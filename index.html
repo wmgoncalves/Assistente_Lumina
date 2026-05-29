@@ -109,10 +109,7 @@
           <button class="feat-btn icon-btn" id="btn-history" title="Histórico">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </button>
-          <button class="feat-btn icon-btn" id="btn-memory" title="Memória">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-          </button>
-          <button class="feat-btn icon-btn" id="btn-settings" title="Configurações">
+<button class="feat-btn icon-btn" id="btn-settings" title="Configurações">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
         </nav>
@@ -122,13 +119,6 @@
         <aside class="history-panel" id="history-panel">
           <div class="history-head"><span>HISTÓRICO</span><button class="x-btn" id="btn-close-history">✕</button></div>
           <div class="history-msgs" id="history-msgs"></div>
-        </aside>
-        <aside class="history-panel" id="memory-panel" style="left:0;right:auto;border-left:none;border-right:1px solid var(--border);">
-          <div class="history-head"><span>MEMÓRIA</span><button class="x-btn" id="btn-close-memory">✕</button></div>
-          <div class="history-msgs" id="memory-list"></div>
-          <div style="padding:0.75rem;border-top:1px solid var(--border);">
-            <button class="ghost-btn" id="btn-clear-memory" style="width:100%;font-size:0.75rem;">Limpar Memória</button>
-          </div>
         </aside>
 
         <section class="center">
@@ -159,7 +149,7 @@
               <ellipse id="el" cx="72"  cy="81" rx="11" ry="11" fill="white" filter="url(#eyeGlow)"/>
               <ellipse id="er" cx="128" cy="81" rx="11" ry="11" fill="white" filter="url(#eyeGlow)"/>
               <!-- Mouth -->
-              <path id="mo" d="M 74 122 Q 100 144 126 122" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+              <path id="mo" d="M 75 122 Q 100 146 125 122" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
             </svg>
           </div>
           <p class="resp-text" id="resp-text"></p>

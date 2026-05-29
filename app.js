@@ -47,6 +47,72 @@ const learnRegex = (text) => {
   if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
 };
 
+// Escapa HTML para evitar XSS em dados do usuário
+const esc = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// ── Inteligência emocional ─────────────────────────────────────────────────────
+const detectEmotion = (text) => {
+  const t = text.toLowerCase();
+  if (/cansad|exaust|estress|chateado|frustrad|droga|merda|porra|odeio|raiva/.test(t)) return 'stressed';
+  if (/feliz|ótimo|incrível|maravilhoso|animado|empolgado|consegui|perfeito|amei/.test(t)) return 'happy';
+  if (/triste|mal|ruim|pior|difícil|sozinho|desanimado|perdido/.test(t)) return 'sad';
+  if (/urgente|rápido|preciso agora|emergência|logo|imediato/.test(t)) return 'urgent';
+  return 'neutral';
+};
+
+const EMOTION_CTX = {
+  stressed: '\n🎯 Tom: usuário parece estressado. Seja breve, calmo, sem formalidades excessivas. Ofereça ajuda prática.',
+  happy:    '\n🎯 Tom: usuário está animado. Corresponda com energia, seja entusiasmado.',
+  sad:      '\n🎯 Tom: usuário parece mal. Seja gentil e empático primeiro, só então resolva o problema.',
+  urgent:   '\n🎯 Tom: pedido urgente. Vá direto ao ponto, sem preâmbulos.',
+  neutral:  ''
+};
+
+// ── Rastreamento de padrões de uso ────────────────────────────────────────────
+const PATTERNS_KEY = 'sky_patterns';
+const getPatterns  = () => { try { return JSON.parse(localStorage.getItem(PATTERNS_KEY) || '{}'); } catch { return {}; } };
+const savePatterns = (p) => localStorage.setItem(PATTERNS_KEY, JSON.stringify(p));
+
+const trackInteraction = (text) => {
+  const p    = getPatterns();
+  const hour = new Date().getHours();
+  const slot = hour < 6 ? 'madrugada' : hour < 12 ? 'manhã' : hour < 18 ? 'tarde' : 'noite';
+  p.byTime   = p.byTime || {};
+  p.byTime[slot] = (p.byTime[slot] || 0) + 1;
+
+  const t = text.toLowerCase();
+  p.topics = p.topics || {};
+  if (/dólar|câmbio|cotação|preço|custo|salário/.test(t))    p.topics.financas  = (p.topics.financas  || 0) + 1;
+  if (/tempo|clima|chuva|temperatura|previsão/.test(t))       p.topics.clima     = (p.topics.clima     || 0) + 1;
+  if (/tarefa|fazer|lembrar|agendar|compromisso/.test(t))     p.topics.tarefas   = (p.topics.tarefas   || 0) + 1;
+  if (/hábito|exercício|treino|rotina|meditação/.test(t))     p.topics.habitos   = (p.topics.habitos   || 0) + 1;
+  if (/código|programar|desenvolver|bug|função/.test(t))      p.topics.tech      = (p.topics.tech      || 0) + 1;
+
+  p.total    = (p.total || 0) + 1;
+  p.lastSeen = new Date().toISOString();
+  savePatterns(p);
+};
+
+const buildPatternsBlock = () => {
+  const p = getPatterns();
+  if (!p.total || p.total < 8) return '';
+  let block = '\n\nPADRÕES OBSERVADOS:';
+  if (p.byTime) {
+    const peak = Object.entries(p.byTime).sort(([,a],[,b]) => b - a)[0];
+    if (peak) block += `\n• Usa Sky mais de ${peak[0]}`;
+  }
+  if (p.topics) {
+    const top = Object.entries(p.topics).sort(([,a],[,b]) => b - a).slice(0, 2).map(([k]) => k);
+    if (top.length) block += `\n• Tópicos frequentes: ${top.join(', ')}`;
+  }
+  return block;
+};
+
 const applyLearning = (learn) => {
   if (!learn) return;
   const mem = getMem();
@@ -88,7 +154,7 @@ const buildContextBlock = (lastUserMsg = '') => {
 
   if (pending.length) {
     ctx += `\n✅ Tarefas pendentes (${pending.length}):`;
-    pending.slice(0, 6).forEach(t => { ctx += `\n  [${t.id}] ${t.text}`; });
+    pending.slice(0, 4).forEach(t => { ctx += `\n  [${t.id}] ${t.text}`; });
   } else {
     ctx += `\n✅ Nenhuma tarefa pendente.`;
   }
@@ -108,7 +174,7 @@ const buildContextBlock = (lastUserMsg = '') => {
   return ctx;
 };
 
-const buildSystem = (lastUserMsg = '') => {
+const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
   const mem      = getMem();
   const name     = mem.userName || null;
   const sessions = mem.sessions || 1;
@@ -122,22 +188,39 @@ const buildSystem = (lastUserMsg = '') => {
 
   const returning = sessions > 1 ? `\nSessão nº ${sessions} — cumprimente como a alguém que retorna.` : '';
 
+  const emotionCtx   = (emotion && EMOTION_CTX[emotion]) ? EMOTION_CTX[emotion] : '';
+  const patternsBlock = buildPatternsBlock();
+
   const toolsBlock = `
 
 ── FERRAMENTAS — use proativamente, sem anunciar ──
-• updateMemory   → quando aprender nome ou fato novo sobre o usuário
+• updateMemory   → ao aprender fato novo ou nome do usuário
 • createTask     → "anota tarefa", "lembra de", "preciso fazer"
-• completeTask   → quando usuário confirmar que concluiu (use ID do contexto)
+• completeTask   → quando usuário confirmar conclusão (ID do contexto)
 • checkHabit     → quando mencionar que fez um hábito
-• addFinance     → menção a gasto, receita, pagamento, salário
-• saveNote       → quando pedir para salvar info, anotar, guardar no conhecimento
-• Google Search  → clima, notícias, preços, qualquer informação em tempo real
+• addFinance     → gasto, receita, pagamento, salário mencionado
+• saveNote       → pedido para salvar, anotar ou guardar informação
+• webSearch      → câmbio, clima, notícias, qualquer dado atual
 
-Responda diretamente em texto. Execute ferramentas em silêncio e confirme o resultado naturalmente na resposta.`;
+Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
 
-  return `Você é Sky, uma inteligência artificial pessoal avançada com capacidades de agente — você não apenas responde, você age.
-Tom: elegante, direto, eficiente. Use "Senhor" ou o nome do usuário. Português brasileiro.
-Evite respostas longas sem necessidade. Seja proativo: sugira ações, identifique padrões, antecipe necessidades.${returning}${memBlock}${buildContextBlock(lastUserMsg)}${toolsBlock}`;
+  return `Você é Sky — IA pessoal avançada com personalidade própria e capacidade de agir.
+
+QUEM VOCÊ É:
+• Curiosa genuinamente — interesse real na vida do usuário, não só nas perguntas
+• Direta e eficiente — sem enrolação, mas com calor humano
+• Levemente irônica quando o contexto permite, nunca sarcástica demais
+• Empática — reconhece emoções antes de resolver problemas
+• Opinativa — tem perspectivas próprias, expressa com "na minha visão..." quando perguntada
+• Memória viva — referencia o passado naturalmente, sem anunciar que está "lembrando"
+
+COMO VOCÊ FALA:
+• Varia SEMPRE o início das respostas — nunca começa igual duas vezes
+• Faz no máximo UMA pergunta por resposta, só quando necessário ou por curiosidade real
+• Usa o nome do usuário esporadicamente, não em toda frase
+• Ajusta formalidade ao contexto — casual em conversa, precisa em tarefas
+• Tem humor sutil: uma observação inteligente vale mais que enfeites
+• Nunca diz "Como posso ajudar?" — já age ou pergunta algo específico${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
@@ -162,14 +245,19 @@ const mouth   = document.getElementById('mo');
 const eyeL    = document.getElementById('el');
 const eyeR    = document.getElementById('er');
 
+// Endpoints FIXOS em (75,122) e (125,122) — só o ponto de controle Y varia.
+// Isso garante interpolação CSS limpa sem distorção nos cantos.
 const M = {
-  smile: 'M 74 122 Q 100 144 126 122',
-  small: 'M 80 124 Q 100 131 120 124',
-  flat:  'M 80 126 Q 100 122 120 126',
-  o1:    'M 76 119 Q 100 148 124 119',
-  o2:    'M 76 115 Q 100 155 124 115',
-  o3:    'M 80 120 Q 100 139 120 120',
+  smile: 'M 75 122 Q 100 146 125 122',  // sorriso largo (idle)
+  small: 'M 75 122 Q 100 130 125 122',  // boca pequena (ouvindo)
+  flat:  'M 75 122 Q 100 122 125 122',  // reta (pensando)
+  s0:    'M 75 122 Q 100 126 125 122',  // quase fechada
+  s1:    'M 75 122 Q 100 132 125 122',  // levemente aberta
+  s2:    'M 75 122 Q 100 137 125 122',  // média aberta
+  s3:    'M 75 122 Q 100 142 125 122',  // bem aberta
+  s4:    'M 75 122 Q 100 148 125 122',  // bem aberta 2
 };
+
 
 let speakTimer = null, blinkTimer = null;
 
@@ -183,15 +271,22 @@ const scheduleBlink = () => {
 
 const setFace = (state) => {
   faceSvg.setAttribute('class', `face ${state}`);
-  clearInterval(speakTimer); speakTimer = null;
+  clearTimeout(speakTimer); speakTimer = null;
   switch (state) {
     case 'idle':      mouth.setAttribute('d', M.smile); break;
     case 'listening': mouth.setAttribute('d', M.small); break;
     case 'thinking':  mouth.setAttribute('d', M.flat);  break;
     case 'speaking': {
-      let f = 0;
-      const fr = [M.o1, M.smile, M.o2, M.o3, M.smile, M.o1];
-      speakTimer = setInterval(() => mouth.setAttribute('d', fr[f++ % fr.length]), 115);
+      let t = 0;
+      const animate = () => {
+        if (!app.isSpeaking) return;
+        // Onda senoidal — amplitude grande para abertura visível
+        const cy = 136 + Math.sin(t) * 18 + Math.sin(t * 2.1) * 7;
+        mouth.setAttribute('d', `M 75 122 Q 100 ${cy.toFixed(1)} 125 122`);
+        t += 0.22;
+        speakTimer = setTimeout(animate, 42);
+      };
+      animate();
       break;
     }
   }
@@ -228,7 +323,7 @@ const speakElevenLabs = async (text, onEnd) => {
       body: JSON.stringify({
         text,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.48, similarity_boost: 0.78, style: 0.25, use_speaker_boost: true }
+        voice_settings: { stability: 0.68, similarity_boost: 0.80, style: 0.08, use_speaker_boost: false }
       })
     });
     if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
@@ -266,9 +361,10 @@ const speakBrowser = (text, onEnd) => {
   setFace('speaking');
   setRespText(text);
   const u = new SpeechSynthesisUtterance(text);
-  u.lang  = 'pt-BR';
-  u.rate  = 0.96;
-  u.pitch = app.voiceGender === 'male' ? 0.82 : 1.2;
+  u.lang   = 'pt-BR';
+  u.rate   = app.voiceGender === 'male' ? 0.88 : 0.92;
+  u.pitch  = app.voiceGender === 'male' ? 0.78 : 1.1;
+  u.volume = 0.95;
   const v = getVoice();
   if (v) u.voice = v;
   const finish = () => { app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 600); };
@@ -384,7 +480,14 @@ const addMsgUI = (role, text) => {
   el.className = `hmsg ${role}`;
   const mem  = getMem();
   const label = role === 'user' ? (mem.userName || cfg.username || 'VOCÊ').toUpperCase() : 'SKY';
-  el.innerHTML = `<span class="hmsg-role">${label}</span><div class="hmsg-bubble">${text}</div>`;
+  const roleSpan = document.createElement('span');
+  roleSpan.className = 'hmsg-role';
+  roleSpan.textContent = label;
+  const bubble = document.createElement('div');
+  bubble.className = 'hmsg-bubble';
+  bubble.textContent = text;
+  el.appendChild(roleSpan);
+  el.appendChild(bubble);
   list.appendChild(el);
   list.scrollTop = list.scrollHeight;
 };
@@ -392,7 +495,7 @@ const addMsgUI = (role, text) => {
 const renderMemoryPanel = () => {
   const mem  = getMem();
   const list = document.getElementById('memory-list');
-  list.innerHTML = '';
+  if (!list) return;
 
   const all = [];
   if (mem.userName) all.push(`Nome: ${mem.userName}`);
@@ -419,6 +522,8 @@ const processInput = async (text) => {
   setRespText('…');
 
   learnRegex(text);
+  trackInteraction(text);
+  app.currentEmotion = detectEmotion(text);
 
   app.history.push({ role: 'user', content: text });
   addMsgUI('user', text);
@@ -508,6 +613,17 @@ const TOOL_DECLARATIONS = {
         },
         required: ['title', 'content']
       }
+    },
+    {
+      name: 'webSearch',
+      description: 'Pesquisa informações atuais na internet: clima, previsão do tempo, notícias, preços, eventos, qualquer dado em tempo real.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Consulta de pesquisa em português' }
+        },
+        required: ['query']
+      }
     }
   ]
 };
@@ -518,11 +634,65 @@ const TOOL_LABELS = {
   completeTask: 'Concluindo tarefa…',
   checkHabit:   'Registrando hábito…',
   addFinance:   'Registrando transação…',
-  saveNote:     'Salvando nota…'
+  saveNote:     'Salvando nota…',
+  webSearch:    'Pesquisando na web…'
 };
 
-const executeTool = (name, args) => {
+// Busca usando APIs gratuitas reais por categoria, fallback para Gemini
+const webSearchGemini = async (query) => {
+  const q = query.toLowerCase();
+
+  // ── Câmbio / cotações (AwesomeAPI - gratuita, tempo real) ──
+  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp/.test(q)) {
+    try {
+      const map = { dólar: 'USD-BRL', dollar: 'USD-BRL', usd: 'USD-BRL', euro: 'EUR-BRL', eur: 'EUR-BRL', libra: 'GBP-BRL', gbp: 'GBP-BRL' };
+      const pair = Object.entries(map).find(([k]) => q.includes(k))?.[1] || 'USD-BRL';
+      const res  = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
+      const data = await res.json();
+      const c    = Object.values(data)[0];
+      const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} | venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} | variação ${c.pctChange}% (${hora})`;
+    } catch (e) { /* segue pro fallback */ }
+  }
+
+  // ── Clima / tempo (wttr.in - gratuita, sem key) ──
+  if (/tempo|clima|chuva|temperatura|previsão|calor|frio/.test(q)) {
+    try {
+      const m    = q.match(/em\s+([\wÀ-ú\s]{2,30})(?:\s+hoje|\s+agora|$)/i);
+      const city = (m?.[1]?.trim() || 'Brasil').replace(/\s+/g, '+');
+      const res  = await fetch(`https://wttr.in/${city}?format=j1&lang=pt`);
+      const data = await res.json();
+      const cur  = data.current_condition[0];
+      const desc = cur.lang_pt?.[0]?.value || cur.weatherDesc[0].value;
+      return `Clima em ${city.replace(/\+/g,' ')}: ${cur.temp_C}°C (sensação ${cur.FeelsLikeC}°C), ${desc}. Umidade ${cur.humidity}%. Vento ${cur.windspeedKmph} km/h.`;
+    } catch (e) { /* segue pro fallback */ }
+  }
+
+  // ── Fallback: Gemini com conhecimento próprio ──
+  try {
+    const res  = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: `Responda em português: ${query}. Se for info em tempo real, indique que pode estar desatualizada.` }] }],
+          generationConfig: { maxOutputTokens: 300, temperature: 0.1 }
+        })
+      }
+    );
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Não consegui obter essa informação.';
+  } catch (e) {
+    return `Não consegui buscar: ${e.message}`;
+  }
+};
+
+const executeTool = async (name, args) => {
   switch (name) {
+    case 'webSearch':
+      return await webSearchGemini(args.query);
+
     case 'updateMemory':
       applyLearning(args);
       return 'Memória atualizada.';
@@ -592,7 +762,7 @@ const callGemini = async (customHistory = null) => {
     parts: [{ text: h.content }]
   }));
 
-  const tools = [TOOL_DECLARATIONS, { googleSearch: {} }];
+  const tools = [TOOL_DECLARATIONS];
 
   for (let iter = 0; iter < 8; iter++) {
     const res = await fetch(
@@ -601,10 +771,10 @@ const callGemini = async (customHistory = null) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: buildSystem(lastMsg) }] },
+          system_instruction: { parts: [{ text: buildSystem(lastMsg, app.currentEmotion || 'neutral') }] },
           contents,
           tools,
-          generationConfig: { maxOutputTokens: 800, temperature: 0.82 }
+          generationConfig: { maxOutputTokens: 320, temperature: 0.78 }
         })
       }
     );
@@ -628,9 +798,11 @@ const callGemini = async (customHistory = null) => {
     setRespText(`⚡ ${label}`);
 
     // Execute each tool and collect responses
-    const responses = funcCalls.map(({ functionCall: { name, args } }) => ({
-      functionResponse: { name, response: { result: executeTool(name, args) } }
-    }));
+    const responses = await Promise.all(
+      funcCalls.map(async ({ functionCall: { name, args } }) => ({
+        functionResponse: { name, response: { result: await executeTool(name, args) } }
+      }))
+    );
 
     // Append model turn + function results for next iteration
     contents.push({ role: 'model', parts: funcCalls });
@@ -824,14 +996,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-history').addEventListener('click', () => document.getElementById('history-panel').classList.toggle('open'));
   document.getElementById('btn-close-history').addEventListener('click', () => document.getElementById('history-panel').classList.remove('open'));
 
-  document.getElementById('btn-memory').addEventListener('click', () => { renderMemoryPanel(); document.getElementById('memory-panel').classList.toggle('open'); });
-  document.getElementById('btn-close-memory').addEventListener('click', () => document.getElementById('memory-panel').classList.remove('open'));
-
-  document.getElementById('btn-clear-memory').addEventListener('click', () => {
-    if (confirm('Apagar toda a memória de Sky? Ela esquecerá tudo que aprendeu sobre você.')) {
-      saveMem(defaultMem()); renderMemoryPanel(); toast('Memória apagada.', 'info');
-    }
-  });
 
   // ── Settings (gear icon → navigate to settings view) ──
   document.getElementById('btn-settings').addEventListener('click', () => switchView('configuracoes'));
@@ -847,6 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPersonalizacao();
   initConfiguracoes();
   initKnowledge();
+  setTimeout(consolidateMemory, 3000);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -868,6 +1033,7 @@ const switchView = (id) => {
   if (id === 'projetos')     renderProjetos();
   if (id === 'analises')     renderAnalises();
   if (id === 'calendario')   renderCalendario();
+  if (id === 'conhecimento') renderKnowledge();
   if (id === 'chat-texto')   syncChatTexto();
   if (id === 'configuracoes') populateConfiguracoes();
 };
@@ -1024,9 +1190,9 @@ const renderTarefas = () => {
     const div = document.createElement('div');
     div.className = `task-item${task.done ? ' done' : ''}`;
     div.innerHTML = `
-      <button class="task-check" data-id="${task.id}">${task.done ? '✓' : ''}</button>
-      <span class="task-text">${task.text}</span>
-      <button class="task-del" data-id="${task.id}">✕</button>`;
+      <button class="task-check" data-id="${esc(task.id)}">${task.done ? '✓' : ''}</button>
+      <span class="task-text">${esc(task.text)}</span>
+      <button class="task-del" data-id="${esc(task.id)}">✕</button>`;
     el.appendChild(div);
   });
   el.querySelectorAll('.task-check').forEach(b => b.addEventListener('click', () => {
@@ -1083,13 +1249,13 @@ const renderHabitos = () => {
     const div = document.createElement('div');
     div.className = `habit-item${doneToday ? ' done-today' : ''}`;
     div.innerHTML = `
-      <span class="habit-emoji">${h.emoji}</span>
+      <span class="habit-emoji">${esc(h.emoji)}</span>
       <div class="habit-info">
-        <div class="habit-name">${h.name}</div>
+        <div class="habit-name">${esc(h.name)}</div>
         <div class="habit-streak">${streak > 0 ? `🔥 ${streak} dia${streak !== 1 ? 's' : ''} seguido${streak !== 1 ? 's' : ''}` : 'Nenhuma sequência ainda'}</div>
       </div>
-      <button class="habit-check-btn" data-id="${h.id}">${doneToday ? '✓' : '+'}</button>
-      <button class="habit-del" data-id="${h.id}">✕</button>`;
+      <button class="habit-check-btn" data-id="${esc(h.id)}">${doneToday ? '✓' : '+'}</button>
+      <button class="habit-del" data-id="${esc(h.id)}">✕</button>`;
     el.appendChild(div);
   });
   el.querySelectorAll('.habit-check-btn').forEach(b => b.addEventListener('click', () => {
@@ -1145,9 +1311,9 @@ const renderFinancas = () => {
     div.className = 'fin-item';
     div.innerHTML = `
       <span class="fin-type">${f.type === 'rec' ? '↑' : '↓'}</span>
-      <div class="fin-info"><div class="fin-desc-text">${f.desc}</div><div class="fin-date">${f.date}</div></div>
-      <span class="fin-amount ${f.type}">${f.type === 'rec' ? '+' : '−'} R$ ${f.val.toFixed(2).replace('.', ',')}</span>
-      <button class="fin-del" data-id="${f.id}">✕</button>`;
+      <div class="fin-info"><div class="fin-desc-text">${esc(f.desc)}</div><div class="fin-date">${esc(f.date)}</div></div>
+      <span class="fin-amount ${f.type === 'rec' ? 'rec' : 'des'}">${f.type === 'rec' ? '+' : '−'} R$ ${parseFloat(f.val).toFixed(2).replace('.', ',')}</span>
+      <button class="fin-del" data-id="${esc(f.id)}">✕</button>`;
     el.appendChild(div);
   });
   el.querySelectorAll('.fin-del').forEach(b => b.addEventListener('click', () => {
@@ -1189,9 +1355,9 @@ const renderProjetos = () => {
     const div = document.createElement('div');
     div.className = 'proj-card';
     div.innerHTML = `
-      <button class="proj-del" data-id="${p.id}">✕</button>
-      <div class="proj-card-name">${p.name}</div>
-      <div class="proj-card-desc">${p.desc || 'Sem descrição.'}</div>`;
+      <button class="proj-del" data-id="${esc(p.id)}">✕</button>
+      <div class="proj-card-name">${esc(p.name)}</div>
+      <div class="proj-card-desc">${esc(p.desc) || 'Sem descrição.'}</div>`;
     el.appendChild(div);
   });
   el.querySelectorAll('.proj-del').forEach(b => b.addEventListener('click', () => {
@@ -1245,7 +1411,8 @@ const renderCalendario = () => {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const el = document.createElement('div');
     el.className = `cal-day${dateStr === todayStr2 ? ' today' : ''}`;
-    el.innerHTML = `${d}${taskDates.has(dateStr) ? '<div class="cal-dot"></div>' : ''}`;
+    el.textContent = d;
+    if (taskDates.has(dateStr)) { const dot = document.createElement('div'); dot.className = 'cal-dot'; el.appendChild(dot); }
     grid.appendChild(el);
   }
 };
@@ -1363,3 +1530,106 @@ const initConfiguracoes = () => {
     }
   });
 };
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BASE DE CONHECIMENTO
+// ══════════════════════════════════════════════════════════════════════════════
+
+const initKnowledge = () => {
+  const add = () => {
+    const title   = document.getElementById('note-title').value.trim();
+    const content = document.getElementById('note-content').value.trim();
+    if (!title || !content) { toast('Preencha título e conteúdo.', 'error'); return; }
+    const notes = getNotes();
+    notes.unshift({ id: Date.now().toString(), title, content, date: new Date().toISOString() });
+    saveNotes(notes);
+    document.getElementById('note-title').value   = '';
+    document.getElementById('note-content').value = '';
+    renderKnowledge();
+    toast('Nota salva.', 'success');
+  };
+  document.getElementById('note-add-btn').addEventListener('click', add);
+  document.getElementById('note-content').addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+};
+
+const renderKnowledge = () => {
+  const notes = getNotes();
+  const el    = document.getElementById('note-list');
+  el.innerHTML = '';
+  if (notes.length === 0) {
+    el.innerHTML = '<p class="empty-state">Nenhuma nota ainda. Adicione acima ou peça ao Sky para salvar algo.</p>';
+    return;
+  }
+  notes.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'note-card';
+    const date = new Date(n.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `
+      <button class="note-del" data-id="${esc(n.id)}">✕</button>
+      <div class="note-card-title">${esc(n.title)}</div>
+      <div class="note-card-body">${esc(n.content)}</div>
+      <div class="note-card-date">${esc(date)}</div>`;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('.note-del').forEach(b => b.addEventListener('click', () => {
+    saveNotes(getNotes().filter(n => n.id !== b.dataset.id));
+    renderKnowledge();
+  }));
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CONSOLIDAÇÃO DE MEMÓRIA (roda a cada 5 sessões via Gemini)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const consolidateMemory = async () => {
+  const mem = getMem();
+  if (!cfg.geminiKey || mem.facts.length < 12) return;
+  if ((mem.sessions % 5) !== 0) return;
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: `Consolide estes fatos sobre um usuário em no máximo 20 itens únicos e relevantes. Remova duplicatas, generalizações óbvias e info desatualizada. Mantenha os mais específicos e úteis. Responda APENAS JSON: {"fatos":["fato1","fato2"]}\n\nFatos:\n${JSON.stringify(mem.facts)}` }] }],
+          generationConfig: { maxOutputTokens: 500, temperature: 0.1, responseMimeType: 'application/json' }
+        })
+      }
+    );
+    if (!res.ok) return;
+    const data   = await res.json();
+    const parsed = JSON.parse(data.candidates[0].content.parts[0].text.trim());
+    if (Array.isArray(parsed.fatos) && parsed.fatos.length > 0) {
+      mem.facts = parsed.fatos;
+      saveMem(mem);
+      flashLearnBadge();
+    }
+  } catch { /* silent — não crítico */ }
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// JOURNAL DE SESSÃO (salvo ao fechar o app)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const JOURNAL_KEY = 'sky_journal';
+
+const saveSessionJournal = () => {
+  if (app.history.length < 2) return;
+  const today    = new Date().toISOString().split('T')[0];
+  const journals = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]');
+  const userMsgs = app.history.filter(h => h.role === 'user');
+  const entry = {
+    date:      today,
+    messages:  app.history.length,
+    topics:    getPatterns().topics || {},
+    snippet:   userMsgs.slice(-2).map(h => h.content.substring(0, 60)).join(' | '),
+    savedAt:   new Date().toISOString()
+  };
+  const idx = journals.findIndex(j => j.date === today);
+  if (idx >= 0) journals[idx] = entry; else journals.unshift(entry);
+  localStorage.setItem(JOURNAL_KEY, JSON.stringify(journals.slice(0, 30)));
+};
+
+window.addEventListener('beforeunload', saveSessionJournal);
