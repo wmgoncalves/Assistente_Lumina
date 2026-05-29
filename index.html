@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sky | Assistente de IA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-dot"></div>
+      <span class="sb-title">SKY</span>
+    </div>
+    <ul class="sb-nav">
+      <li class="sb-item" data-view="painel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Painel</span>
+      </li>
+      <li class="sb-item" data-view="novidades">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Novidades</span>
+      </li>
+      <li class="sb-item" data-view="integracoes">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <span>Integrações</span>
+      </li>
+      <li class="sb-item active" data-view="chat-voz">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <span>Chat IA Voz</span>
+      </li>
+      <li class="sb-item" data-view="chat-texto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Chat IA Texto</span>
+      </li>
+      <li class="sb-item" data-view="calendario">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Calendário</span>
+      </li>
+      <li class="sb-item" data-view="como-usar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Como Usar</span>
+      </li>
+      <li class="sb-item" data-view="tarefas">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Tarefas</span>
+      </li>
+      <li class="sb-item" data-view="financas">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Finanças</span>
+      </li>
+      <li class="sb-item" data-view="habitos">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span>Hábitos</span>
+      </li>
+      <li class="sb-item" data-view="projetos">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Projetos</span>
+      </li>
+      <li class="sb-item" data-view="analises">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Análises</span>
+      </li>
+      <li class="sb-item" data-view="suporte">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Suporte e Instalação</span>
+      </li>
+      <li class="sb-item" data-view="personalizacao">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span>Personalização</span>
+      </li>
+      <li class="sb-item" data-view="configuracoes">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Configurações e Notificações</span>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ── PAGE (views) ────────────────────────────────────────────────────── -->
+  <div class="page">
+
+    <!-- ── VIEW: Chat IA Voz ── -->
+    <section class="view active" id="view-chat-voz">
+      <header class="topbar">
+        <div class="voice-group">
+          <button class="voice-btn active" id="btn-voice-male">VOZ MASCULINA</button>
+          <button class="voice-btn" id="btn-voice-female">VOZ FEMININA</button>
+        </div>
+        <nav class="feat-group">
+          <button class="feat-btn" id="btn-camera">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            VER CÂMERA
+          </button>
+          <button class="feat-btn" id="btn-file">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            ANALISAR ARQUIVO
+          </button>
+          <button class="feat-btn" id="btn-continuous">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span id="cont-label">CONVERSA CONTÍNUA: OFF</span>
+          </button>
+          <button class="feat-btn icon-btn" id="btn-history" title="Histórico">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="feat-btn icon-btn" id="btn-memory" title="Memória">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </button>
+          <button class="feat-btn icon-btn" id="btn-settings" title="Configurações">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </nav>
+      </header>
+
+      <main class="main-area">
+        <aside class="history-panel" id="history-panel">
+          <div class="history-head"><span>HISTÓRICO</span><button class="x-btn" id="btn-close-history">✕</button></div>
+          <div class="history-msgs" id="history-msgs"></div>
+        </aside>
+        <aside class="history-panel" id="memory-panel" style="left:0;right:auto;border-left:none;border-right:1px solid var(--border);">
+          <div class="history-head"><span>MEMÓRIA</span><button class="x-btn" id="btn-close-memory">✕</button></div>
+          <div class="history-msgs" id="memory-list"></div>
+          <div style="padding:0.75rem;border-top:1px solid var(--border);">
+            <button class="ghost-btn" id="btn-clear-memory" style="width:100%;font-size:0.75rem;">Limpar Memória</button>
+          </div>
+        </aside>
+
+        <section class="center">
+          <div class="avatar-wrap">
+            <svg class="face" id="face" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="faceBg" cx="42%" cy="36%" r="70%">
+                  <stop offset="0%" stop-color="#140002"/>
+                  <stop offset="55%" stop-color="#0e0001"/>
+                  <stop offset="100%" stop-color="#000000"/>
+                </radialGradient>
+                <filter id="eyeGlow" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- Sky glow border rings -->
+              <circle cx="100" cy="100" r="97" fill="none" stroke="#f87171" stroke-width="10" opacity="0.07"/>
+              <circle cx="100" cy="100" r="97" fill="none" stroke="#ef4444" stroke-width="4"  opacity="0.28"/>
+              <circle cx="100" cy="100" r="97" fill="none" stroke="#fca5a5" stroke-width="2"  opacity="0.9"/>
+              <!-- Face -->
+              <circle cx="100" cy="100" r="94" fill="url(#faceBg)"/>
+              <!-- Bubble specular highlights -->
+              <ellipse cx="68" cy="48" rx="32" ry="18" fill="white" opacity="0.055"/>
+              <ellipse cx="62" cy="42" rx="16" ry="9"  fill="white" opacity="0.10"/>
+              <ellipse cx="59" cy="39" rx="7" ry="4" fill="white" opacity="0.18"/>
+              <!-- Eyes -->
+              <ellipse id="el" cx="72"  cy="81" rx="11" ry="11" fill="white" filter="url(#eyeGlow)"/>
+              <ellipse id="er" cx="128" cy="81" rx="11" ry="11" fill="white" filter="url(#eyeGlow)"/>
+              <!-- Mouth -->
+              <path id="mo" d="M 74 122 Q 100 144 126 122" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="resp-text" id="resp-text"></p>
+          <p class="user-said" id="user-said"></p>
+          <div class="learn-badge" id="learn-badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Memória atualizada
+          </div>
+        </section>
+      </main>
+
+      <footer class="bottombar">
+        <button class="mic-btn" id="btn-mic">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <span class="mic-label">C L I Q U E &nbsp; E &nbsp; F A L E</span>
+        <div class="text-input-row">
+          <input type="text" id="text-input" class="text-fld" placeholder="Ou digite aqui e pressione Enter…" autocomplete="off">
+          <button class="send-btn" id="btn-send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ── VIEW: Painel ── -->
+    <section class="view" id="view-painel">
+      <div class="view-header"><h2 class="view-title">Painel</h2></div>
+      <div class="view-body">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon">💬</div><div class="stat-val" id="stat-msgs">0</div><div class="stat-lbl">Mensagens hoje</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="stat-tasks">0</div><div class="stat-lbl">Tarefas pendentes</div></div>
+          <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-val" id="stat-habits">0</div><div class="stat-lbl">Hábitos feitos hoje</div></div>
+          <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-val" id="stat-sessions">0</div><div class="stat-lbl">Sessões totais</div></div>
+        </div>
+        <h3 class="section-title">Últimas mensagens</h3>
+        <div id="painel-msgs"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Novidades ── -->
+    <section class="view" id="view-novidades">
+      <div class="view-header"><h2 class="view-title">Novidades</h2></div>
+      <div class="view-body">
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Sky — redesign completo</h3><p class="news-body">Interface reformulada com tema vermelho, animação de bolha flutuante e sistema de navegação com módulos.</p></div>
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Aprendizado unificado</h3><p class="news-body">Sky aprende sobre você na mesma requisição da resposta, sem chamadas duplas — mais rápido e econômico.</p></div>
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Módulos: Tarefas, Hábitos, Finanças</h3><p class="news-body">Gerencie seu dia diretamente no painel sem sair do assistente.</p></div>
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Personalização de tema</h3><p class="news-body">Escolha a cor de destaque da interface em Personalização.</p></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Integrações ── -->
+    <section class="view" id="view-integracoes">
+      <div class="view-header"><h2 class="view-title">Integrações</h2></div>
+      <div class="view-body">
+        <div class="intg-card"><div class="intg-logo">G</div><div class="intg-info"><div class="intg-name">Gemini API</div><div class="intg-status" id="intg-gemini">—</div></div><div class="intg-badge" id="intg-gemini-dot">●</div></div>
+        <div class="intg-card"><div class="intg-logo">11</div><div class="intg-info"><div class="intg-name">ElevenLabs TTS</div><div class="intg-status" id="intg-eleven">—</div></div><div class="intg-badge" id="intg-eleven-dot">●</div></div>
+        <div class="intg-card intg-soon"><div class="intg-logo">📅</div><div class="intg-info"><div class="intg-name">Google Calendar</div><div class="intg-status">Em breve</div></div></div>
+        <div class="intg-card intg-soon"><div class="intg-logo">📧</div><div class="intg-info"><div class="intg-name">Gmail</div><div class="intg-status">Em breve</div></div></div>
+        <div class="intg-card intg-soon"><div class="intg-logo">📱</div><div class="intg-info"><div class="intg-name">WhatsApp</div><div class="intg-status">Em breve</div></div></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Chat IA Texto ── -->
+    <section class="view" id="view-chat-texto">
+      <div class="view-header">
+        <h2 class="view-title">Chat IA Texto</h2>
+        <button class="ghost-btn" id="chat-texto-clear" style="font-size:0.75rem;padding:0.3rem 0.75rem">Limpar</button>
+      </div>
+      <div class="chat-msgs" id="chat-texto-msgs"></div>
+      <div class="chat-input-wrap">
+        <input type="text" id="chat-texto-input" class="text-fld" placeholder="Digite sua mensagem para Sky…" autocomplete="off">
+        <button class="send-btn" id="chat-texto-send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Calendário ── -->
+    <section class="view" id="view-calendario">
+      <div class="view-header cal-header">
+        <button class="ghost-btn" id="cal-prev" style="padding:0.3rem 0.7rem">‹</button>
+        <h2 class="view-title" id="cal-title">—</h2>
+        <button class="ghost-btn" id="cal-next" style="padding:0.3rem 0.7rem">›</button>
+      </div>
+      <div class="view-body">
+        <div class="cal-weekdays"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Como Usar ── -->
+    <section class="view" id="view-como-usar">
+      <div class="view-header"><h2 class="view-title">Como Usar</h2></div>
+      <div class="view-body">
+        <div class="help-item"><div class="help-icon">🎤</div><div><div class="help-title">Chat por Voz</div><div class="help-desc">Clique no microfone ou pressione Espaço. Sky responde com voz. Escape para parar.</div></div></div>
+        <div class="help-item"><div class="help-icon">💬</div><div><div class="help-title">Chat por Texto</div><div class="help-desc">Use "Chat IA Texto" na barra lateral ou o campo de texto na tela de voz. Enter para enviar.</div></div></div>
+        <div class="help-item"><div class="help-icon">📷</div><div><div class="help-title">Câmera</div><div class="help-desc">Botão "Ver Câmera" na barra do chat de voz. Capture e Sky analisa a imagem.</div></div></div>
+        <div class="help-item"><div class="help-icon">📎</div><div><div class="help-title">Arquivos</div><div class="help-desc">Envie imagens ou .txt para análise pelo botão "Analisar Arquivo".</div></div></div>
+        <div class="help-item"><div class="help-icon">🧠</div><div><div class="help-title">Memória</div><div class="help-desc">Sky aprende sobre você automaticamente. Veja em "Memória" (ícone banco de dados).</div></div></div>
+        <div class="help-item"><div class="help-icon">⚡</div><div><div class="help-title">Conversa Contínua</div><div class="help-desc">Ative para Sky ouvir e responder automaticamente sem precisar clicar.</div></div></div>
+        <div class="help-item"><div class="help-icon">🔑</div><div><div class="help-title">Chaves API</div><div class="help-desc">Configure em Configurações e Notificações. Gemini obrigatório, ElevenLabs opcional.</div></div></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Tarefas ── -->
+    <section class="view" id="view-tarefas">
+      <div class="view-header">
+        <h2 class="view-title">Tarefas</h2>
+        <div class="filter-group" id="task-filters">
+          <button class="filter-btn active" data-filter="todas">Todas</button>
+          <button class="filter-btn" data-filter="pendentes">Pendentes</button>
+          <button class="filter-btn" data-filter="concluidas">Concluídas</button>
+        </div>
+      </div>
+      <div class="view-body">
+        <div class="add-row">
+          <input type="text" id="task-input" class="text-fld" placeholder="Nova tarefa…" autocomplete="off">
+          <button class="send-btn" id="task-add-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        </div>
+        <div id="task-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Finanças ── -->
+    <section class="view" id="view-financas">
+      <div class="view-header"><h2 class="view-title">Finanças</h2></div>
+      <div class="view-body">
+        <div class="balance-card">
+          <div class="balance-label">Saldo atual</div>
+          <div class="balance-value" id="fin-balance">R$ 0,00</div>
+        </div>
+        <div class="add-row" style="gap:0.4rem;flex-wrap:wrap">
+          <input type="text" id="fin-desc" class="text-fld" placeholder="Descrição…" style="flex:1;min-width:140px">
+          <input type="number" id="fin-val" class="text-fld" placeholder="Valor" style="width:110px">
+          <button class="send-btn" id="fin-add-receita" title="Receita" style="background:rgba(34,197,94,0.2);border-color:rgba(34,197,94,0.4)">+</button>
+          <button class="send-btn" id="fin-add-despesa" title="Despesa" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4)">−</button>
+        </div>
+        <div id="fin-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Hábitos ── -->
+    <section class="view" id="view-habitos">
+      <div class="view-header"><h2 class="view-title">Hábitos</h2></div>
+      <div class="view-body">
+        <div class="add-row">
+          <input type="text" id="habit-emoji" class="text-fld" placeholder="⭐" maxlength="2" style="width:50px;text-align:center;padding:0.55rem 0.4rem">
+          <input type="text" id="habit-input" class="text-fld" placeholder="Nome do hábito…" autocomplete="off">
+          <button class="send-btn" id="habit-add-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        </div>
+        <div id="habit-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Projetos ── -->
+    <section class="view" id="view-projetos">
+      <div class="view-header"><h2 class="view-title">Projetos</h2></div>
+      <div class="view-body">
+        <div class="add-row">
+          <input type="text" id="proj-input" class="text-fld" placeholder="Nome do projeto…" autocomplete="off">
+          <input type="text" id="proj-desc" class="text-fld" placeholder="Descrição breve…" style="flex:1.5">
+          <button class="send-btn" id="proj-add-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        </div>
+        <div id="proj-list" class="proj-grid"></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Análises ── -->
+    <section class="view" id="view-analises">
+      <div class="view-header"><h2 class="view-title">Análises</h2></div>
+      <div class="view-body" id="analises-body"></div>
+    </section>
+
+    <!-- ── VIEW: Suporte ── -->
+    <section class="view" id="view-suporte">
+      <div class="view-header"><h2 class="view-title">Suporte e Instalação</h2></div>
+      <div class="view-body">
+        <div class="help-item"><div class="help-icon">⚙️</div><div><div class="help-title">Requisitos</div><div class="help-desc">Chrome ou Edge para reconhecimento de voz. Node.js 18+ para servidor local.</div></div></div>
+        <div class="help-item"><div class="help-icon">🔑</div><div><div class="help-title">Chave Gemini API</div><div class="help-desc">Obtenha grátis em aistudio.google.com — insira em Configurações e Notificações.</div></div></div>
+        <div class="help-item"><div class="help-icon">🎙️</div><div><div class="help-title">ElevenLabs (opcional)</div><div class="help-desc">elevenlabs.io → copie a API key → Configurações. Ativa a voz Jarvis premium em pt-BR.</div></div></div>
+        <div class="help-item"><div class="help-icon">🚀</div><div><div class="help-title">Iniciar localmente</div><div class="help-desc">No terminal da pasta do projeto: <code style="background:rgba(255,255,255,0.08);padding:0.1rem 0.4rem;border-radius:4px">npx serve .</code> — acesse localhost:3000</div></div></div>
+        <div class="help-item"><div class="help-icon">🐛</div><div><div class="help-title">Microfone não funciona</div><div class="help-desc">Use Chrome/Edge. Clique no cadeado na barra de endereço e permita o microfone.</div></div></div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Personalização ── -->
+    <section class="view" id="view-personalizacao">
+      <div class="view-header"><h2 class="view-title">Personalização</h2></div>
+      <div class="view-body">
+        <div class="setting-section">
+          <div class="setting-label">Cor de destaque</div>
+          <div class="color-swatches" id="color-swatches">
+            <div class="swatch active" data-accent="#ef4444" data-hi="#f87171" style="background:#ef4444" title="Vermelho"></div>
+            <div class="swatch" data-accent="#3b82f6" data-hi="#60a5fa" style="background:#3b82f6" title="Azul"></div>
+            <div class="swatch" data-accent="#10b981" data-hi="#34d399" style="background:#10b981" title="Verde"></div>
+            <div class="swatch" data-accent="#a855f7" data-hi="#c084fc" style="background:#a855f7" title="Roxo"></div>
+            <div class="swatch" data-accent="#f59e0b" data-hi="#fbbf24" style="background:#f59e0b" title="Âmbar"></div>
+            <div class="swatch" data-accent="#ec4899" data-hi="#f472b6" style="background:#ec4899" title="Rosa"></div>
+          </div>
+        </div>
+        <div class="setting-section">
+          <div class="setting-label">Voz do assistente</div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="voice-btn active" id="prs-voice-male">VOZ MASCULINA</button>
+            <button class="voice-btn" id="prs-voice-female">VOZ FEMININA</button>
+          </div>
+        </div>
+        <div class="setting-section">
+          <div class="setting-label">Seu nome</div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input type="text" id="prs-name" class="text-fld" placeholder="Como Sky deve te chamar?" style="max-width:280px">
+            <button class="ghost-btn" id="prs-save-name" style="font-size:0.8rem">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VIEW: Configurações ── -->
+    <section class="view" id="view-configuracoes">
+      <div class="view-header"><h2 class="view-title">Configurações e Notificações</h2></div>
+      <div class="view-body" style="max-width:500px">
+        <div class="setting-section">
+          <label class="fld-lbl">Seu Nome</label>
+          <input type="text" id="cfg-name" class="fld" placeholder="Como devo chamá-lo?">
+        </div>
+        <div class="setting-section">
+          <label class="fld-lbl">Chave Gemini API</label>
+          <input type="password" id="cfg-key" class="fld" placeholder="AIzaSy...">
+          <p class="fld-hint">Inteligência principal. Salva localmente no navegador.</p>
+        </div>
+        <div class="setting-section">
+          <label class="fld-lbl">ElevenLabs API Key <span style="color:var(--accent);font-size:0.68rem">(Voz Premium)</span></label>
+          <input type="password" id="cfg-el-key" class="fld" placeholder="API key do ElevenLabs">
+          <p class="fld-hint">Opcional. Ativa voz estilo Jarvis em português.</p>
+        </div>
+        <button class="green-btn" id="cfg-save" style="margin-top:1.2rem">Salvar Configurações</button>
+        <div class="setting-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+          <div class="setting-label" style="color:var(--text-dim);margin-bottom:0.5rem">Zona de perigo</div>
+          <button class="ghost-btn" id="cfg-clear-mem" style="font-size:0.8rem;border-color:rgba(239,68,68,0.3);color:rgba(239,68,68,0.7)">Apagar memória de Sky</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page -->
+</div><!-- /app-layout -->
+
+<!-- Camera modal -->
+<div class="modal-bg" id="cam-modal">
+  <div class="cam-box">
+    <div class="cam-head"><span>Câmera ao Vivo</span><button class="x-btn" id="btn-cam-close">✕</button></div>
+    <video id="cam-vid" autoplay playsinline muted></video>
+    <canvas id="cap-canvas" style="display:none"></canvas>
+    <div class="cam-foot"><button class="green-btn" id="btn-capture">Capturar e Analisar</button></div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept="image/*,.txt" style="display:none">
+
+<!-- Legacy settings modal (kept for JS compat — hidden) -->
+<div id="set-modal" style="display:none">
+  <input type="text"     id="inp-name"   style="display:none">
+  <input type="password" id="inp-key"    style="display:none">
+  <input type="password" id="inp-el-key" style="display:none">
+  <button id="btn-set-close"  style="display:none"></button>
+  <button id="btn-set-cancel" style="display:none"></button>
+  <button id="btn-set-save"   style="display:none"></button>
+</div>
+
+<div id="toasts"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

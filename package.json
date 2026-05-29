@@ -1,0 +1,12 @@
+{
+  "name": "emerald",
+  "version": "2.0.0",
+  "description": "Emerald - Assistente de IA pessoal estilo JARVIS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
