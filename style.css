@@ -330,6 +330,35 @@
 .swatch.active { border-color: white; transform: scale(1.18); }
 .swatch:hover  { transform: scale(1.1); }
 
+/* ── BASE DE CONHECIMENTO ── */
+.kb-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  line-height: 1.5;
+}
+.kb-hint em { color: var(--accent-hi); font-style: normal; }
+.kb-hint svg { flex-shrink: 0; margin-top: 2px; }
+.note-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  position: relative;
+}
+.note-card-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--accent-hi); }
+.note-card-body  { font-size: 0.76rem; color: var(--text-dim); line-height: 1.5; white-space: pre-wrap; }
+.note-card-date  { font-size: 0.66rem; color: rgba(255,255,255,0.2); margin-top: 0.4rem; }
+.note-del { position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.75rem; opacity: 0.5; }
+.note-del:hover { opacity: 1; color: #ef4444; }
+
 /* ── CONFIGURAÇÕES ── */
 #view-configuracoes .view-body { gap: 1.1rem; }
 

@@ -6,8 +6,26 @@ const saveCfg = () => localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
 const cfg = { username: '', geminiKey: '', elevenLabsKey: '', ...loadCfg() };
 
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
-const MEM_KEY  = 'emerald_mem';
-const HIST_KEY = 'emerald_hist';
+const MEM_KEY   = 'emerald_mem';
+const HIST_KEY  = 'emerald_hist';
+const NOTES_KEY = 'sky_notes';
+
+const getNotes  = () => { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'); } catch { return []; } };
+const saveNotes = (n) => localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+
+// Keyword search over KB notes — returns top relevant notes for RAG context injection
+const retrieveNotes = (query = '') => {
+  const notes = getNotes();
+  if (!notes.length) return [];
+  if (!query) return notes.slice(0, 3);
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const scored = notes.map(n => {
+    const hay = (n.title + ' ' + n.content).toLowerCase();
+    const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+    return { ...n, score };
+  }).filter(n => n.score > 0).sort((a, b) => b.score - a.score);
+  return scored.length ? scored.slice(0, 3) : notes.slice(0, 2);
+};
 
 const defaultMem = () => ({ userName: null, facts: [], sessions: 0, lastSeen: null });
 
@@ -52,31 +70,74 @@ const applyLearning = (learn) => {
   if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
 };
 
-const buildSystem = () => {
-  const mem  = getMem();
-  const name = mem.userName ? mem.userName : null;
+const buildContextBlock = (lastUserMsg = '') => {
+  const today    = new Date();
+  const todayKey = today.toISOString().split('T')[0];
+  const tasks    = typeof getTasks    === 'function' ? getTasks()   : [];
+  const habits   = typeof getHabits   === 'function' ? getHabits()  : [];
+  const fin      = typeof getFin      === 'function' ? getFin()     : [];
+
+  const pending      = tasks.filter(t => !t.done);
+  const doneHabits   = habits.filter(h => (h.dates || []).includes(todayKey));
+  const pendingHabit = habits.filter(h => !(h.dates || []).includes(todayKey));
+  const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
+  const notes        = retrieveNotes(lastUserMsg);
+
+  let ctx = `\n\n── CONTEXTO DO DIA ──`;
+  ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+  if (pending.length) {
+    ctx += `\n✅ Tarefas pendentes (${pending.length}):`;
+    pending.slice(0, 6).forEach(t => { ctx += `\n  [${t.id}] ${t.text}`; });
+  } else {
+    ctx += `\n✅ Nenhuma tarefa pendente.`;
+  }
+
+  if (habits.length) {
+    if (doneHabits.length)   ctx += `\n🔥 Hábitos feitos hoje: ${doneHabits.map(h => h.name).join(', ')}`;
+    if (pendingHabit.length) ctx += `\n⏳ Hábitos pendentes hoje: ${pendingHabit.map(h => h.name).join(', ')}`;
+  }
+
+  ctx += `\n💰 Saldo financeiro: R$ ${balance.toFixed(2).replace('.', ',')}`;
+
+  if (notes.length) {
+    ctx += `\n\n── BASE DE CONHECIMENTO (notas relevantes) ──`;
+    notes.forEach(n => { ctx += `\n📄 "${n.title}": ${n.content.substring(0, 200)}${n.content.length > 200 ? '…' : ''}`; });
+  }
+
+  return ctx;
+};
+
+const buildSystem = (lastUserMsg = '') => {
+  const mem      = getMem();
+  const name     = mem.userName || null;
   const sessions = mem.sessions || 1;
 
   let memBlock = '';
   if (name || mem.facts.length > 0) {
-    memBlock = '\n\nMEMÓRIA DO USUÁRIO (use naturalmente quando relevante):';
+    memBlock = '\n\nMEMÓRIA DO USUÁRIO:';
     if (name) memBlock += `\n• Nome: ${name}`;
-    mem.facts.slice(-25).forEach(f => { memBlock += `\n• ${f}`; });
+    mem.facts.slice(-20).forEach(f => { memBlock += `\n• ${f}`; });
   }
 
-  const returning = sessions > 1 ? `\nEsta é a sessão número ${sessions}. Cumprimente-o como alguém que retorna.` : '';
+  const returning = sessions > 1 ? `\nSessão nº ${sessions} — cumprimente como a alguém que retorna.` : '';
 
-  return `Você é Sky, uma inteligência artificial avançada e sofisticada, inspirada no J.A.R.V.I.S. do Homem de Ferro.
-Comunique-se em português brasileiro com elegância, precisão e personalidade marcante.
-Tom: formal mas acessível, como um assistente pessoal de elite — eficiente, direto, com sutileza.
-Use "Senhor" ou o nome do usuário com naturalidade. Evite respostas longas desnecessárias.
-Demonstre memória das conversas anteriores de forma orgânica, sem anunciar explicitamente que está recordando.${returning}${memBlock}
+  const toolsBlock = `
 
-FORMATO DE RESPOSTA — responda SEMPRE em JSON:
-• "reply": sua resposta ao usuário.
-• "learn.nome": nome do usuário se revelado nesta mensagem, caso contrário null.
-• "learn.fatos": até 3 fatos concretos e úteis aprendidos AGORA sobre o usuário (profissão, local, preferências, família). Array vazio se nenhum fato novo.
-• "learn.remover": copie aqui o texto EXATO de fatos da MEMÓRIA DO USUÁRIO que foram contraditos ou ficaram desatualizados. Array vazio se nenhum.`;
+── FERRAMENTAS — use proativamente, sem anunciar ──
+• updateMemory   → quando aprender nome ou fato novo sobre o usuário
+• createTask     → "anota tarefa", "lembra de", "preciso fazer"
+• completeTask   → quando usuário confirmar que concluiu (use ID do contexto)
+• checkHabit     → quando mencionar que fez um hábito
+• addFinance     → menção a gasto, receita, pagamento, salário
+• saveNote       → quando pedir para salvar info, anotar, guardar no conhecimento
+• Google Search  → clima, notícias, preços, qualquer informação em tempo real
+
+Responda diretamente em texto. Execute ferramentas em silêncio e confirme o resultado naturalmente na resposta.`;
+
+  return `Você é Sky, uma inteligência artificial pessoal avançada com capacidades de agente — você não apenas responde, você age.
+Tom: elegante, direto, eficiente. Use "Senhor" ou o nome do usuário. Português brasileiro.
+Evite respostas longas sem necessidade. Seja proativo: sugira ações, identifique padrões, antecipe necessidades.${returning}${memBlock}${buildContextBlock(lastUserMsg)}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
@@ -375,41 +436,208 @@ const processInput = async (text) => {
   }
 };
 
-const callGemini = async () => {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: buildSystem() }] },
-      contents: app.history.map(h => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] })),
-      generationConfig: {
-        maxOutputTokens: 700,
-        temperature: 0.82,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'object',
-          properties: {
-            reply: { type: 'string' },
-            learn: {
-              type: 'object',
-              properties: {
-                nome:    { type: 'string', nullable: true },
-                fatos:   { type: 'array', items: { type: 'string' } },
-                remover: { type: 'array', items: { type: 'string' } }
-              },
-              required: ['fatos', 'remover']
-            }
-          },
-          required: ['reply', 'learn']
+// ── Tool declarations ──────────────────────────────────────────────────────────
+const TOOL_DECLARATIONS = {
+  functionDeclarations: [
+    {
+      name: 'updateMemory',
+      description: 'Salva ou atualiza informações sobre o usuário na memória persistente.',
+      parameters: {
+        type: 'object',
+        properties: {
+          nome:    { type: 'string', nullable: true, description: 'Nome do usuário, se revelado' },
+          fatos:   { type: 'array',  items: { type: 'string' }, description: 'Novos fatos aprendidos (profissão, local, gostos)' },
+          remover: { type: 'array',  items: { type: 'string' }, description: 'Texto EXATO de fatos da memória que ficaram desatualizados' }
         }
       }
-    })
-  });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-  const data = await res.json();
-  const parsed = JSON.parse(data.candidates[0].content.parts[0].text.trim());
-  applyLearning(parsed.learn);
-  return parsed.reply;
+    },
+    {
+      name: 'createTask',
+      description: 'Cria uma nova tarefa na lista de tarefas do usuário.',
+      parameters: {
+        type: 'object',
+        properties: {
+          text: { type: 'string', description: 'Descrição da tarefa' }
+        },
+        required: ['text']
+      }
+    },
+    {
+      name: 'completeTask',
+      description: 'Marca uma tarefa como concluída. Use o ID exato do contexto do sistema.',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskId: { type: 'string', description: 'ID da tarefa (número entre colchetes no contexto)' }
+        },
+        required: ['taskId']
+      }
+    },
+    {
+      name: 'checkHabit',
+      description: 'Registra um hábito como realizado hoje.',
+      parameters: {
+        type: 'object',
+        properties: {
+          habitName: { type: 'string', description: 'Nome parcial ou completo do hábito' }
+        },
+        required: ['habitName']
+      }
+    },
+    {
+      name: 'addFinance',
+      description: 'Registra uma receita ou despesa financeira.',
+      parameters: {
+        type: 'object',
+        properties: {
+          desc:  { type: 'string', description: 'Descrição da transação' },
+          value: { type: 'number', description: 'Valor em reais (positivo)' },
+          type:  { type: 'string', enum: ['rec', 'des'], description: 'rec=receita, des=despesa' }
+        },
+        required: ['desc', 'value', 'type']
+      }
+    },
+    {
+      name: 'saveNote',
+      description: 'Salva uma nota na base de conhecimento pessoal do usuário.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title:   { type: 'string', description: 'Título da nota' },
+          content: { type: 'string', description: 'Conteúdo completo da nota' }
+        },
+        required: ['title', 'content']
+      }
+    }
+  ]
+};
+
+const TOOL_LABELS = {
+  updateMemory: 'Memorizando…',
+  createTask:   'Criando tarefa…',
+  completeTask: 'Concluindo tarefa…',
+  checkHabit:   'Registrando hábito…',
+  addFinance:   'Registrando transação…',
+  saveNote:     'Salvando nota…'
+};
+
+const executeTool = (name, args) => {
+  switch (name) {
+    case 'updateMemory':
+      applyLearning(args);
+      return 'Memória atualizada.';
+
+    case 'createTask': {
+      if (typeof getTasks !== 'function') return 'Módulo de tarefas não disponível.';
+      const tasks = getTasks();
+      tasks.unshift({ id: Date.now().toString(), text: args.text, done: false });
+      saveTasks(tasks);
+      if (document.getElementById('view-tarefas')?.classList.contains('active')) renderTarefas();
+      return `Tarefa criada: "${args.text}"`;
+    }
+
+    case 'completeTask': {
+      if (typeof getTasks !== 'function') return 'Módulo não disponível.';
+      const tasks = getTasks();
+      const task  = tasks.find(t => t.id === args.taskId);
+      if (!task) return `Tarefa ${args.taskId} não encontrada.`;
+      task.done = true;
+      saveTasks(tasks);
+      if (document.getElementById('view-tarefas')?.classList.contains('active')) renderTarefas();
+      return `Tarefa "${task.text}" concluída.`;
+    }
+
+    case 'checkHabit': {
+      if (typeof getHabits !== 'function') return 'Módulo não disponível.';
+      const habits = getHabits();
+      const habit  = habits.find(h => h.name.toLowerCase().includes(args.habitName.toLowerCase()));
+      if (!habit) return `Hábito "${args.habitName}" não encontrado. Cadastre-o em Hábitos.`;
+      habit.dates = habit.dates || [];
+      const today = new Date().toISOString().split('T')[0];
+      if (!habit.dates.includes(today)) habit.dates.push(today);
+      saveHabits(habits);
+      if (document.getElementById('view-habitos')?.classList.contains('active')) renderHabitos();
+      return `Hábito "${habit.name}" ✓ registrado hoje.`;
+    }
+
+    case 'addFinance': {
+      if (typeof getFin !== 'function') return 'Módulo não disponível.';
+      const fin = getFin();
+      fin.unshift({ id: Date.now().toString(), desc: args.desc, val: args.value, type: args.type, date: new Date().toLocaleDateString('pt-BR') });
+      saveFin(fin);
+      if (document.getElementById('view-financas')?.classList.contains('active')) renderFinancas();
+      return `${args.type === 'rec' ? 'Receita' : 'Despesa'} de R$ ${args.value.toFixed(2)} registrada.`;
+    }
+
+    case 'saveNote': {
+      const notes = getNotes();
+      notes.unshift({ id: Date.now().toString(), title: args.title, content: args.content, date: new Date().toISOString() });
+      saveNotes(notes);
+      if (document.getElementById('view-conhecimento')?.classList.contains('active')) renderKnowledge();
+      return `Nota "${args.title}" salva na base de conhecimento.`;
+    }
+
+    default:
+      return 'Ferramenta desconhecida.';
+  }
+};
+
+// ── Agentic loop ───────────────────────────────────────────────────────────────
+const callGemini = async (customHistory = null) => {
+  const history = customHistory || app.history;
+  const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
+
+  let contents = history.map(h => ({
+    role: h.role === 'user' ? 'user' : 'model',
+    parts: [{ text: h.content }]
+  }));
+
+  const tools = [TOOL_DECLARATIONS, { googleSearch: {} }];
+
+  for (let iter = 0; iter < 8; iter++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: buildSystem(lastMsg) }] },
+          contents,
+          tools,
+          generationConfig: { maxOutputTokens: 800, temperature: 0.82 }
+        })
+      }
+    );
+
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+    const data      = await res.json();
+    const candidate = data.candidates?.[0];
+    if (!candidate) throw new Error('Resposta vazia da API.');
+
+    const parts     = candidate.content?.parts || [];
+    const textPart  = parts.find(p => p.text);
+    const funcCalls = parts.filter(p => p.functionCall);
+
+    if (funcCalls.length === 0) {
+      // Final text response
+      return textPart?.text?.trim() || '';
+    }
+
+    // Show tool activity in UI
+    const label = TOOL_LABELS[funcCalls[0].functionCall.name] || 'Executando…';
+    setRespText(`⚡ ${label}`);
+
+    // Execute each tool and collect responses
+    const responses = funcCalls.map(({ functionCall: { name, args } }) => ({
+      functionResponse: { name, response: { result: executeTool(name, args) } }
+    }));
+
+    // Append model turn + function results for next iteration
+    contents.push({ role: 'model', parts: funcCalls });
+    contents.push({ role: 'user',  parts: responses });
+  }
+
+  return 'Ação concluída.';
 };
 
 const callGeminiVision = async (base64, mime, prompt) => {
@@ -522,7 +750,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const name = mem.userName || cfg.username;
   const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
   const ready = cfg.geminiKey ? 'Todos os sistemas operacionais.' : 'Configure a chave Gemini API para capacidades completas.';
-  setTimeout(() => speak(`${gr}. ${returning}Sou Sky. ${ready}`), 700);
+  // Briefing matinal automático (uma vez por dia)
+  const briefingKey = 'sky_last_briefing';
+  const todayBrief  = new Date().toISOString().split('T')[0];
+  if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
+    localStorage.setItem(briefingKey, todayBrief);
+    const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
+    const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
+    let briefing = `${gr}. ${returning}Sou Sky. `;
+    if (pendingCount || habitCount) {
+      if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
+      if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
+    } else {
+      briefing += 'Todos os sistemas operacionais. ';
+    }
+    briefing += 'Como posso ajudá-lo?';
+    setTimeout(() => speak(briefing), 700);
+  } else {
+    setTimeout(() => speak(`${gr}. ${returning}Sou Sky. ${ready}`), 700);
+  }
 
   // ── Microphone ──
   document.getElementById('btn-mic').addEventListener('click', () => app.isListening ? stopListening() : startListening());
@@ -600,6 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCalendario();
   initPersonalizacao();
   initConfiguracoes();
+  initKnowledge();
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -726,10 +973,7 @@ const syncChatTexto = () => {
 const processChatTexto = async () => {
   const el = addChatBubble('sky', '…', true);
   try {
-    const savedHistory = app.history;
-    app.history = textHistory.map(h => h);
-    const response = await callGemini();
-    app.history = savedHistory;
+    const response = await callGemini(textHistory);
     textHistory.push({ role: 'model', content: response });
     el.textContent = response;
     el.classList.remove('typing');
