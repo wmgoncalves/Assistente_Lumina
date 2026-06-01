@@ -677,6 +677,36 @@ body {
 }
 .send-btn:hover { background: rgba(239,68,68,0.3); }
 
+/* ── WEB POPUP ── */
+.web-box {
+  background: #0a0101;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  width: min(94vw, 1000px);
+  height: min(88vh, 740px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+}
+.web-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  gap: 1rem;
+}
+#web-frame {
+  flex: 1;
+  border: none;
+  background: #fff;
+  width: 100%;
+}
+
 /* ── CAMERA MODAL ── */
 .modal-bg {
   display: none;

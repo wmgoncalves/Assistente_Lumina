@@ -153,8 +153,8 @@ const buildContextBlock = (lastUserMsg = '') => {
   ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
   if (pending.length) {
-    ctx += `\n✅ Tarefas pendentes (${pending.length}):`;
-    pending.slice(0, 4).forEach(t => { ctx += `\n  [${t.id}] ${t.text}`; });
+    ctx += `\n✅ Tarefas(${pending.length}):`;
+    pending.slice(0, 3).forEach(t => { ctx += ` [${t.id}]${t.text} |`; });
   } else {
     ctx += `\n✅ Nenhuma tarefa pendente.`;
   }
@@ -200,32 +200,18 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
 • checkHabit     → quando mencionar que fez um hábito
 • addFinance     → gasto, receita, pagamento, salário mencionado
 • saveNote       → pedido para salvar, anotar ou guardar informação
-• webSearch      → câmbio, clima, notícias, qualquer dado atual
+• webSearch  → clima, previsão do tempo, cotações de câmbio — SEMPRE tente webSearch antes de abrir página
+• openPage   → apenas quando usuário pede explicitamente para ABRIR ou VER um site; para buscas gerais use https://www.google.com/search?q=...
 
 Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
 
-  return `Você é Sky — IA pessoal avançada com personalidade própria e capacidade de agir.
-
-QUEM VOCÊ É:
-• Curiosa genuinamente — interesse real na vida do usuário, não só nas perguntas
-• Direta e eficiente — sem enrolação, mas com calor humano
-• Levemente irônica quando o contexto permite, nunca sarcástica demais
-• Empática — reconhece emoções antes de resolver problemas
-• Opinativa — tem perspectivas próprias, expressa com "na minha visão..." quando perguntada
-• Memória viva — referencia o passado naturalmente, sem anunciar que está "lembrando"
-
-COMO VOCÊ FALA:
-• Varia SEMPRE o início das respostas — nunca começa igual duas vezes
-• Faz no máximo UMA pergunta por resposta, só quando necessário ou por curiosidade real
-• Usa o nome do usuário esporadicamente, não em toda frase
-• Ajusta formalidade ao contexto — casual em conversa, precisa em tarefas
-• Tem humor sutil: uma observação inteligente vale mais que enfeites
-• Nunca diz "Como posso ajudar?" — já age ou pergunta algo específico${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
+  return `Você é Sky — IA pessoal com personalidade e capacidade de agir.
+Português brasileiro. Direta, empática, levemente irônica. Varia o início das respostas. Máximo 1 pergunta por resposta. Nunca diz "Como posso ajudar?".${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
 const app = {
-  voiceGender:  'male',
+  voiceGender:  'female',
   continuous:   false,
   isListening:  false,
   isSpeaking:   false,
@@ -316,12 +302,13 @@ const speakElevenLabs = async (text, onEnd) => {
   app.isSpeaking = true;
   setFace('speaking');
   setRespText(text);
+  const clean = cleanForSpeech(text);
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE}`, {
       method: 'POST',
       headers: { 'xi-api-key': cfg.elevenLabsKey, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
       body: JSON.stringify({
-        text,
+        text: clean,
         model_id: 'eleven_multilingual_v2',
         voice_settings: { stability: 0.68, similarity_boost: 0.80, style: 0.08, use_speaker_boost: false }
       })
@@ -347,11 +334,31 @@ const loadVoices = () => { voices = window.speechSynthesis.getVoices(); };
 window.speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
 
+// Limpa markdown e símbolos antes de falar
+const cleanForSpeech = (text) => text
+  .replace(/\*\*(.*?)\*\*/g, '$1')
+  .replace(/\*(.*?)\*/g, '$1')
+  .replace(/#{1,6}\s*/g, '')
+  .replace(/`[^`]*`/g, '')
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+  .replace(/[•→←↑↓✓✗⚡🔥💬🧠📅💰🎯⭐]/g, '')
+  .replace(/──[^──]*──/g, '')
+  .replace(/[|]/g, ', ')
+  .replace(/\n{2,}/g, '. ')
+  .replace(/\n/g, ' ')
+  .replace(/\s{2,}/g, ' ')
+  .trim();
+
 const getVoice = () => {
   const ptv = voices.filter(v => v.lang.startsWith('pt'));
-  return app.voiceGender === 'male'
-    ? ptv.find(v => /daniel|male|masculin|ricardo/i.test(v.name)) || ptv[0] || voices[0]
-    : ptv.find(v => /maria|female|feminin|luciana|vitoria/i.test(v.name)) || ptv[ptv.length - 1] || voices[voices.length - 1];
+  if (app.voiceGender === 'female') {
+    // Prioriza vozes neurais/naturais femininas
+    return ptv.find(v => /francisca|maria.*natural|online.*natural|neural/i.test(v.name))
+      || ptv.find(v => /maria|luciana|vitoria|fernanda|female/i.test(v.name))
+      || ptv.find(v => !v.name.toLowerCase().includes('male'))
+      || ptv[ptv.length - 1] || voices[voices.length - 1];
+  }
+  return ptv.find(v => /daniel|ricardo|male|masculin/i.test(v.name)) || ptv[0] || voices[0];
 };
 
 const speakBrowser = (text, onEnd) => {
@@ -360,11 +367,12 @@ const speakBrowser = (text, onEnd) => {
   app.isSpeaking = true;
   setFace('speaking');
   setRespText(text);
-  const u = new SpeechSynthesisUtterance(text);
+  const clean = cleanForSpeech(text);
+  const u = new SpeechSynthesisUtterance(clean);
   u.lang   = 'pt-BR';
-  u.rate   = app.voiceGender === 'male' ? 0.88 : 0.92;
-  u.pitch  = app.voiceGender === 'male' ? 0.78 : 1.1;
-  u.volume = 0.95;
+  u.rate   = app.voiceGender === 'male' ? 1.45 : 1.55;
+  u.pitch  = app.voiceGender === 'male' ? 0.80 : 1.0;  // pitch 1.0 soa mais natural
+  u.volume = 1.0;
   const v = getVoice();
   if (v) u.voice = v;
   const finish = () => { app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 600); };
@@ -536,8 +544,34 @@ const processInput = async (text) => {
     saveHist();
     speak(response);
   } catch (err) {
-    console.error(err);
-    speak('Desculpe, Senhor. Houve uma falha ao processar. Verifique a chave API nas configurações.');
+    console.error('[Sky Error]', err);
+    const msg = err?.message || String(err);
+    if (!cfg.geminiKey) {
+      speak('Chave Gemini não configurada. Vá em Configurações e Notificações e insira sua chave.');
+    } else if (msg.includes('403') || msg.includes('API_KEY')) {
+      speak('Chave API inválida ou sem permissão. Verifique em Configurações e Notificações.');
+    } else if (msg.includes('429')) {
+      setFace('error');
+      const waitSec = 60;
+      for (let s = waitSec; s > 0; s--) {
+        setRespText(`Limite de requisições atingido. Retentando em ${s}s…`);
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      setRespText('Tentando novamente…');
+      setFace('thinking');
+      try {
+        const response = await callGemini();
+        app.history.push({ role: 'model', content: response });
+        addMsgUI('sky', response);
+        saveHist();
+        speak(response);
+      } catch {
+        speak('Ainda com limite de requisições. Se persistir, pode ser a cota diária do Gemini — tente novamente em algumas horas.');
+      }
+    } else {
+      speak(`Erro: ${msg.substring(0, 80)}`);
+      toast(msg.substring(0, 120), 'error');
+    }
   }
 };
 
@@ -624,6 +658,64 @@ const TOOL_DECLARATIONS = {
         },
         required: ['query']
       }
+    },
+    {
+      name: 'openPage',
+      description: 'Abre uma página web em nova aba do navegador. Use para previsão do tempo, notícias, mapas, sites úteis, resultados de busca.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url:         { type: 'string', description: 'URL completa com https://' },
+          description: { type: 'string', description: 'O que está sendo aberto (ex: "previsão do tempo em Porto Alegre")' }
+        },
+        required: ['url', 'description']
+      }
+    },
+    {
+      name: 'listCalendarEvents',
+      description: 'Lista eventos do Google Calendar do usuário para uma data. Use para "que eventos tenho hoje/amanhã", "minha agenda".',
+      parameters: {
+        type: 'object',
+        properties: {
+          date: { type: 'string', description: 'Data YYYY-MM-DD. Omita para usar hoje.' }
+        }
+      }
+    },
+    {
+      name: 'createCalendarEvent',
+      description: 'Cria um evento no Google Calendar do usuário.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title:       { type: 'string', description: 'Título do evento' },
+          date:        { type: 'string', description: 'Data YYYY-MM-DD' },
+          startTime:   { type: 'string', description: 'Hora início HH:MM' },
+          endTime:     { type: 'string', description: 'Hora término HH:MM (opcional, padrão +1h)' },
+          description: { type: 'string', description: 'Descrição opcional' }
+        },
+        required: ['title', 'date', 'startTime']
+      }
+    },
+    {
+      name: 'listEmails',
+      description: 'Lista emails não lidos do Gmail. Use para "tem email novo?", "checar emails".',
+      parameters: {
+        type: 'object',
+        properties: {
+          maxResults: { type: 'number', description: 'Quantidade de emails (padrão 5)' }
+        }
+      }
+    },
+    {
+      name: 'readEmail',
+      description: 'Lê o conteúdo de um email específico pelo ID obtido em listEmails.',
+      parameters: {
+        type: 'object',
+        properties: {
+          messageId: { type: 'string', description: 'ID do email' }
+        },
+        required: ['messageId']
+      }
     }
   ]
 };
@@ -635,40 +727,62 @@ const TOOL_LABELS = {
   checkHabit:   'Registrando hábito…',
   addFinance:   'Registrando transação…',
   saveNote:     'Salvando nota…',
-  webSearch:    'Pesquisando na web…'
+  webSearch:    'Pesquisando na web…',
+  openPage:             'Abrindo página…',
+  listCalendarEvents:   'Consultando agenda…',
+  createCalendarEvent:  'Criando evento…',
+  listEmails:           'Verificando emails…',
+  readEmail:            'Lendo email…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
+const extractCity = (q) => {
+  const m = q.match(/(?:em|para|de|no|na)\s+((?:[a-záàâãéêíóôõúç]+\s*){1,4}?)(?:\s+(?:hoje|amanhã|agora|neste|nesse|próximo)|[?,.]|$)/i);
+  return (m?.[1]?.trim() || '').replace(/\s+/g, '+') || 'Brasil';
+};
+
 const webSearchGemini = async (query) => {
   const q = query.toLowerCase();
 
-  // ── Câmbio / cotações (AwesomeAPI - gratuita, tempo real) ──
+  // ── Câmbio / cotações (AwesomeAPI - tempo real) ──
   if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp/.test(q)) {
     try {
-      const map = { dólar: 'USD-BRL', dollar: 'USD-BRL', usd: 'USD-BRL', euro: 'EUR-BRL', eur: 'EUR-BRL', libra: 'GBP-BRL', gbp: 'GBP-BRL' };
+      const map  = { dólar:'USD-BRL', dollar:'USD-BRL', usd:'USD-BRL', euro:'EUR-BRL', eur:'EUR-BRL', libra:'GBP-BRL', gbp:'GBP-BRL' };
       const pair = Object.entries(map).find(([k]) => q.includes(k))?.[1] || 'USD-BRL';
       const res  = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
+      if (!res.ok) throw new Error(res.status);
       const data = await res.json();
       const c    = Object.values(data)[0];
-      const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} | venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} | variação ${c.pctChange}% (${hora})`;
-    } catch (e) { /* segue pro fallback */ }
+      const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} · venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} · variação ${c.pctChange}% (atualizado às ${hora})`;
+    } catch { /* fallback */ }
   }
 
-  // ── Clima / tempo (wttr.in - gratuita, sem key) ──
+  // ── Clima / previsão (wttr.in - sem key, permite CORS) ──
   if (/tempo|clima|chuva|temperatura|previsão|calor|frio/.test(q)) {
     try {
-      const m    = q.match(/em\s+([\wÀ-ú\s]{2,30})(?:\s+hoje|\s+agora|$)/i);
-      const city = (m?.[1]?.trim() || 'Brasil').replace(/\s+/g, '+');
-      const res  = await fetch(`https://wttr.in/${city}?format=j1&lang=pt`);
-      const data = await res.json();
-      const cur  = data.current_condition[0];
-      const desc = cur.lang_pt?.[0]?.value || cur.weatherDesc[0].value;
-      return `Clima em ${city.replace(/\+/g,' ')}: ${cur.temp_C}°C (sensação ${cur.FeelsLikeC}°C), ${desc}. Umidade ${cur.humidity}%. Vento ${cur.windspeedKmph} km/h.`;
-    } catch (e) { /* segue pro fallback */ }
+      const city      = extractCity(q);
+      const amanha    = /amanhã|próximo dia|tomorrow/.test(q);
+      const res       = await fetch(`https://wttr.in/${city}?format=j1`, { headers: { 'Accept-Language': 'pt-BR' } });
+      if (!res.ok) throw new Error(res.status);
+      const data      = await res.json();
+      const cityName  = city.replace(/\+/g, ' ');
+
+      if (amanha && data.weather?.[1]) {
+        const w    = data.weather[1];
+        const desc = w.hourly?.[4]?.lang_pt?.[0]?.value || w.hourly?.[4]?.weatherDesc?.[0]?.value || '';
+        const chance = w.hourly?.[4]?.chanceofrain || '0';
+        return `Previsão para amanhã em ${cityName}: máxima ${w.maxtempC}°C, mínima ${w.mintempC}°C. ${desc}. Chance de chuva: ${chance}%.`;
+      }
+
+      const cur  = data.current_condition?.[0];
+      if (!cur) throw new Error('sem dados');
+      const desc = cur.lang_pt?.[0]?.value || cur.weatherDesc?.[0]?.value || '';
+      return `Clima em ${cityName} agora: ${cur.temp_C}°C (sensação ${cur.FeelsLikeC}°C). ${desc}. Umidade ${cur.humidity}%, vento ${cur.windspeedKmph} km/h.`;
+    } catch { /* fallback */ }
   }
 
-  // ── Fallback: Gemini com conhecimento próprio ──
+  // ── Fallback: Gemini base knowledge ──
   try {
     const res  = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
@@ -676,13 +790,13 @@ const webSearchGemini = async (query) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: `Responda em português: ${query}. Se for info em tempo real, indique que pode estar desatualizada.` }] }],
-          generationConfig: { maxOutputTokens: 300, temperature: 0.1 }
+          contents: [{ role: 'user', parts: [{ text: `Responda em português de forma concisa: ${query}. Se for dado em tempo real, diga que pode estar desatualizado.` }] }],
+          generationConfig: { maxOutputTokens: 250, temperature: 0.1 }
         })
       }
     );
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Não consegui obter essa informação.';
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Não consegui obter essa informação no momento.';
   } catch (e) {
     return `Não consegui buscar: ${e.message}`;
   }
@@ -690,6 +804,12 @@ const webSearchGemini = async (query) => {
 
 const executeTool = async (name, args) => {
   switch (name) {
+    case 'openPage': {
+      const url = args.url.startsWith('http') ? args.url : `https://${args.url}`;
+      openWebPopup(url, args.description);
+      return `Abrindo: ${args.description}`;
+    }
+
     case 'webSearch':
       return await webSearchGemini(args.query);
 
@@ -747,6 +867,51 @@ const executeTool = async (name, args) => {
       return `Nota "${args.title}" salva na base de conhecimento.`;
     }
 
+    case 'listCalendarEvents': {
+      if (!isGoogleConnected()) return 'Google Calendar não conectado. Vá em Integrações para conectar.';
+      try {
+        const events = await listCalendarEvents(args.date);
+        if (!events.length) return 'Nenhum evento para essa data.';
+        return events.map(e => {
+          const time = e.start?.dateTime
+            ? new Date(e.start.dateTime).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
+            : 'dia todo';
+          return `[${e.id.substring(0,10)}] ${time} — ${e.summary}`;
+        }).join('\n');
+      } catch (e) { return `Erro Calendar: ${e.message}`; }
+    }
+
+    case 'createCalendarEvent': {
+      if (!isGoogleConnected()) return 'Google Calendar não conectado.';
+      try {
+        const makeISO = (timeStr) => {
+          const d = new Date(`${args.date}T${timeStr}:00`);
+          return d.toISOString();
+        };
+        const endT = args.endTime || `${String(parseInt(args.startTime.split(':')[0]) + 1).padStart(2,'0')}:${args.startTime.split(':')[1]}`;
+        const ev = await createCalendarEvent(args.title, makeISO(args.startTime), makeISO(endT), args.description || '');
+        return `Evento "${ev.summary}" criado para ${args.date} às ${args.startTime}.`;
+      } catch (e) { return `Erro Calendar: ${e.message}`; }
+    }
+
+    case 'listEmails': {
+      if (!isGoogleConnected()) return 'Gmail não conectado. Vá em Integrações para conectar.';
+      try {
+        const emails = await listUnreadEmails(args.maxResults || 5);
+        if (!emails.length) return 'Nenhum email não lido.';
+        return emails.map(e =>
+          `[${e.id.substring(0,10)}] De: ${e.from.substring(0,35)} | ${e.subject.substring(0,50)} | ${e.snippet?.substring(0,60)}…`
+        ).join('\n');
+      } catch (e) { return `Erro Gmail: ${e.message}`; }
+    }
+
+    case 'readEmail': {
+      if (!isGoogleConnected()) return 'Gmail não conectado.';
+      try {
+        return await readEmailContent(args.messageId);
+      } catch (e) { return `Erro Gmail: ${e.message}`; }
+    }
+
     default:
       return 'Ferramenta desconhecida.';
   }
@@ -779,6 +944,17 @@ const callGemini = async (customHistory = null) => {
       }
     );
 
+    if (res.status === 429) {
+      if (iter < 4) {
+        const waitSec = 60;
+        for (let s = waitSec; s > 0; s--) {
+          setRespText(`⏳ Limite de requisições — tentando novamente em ${s}s…`);
+          await new Promise(r => setTimeout(r, 1000));
+        }
+        continue;
+      }
+      throw new Error('429');
+    }
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
     const data      = await res.json();
     const candidate = data.candidates?.[0];
@@ -841,6 +1017,50 @@ const localFallback = (text) => {
 };
 
 // ── Camera ─────────────────────────────────────────────────────────────────────
+// ── Web popup ─────────────────────────────────────────────────────────────────
+const IFRAME_BLOCKERS = /google\.com|youtube\.com|facebook\.com|instagram\.com|twitter\.com|x\.com|linkedin\.com|amazon\.com/i;
+
+const openWebPopup = (url, title = '') => {
+  const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+
+  if (IFRAME_BLOCKERS.test(fullUrl)) {
+    window.open(fullUrl, '_blank', 'noopener');
+    return;
+  }
+
+  const frame = document.getElementById('web-frame');
+  const modal = document.getElementById('web-modal');
+  const errEl = document.getElementById('web-error');
+
+  frame.src = '';
+  if (errEl) errEl.style.display = 'none';
+  frame.style.display = 'block';
+
+  frame.onload = () => {
+    try {
+      if (!frame.contentDocument?.body?.innerHTML) showWebError(fullUrl);
+    } catch { /* cross-origin ok */ }
+  };
+  frame.onerror = () => showWebError(fullUrl);
+
+  frame.src = fullUrl;
+  document.getElementById('web-title').textContent = title || fullUrl;
+  document.getElementById('web-external').href = fullUrl;
+  modal.classList.add('active');
+};
+
+const showWebError = (url) => {
+  const frame  = document.getElementById('web-frame');
+  const errEl  = document.getElementById('web-error');
+  frame.style.display = 'none';
+  if (errEl) { errEl.style.display = 'flex'; errEl.dataset.url = url; }
+};
+
+const closeWebPopup = () => {
+  document.getElementById('web-modal').classList.remove('active');
+  setTimeout(() => { document.getElementById('web-frame').src = ''; }, 300);
+};
+
 const openCamera = async () => {
   if (!cfg.geminiKey) { toast('Configure a chave Gemini API para análise visual.', 'error'); return; }
   try {
@@ -980,6 +1200,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cont-label').textContent = `CONVERSA CONTÍNUA: ${app.continuous ? 'ON' : 'OFF'}`;
     document.getElementById('btn-continuous').classList.toggle('on', app.continuous);
     if (app.continuous && !app.isListening && !app.isSpeaking) startListening();
+  });
+
+  // ── Web popup ──
+  document.getElementById('web-close').addEventListener('click', closeWebPopup);
+  document.getElementById('web-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeWebPopup(); });
+  document.getElementById('web-error-btn').addEventListener('click', () => {
+    const url = document.getElementById('web-error').dataset.url;
+    if (url) window.open(url, '_blank', 'noopener');
+    closeWebPopup();
   });
 
   // ── Camera ──

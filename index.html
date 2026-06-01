@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sky | Assistente de IA</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
 <div class="app-layout">
@@ -90,8 +91,8 @@
     <section class="view active" id="view-chat-voz">
       <header class="topbar">
         <div class="voice-group">
-          <button class="voice-btn active" id="btn-voice-male">VOZ MASCULINA</button>
-          <button class="voice-btn" id="btn-voice-female">VOZ FEMININA</button>
+          <button class="voice-btn" id="btn-voice-male">VOZ MASCULINA</button>
+          <button class="voice-btn active" id="btn-voice-female">VOZ FEMININA</button>
         </div>
         <nav class="feat-group">
           <button class="feat-btn" id="btn-camera">
@@ -212,8 +213,26 @@
       <div class="view-body">
         <div class="intg-card"><div class="intg-logo">G</div><div class="intg-info"><div class="intg-name">Gemini API</div><div class="intg-status" id="intg-gemini">—</div></div><div class="intg-badge" id="intg-gemini-dot">●</div></div>
         <div class="intg-card"><div class="intg-logo">11</div><div class="intg-info"><div class="intg-name">ElevenLabs TTS</div><div class="intg-status" id="intg-eleven">—</div></div><div class="intg-badge" id="intg-eleven-dot">●</div></div>
-        <div class="intg-card intg-soon"><div class="intg-logo">📅</div><div class="intg-info"><div class="intg-name">Google Calendar</div><div class="intg-status">Em breve</div></div></div>
-        <div class="intg-card intg-soon"><div class="intg-logo">📧</div><div class="intg-info"><div class="intg-name">Gmail</div><div class="intg-status">Em breve</div></div></div>
+        <!-- Google Integration -->
+        <div class="intg-card" id="intg-google-card" style="flex-direction:column;align-items:stretch;gap:0.75rem">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div class="intg-logo" style="font-size:1.1rem">G</div>
+            <div class="intg-info">
+              <div class="intg-name">Google Calendar + Gmail</div>
+              <div class="intg-status" id="intg-google-status">Não conectado</div>
+            </div>
+            <div class="intg-badge" id="intg-google-dot" style="color:#6b7280">●</div>
+          </div>
+          <div id="intg-google-setup">
+            <label class="fld-lbl" style="margin-bottom:0.3rem">Google Client ID</label>
+            <input type="text" id="intg-client-id" class="fld" placeholder="Seu Client ID do Google Cloud Console">
+            <p class="fld-hint">Crie em console.cloud.google.com → Credenciais → OAuth 2.0 → Aplicativo Web. Adicione http://localhost:4321 como origem autorizada.</p>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button class="green-btn" id="intg-google-connect" style="flex:1">Conectar com Google</button>
+            <button class="ghost-btn" id="intg-google-disconnect" style="display:none">Desconectar</button>
+          </div>
+        </div>
         <div class="intg-card intg-soon"><div class="intg-logo">📱</div><div class="intg-info"><div class="intg-name">WhatsApp</div><div class="intg-status">Em breve</div></div></div>
       </div>
     </section>
@@ -421,6 +440,25 @@
 
   </div><!-- /page -->
 </div><!-- /app-layout -->
+
+<!-- Web page popup -->
+<div class="modal-bg" id="web-modal">
+  <div class="web-box">
+    <div class="web-head">
+      <span id="web-title">Carregando…</span>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <a id="web-external" href="#" target="_blank" rel="noopener" class="ghost-btn" style="font-size:0.72rem;padding:0.25rem 0.6rem">↗ Abrir no navegador</a>
+        <button class="x-btn" id="web-close">✕</button>
+      </div>
+    </div>
+    <iframe id="web-frame" src="" frameborder="0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    <div id="web-error" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#0a0303;color:rgba(255,255,255,0.5);font-size:0.85rem">
+      <span style="font-size:2rem">🔒</span>
+      <span>Este site bloqueia exibição em popup.</span>
+      <button class="green-btn" id="web-error-btn">Abrir no navegador</button>
+    </div>
+  </div>
+</div>
 
 <!-- Camera modal -->
 <div class="modal-bg" id="cam-modal">
