@@ -1,7 +1,18 @@
-const { app, BrowserWindow, globalShortcut, screen } = require('electron');
+const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain } = require('electron');
+const { fork } = require('child_process');
 const path = require('path');
 
 let win = null;
+let server = null;
+
+function startServer() {
+  return new Promise((resolve) => {
+    server = fork(path.join(__dirname, 'server.js'), [], { silent: true });
+    server.stdout.on('data', (d) => { if (d.toString().includes('localhost')) resolve(); });
+    server.stderr.on('data', () => {});
+    setTimeout(resolve, 2000);
+  });
+}
 
 const WIN_W = 1100;
 const WIN_H = 720;
@@ -23,10 +34,30 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 
-  win.loadFile(path.join(__dirname, 'index.html'));
+  // Permite microfone e câmera sem HTTPS no localhost
+  win.webContents.session.setPermissionRequestHandler((_, permission, callback) => {
+    const allowed = ['media', 'microphone', 'audioCapture', 'videoCapture', 'camera'];
+    callback(allowed.includes(permission));
+  });
+  win.webContents.session.setPermissionCheckHandler((_, permission) => {
+    const allowed = ['media', 'microphone', 'audioCapture', 'videoCapture', 'camera'];
+    return allowed.includes(permission);
+  });
+
+  // Abre links externos no browser padrão do sistema (Chrome, Edge, etc)
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
+  // Mantém JS rodando mesmo com janela escondida (necessário pro wake word)
+  win.webContents.setBackgroundThrottling(false);
+
+  win.loadURL('http://localhost:8080');
 
   // ESC esconde a janela
   win.webContents.on('before-input-event', (_, input) => {
@@ -39,7 +70,15 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
+app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
+
+// IPC — renderer pede pra mostrar/esconder janela (wake word)
+ipcMain.on('sky-show', () => { if (win) { win.show(); win.focus(); } });
+ipcMain.on('sky-hide', () => { if (win) win.hide(); });
+
+app.whenReady().then(async () => {
+  await startServer();
   createWindow();
 
   globalShortcut.register('F6', () => {
@@ -53,7 +92,10 @@ app.whenReady().then(() => {
   });
 });
 
-app.on('will-quit', () => globalShortcut.unregisterAll());
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+  if (server) server.kill();
+});
 
 // Mantém o app rodando mesmo sem janelas visíveis
 app.on('window-all-closed', (e) => e.preventDefault());

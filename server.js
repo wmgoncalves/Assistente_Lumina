@@ -1,6 +1,9 @@
-const express = require('express');
-const path    = require('path');
-const fs      = require('fs');
+const express   = require('express');
+const path      = require('path');
+const fs        = require('fs');
+const multer   = require('multer');
+const mammoth  = require('mammoth');
+const pdfParse = require('pdf-parse');
 
 // Node 18+ required (built-in fetch)
 if (!globalThis.fetch) {
@@ -28,13 +31,24 @@ const getMem = () => readJSON(MEMORY_FILE, { userName: null, facts: [], sessions
 // ── Express ───────────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json({ limit: '20mb' }));
+// Serve arquivos da raiz (versão atual da Sky) antes do public/
+app.get('/',          (_, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/style.css', (_, res) => res.sendFile(path.join(__dirname, 'style.css')));
+app.get('/app.js',    (_, res) => res.sendFile(path.join(__dirname, 'app.js')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Config ────────────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
   const c = getCfg();
-  // Never expose keys to client
-  res.json({ username: c.username || '', hasGemini: !!c.geminiKey, hasElevenLabs: !!c.elevenLabsKey });
+  // Expõe chaves apenas para localhost (app local, sem risco)
+  const isLocal = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
+  res.json({
+    username:      c.username      || '',
+    geminiKey:     isLocal ? (c.geminiKey     || '') : '',
+    elevenLabsKey: isLocal ? (c.elevenLabsKey || '') : '',
+    hasGemini:     !!c.geminiKey,
+    hasElevenLabs: !!c.elevenLabsKey,
+  });
 });
 
 app.post('/api/config', (req, res) => {
@@ -188,6 +202,53 @@ Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em 
     if (changed) writeJSON(MEMORY_FILE, m);
     res.json({ updated: changed, memory: { userName: m.userName, facts: m.facts } });
   } catch { res.json({ updated: false }); }
+});
+
+// ── Ingestão de Documentos (PDF / DOCX / TXT) ────────────────────────────────
+const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+const chunkText = (text, size = 800, overlap = 100) => {
+  const chunks = [];
+  let i = 0;
+  while (i < text.length) {
+    chunks.push(text.slice(i, i + size));
+    i += size - overlap;
+  }
+  return chunks.filter(c => c.trim().length > 60);
+};
+
+app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  const { originalname, mimetype, buffer } = req.file;
+  let text = '';
+  try {
+    if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
+      const data = await pdfParse(buffer);
+      text = data.text;
+    } else if (mimetype.includes('wordprocessingml') || originalname.endsWith('.docx')) {
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+    } else {
+      text = buffer.toString('utf8');
+    }
+    // Corrige espaços perdidos na extração de PDF
+    text = text
+      .replace(/([a-záéíóúàâêôãõç])([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ])/g, '$1 $2')
+      .replace(/([.,;:!?])([^\s])/g, '$1 $2')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!text) return res.status(422).json({ error: 'Não foi possível extrair texto do arquivo.' });
+    const baseName = originalname.replace(/\.[^.]+$/, '');
+    const chunks   = chunkText(text);
+    const notes    = chunks.map((c, i) => ({
+      id:      `doc_${Date.now()}_${i}`,
+      title:   `${baseName} (${i + 1}/${chunks.length})`,
+      content: c,
+      source:  originalname,
+      date:    new Date().toISOString()
+    }));
+    res.json({ ok: true, chunks: notes.length, notes });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

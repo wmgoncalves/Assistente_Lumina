@@ -1,9 +1,26 @@
 // ── Settings ──────────────────────────────────────────────────────────────────
-const CFG_KEY = 'emerald_cfg';
+const CFG_KEY = 'sky_cfg';
 const loadCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch { return {}; } };
-const saveCfg = () => localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+const saveCfg = () => {
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  // Persiste no servidor (config.json) quando rodando via Electron/localhost
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: cfg.username, geminiKey: cfg.geminiKey, elevenLabsKey: cfg.elevenLabsKey })
+    }).catch(() => {});
+  }
+};
 
 const cfg = { username: '', geminiKey: '', elevenLabsKey: '', ...loadCfg() };
+
+// Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  fetch('/api/config').then(r => r.json()).then(d => {
+    if (d.geminiKey     && !cfg.geminiKey)     { cfg.geminiKey     = d.geminiKey;     localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    if (d.elevenLabsKey && !cfg.elevenLabsKey) { cfg.elevenLabsKey = d.elevenLabsKey; localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    if (d.username      && !cfg.username)      { cfg.username      = d.username;      localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+  }).catch(() => {});
+}
 
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
 const MEM_KEY   = 'emerald_mem';
@@ -24,7 +41,7 @@ const retrieveNotes = (query = '') => {
     const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
     return { ...n, score };
   }).filter(n => n.score > 0).sort((a, b) => b.score - a.score);
-  return scored.length ? scored.slice(0, 3) : notes.slice(0, 2);
+  return scored.length ? scored.slice(0, 5) : notes.slice(0, 3);
 };
 
 const defaultMem = () => ({ userName: null, facts: [], sessions: 0, lastSeen: null });
@@ -168,7 +185,7 @@ const buildContextBlock = (lastUserMsg = '') => {
 
   if (notes.length) {
     ctx += `\n\n── BASE DE CONHECIMENTO (notas relevantes) ──`;
-    notes.forEach(n => { ctx += `\n📄 "${n.title}": ${n.content.substring(0, 200)}${n.content.length > 200 ? '…' : ''}`; });
+    notes.forEach(n => { ctx += `\n📄 "${n.title}": ${n.content.substring(0, 500)}${n.content.length > 500 ? '…' : ''}`; });
   }
 
   return ctx;
@@ -194,15 +211,16 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
   const toolsBlock = `
 
 ── FERRAMENTAS — use proativamente, sem anunciar ──
-• updateMemory   → ao aprender fato novo ou nome do usuário
+• updateMemory   → SEMPRE que aprender qualquer fato sobre o usuário: nome, profissão, empresa, cidade, gostos, rotina, família, preferências — mesmo que não seja pedido explicitamente
 • createTask     → "anota tarefa", "lembra de", "preciso fazer"
 • completeTask   → quando usuário confirmar conclusão (ID do contexto)
 • checkHabit     → quando mencionar que fez um hábito
 • addFinance     → gasto, receita, pagamento, salário mencionado
 • saveNote       → pedido para salvar, anotar ou guardar informação
-• webSearch  → clima, previsão do tempo, cotações de câmbio — SEMPRE tente webSearch antes de abrir página
-• openPage   → apenas quando usuário pede explicitamente para ABRIR ou VER um site; para buscas gerais use https://www.google.com/search?q=...
+• webSearch      → clima, previsão do tempo, cotações de câmbio — SEMPRE tente webSearch antes de abrir página
+• openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
 
+APRENDIZADO AUTÔNOMO: Em toda conversa, preste atenção a detalhes pessoais e use updateMemory silenciosamente. Quanto mais você aprende, mais personalizada fica sua ajuda.
 Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
 
   return `Você é Sky — IA pessoal com personalidade e capacidade de agir.
@@ -350,15 +368,18 @@ const cleanForSpeech = (text) => text
   .trim();
 
 const getVoice = () => {
-  const ptv = voices.filter(v => v.lang.startsWith('pt'));
+  const all = voices;
+  const ptv = all.filter(v => v.lang.startsWith('pt'));
   if (app.voiceGender === 'female') {
-    // Prioriza vozes neurais/naturais femininas
-    return ptv.find(v => /francisca|maria.*natural|online.*natural|neural/i.test(v.name))
-      || ptv.find(v => /maria|luciana|vitoria|fernanda|female/i.test(v.name))
-      || ptv.find(v => !v.name.toLowerCase().includes('male'))
-      || ptv[ptv.length - 1] || voices[voices.length - 1];
+    return ptv.find(v => /natural|neural|online/i.test(v.name))
+      || ptv.find(v => /francisca|fernanda|vitoria|luciana|maria/i.test(v.name))
+      || ptv.find(v => !/male|masculin|daniel|ricardo/i.test(v.name))
+      || ptv[ptv.length - 1] || all.find(v => /natural|neural/i.test(v.name))
+      || all[all.length - 1];
   }
-  return ptv.find(v => /daniel|ricardo|male|masculin/i.test(v.name)) || ptv[0] || voices[0];
+  return ptv.find(v => /natural|neural|online/i.test(v.name) && !/female|feminina/i.test(v.name))
+    || ptv.find(v => /daniel|ricardo/i.test(v.name))
+    || ptv[0] || all[0];
 };
 
 const speakBrowser = (text, onEnd) => {
@@ -371,7 +392,7 @@ const speakBrowser = (text, onEnd) => {
   const u = new SpeechSynthesisUtterance(clean);
   u.lang   = 'pt-BR';
   u.rate   = app.voiceGender === 'male' ? 1.45 : 1.55;
-  u.pitch  = app.voiceGender === 'male' ? 0.80 : 1.0;  // pitch 1.0 soa mais natural
+  u.pitch  = app.voiceGender === 'male' ? 0.85 : 0.92;
   u.volume = 1.0;
   const v = getVoice();
   if (v) u.voice = v;
@@ -385,6 +406,14 @@ const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
 let recog = null;
 let micPermissionGranted = false;
+
+const IS_ELECTRON = navigator.userAgent.includes('Electron');
+
+const blobToBase64 = (blob) => new Promise((resolve) => {
+  const reader = new FileReader();
+  reader.onloadend = () => resolve(reader.result.split(',')[1]);
+  reader.readAsDataURL(blob);
+});
 
 const buildRecog = () => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -413,23 +442,11 @@ const buildRecog = () => {
   r.onerror = (e) => {
     app.isListening = false;
     document.getElementById('btn-mic').classList.remove('listening');
-    setFace('idle');
-    setUserSaid('');
-    switch (e.error) {
-      case 'not-allowed':
-        toast('Permissão de microfone negada. Clique no cadeado da barra do navegador e permita o microfone.', 'error');
-        break;
-      case 'no-speech':
-        if (app.continuous) setTimeout(startListening, 1000);
-        break;
-      case 'audio-capture':
-        toast('Nenhum microfone encontrado.', 'error');
-        break;
-      case 'aborted':
-        break; // interrupção normal
-      default:
-        toast(`Erro no microfone: ${e.error}`, 'error');
-    }
+    setFace('idle'); setUserSaid('');
+    if (e.error === 'not-allowed')        toast('Permissão de microfone negada.', 'error');
+    else if (e.error === 'no-speech' && app.continuous) setTimeout(startListening, 1000);
+    else if (e.error === 'audio-capture') toast('Nenhum microfone encontrado.', 'error');
+    else if (e.error !== 'aborted')       toast(`Erro no microfone: ${e.error}`, 'error');
   };
 
   r.onend = () => {
@@ -440,41 +457,200 @@ const buildRecog = () => {
   return r;
 };
 
+// ── Electron: MediaRecorder + Gemini transcrição ──────────────────────────────
+let mediaRecorder = null;
+let audioChunks   = [];
+let silenceTimer  = null;
+let audioCtx      = null;
+let analyserNode  = null;
+
+const detectSilence = () => {
+  if (!analyserNode || !mediaRecorder || mediaRecorder.state !== 'recording') return;
+  const data = new Uint8Array(analyserNode.fftSize);
+  analyserNode.getByteTimeDomainData(data);
+  const peak = Math.max(...data.map(v => Math.abs(v - 128)));
+  if (peak > 12) { if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; } }
+  else if (!silenceTimer) { silenceTimer = setTimeout(() => stopListening(), 2000); }
+  requestAnimationFrame(detectSilence);
+};
+
+const startMediaRecorder = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  audioCtx     = new AudioContext();
+  analyserNode = audioCtx.createAnalyser();
+  analyserNode.fftSize = 512;
+  audioCtx.createMediaStreamSource(stream).connect(analyserNode);
+  audioChunks  = [];
+  const mime   = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+  mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+  mediaRecorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    if (audioCtx) { audioCtx.close(); audioCtx = null; analyserNode = null; }
+    app.isListening = false;
+    document.getElementById('btn-mic').classList.remove('listening');
+    if (!audioChunks.length) { setFace('idle'); setUserSaid(''); return; }
+    setFace('thinking'); setUserSaid('Transcrevendo…');
+    try {
+      if (!cfg.geminiKey) throw new Error('Configure a chave Gemini API.');
+      const b64  = await blobToBase64(new Blob(audioChunks, { type: 'audio/webm' }));
+      const res  = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [
+          { inline_data: { mime_type: 'audio/webm', data: b64 } },
+          { text: 'Transcreva exatamente o que foi dito neste áudio em português brasileiro. Responda apenas com a transcrição.' }
+        ]}], generationConfig: { maxOutputTokens: 200, temperature: 0 } })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      if (text) { setUserSaid(`"${text}"`); processInput(text); }
+      else      { setFace('idle'); setUserSaid(''); if (app.continuous) setTimeout(startListening, 800); }
+    } catch (err) { setFace('idle'); setUserSaid(''); toast('Erro no microfone: ' + err.message, 'error'); }
+  };
+  mediaRecorder.start(100);
+  app.isListening = true;
+  setFace('listening'); setUserSaid('Ouvindo…');
+  document.getElementById('btn-mic').classList.add('listening');
+  detectSilence();
+};
+
 const startListening = async () => {
   if (app.isSpeaking) stopSpeaking();
 
-  if (!micPermissionGranted && navigator.mediaDevices?.getUserMedia) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
-      micPermissionGranted = true;
-    } catch (err) {
-      setFace('idle');
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        toast('Microfone bloqueado. Clique no ícone 🎤 na barra de endereço do Chrome e clique em "Permitir".', 'error');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        toast('Nenhum microfone encontrado. Conecte um microfone e tente novamente.', 'error');
-      } else {
-        toast('Erro ao acessar microfone: ' + err.message, 'error');
-      }
-      return;
-    }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setFace('error');
+    setRespText('Microfone indisponível neste ambiente.');
+    toast('Microfone indisponível. Abra o app via "npm run sky".', 'error');
+    return;
   }
-
-  recog = buildRecog();
-  if (!recog) return;
 
   try {
-    recog.start();
-  } catch (e) {
-    console.error(e);
-    toast('Erro ao iniciar reconhecimento. Recarregue a página e tente de novo.', 'error');
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+    micPermissionGranted = true;
+  } catch (err) {
+    setFace('idle');
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      setRespText('Microfone bloqueado pelo Windows.');
+      toast('Permissão negada. Vá em: Configurações do Windows → Privacidade e segurança → Microfone → ative para "Apps de desktop".', 'error');
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      toast('Nenhum microfone encontrado. Conecte um microfone e tente novamente.', 'error');
+    } else {
+      toast(`Erro no microfone: ${err.name} — ${err.message}`, 'error');
+    }
+    return;
   }
+
+  await startMediaRecorder();
 };
 
 const stopListening = () => {
-  if (recog && app.isListening) {
-    try { recog.stop(); } catch {}
+  if (IS_ELECTRON) {
+    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+    if (mediaRecorder && mediaRecorder.state === 'recording') try { mediaRecorder.stop(); } catch {}
+  } else {
+    if (recog && app.isListening) try { recog.stop(); } catch {}
+  }
+};
+
+// ── Wake Word ──────────────────────────────────────────────────────────────────
+let wakeActive     = false;
+let wakeStream     = null;
+let wakeAudioCtx   = null;
+let wakeAnalyser   = null;
+let wakeMR         = null;
+let wakeChunks     = [];
+let wakeRecording  = false;
+let wakeSilTimer   = null;
+let wakeCooldown   = false;
+
+const WAKE_WORDS = ['sky', 'ei sky', 'oi sky', 'hey sky', 'ok sky', 'ei, sky', 'oi, sky'];
+
+const stopWakeWord = () => {
+  wakeActive = false;
+  if (wakeMR?.state === 'recording') try { wakeMR.stop(); } catch {}
+  if (wakeStream) { wakeStream.getTracks().forEach(t => t.stop()); wakeStream = null; }
+  if (wakeAudioCtx) { wakeAudioCtx.close(); wakeAudioCtx = null; }
+  document.getElementById('wake-label').textContent = 'CHAMAR: OFF';
+  document.getElementById('btn-wake').classList.remove('on');
+};
+
+const processWakeChunks = async () => {
+  wakeRecording = false;
+  if (!wakeChunks.length || !cfg.geminiKey || app.isListening || app.isSpeaking) return;
+  wakeCooldown = true;
+  setTimeout(() => { wakeCooldown = false; }, 8000);
+
+  try {
+    const b64 = await blobToBase64(new Blob(wakeChunks, { type: 'audio/webm' }));
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [
+          { inline_data: { mime_type: 'audio/webm', data: b64 } },
+          { text: 'O áudio contém a palavra "Sky" como ativação? Se sim, qual o comando após "Sky"? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
+        ]}], generationConfig: { maxOutputTokens: 80, temperature: 0 } }) }
+    );
+    if (!res.ok) return;
+    const raw = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const result = JSON.parse(raw.replace(/```json?|```/g, '').trim());
+    if (!result.wake) return;
+    // Mostra a janela do Electron
+    window.skyAPI?.showWindow();
+    if (result.cmd && result.cmd !== 'null') {
+      setUserSaid(`"${result.cmd}"`);
+      processInput(result.cmd);
+    } else {
+      setTimeout(() => startListening(), 400);
+    }
+  } catch {}
+};
+
+const monitorWake = () => {
+  if (!wakeActive) return;
+  if (!wakeAnalyser || app.isListening || app.isSpeaking || wakeCooldown) {
+    requestAnimationFrame(monitorWake); return;
+  }
+  const data = new Uint8Array(wakeAnalyser.fftSize);
+  wakeAnalyser.getByteTimeDomainData(data);
+  const peak = Math.max(...data.map(v => Math.abs(v - 128)));
+
+  if (peak > 28 && !wakeRecording) {
+    // Aguarda 300ms de áudio sustentado antes de gravar (evita clicks/ruídos)
+    setTimeout(() => {
+      if (!wakeActive || wakeRecording || wakeCooldown || app.isListening || app.isSpeaking) return;
+      const data2 = new Uint8Array(wakeAnalyser.fftSize);
+      wakeAnalyser.getByteTimeDomainData(data2);
+      const peak2 = Math.max(...data2.map(v => Math.abs(v - 128)));
+      if (peak2 < 20) return; // ruído falso, ignora
+      wakeRecording = true;
+      wakeChunks = [];
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+      wakeMR = new MediaRecorder(wakeStream, { mimeType: mime });
+      wakeMR.ondataavailable = (e) => { if (e.data.size > 0) wakeChunks.push(e.data); };
+      wakeMR.onstop = processWakeChunks;
+      wakeMR.start(100);
+      wakeSilTimer = setTimeout(() => { if (wakeMR?.state === 'recording') wakeMR.stop(); }, 3500);
+    }, 300);
+  }
+  requestAnimationFrame(monitorWake);
+};
+
+const startWakeWord = async () => {
+  if (wakeActive) { stopWakeWord(); return; }
+  try {
+    wakeStream   = await navigator.mediaDevices.getUserMedia({ audio: true });
+    wakeAudioCtx = new AudioContext();
+    wakeAnalyser = wakeAudioCtx.createAnalyser();
+    wakeAnalyser.fftSize = 256;
+    wakeAudioCtx.createMediaStreamSource(wakeStream).connect(wakeAnalyser);
+    wakeActive = true;
+    document.getElementById('wake-label').textContent = 'CHAMAR: ON';
+    document.getElementById('btn-wake').classList.add('on');
+    monitorWake();
+    toast('Diga "Sky" para ativar.', 'info');
+  } catch (err) {
+    toast('Não foi possível ativar o wake word: ' + err.message, 'error');
   }
 };
 
@@ -931,7 +1107,7 @@ const callGemini = async (customHistory = null) => {
 
   for (let iter = 0; iter < 8; iter++) {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -939,7 +1115,7 @@ const callGemini = async (customHistory = null) => {
           system_instruction: { parts: [{ text: buildSystem(lastMsg, app.currentEmotion || 'neutral') }] },
           contents,
           tools,
-          generationConfig: { maxOutputTokens: 320, temperature: 0.78 }
+          generationConfig: { maxOutputTokens: 800, temperature: 0.78 }
         })
       }
     );
@@ -964,23 +1140,17 @@ const callGemini = async (customHistory = null) => {
     const textPart  = parts.find(p => p.text);
     const funcCalls = parts.filter(p => p.functionCall);
 
-    if (funcCalls.length === 0) {
-      // Final text response
-      return textPart?.text?.trim() || '';
-    }
+    if (funcCalls.length === 0) return textPart?.text?.trim() || '';
 
-    // Show tool activity in UI
     const label = TOOL_LABELS[funcCalls[0].functionCall.name] || 'Executando…';
     setRespText(`⚡ ${label}`);
 
-    // Execute each tool and collect responses
     const responses = await Promise.all(
       funcCalls.map(async ({ functionCall: { name, args } }) => ({
         functionResponse: { name, response: { result: await executeTool(name, args) } }
       }))
     );
 
-    // Append model turn + function results for next iteration
     contents.push({ role: 'model', parts: funcCalls });
     contents.push({ role: 'user',  parts: responses });
   }
@@ -989,7 +1159,7 @@ const callGemini = async (customHistory = null) => {
 };
 
 const callGeminiVision = async (base64, mime, prompt) => {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -1170,15 +1340,85 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.code === 'Escape') { stopListening(); stopSpeaking(); }
   });
 
-  // ── Text input (fallback) ──
-  const textInput = document.getElementById('text-input');
-  const sendText = () => {
-    const val = textInput.value.trim();
-    if (!val) return;
-    textInput.value = '';
-    setUserSaid(`"${val}"`);
-    processInput(val);
+  // ── Text input + imagem (paste / drag-drop) ──
+  const textInput    = document.getElementById('text-input');
+  const imgPreviewWrap = document.getElementById('img-preview-wrap');
+  const imgPreview   = document.getElementById('img-preview');
+  const imgCancel    = document.getElementById('img-cancel');
+  let pendingImageB64  = null;
+  let pendingImageMime = null;
+
+  const setPendingImage = (b64, mime) => {
+    pendingImageB64  = b64;
+    pendingImageMime = mime;
+    imgPreview.src = `data:${mime};base64,${b64}`;
+    imgPreviewWrap.style.display = 'flex';
+    textInput.placeholder = 'Descreva o que quer saber sobre a imagem (opcional)…';
   };
+
+  const clearPendingImage = () => {
+    pendingImageB64 = null; pendingImageMime = null;
+    imgPreviewWrap.style.display = 'none';
+    imgPreview.src = '';
+    textInput.placeholder = 'Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)';
+  };
+
+  imgCancel.addEventListener('click', clearPendingImage);
+
+  const fileToB64 = (file) => new Promise((resolve) => {
+    const r = new FileReader();
+    r.onloadend = () => resolve({ b64: r.result.split(',')[1], mime: file.type });
+    r.readAsDataURL(file);
+  });
+
+  // Colar imagem com Ctrl+V
+  textInput.addEventListener('paste', async (e) => {
+    const items = Array.from(e.clipboardData?.items || []);
+    const imgItem = items.find(i => i.type.startsWith('image/'));
+    if (!imgItem) return;
+    e.preventDefault();
+    const { b64, mime } = await fileToB64(imgItem.getAsFile());
+    setPendingImage(b64, mime);
+  });
+
+  // Drag & drop na área do chat
+  const chatView = document.getElementById('view-chat-voz');
+  chatView.addEventListener('dragover', (e) => { e.preventDefault(); chatView.style.outline = '2px dashed var(--accent)'; });
+  chatView.addEventListener('dragleave', () => { chatView.style.outline = ''; });
+  chatView.addEventListener('drop', async (e) => {
+    e.preventDefault(); chatView.style.outline = '';
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (!file) return;
+    const { b64, mime } = await fileToB64(file);
+    setPendingImage(b64, mime);
+  });
+
+  const sendText = async () => {
+    const val = textInput.value.trim();
+    if (!val && !pendingImageB64) return;
+    textInput.value = '';
+
+    if (pendingImageB64) {
+      const b64  = pendingImageB64;
+      const mime = pendingImageMime;
+      const prompt = val || 'Descreva o que você vê nesta imagem de forma natural em português.';
+      clearPendingImage();
+      if (val) setUserSaid(`"${val}" 🖼️`);
+      else setUserSaid('🖼️ Imagem enviada');
+      setFace('thinking'); setRespText('Analisando imagem…');
+      try {
+        const response = await callGeminiVision(b64, mime, prompt);
+        app.history.push({ role: 'model', content: response });
+        addMsgUI('sky', response);
+        saveHist();
+        speak(response);
+      } catch (err) { speak('Não consegui analisar a imagem. Tente novamente.'); }
+    } else {
+      setUserSaid(`"${val}"`);
+      processInput(val);
+    }
+  };
+
   document.getElementById('btn-send').addEventListener('click', sendText);
   textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(); });
 
@@ -1193,6 +1433,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-voice-female').classList.add('active');
     document.getElementById('btn-voice-male').classList.remove('active');
   });
+
+  // ── Wake word ──
+  document.getElementById('btn-wake').addEventListener('click', startWakeWord);
 
   // ── Continuous ──
   document.getElementById('btn-continuous').addEventListener('click', () => {
@@ -1779,6 +2022,40 @@ const initKnowledge = () => {
   };
   document.getElementById('note-add-btn').addEventListener('click', add);
   document.getElementById('note-content').addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+  // ── Importar documento ──
+  const docBtn    = document.getElementById('doc-import-btn');
+  const docInput  = document.getElementById('doc-file-input');
+  const docStatus = document.getElementById('doc-import-status');
+
+  docBtn.addEventListener('click', () => docInput.click());
+
+  docInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    docBtn.disabled = true;
+    docStatus.textContent = `Processando ${file.name}…`;
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res  = await fetch('/api/ingest-doc', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      const existing = getNotes();
+      saveNotes([...data.notes, ...existing]);
+      renderKnowledge();
+      docStatus.textContent = `✓ ${data.chunks} trechos importados de "${file.name}"`;
+      toast(`Documento importado: ${data.chunks} trechos prontos para a Sky.`, 'success');
+    } catch (err) {
+      docStatus.textContent = '';
+      toast('Erro ao importar: ' + err.message, 'error');
+    } finally {
+      docBtn.disabled = false;
+    }
+  });
 };
 
 const renderKnowledge = () => {
@@ -1786,22 +2063,96 @@ const renderKnowledge = () => {
   const el    = document.getElementById('note-list');
   el.innerHTML = '';
   if (notes.length === 0) {
-    el.innerHTML = '<p class="empty-state">Nenhuma nota ainda. Adicione acima ou peça ao Sky para salvar algo.</p>';
+    el.innerHTML = '<p class="empty-state">Nenhuma nota ainda. Adicione acima ou importe um documento.</p>';
     return;
   }
-  notes.forEach(n => {
-    const div = document.createElement('div');
-    div.className = 'note-card';
-    const date = new Date(n.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-    div.innerHTML = `
-      <button class="note-del" data-id="${esc(n.id)}">✕</button>
-      <div class="note-card-title">${esc(n.title)}</div>
-      <div class="note-card-body">${esc(n.content)}</div>
-      <div class="note-card-date">${esc(date)}</div>`;
-    el.appendChild(div);
+
+  // Separa notas de documentos (têm source) das notas manuais
+  const docNotes    = notes.filter(n => n.source);
+  const manualNotes = notes.filter(n => !n.source);
+
+  // Agrupa por arquivo fonte
+  const bySource = {};
+  docNotes.forEach(n => {
+    if (!bySource[n.source]) bySource[n.source] = [];
+    bySource[n.source].push(n);
   });
+
+  // Renderiza documentos agrupados
+  Object.entries(bySource).forEach(([source, chunks]) => {
+    const group = document.createElement('div');
+    group.style.cssText = 'margin-bottom:1rem;border:1px solid rgba(239,68,68,0.2);border-radius:10px;overflow:hidden;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.9rem;background:rgba(239,68,68,0.08);cursor:pointer;';
+    header.innerHTML = `
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span style="font-size:0.78rem;font-weight:600;color:var(--accent-hi);">${esc(source)}</span>
+        <span style="font-size:0.68rem;color:var(--text-dim);">${chunks.length} trechos</span>
+      </div>
+      <div style="display:flex;gap:0.5rem;align-items:center;">
+        <button class="doc-del-all" data-source="${esc(source)}" style="background:none;border:none;color:rgba(239,68,68,0.5);cursor:pointer;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:4px;border:1px solid rgba(239,68,68,0.2);" title="Remover documento">Remover</button>
+        <span class="doc-toggle" style="color:var(--text-dim);font-size:0.8rem;">▾</span>
+      </div>`;
+
+    const body = document.createElement('div');
+    body.style.cssText = 'padding:0.5rem 0.9rem 0.7rem;display:flex;flex-direction:column;gap:0.4rem;';
+
+    chunks.forEach(n => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:rgba(255,255,255,0.02);border-radius:6px;padding:0.5rem 0.7rem;position:relative;';
+      card.innerHTML = `
+        <button class="note-del" data-id="${esc(n.id)}" style="position:absolute;top:0.3rem;right:0.4rem;background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;font-size:0.75rem;">✕</button>
+        <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:0.2rem;">${esc(n.title)}</div>
+        <div style="font-size:0.75rem;color:var(--text);line-height:1.5;">${esc(n.content.substring(0, 120))}…</div>`;
+      body.appendChild(card);
+    });
+
+    // Toggle colapsar/expandir
+    let collapsed = false;
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('.doc-del-all')) return;
+      collapsed = !collapsed;
+      body.style.display = collapsed ? 'none' : 'flex';
+      header.querySelector('.doc-toggle').textContent = collapsed ? '▸' : '▾';
+    });
+
+    group.appendChild(header);
+    group.appendChild(body);
+    el.appendChild(group);
+  });
+
+  // Renderiza notas manuais
+  if (manualNotes.length > 0) {
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin:0.6rem 0 0.3rem;letter-spacing:0.06em;';
+    label.textContent = 'NOTAS MANUAIS';
+    el.appendChild(label);
+
+    manualNotes.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'note-card';
+      const date = new Date(n.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+      div.innerHTML = `
+        <button class="note-del" data-id="${esc(n.id)}">✕</button>
+        <div class="note-card-title">${esc(n.title)}</div>
+        <div class="note-card-body">${esc(n.content)}</div>
+        <div class="note-card-date">${esc(date)}</div>`;
+      el.appendChild(div);
+    });
+  }
+
+  // Eventos de deletar nota individual
   el.querySelectorAll('.note-del').forEach(b => b.addEventListener('click', () => {
     saveNotes(getNotes().filter(n => n.id !== b.dataset.id));
+    renderKnowledge();
+  }));
+
+  // Eventos de deletar documento inteiro
+  el.querySelectorAll('.doc-del-all').forEach(b => b.addEventListener('click', () => {
+    if (!confirm(`Remover todos os trechos de "${b.dataset.source}"?`)) return;
+    saveNotes(getNotes().filter(n => n.source !== b.dataset.source));
     renderKnowledge();
   }));
 };
