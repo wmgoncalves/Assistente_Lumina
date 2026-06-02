@@ -57,7 +57,10 @@ function createWindow() {
   // Mantém JS rodando mesmo com janela escondida (necessário pro wake word)
   win.webContents.setBackgroundThrottling(false);
 
-  win.loadURL('http://localhost:8080');
+  // Limpa cache para sempre carregar o código mais recente
+  win.webContents.session.clearCache().then(() => {
+    win.loadURL('http://localhost:8080');
+  });
 
   // ESC esconde a janela
   win.webContents.on('before-input-event', (_, input) => {
