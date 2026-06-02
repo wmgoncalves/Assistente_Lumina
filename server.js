@@ -308,6 +308,20 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Dados persistentes (tarefas, hábitos, finanças, notas) ───────────────────
+const DATA_STORES = ['tasks', 'habits', 'finances', 'notes'];
+const dataFile = (store) => path.join(__dirname, `${store}.json`);
+
+DATA_STORES.forEach(store => {
+  app.get(`/api/data/${store}`, (_, res) => {
+    res.json(readJSON(dataFile(store), []));
+  });
+  app.post(`/api/data/${store}`, (req, res) => {
+    writeJSON(dataFile(store), req.body);
+    res.json({ ok: true });
+  });
+});
+
 // ── News RSS (G1 + BBC Brasil — sem API key) ──────────────────────────────────
 const RSS_FEEDS = [
   { url: 'https://g1.globo.com/rss/g1/',                     source: 'G1'       },

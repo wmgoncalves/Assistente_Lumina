@@ -29,8 +29,27 @@ const MEM_KEY   = 'emerald_mem';
 const HIST_KEY  = 'emerald_hist';
 const NOTES_KEY = 'sky_notes';
 
-const getNotes  = () => { try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'); } catch { return []; } };
-const saveNotes = (n) => localStorage.setItem(NOTES_KEY, JSON.stringify(n));
+// ── Persistência híbrida: localStorage (cache) + servidor (fonte da verdade) ──
+const serverGet  = async (store, fallback = []) => {
+  try { const r = await fetch(`/api/data/${store}`); return r.ok ? await r.json() : fallback; }
+  catch { return fallback; }
+};
+const serverSave = (store, data) => {
+  localStorage.setItem(`sky_${store}`, JSON.stringify(data));
+  fetch(`/api/data/${store}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
+};
+const localCache = (store) => { try { return JSON.parse(localStorage.getItem(`sky_${store}`) || '[]'); } catch { return []; } };
+
+// Carrega dados do servidor na inicialização e sincroniza o cache local
+const syncFromServer = async () => {
+  for (const store of ['tasks', 'habits', 'finances', 'notes']) {
+    const data = await serverGet(store);
+    if (data.length) localStorage.setItem(`sky_${store}`, JSON.stringify(data));
+  }
+};
+
+const getNotes  = () => localCache('notes');
+const saveNotes = (n) => serverSave('notes', n);
 
 // Keyword search over KB notes — returns top relevant notes for RAG context injection
 const retrieveNotes = (query = '') => {
@@ -611,11 +630,16 @@ const startMediaRecorder = async (stream) => {
       if (text) { setUserSaid(`"${text}"`); processInput(text); }
       else { setFace('idle'); setUserSaid(''); if (app.continuous) setTimeout(startListening, 800); }
     } catch (err) {
-      setFace('idle'); setUserSaid('');
-      toast(err.message.includes('429') || err.message.includes('Limite')
-        ? 'Limite de API atingido. Aguarde e tente novamente.'
-        : 'Erro na transcrição: ' + err.message, 'error');
-      if (app.continuous) setTimeout(startListening, 5000);
+      const isQuota = err.message.includes('429') || err.message.includes('Limite');
+      if (isQuota) {
+        // Fallback: reconhecimento nativo do navegador (gratuito, sem API)
+        setUserSaid('Usando reconhecimento do navegador…');
+        startListeningNative();
+      } else {
+        setFace('idle'); setUserSaid('');
+        toast('Erro na transcrição: ' + err.message, 'error');
+        if (app.continuous) setTimeout(startListening, 5000);
+      }
     }
   };
   mediaRecorder.start(100);
@@ -625,29 +649,21 @@ const startMediaRecorder = async (stream) => {
   detectSilence();
 };
 
-const startListening = async () => {
-  if (app.isSpeaking) stopSpeaking();
-  if (app.isListening) return; // já ouvindo
-
-  if (!navigator.mediaDevices?.getUserMedia) {
-    toast('Microfone indisponível. Abra o app via "npm run sky".', 'error');
-    return;
-  }
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    await startMediaRecorder(stream);
-  } catch (err) {
-    setFace('idle');
-    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      toast('Permissão de microfone negada. Vá em Configurações do Windows → Privacidade → Microfone.', 'error');
-    } else if (err.name === 'NotFoundError') {
-      toast('Nenhum microfone encontrado.', 'error');
-    } else {
-      toast(`Erro no microfone: ${err.message}`, 'error');
-    }
-  }
+// Reconhecimento nativo do navegador — fallback quando Gemini está sem cota
+const startListeningNative = () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Reconhecimento nativo não suportado. Use Chrome.', 'error'); setFace('idle'); return; }
+  const r = new SR();
+  r.lang = 'pt-BR'; r.continuous = false; r.interimResults = false;
+  r.onstart  = () => { app.isListening = true; setFace('listening'); setUserSaid('Ouvindo (nativo)…'); document.getElementById('btn-mic').classList.add('listening'); };
+  r.onresult = (e) => { const t = e.results[0][0].transcript.trim(); if (t) { setUserSaid(`"${t}"`); processInput(t); } };
+  r.onerror  = () => { app.isListening = false; setFace('idle'); setUserSaid(''); document.getElementById('btn-mic').classList.remove('listening'); };
+  r.onend    = () => { app.isListening = false; document.getElementById('btn-mic').classList.remove('listening'); if (app.continuous && !app.isSpeaking) setTimeout(startListeningNative, 250); };
+  r.start();
 };
+
+// startListening usa reconhecimento nativo do navegador por padrão — sem consumir cota Gemini
+const startListening = () => startListeningNative();
 
 const stopListening = () => {
   if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
@@ -1960,6 +1976,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Settings (gear icon → navigate to settings view) ──
   document.getElementById('btn-settings').addEventListener('click', () => switchView('configuracoes'));
 
+  // ── Sincroniza dados do servidor para o cache local ──
+  syncFromServer();
+
   // ── Init modules ──
   initSidebar();
   initChatTexto();
@@ -2116,8 +2135,8 @@ const processChatTexto = async () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const TASKS_KEY = 'sky_tasks';
-const getTasks  = () => { try { return JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); } catch { return []; } };
-const saveTasks = (t) => localStorage.setItem(TASKS_KEY, JSON.stringify(t));
+const getTasks  = () => localCache('tasks');
+const saveTasks = (t) => serverSave('tasks', t);
 
 const initTarefas = () => {
   const add = () => {
@@ -2170,8 +2189,8 @@ const renderTarefas = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const HABITS_KEY = 'sky_habits';
-const getHabits  = () => { try { return JSON.parse(localStorage.getItem(HABITS_KEY) || '[]'); } catch { return []; } };
-const saveHabits = (h) => localStorage.setItem(HABITS_KEY, JSON.stringify(h));
+const getHabits  = () => localCache('habits');
+const saveHabits = (h) => serverSave('habits', h);
 const todayStr   = () => new Date().toISOString().split('T')[0];
 
 const calcStreak = (dates = []) => {
@@ -2238,8 +2257,8 @@ const renderHabitos = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const FIN_KEY   = 'sky_financas';
-const getFin    = () => { try { return JSON.parse(localStorage.getItem(FIN_KEY) || '[]'); } catch { return []; } };
-const saveFin   = (f) => localStorage.setItem(FIN_KEY, JSON.stringify(f));
+const getFin    = () => localCache('finances');
+const saveFin   = (f) => serverSave('finances', f);
 
 const initFinancas = () => {
   const add = (type) => {
