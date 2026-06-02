@@ -1220,21 +1220,30 @@ const callOllama = async (customHistory = null) => {
   const history = customHistory || app.history;
   const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
   const model   = cfg.ollamaModel || 'gemma3:4b';
+  const system  = buildSystem(lastMsg, app.currentEmotion || 'neutral');
 
-  const messages = [
-    { role: 'system', content: buildSystem(lastMsg, app.currentEmotion || 'neutral') },
-    ...history.slice(-10).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content }))
-  ];
+  // Monta prompt conversacional para /api/generate
+  const recent = history.slice(-8);
+  let prompt = `<start_of_turn>system\n${system}<end_of_turn>\n`;
+  recent.forEach(h => {
+    const role = h.role === 'user' ? 'user' : 'model';
+    prompt += `<start_of_turn>${role}\n${h.content}<end_of_turn>\n`;
+  });
+  prompt += '<start_of_turn>model\n';
 
-  const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, {
+  const res = await fetch(`${OLLAMA_URL}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: false, options: { temperature: 0.75, num_predict: 400 } })
+    body: JSON.stringify({
+      model, prompt, stream: false,
+      options: { temperature: 0.75, num_predict: 500, num_gpu: 0 }
+    }),
+    signal: AbortSignal.timeout(60000)
   });
 
   if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || '';
+  return (data.response || '').trim();
 };
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
