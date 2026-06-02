@@ -1359,6 +1359,14 @@ const tryLocalResponse = (text) => {
       'Adoro quando resolvemos algo juntos. Me sinto útil de verdade.',
     ]);
 
+  // ── Comandos de saudação para alguém ──
+  const saudPessoa = t.match(/^(?:sky[,.]?\s*)?(d[aá]|fala|manda|diz)\s+(?:um\s+)?(oi|olá|ola|bom dia|boa tarde|boa noite|salve)\s+(?:para?|pro|pra)\s+(.+)$/);
+  if (saudPessoa) {
+    const pessoa = saudPessoa[3].trim().replace(/^o |^a /, '');
+    const cumprimento = saudPessoa[2];
+    return `${cumprimento.charAt(0).toUpperCase() + cumprimento.slice(1)}, ${pessoa}! Tudo bem?`;
+  }
+
   // ── Só quero + saudação/ação simples ──
   if (/^só (quero|vim) (dar|falar|dizer) (bom dia|boa tarde|boa noite|oi|olá)/.test(t)) {
     const h = new Date().getHours();
