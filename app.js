@@ -802,7 +802,8 @@ const processInput = async (text) => {
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
   try {
-    const raw = cfg.geminiKey ? await callGemini() : localFallback(text);
+    const localResp = tryLocalResponse(text);
+    const raw = localResp ?? (cfg.geminiKey ? await callGemini() : localFallback(text));
     const { clean: response, learned } = extractLearn(raw);
     applyInlineLearn(learned);
     app.history.push({ role: 'model', content: response });
@@ -1265,17 +1266,89 @@ const callGeminiVision = async (base64, mime, prompt) => {
   return data.candidates[0].content.parts[0].text.trim();
 };
 
+// ── Respostas locais (sem API) para mensagens simples ─────────────────────────
+const LOCAL_RESPONSES = {
+  saudacao: [
+    'Oi! O que posso fazer por você?',
+    'Olá! Pode falar.',
+    'Oi, estou aqui. O que precisa?',
+    'Olá! Pronta para ajudar.',
+  ],
+  bemEstar: [
+    'Tudo certo por aqui! E você?',
+    'Funcionando perfeitamente. E aí, o que precisa?',
+    'Estou ótima, obrigada. Como posso ajudar?',
+    'Tudo bem! O que vamos fazer hoje?',
+  ],
+  obrigado: [
+    'Disponha!',
+    'Sempre que precisar.',
+    'Por nada!',
+    'Às ordens.',
+    'Fico feliz em ajudar.',
+  ],
+  despedida: [
+    'Até logo!',
+    'Estarei aqui quando precisar.',
+    'Até mais!',
+  ],
+  elogio: [
+    'Obrigada! Fico feliz.',
+    'Que gentil!',
+    'Boa notícia, estou melhorando sempre.',
+  ],
+};
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+const tryLocalResponse = (text) => {
+  const t = text.toLowerCase().trim();
+  const mem = getMem();
+  const name = mem.userName ? `, ${mem.userName}` : '';
+
+  // Saudações puras
+  if (/^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)[\s!?.]*$/.test(t))
+    return pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`);
+
+  // Tudo bem / como vai
+  if (/^(tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai)[\s!?.]*$/.test(t))
+    return pick(LOCAL_RESPONSES.bemEstar);
+
+  // Agradecimentos
+  if (/^(obrigad[ao]|valeu|vlw|grat[ao]|muito obrigad[ao])[\s!?.]*$/.test(t))
+    return pick(LOCAL_RESPONSES.obrigado);
+
+  // Despedidas
+  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou)[\s!?.]*$/.test(t))
+    return pick(LOCAL_RESPONSES.despedida) + (name ? name + '.' : '');
+
+  // Elogios simples
+  if (/^(você é (boa|ótima|incrível|demais)|parabéns|muito boa|gostei de você)[\s!?.]*$/.test(t))
+    return pick(LOCAL_RESPONSES.elogio);
+
+  // Horário
+  if (/^(que horas (são|é)|horas|hora certa)[\s!?.]*$/.test(t))
+    return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
+
+  // Data
+  if (/^(que dia (é hoje|é)|qual a data|hoje é)[\s!?.]*$/.test(t))
+    return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
+
+  return null; // não é local — vai para Gemini
+};
+
 const localFallback = (text) => {
+  const local = tryLocalResponse(text);
+  if (local) return local;
   const t = text.toLowerCase();
   const mem = getMem();
   const name = mem.userName ? `, ${mem.userName}` : '';
-  if (/\b(oi|olá|ola|hey|ei)\b/.test(t))  return `Olá${name}. Em que posso ser útil?`;
-  if (/que horas|horas s[aã]o/.test(t))    return `São exatamente ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}, Senhor.`;
-  if (/que dia|data|hoje/.test(t))         return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`;
-  if (/seu nome|você [eé]|quem é você/.test(t)) return 'Sou Sky, sua inteligência artificial pessoal. Para capacidades completas, configure a chave Gemini API nas configurações.';
-  if (/obrigad|valeu/.test(t))             return 'Às suas ordens, Senhor.';
-  if (/tchau|adeus|até logo/.test(t))      return `Até breve${name}. Estarei aqui quando precisar.`;
-  return 'Para respostas inteligentes completas, adicione sua chave Gemini API nas configurações — ícone de engrenagem no topo.';
+  if (/seu nome|você [eé]|quem é você/.test(t)) return 'Sou Sky, sua IA pessoal. Configure a chave Gemini nas configurações para capacidades completas.';
+  if (/que horas|horas s[aã]o/.test(t)) return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
+  if (/que dia|data/.test(t)) return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`;
+  if (/obrigad|valeu/.test(t)) return pick(LOCAL_RESPONSES.obrigado);
+  if (/tchau|adeus|até logo/.test(t)) return `Até breve${name}.`;
+  return 'Para respostas completas, configure a chave Gemini API nas configurações.';
 };
 
 // ── Camera ─────────────────────────────────────────────────────────────────────
