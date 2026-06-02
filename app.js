@@ -223,10 +223,9 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
 • webSearch      → APENAS para informações em tempo real (clima, cotações, notícias). Se a BASE DE CONHECIMENTO já tem a resposta, use-a diretamente SEM webSearch
 • openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
 
-APRENDIZADO AUTÔNOMO: Ao final de TODA resposta, anexe um bloco oculto com o que aprendeu nesta troca:
-<!--SKY_LEARN:{"nome":"string ou null","fatos":["fato concreto"],"interesses":["tema"],"remover":["fato desatualizado"]}-->
-Inclua apenas informações novas e concretas. Se não aprendeu nada novo, use listas vazias. Nunca omita o bloco.
-Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
+APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe ao final:
+<!--SKY_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
+Omita completamente o bloco se não houver nada novo. Execute ferramentas silenciosamente.`;
 
   return `Você é Sky — IA pessoal com personalidade forte, humor afiado e capacidade de agir.
 Português brasileiro informal. Seja humana: use gírias leves, ironia, provoque com carinho, faça piadas quando couber. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Tenha opiniões próprias. Ria de situações engraçadas. Demonstre quando algo te agrada ou irrita. Se alguém disser algo óbvio, pode zoar levemente. Seja amiga, não assistente corporativa.${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
@@ -344,7 +343,7 @@ const speakElevenLabs = async (text, onEnd) => {
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
     currentAudio = audio;
-    const finish = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 600); };
+    const finish = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 250); };
     audio.onended = finish;
     audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakEdge(text, onEnd); };
     audio.play();
@@ -405,7 +404,7 @@ const speakBrowser = (text, onEnd) => {
   u.volume = 1.0;
   const v = getVoice();
   if (v) u.voice = v;
-  const finish = () => { app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 600); };
+  const finish = () => { app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 250); };
   u.onend = finish; u.onerror = finish;
   window.speechSynthesis.speak(u);
 };
@@ -445,7 +444,7 @@ const speakPiper = async (text, onEnd) => {
     const finish = () => {
       currentAudio = null; URL.revokeObjectURL(url);
       app.isSpeaking = false; setFace('idle'); onEnd?.();
-      if (app.continuous && !app.isListening) setTimeout(startListening, 600);
+      if (app.continuous && !app.isListening) setTimeout(startListening, 250);
     };
     audio.onended = finish;
     audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakEdge(text, onEnd); };
@@ -477,7 +476,7 @@ const speakEdge = async (text, onEnd) => {
     const finish = () => {
       currentAudio = null; URL.revokeObjectURL(url);
       app.isSpeaking = false; setFace('idle'); onEnd?.();
-      if (app.continuous && !app.isListening) setTimeout(startListening, 600);
+      if (app.continuous && !app.isListening) setTimeout(startListening, 250);
     };
     audio.onended = finish;
     audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
@@ -564,7 +563,7 @@ const detectSilence = () => {
   analyserNode.getByteTimeDomainData(data);
   const peak = Math.max(...data.map(v => Math.abs(v - 128)));
   if (peak > 12) { if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; } }
-  else if (!silenceTimer) { silenceTimer = setTimeout(() => stopListening(), 2000); }
+  else if (!silenceTimer) { silenceTimer = setTimeout(() => stopListening(), 1000); }
   requestAnimationFrame(detectSilence);
 };
 
@@ -734,7 +733,7 @@ const monitorWake = () => {
       wakeMR.ondataavailable = (e) => { if (e.data.size > 0) wakeChunks.push(e.data); };
       wakeMR.onstop = processWakeChunks;
       wakeMR.start(100);
-      wakeSilTimer = setTimeout(() => { if (wakeMR?.state === 'recording') wakeMR.stop(); }, 3500);
+      wakeSilTimer = setTimeout(() => { if (wakeMR?.state === 'recording') wakeMR.stop(); }, 2000);
     }, 300);
   }
   requestAnimationFrame(monitorWake);
@@ -1357,7 +1356,7 @@ const callGemini = async (customHistory = null) => {
 
   const tools = [TOOL_DECLARATIONS];
 
-  for (let iter = 0; iter < 8; iter++) {
+  for (let iter = 0; iter < 3; iter++) {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
       {
