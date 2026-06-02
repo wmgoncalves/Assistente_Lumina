@@ -219,6 +219,7 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
 • checkHabit     → quando mencionar que fez um hábito
 • addFinance     → gasto, receita, pagamento, salário mencionado
 • saveNote       → pedido para salvar, anotar ou guardar informação
+• systemCommand  → bloquear tela, suspender, desligar, reiniciar, mudo, volume — quando usuário pedir ação no computador
 • webSearch      → APENAS para informações em tempo real (clima, cotações, notícias). Se a BASE DE CONHECIMENTO já tem a resposta, use-a diretamente SEM webSearch
 • openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
 
@@ -939,6 +940,21 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'systemCommand',
+      description: 'Executa um comando no computador do usuário.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['lock','sleep','shutdown','restart','mute','volume_up','volume_down','cancel_shutdown'],
+            description: 'lock=bloquear tela, sleep=suspender, shutdown=desligar(30s), restart=reiniciar(30s), cancel_shutdown=cancelar desligamento, mute=mudo, volume_up/down=volume'
+          }
+        },
+        required: ['action']
+      }
+    },
+    {
       name: 'webSearch',
       description: 'Pesquisa informações atuais na internet: clima, previsão do tempo, notícias, preços, eventos, qualquer dado em tempo real.',
       parameters: {
@@ -1016,7 +1032,8 @@ const TOOL_LABELS = {
   completeTask: 'Concluindo tarefa…',
   checkHabit:   'Registrando hábito…',
   addFinance:   'Registrando transação…',
-  saveNote:     'Salvando nota…',
+  saveNote:      'Salvando nota…',
+  systemCommand: 'Executando comando…',
   webSearch:    'Pesquisando na web…',
   openPage:             'Abrindo página…',
   listCalendarEvents:   'Consultando agenda…',
@@ -1155,6 +1172,20 @@ const executeTool = async (name, args) => {
       saveNotes(notes);
       if (document.getElementById('view-conhecimento')?.classList.contains('active')) renderKnowledge();
       return `Nota "${args.title}" salva na base de conhecimento.`;
+    }
+
+    case 'systemCommand': {
+      if (!window.skyAPI?.runCommand)
+        return 'Comandos do sistema só funcionam no app Electron, não no navegador.';
+      const ACTION_LABELS = {
+        lock: 'Tela bloqueada.', sleep: 'Computador suspenso.',
+        shutdown: 'Computador vai desligar em 30 segundos. Diga "cancela desligamento" para cancelar.',
+        restart: 'Computador vai reiniciar em 30 segundos.',
+        cancel_shutdown: 'Desligamento cancelado.',
+        mute: 'Áudio mutado.', volume_up: 'Volume aumentado.', volume_down: 'Volume diminuído.',
+      };
+      const result = await window.skyAPI.runCommand(args.action);
+      return result.ok ? (ACTION_LABELS[args.action] || 'Feito.') : `Erro: ${result.error}`;
     }
 
     case 'listCalendarEvents': {

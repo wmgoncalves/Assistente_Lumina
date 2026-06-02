@@ -1,6 +1,19 @@
 const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain, Tray, Menu, nativeImage } = require('electron');
-const { fork } = require('child_process');
+const { fork, exec } = require('child_process');
 const path = require('path');
+
+// ── Comandos do sistema (lista branca segura) ─────────────────────────────────
+const SYS_COMMANDS = {
+  lock:        () => exec('rundll32.exe user32.dll,LockWorkStation'),
+  sleep:       () => exec('rundll32.exe powrprof.dll,SetSuspendState 0,1,0'),
+  shutdown:    () => exec('shutdown /s /t 30'),
+  restart:     () => exec('shutdown /r /t 30'),
+  mute:        () => exec('powershell -c "(New-Object -com WScript.Shell).SendKeys([char]173)"'),
+  volume_up:   () => exec('powershell -c "for($i=0;$i -lt 5;$i++){(New-Object -com WScript.Shell).SendKeys([char]175)}"'),
+  volume_down: () => exec('powershell -c "for($i=0;$i -lt 5;$i++){(New-Object -com WScript.Shell).SendKeys([char]174)}"'),
+  screenshot:  () => exec('powershell -c "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'%{PRTSC}\')"'),
+  cancel_shutdown: () => exec('shutdown /a'),
+};
 
 let win    = null;
 let server = null;
@@ -94,6 +107,13 @@ app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http:/
 
 ipcMain.on('sky-show', () => showWindow());
 ipcMain.on('sky-hide', () => win?.hide());
+
+ipcMain.handle('sky-cmd', (_, action) => {
+  const cmd = SYS_COMMANDS[action];
+  if (!cmd) return { ok: false, error: 'Comando desconhecido: ' + action };
+  try { cmd(); return { ok: true }; }
+  catch (e) { return { ok: false, error: e.message }; }
+});
 
 app.whenReady().then(async () => {
   await startServer();
