@@ -6,19 +6,21 @@ const saveCfg = () => {
   // Persiste no servidor (config.json) quando rodando via Electron/localhost
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: cfg.username, geminiKey: cfg.geminiKey, elevenLabsKey: cfg.elevenLabsKey })
+      body: JSON.stringify({ username: cfg.username, geminiKey: cfg.geminiKey, elevenLabsKey: cfg.elevenLabsKey, elevenVoiceFemaleId: cfg.elevenVoiceFemaleId, elevenVoiceMaleId: cfg.elevenVoiceMaleId })
     }).catch(() => {});
   }
 };
 
-const cfg = { username: '', geminiKey: '', elevenLabsKey: '', ...loadCfg() };
+const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ...loadCfg() };
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   fetch('/api/config').then(r => r.json()).then(d => {
-    if (d.geminiKey     && !cfg.geminiKey)     { cfg.geminiKey     = d.geminiKey;     localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-    if (d.elevenLabsKey && !cfg.elevenLabsKey) { cfg.elevenLabsKey = d.elevenLabsKey; localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-    if (d.username      && !cfg.username)      { cfg.username      = d.username;      localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    if (d.geminiKey     && !cfg.geminiKey)     { cfg.geminiKey     = d.geminiKey;     }
+    if (d.elevenLabsKey && !cfg.elevenLabsKey) { cfg.elevenLabsKey = d.elevenLabsKey; }
+    if (d.elevenVoiceId !== undefined)         { cfg.elevenVoiceId = d.elevenVoiceId; }
+    if (d.username      && !cfg.username)      { cfg.username      = d.username;      }
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
   }).catch(() => {});
 }
 
@@ -314,15 +316,19 @@ const stopSpeaking = () => {
 };
 
 // ── Speech — ElevenLabs (Jarvis Voice) ────────────────────────────────────────
-const ELEVEN_VOICE = 'pNInz6obpgDQGcFmaJgB'; // Adam — deep clear male, great for pt-BR
+const DEFAULT_ELEVEN_VOICE_F = 'jotBQRDYDizrWQAbv9VO'; // voz feminina
+const DEFAULT_ELEVEN_VOICE_M = '4r3G9XKliGgVZLKMgjik'; // voz masculina
 
 const speakElevenLabs = async (text, onEnd) => {
   app.isSpeaking = true;
   setFace('speaking');
   setRespText(text);
   const clean = cleanForSpeech(text);
+  const voiceId = app.voiceGender === 'male'
+    ? (cfg.elevenVoiceMaleId   || DEFAULT_ELEVEN_VOICE_M)
+    : (cfg.elevenVoiceFemaleId || DEFAULT_ELEVEN_VOICE_F);
   try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_VOICE}`, {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: { 'xi-api-key': cfg.elevenLabsKey, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
       body: JSON.stringify({
@@ -337,12 +343,12 @@ const speakElevenLabs = async (text, onEnd) => {
     currentAudio = audio;
     const finish = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 600); };
     audio.onended = finish;
-    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakBrowser(text, onEnd); };
+    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakEdge(text, onEnd); };
     audio.play();
   } catch (e) {
-    console.warn('ElevenLabs falhou, usando TTS do navegador:', e.message);
+    console.warn('ElevenLabs falhou:', e.message);
     app.isSpeaking = false;
-    speakBrowser(text, onEnd);
+    speakEdge(text, onEnd);
   }
 };
 
@@ -401,7 +407,39 @@ const speakBrowser = (text, onEnd) => {
   window.speechSynthesis.speak(u);
 };
 
-const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) : speakBrowser(text, onEnd);
+// ── Edge TTS (Microsoft Neural — sem API key) ─────────────────────────────────
+const speakEdge = async (text, onEnd) => {
+  const clean = cleanForSpeech(text);
+  if (!clean) { onEnd?.(); return; }
+  const voice = app.voiceGender === 'male' ? 'pt-BR-AntonioNeural' : 'pt-BR-FranciscaNeural';
+  app.isSpeaking = true;
+  setFace('speaking');
+  setRespText(text);
+  try {
+    const res = await fetch('/api/tts-edge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: clean, voice })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const url   = URL.createObjectURL(await res.blob());
+    const audio = new Audio(url);
+    currentAudio = audio;
+    const finish = () => {
+      currentAudio = null; URL.revokeObjectURL(url);
+      app.isSpeaking = false; setFace('idle'); onEnd?.();
+      if (app.continuous && !app.isListening) setTimeout(startListening, 600);
+    };
+    audio.onended = finish;
+    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
+    audio.play();
+  } catch (e) {
+    app.isSpeaking = false;
+    speakBrowser(text, onEnd);
+  }
+};
+
+const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) : speakEdge(text, onEnd);
 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
 let recog = null;
@@ -457,7 +495,7 @@ const buildRecog = () => {
   return r;
 };
 
-// ── Electron: MediaRecorder + Gemini transcrição ──────────────────────────────
+// ── MediaRecorder + Gemini transcrição ────────────────────────────────────────
 let mediaRecorder = null;
 let audioChunks   = [];
 let silenceTimer  = null;
@@ -474,8 +512,30 @@ const detectSilence = () => {
   requestAnimationFrame(detectSilence);
 };
 
-const startMediaRecorder = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+const transcribeBlob = async (blob) => {
+  if (!cfg.geminiKey) throw new Error('Configure a chave Gemini API.');
+  const b64 = await blobToBase64(blob);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [
+        { inline_data: { mime_type: 'audio/webm', data: b64 } },
+        { text: 'Transcreva exatamente o que foi dito neste áudio em português brasileiro. Responda apenas com a transcrição, sem mais nada.' }
+      ]}], generationConfig: { maxOutputTokens: 200, temperature: 0 } })
+    });
+    if (res.status === 429) {
+      setUserSaid(`⏳ Aguardando limite de API… (${30 - attempt * 10}s)`);
+      await new Promise(r => setTimeout(r, (attempt + 1) * 10000));
+      continue;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  }
+  throw new Error('Limite de requisições. Tente novamente em instantes.');
+};
+
+const startMediaRecorder = async (stream) => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return; // guard duplo clique
   audioCtx     = new AudioContext();
   analyserNode = audioCtx.createAnalyser();
   analyserNode.fftSize = 512;
@@ -492,20 +552,16 @@ const startMediaRecorder = async () => {
     if (!audioChunks.length) { setFace('idle'); setUserSaid(''); return; }
     setFace('thinking'); setUserSaid('Transcrevendo…');
     try {
-      if (!cfg.geminiKey) throw new Error('Configure a chave Gemini API.');
-      const b64  = await blobToBase64(new Blob(audioChunks, { type: 'audio/webm' }));
-      const res  = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [
-          { inline_data: { mime_type: 'audio/webm', data: b64 } },
-          { text: 'Transcreva exatamente o que foi dito neste áudio em português brasileiro. Responda apenas com a transcrição.' }
-        ]}], generationConfig: { maxOutputTokens: 200, temperature: 0 } })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      const text = await transcribeBlob(new Blob(audioChunks, { type: 'audio/webm' }));
       if (text) { setUserSaid(`"${text}"`); processInput(text); }
-      else      { setFace('idle'); setUserSaid(''); if (app.continuous) setTimeout(startListening, 800); }
-    } catch (err) { setFace('idle'); setUserSaid(''); toast('Erro no microfone: ' + err.message, 'error'); }
+      else { setFace('idle'); setUserSaid(''); if (app.continuous) setTimeout(startListening, 800); }
+    } catch (err) {
+      setFace('idle'); setUserSaid('');
+      toast(err.message.includes('429') || err.message.includes('Limite')
+        ? 'Limite de API atingido. Aguarde e tente novamente.'
+        : 'Erro na transcrição: ' + err.message, 'error');
+      if (app.continuous) setTimeout(startListening, 5000);
+    }
   };
   mediaRecorder.start(100);
   app.isListening = true;
@@ -516,41 +572,32 @@ const startMediaRecorder = async () => {
 
 const startListening = async () => {
   if (app.isSpeaking) stopSpeaking();
+  if (app.isListening) return; // já ouvindo
 
   if (!navigator.mediaDevices?.getUserMedia) {
-    setFace('error');
-    setRespText('Microfone indisponível neste ambiente.');
     toast('Microfone indisponível. Abra o app via "npm run sky".', 'error');
     return;
   }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop());
-    micPermissionGranted = true;
+    await startMediaRecorder(stream);
   } catch (err) {
     setFace('idle');
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-      setRespText('Microfone bloqueado pelo Windows.');
-      toast('Permissão negada. Vá em: Configurações do Windows → Privacidade e segurança → Microfone → ative para "Apps de desktop".', 'error');
-    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-      toast('Nenhum microfone encontrado. Conecte um microfone e tente novamente.', 'error');
+      toast('Permissão de microfone negada. Vá em Configurações do Windows → Privacidade → Microfone.', 'error');
+    } else if (err.name === 'NotFoundError') {
+      toast('Nenhum microfone encontrado.', 'error');
     } else {
-      toast(`Erro no microfone: ${err.name} — ${err.message}`, 'error');
+      toast(`Erro no microfone: ${err.message}`, 'error');
     }
-    return;
   }
-
-  await startMediaRecorder();
 };
 
 const stopListening = () => {
-  if (IS_ELECTRON) {
-    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
-    if (mediaRecorder && mediaRecorder.state === 'recording') try { mediaRecorder.stop(); } catch {}
-  } else {
-    if (recog && app.isListening) try { recog.stop(); } catch {}
-  }
+  if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+  if (mediaRecorder && mediaRecorder.state === 'recording') try { mediaRecorder.stop(); } catch {}
+  else if (recog && app.isListening) try { recog.stop(); } catch {}
 };
 
 // ── Wake Word ──────────────────────────────────────────────────────────────────
@@ -582,6 +629,7 @@ const processWakeChunks = async () => {
   setTimeout(() => { wakeCooldown = false; }, 8000);
 
   try {
+    if (!cfg.geminiKey) return;
     const b64 = await blobToBase64(new Blob(wakeChunks, { type: 'audio/webm' }));
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
@@ -591,11 +639,11 @@ const processWakeChunks = async () => {
           { text: 'O áudio contém a palavra "Sky" como ativação? Se sim, qual o comando após "Sky"? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
         ]}], generationConfig: { maxOutputTokens: 80, temperature: 0 } }) }
     );
+    if (res.status === 429) { wakeCooldown = true; setTimeout(() => { wakeCooldown = false; }, 30000); return; }
     if (!res.ok) return;
     const raw = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     const result = JSON.parse(raw.replace(/```json?|```/g, '').trim());
     if (!result.wake) return;
-    // Mostra a janela do Electron
     window.skyAPI?.showWindow();
     if (result.cmd && result.cmd !== 'null') {
       setUserSaid(`"${result.cmd}"`);
@@ -1984,16 +2032,20 @@ const initPersonalizacao = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const populateConfiguracoes = () => {
-  document.getElementById('cfg-name').value   = cfg.username || '';
-  document.getElementById('cfg-key').value    = cfg.geminiKey || '';
-  document.getElementById('cfg-el-key').value = cfg.elevenLabsKey || '';
+  document.getElementById('cfg-name').value         = cfg.username || '';
+  document.getElementById('cfg-key').value          = cfg.geminiKey || '';
+  document.getElementById('cfg-el-key').value       = cfg.elevenLabsKey || '';
+  document.getElementById('cfg-voice-female').value = cfg.elevenVoiceFemaleId || '';
+  document.getElementById('cfg-voice-male').value   = cfg.elevenVoiceMaleId   || '';
 };
 
 const initConfiguracoes = () => {
   document.getElementById('cfg-save').addEventListener('click', () => {
-    cfg.username      = document.getElementById('cfg-name').value.trim();
-    cfg.geminiKey     = document.getElementById('cfg-key').value.trim();
-    cfg.elevenLabsKey = document.getElementById('cfg-el-key').value.trim();
+    cfg.username            = document.getElementById('cfg-name').value.trim();
+    cfg.geminiKey           = document.getElementById('cfg-key').value.trim();
+    cfg.elevenLabsKey       = document.getElementById('cfg-el-key').value.trim();
+    cfg.elevenVoiceFemaleId = document.getElementById('cfg-voice-female').value.trim();
+    cfg.elevenVoiceMaleId   = document.getElementById('cfg-voice-male').value.trim();
     saveCfg(); toast('Configurações salvas.', 'success');
   });
   document.getElementById('cfg-clear-mem').addEventListener('click', () => {

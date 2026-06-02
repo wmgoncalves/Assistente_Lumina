@@ -1,6 +1,7 @@
 const express   = require('express');
 const path      = require('path');
 const fs        = require('fs');
+const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const multer   = require('multer');
 const mammoth  = require('mammoth');
 const pdfParse = require('pdf-parse');
@@ -46,6 +47,7 @@ app.get('/api/config', (req, res) => {
     username:      c.username      || '',
     geminiKey:     isLocal ? (c.geminiKey     || '') : '',
     elevenLabsKey: isLocal ? (c.elevenLabsKey || '') : '',
+    elevenVoiceId: isLocal ? (c.elevenVoiceId || '') : '',
     hasGemini:     !!c.geminiKey,
     hasElevenLabs: !!c.elevenLabsKey,
   });
@@ -53,10 +55,11 @@ app.get('/api/config', (req, res) => {
 
 app.post('/api/config', (req, res) => {
   const c = getCfg();
-  const { username, geminiKey, elevenLabsKey } = req.body;
-  if (username     !== undefined)          c.username      = username;
-  if (geminiKey    && geminiKey.trim())    c.geminiKey     = geminiKey.trim();
-  if (elevenLabsKey && elevenLabsKey.trim()) c.elevenLabsKey = elevenLabsKey.trim();
+  const { username, geminiKey, elevenLabsKey, elevenVoiceId } = req.body;
+  if (username      !== undefined)             c.username      = username;
+  if (geminiKey     && geminiKey.trim())       c.geminiKey     = geminiKey.trim();
+  if (elevenLabsKey && elevenLabsKey.trim())   c.elevenLabsKey = elevenLabsKey.trim();
+  if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId.trim();
   writeJSON(CONFIG_FILE, c);
   res.json({ ok: true, hasGemini: !!c.geminiKey, hasElevenLabs: !!c.elevenLabsKey });
 });
@@ -202,6 +205,23 @@ Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em 
     if (changed) writeJSON(MEMORY_FILE, m);
     res.json({ updated: changed, memory: { userName: m.userName, facts: m.facts } });
   } catch { res.json({ updated: false }); }
+});
+
+// ── Edge TTS (Microsoft Neural — gratuito, sem API key) ──────────────────────
+app.post('/api/tts-edge', async (req, res) => {
+  const { text, voice = 'pt-BR-FranciscaNeural' } = req.body;
+  if (!text) return res.status(400).json({ error: 'text required' });
+  try {
+    const tts    = new MsEdgeTTS();
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+    const chunks = [];
+    const stream = tts.toStream(text);
+    stream.on('data',  c => chunks.push(c));
+    stream.on('end',   () => { res.set('Content-Type', 'audio/mpeg'); res.send(Buffer.concat(chunks)); });
+    stream.on('error', e => { if (!res.headersSent) res.status(500).json({ error: e.message }); });
+  } catch (e) {
+    if (!res.headersSent) res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Ingestão de Documentos (PDF / DOCX / TXT) ────────────────────────────────
