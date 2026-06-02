@@ -11,7 +11,7 @@ const saveCfg = () => {
   }
 };
 
-const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:4b', ...loadCfg() };
+const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:1b', ...loadCfg() };
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
@@ -1236,7 +1236,7 @@ const callOllama = async (customHistory = null) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model, prompt, stream: false,
-      options: { temperature: 0.75, num_predict: 500, num_gpu: 0 }
+      options: { temperature: 0.75, num_predict: 200, num_gpu: 0 }
     }),
     signal: AbortSignal.timeout(60000)
   });
