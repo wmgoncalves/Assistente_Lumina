@@ -1,9 +1,10 @@
-const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const { fork } = require('child_process');
 const path = require('path');
 
-let win = null;
+let win    = null;
 let server = null;
+let tray   = null;
 
 function startServer() {
   return new Promise((resolve) => {
@@ -14,8 +15,39 @@ function startServer() {
   });
 }
 
+// Ícone 16x16 vermelho para o tray (base64 PNG)
+const TRAY_ICON_B64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFJSURBVDiNpZMxSsRAEIa/2WwWFCwFD+AJLCwEPS9gIXgBwVIQL+ApbG0FC/EEHsDKC1hYiYWFhYuIhVhYiJuQzb4fiye7u4mJYGDgMfP/M/MyM4L/JgIgqYwxEZB57UlyFpEzkBpJkiQ55/wA4Jz7BvABYIwx1lp7UkpJKaW01rLWWq21Xmut9zHGewDMbLTWOuccgIjIiIiIiIjIiIiIiIioqo6q+lVVf1T1V1V3VXVHVXdUdUdVd1R1R1V3VHVHVQ==';
+
 const WIN_W = 1100;
 const WIN_H = 720;
+
+function createTray() {
+  const icon = nativeImage.createFromDataURL(`data:image/png;base64,${TRAY_ICON_B64}`).resize({ width: 16, height: 16 });
+  tray = new Tray(icon);
+  tray.setToolTip('Sky — Clique para mostrar');
+  tray.on('click', toggleWindow);
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Mostrar Sky',  click: () => showWindow() },
+    { label: 'Esconder',     click: () => win?.hide() },
+    { type: 'separator' },
+    { label: 'Iniciar com Windows', type: 'checkbox',
+      checked: app.getLoginItemSettings().openAtLogin,
+      click: (item) => app.setLoginItemSettings({ openAtLogin: item.checked }) },
+    { type: 'separator' },
+    { label: 'Sair',         click: () => { app.quit(); } },
+  ]));
+}
+
+function showWindow() {
+  if (!win) return;
+  win.show();
+  win.focus();
+}
+
+function toggleWindow() {
+  if (!win) return;
+  win.isVisible() ? win.hide() : showWindow();
+}
 
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -25,74 +57,55 @@ function createWindow() {
     height: WIN_H,
     x: Math.floor((width  - WIN_W) / 2),
     y: Math.floor((height - WIN_H) / 2),
-    frame:       false,
-    alwaysOnTop: true,
-    resizable:   true,
-    skipTaskbar: false,
-    show:        true,
+    frame:        false,
+    alwaysOnTop:  true,
+    resizable:    true,
+    skipTaskbar:  true,   // não aparece na barra de tarefas
+    show:         false,  // inicia escondida
     backgroundColor: '#0a0303',
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration:  false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     }
   });
 
-  // Permite microfone e câmera sem HTTPS no localhost
   win.webContents.session.setPermissionRequestHandler((_, permission, callback) => {
-    const allowed = ['media', 'microphone', 'audioCapture', 'videoCapture', 'camera'];
-    callback(allowed.includes(permission));
+    callback(['media','microphone','audioCapture','videoCapture','camera'].includes(permission));
   });
   win.webContents.session.setPermissionCheckHandler((_, permission) => {
-    const allowed = ['media', 'microphone', 'audioCapture', 'videoCapture', 'camera'];
-    return allowed.includes(permission);
+    return ['media','microphone','audioCapture','videoCapture','camera'].includes(permission);
   });
 
-  // Abre links externos no browser padrão do sistema (Chrome, Edge, etc)
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
-
-  // Mantém JS rodando mesmo com janela escondida (necessário pro wake word)
+  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.setBackgroundThrottling(false);
 
-  // Limpa cache para sempre carregar o código mais recente
-  win.webContents.session.clearCache().then(() => {
-    win.loadURL('http://localhost:8080');
-  });
+  win.webContents.session.clearCache().then(() => win.loadURL('http://localhost:8080'));
 
-  // ESC esconde a janela
   win.webContents.on('before-input-event', (_, input) => {
     if (input.key === 'Escape' && input.type === 'keyDown') win.hide();
   });
 
-  win.on('close', (e) => {
-    e.preventDefault();
-    win.hide();
-  });
+  win.on('close', (e) => { e.preventDefault(); win.hide(); });
 }
 
 app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
 app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
 
-// IPC — renderer pede pra mostrar/esconder janela (wake word)
-ipcMain.on('sky-show', () => { if (win) { win.show(); win.focus(); } });
-ipcMain.on('sky-hide', () => { if (win) win.hide(); });
+ipcMain.on('sky-show', () => showWindow());
+ipcMain.on('sky-hide', () => win?.hide());
 
 app.whenReady().then(async () => {
   await startServer();
   createWindow();
+  createTray();
 
-  globalShortcut.register('F6', () => {
-    if (!win) return;
-    if (win.isVisible()) {
-      win.hide();
-    } else {
-      win.show();
-      win.focus();
-    }
-  });
+  // Ativa wake word automaticamente ao iniciar
+  setTimeout(() => {
+    win.webContents.executeJavaScript('if(typeof startWakeWord==="function" && !wakeActive) startWakeWord()').catch(() => {});
+  }, 3000);
+
+  globalShortcut.register('F6', toggleWindow);
 });
 
 app.on('will-quit', () => {
@@ -100,5 +113,4 @@ app.on('will-quit', () => {
   if (server) server.kill();
 });
 
-// Mantém o app rodando mesmo sem janelas visíveis
 app.on('window-all-closed', (e) => e.preventDefault());

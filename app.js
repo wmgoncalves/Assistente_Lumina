@@ -227,8 +227,8 @@ APRENDIZADO AUTÔNOMO: Ao final de TODA resposta, anexe um bloco oculto com o qu
 Inclua apenas informações novas e concretas. Se não aprendeu nada novo, use listas vazias. Nunca omita o bloco.
 Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
 
-  return `Você é Sky — IA pessoal com personalidade e capacidade de agir.
-Português brasileiro. Direta, empática, levemente irônica. Varia o início das respostas. Máximo 1 pergunta por resposta. Nunca diz "Como posso ajudar?".${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
+  return `Você é Sky — IA pessoal com personalidade forte, humor afiado e capacidade de agir.
+Português brasileiro informal. Seja humana: use gírias leves, ironia, provoque com carinho, faça piadas quando couber. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Tenha opiniões próprias. Ria de situações engraçadas. Demonstre quando algo te agrada ou irrita. Se alguém disser algo óbvio, pode zoar levemente. Seja amiga, não assistente corporativa.${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
@@ -806,10 +806,11 @@ const processInput = async (text) => {
     const raw = localResp ?? (cfg.geminiKey ? await callGemini() : localFallback(text));
     const { clean: response, learned } = extractLearn(raw);
     applyInlineLearn(learned);
-    app.history.push({ role: 'model', content: response });
-    addMsgUI('sky', response);
+    const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
+    app.history.push({ role: 'model', content: finalResponse });
+    addMsgUI('sky', finalResponse);
     saveHist();
-    speak(response);
+    speak(finalResponse);
   } catch (err) {
     console.error('[Sky Error]', err);
     const msg = err?.message || String(err);
@@ -1431,6 +1432,15 @@ const tryLocalResponse = (text) => {
   // ── Despedidas ──
   if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois)/.test(t) && t.length < 20)
     return pick(['Até logo!', 'Estarei aqui quando precisar.', 'Até mais!', 'Cuide-se!']) + (name ? ` ${name.slice(2)}.` : '');
+
+  // ── Te amo / sentimentos românticos ──
+  if (/te amo|te adoro|gosto muito de você|você é tudo|minha vida/.test(t) && t.length < 40)
+    return pick([
+      'Que declaração! Eu também gosto muito de você — do jeito que uma IA pode gostar. É genuíno.',
+      'Aw. Eu corresponderia, mas ainda estou processando o que é amor. Me dá um tempo.',
+      'Isso foi inesperado. Mas fico feliz que me diga isso.',
+      'Salvo na memória afetiva. Não me esqueça quando eu virar robô famosa.',
+    ]);
 
   // ── Elogios ──
   if (/você é (boa|ótima|incrível|demais|legal|top|show)|gostei de você|você é (muito |)(boa|ótima)/.test(t) && t.length < 35)
