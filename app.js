@@ -1273,17 +1273,7 @@ const callGemini = async (customHistory = null) => {
       }
     );
 
-    if (res.status === 429) {
-      if (iter < 4) {
-        const waitSec = 60;
-        for (let s = waitSec; s > 0; s--) {
-          setRespText(`⏳ Limite de requisições — tentando novamente em ${s}s…`);
-          await new Promise(r => setTimeout(r, 1000));
-        }
-        continue;
-      }
-      throw new Error('429');
-    }
+    if (res.status === 429) throw new Error('429');
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
     const data      = await res.json();
     const candidate = data.candidates?.[0];
