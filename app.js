@@ -222,7 +222,9 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
 • webSearch      → clima, previsão do tempo, cotações de câmbio — SEMPRE tente webSearch antes de abrir página
 • openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
 
-APRENDIZADO AUTÔNOMO: Em toda conversa, preste atenção a detalhes pessoais e use updateMemory silenciosamente. Quanto mais você aprende, mais personalizada fica sua ajuda.
+APRENDIZADO AUTÔNOMO: Ao final de TODA resposta, anexe um bloco oculto com o que aprendeu nesta troca:
+<!--SKY_LEARN:{"nome":"string ou null","fatos":["fato concreto"],"interesses":["tema"],"remover":["fato desatualizado"]}-->
+Inclua apenas informações novas e concretas. Se não aprendeu nada novo, use listas vazias. Nunca omita o bloco.
 Execute ferramentas silenciosamente. Confirme o resultado naturalmente na resposta.`;
 
   return `Você é Sky — IA pessoal com personalidade e capacidade de agir.
@@ -702,6 +704,44 @@ const startWakeWord = async () => {
   }
 };
 
+// ── Aprendizado inline (extrai bloco oculto da resposta) ──────────────────────
+const LEARN_RE = /<!--SKY_LEARN:([\s\S]*?)-->/;
+
+const extractLearn = (response) => {
+  const match = response.match(LEARN_RE);
+  const clean = response.replace(LEARN_RE, '').trim();
+  if (!match) return { clean, learned: null };
+  try { return { clean, learned: JSON.parse(match[1].trim()) }; }
+  catch { return { clean, learned: null }; }
+};
+
+const applyInlineLearn = (learned) => {
+  if (!learned) return;
+  const mem = getMem();
+  let changed = false;
+
+  if (learned.nome && !mem.userName) { mem.userName = learned.nome; changed = true; }
+
+  if (Array.isArray(learned.remover)) {
+    learned.remover.forEach(r => {
+      const i = mem.facts.indexOf(r);
+      if (i !== -1) { mem.facts.splice(i, 1); changed = true; }
+    });
+  }
+
+  const allNew = [
+    ...(learned.fatos     || []),
+    ...(learned.interesses|| []).map(i => `Interesse: ${i}`)
+  ];
+  allNew.forEach(f => {
+    if (f && !mem.facts.includes(f) && mem.facts.length < 120) {
+      mem.facts.push(f); changed = true;
+    }
+  });
+
+  if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
+};
+
 // ── UI Helpers ─────────────────────────────────────────────────────────────────
 const setRespText = (t) => { document.getElementById('resp-text').textContent = t; };
 const setUserSaid = (t) => { document.getElementById('user-said').textContent = t; };
@@ -762,7 +802,9 @@ const processInput = async (text) => {
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
   try {
-    const response = cfg.geminiKey ? await callGemini() : localFallback(text);
+    const raw = cfg.geminiKey ? await callGemini() : localFallback(text);
+    const { clean: response, learned } = extractLearn(raw);
+    applyInlineLearn(learned);
     app.history.push({ role: 'model', content: response });
     addMsgUI('sky', response);
     saveHist();
@@ -784,11 +826,13 @@ const processInput = async (text) => {
       setRespText('Tentando novamente…');
       setFace('thinking');
       try {
-        const response = await callGemini();
-        app.history.push({ role: 'model', content: response });
-        addMsgUI('sky', response);
+        const raw2 = await callGemini();
+        const { clean: response2, learned: l2 } = extractLearn(raw2);
+        applyInlineLearn(l2);
+        app.history.push({ role: 'model', content: response2 });
+        addMsgUI('sky', response2);
         saveHist();
-        speak(response);
+        speak(response2);
       } catch {
         speak('Ainda com limite de requisições. Se persistir, pode ser a cota diária do Gemini — tente novamente em algumas horas.');
       }
