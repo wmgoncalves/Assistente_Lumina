@@ -308,6 +308,40 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── News RSS (G1 + BBC Brasil — sem API key) ──────────────────────────────────
+const RSS_FEEDS = [
+  { url: 'https://g1.globo.com/rss/g1/',                     source: 'G1'       },
+  { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml',      source: 'BBC'      },
+  { url: 'https://www.uol.com.br/rss.xml',                   source: 'UOL'      },
+];
+
+const parseRssTitles = (xml) => {
+  const items = [...xml.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 6);
+  return items.map(m => {
+    const titleMatch = m[0].match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+    return titleMatch ? titleMatch[1].trim() : null;
+  }).filter(Boolean);
+};
+
+app.get('/api/news', async (_, res) => {
+  const headlines = [];
+  for (const feed of RSS_FEEDS) {
+    try {
+      const r = await fetch(feed.url, {
+        signal: AbortSignal.timeout(5000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SkyBot/1.0)' }
+      });
+      if (!r.ok) continue;
+      const xml    = await r.text();
+      const titles = parseRssTitles(xml, feed.source);
+      titles.forEach(t => headlines.push({ title: t, source: feed.source }));
+      if (headlines.length >= 10) break;
+    } catch { continue; }
+  }
+  if (!headlines.length) return res.status(503).json({ error: 'Não foi possível buscar notícias.' });
+  res.json({ headlines: headlines.slice(0, 8) });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log('\n╔═══════════════════════════════════════╗');

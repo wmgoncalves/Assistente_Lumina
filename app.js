@@ -856,7 +856,8 @@ const processInput = async (text) => {
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
   try {
-    const localResp = tryLocalResponse(text);
+    const infoResp = await detectLocalInfo(text);
+    const localResp = infoResp ?? tryLocalResponse(text);
     const raw = localResp ?? (cfg.geminiKey ? await callGemini() : localFallback(text));
     const { clean: response, learned } = extractLearn(raw);
     applyInlineLearn(learned);
@@ -1142,6 +1143,19 @@ const webSearchGemini = async (query) => {
     } catch { /* fallback */ }
   }
 
+  // ── Notícias / manchetes (RSS G1 + BBC Brasil — sem key) ──
+  if (/notícia|manchete|hoje no mundo|o que (aconteceu|rolou)|últimas|novidade|atualidade|headline/.test(q)) {
+    try {
+      const r = await fetch('/api/news');
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      if (data.headlines?.length) {
+        const lista = data.headlines.map((h, i) => `${i + 1}. [${h.source}] ${h.title}`).join('\n');
+        return `Manchetes de agora:\n${lista}`;
+      }
+    } catch { /* fallback */ }
+  }
+
   // ── Fallback: Gemini base knowledge ──
   try {
     const res  = await fetch(
@@ -1401,6 +1415,110 @@ const callGeminiVision = async (base64, mime, prompt) => {
   return data.candidates[0].content.parts[0].text.trim();
 };
 
+// ── Info em tempo real local (câmbio, clima, notícias — sem Gemini) ───────────
+const detectLocalInfo = async (text) => {
+  const q = text.toLowerCase();
+
+  // Câmbio
+  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp/.test(q)) {
+    try {
+      const map  = { dólar:'USD-BRL', dollar:'USD-BRL', usd:'USD-BRL', euro:'EUR-BRL', eur:'EUR-BRL', libra:'GBP-BRL', gbp:'GBP-BRL' };
+      const pair = Object.entries(map).find(([k]) => q.includes(k))?.[1] || 'USD-BRL';
+      const res  = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      const c    = Object.values(data)[0];
+      const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} · venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} · variação ${c.pctChange}% (atualizado às ${hora})`;
+    } catch { return null; }
+  }
+
+  // Clima
+  if (/tempo|clima|chuva|temperatura|previsão|calor|frio/.test(q)) {
+    try {
+      const city   = extractCity(q);
+      const amanha = /amanhã|próximo dia/.test(q);
+      const res    = await fetch(`https://wttr.in/${city}?format=j1`, { headers: { 'Accept-Language': 'pt-BR' } });
+      if (!res.ok) throw new Error(res.status);
+      const data     = await res.json();
+      const cityName = city.replace(/\+/g, ' ');
+      if (amanha && data.weather?.[1]) {
+        const w    = data.weather[1];
+        const desc = w.hourly?.[4]?.lang_pt?.[0]?.value || w.hourly?.[4]?.weatherDesc?.[0]?.value || '';
+        return `Previsão para amanhã em ${cityName}: máxima ${w.maxtempC}°C, mínima ${w.mintempC}°C. ${desc}. Chance de chuva: ${w.hourly?.[4]?.chanceofrain || 0}%.`;
+      }
+      const cur  = data.current_condition?.[0];
+      if (!cur) throw new Error('sem dados');
+      const desc = cur.lang_pt?.[0]?.value || cur.weatherDesc?.[0]?.value || '';
+      return `Clima em ${cityName} agora: ${cur.temp_C}°C (sensação ${cur.FeelsLikeC}°C). ${desc}. Umidade ${cur.humidity}%, vento ${cur.windspeedKmph} km/h.`;
+    } catch { return null; }
+  }
+
+  // Notícias
+  if (/notícia|manchete|hoje no mundo|o que (aconteceu|rolou)|últimas|novidade|atualidade/.test(q)) {
+    try {
+      const r = await fetch('/api/news');
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      if (data.headlines?.length) {
+        return `Manchetes de agora:\n${data.headlines.map((h, i) => `${i + 1}. [${h.source}] ${h.title}`).join('\n')}`;
+      }
+    } catch { return null; }
+  }
+
+  return null;
+};
+
+// ── Abrir sites localmente (sem API) ──────────────────────────────────────────
+const SITE_MAP = {
+  'youtube':       'https://youtube.com',
+  'instagram':     'https://instagram.com',
+  'google':        'https://google.com',
+  'gmail':         'https://gmail.com',
+  'whatsapp':      'https://web.whatsapp.com',
+  'twitter':       'https://twitter.com',
+  'facebook':      'https://facebook.com',
+  'spotify':       'https://open.spotify.com',
+  'netflix':       'https://netflix.com',
+  'reddit':        'https://reddit.com',
+  'github':        'https://github.com',
+  'linkedin':      'https://linkedin.com',
+  'twitch':        'https://twitch.tv',
+  'amazon':        'https://amazon.com.br',
+  'mercado livre': 'https://mercadolivre.com.br',
+  'mercadolivre':  'https://mercadolivre.com.br',
+  'shopee':        'https://shopee.com.br',
+  'tiktok':        'https://tiktok.com',
+  'discord':       'https://discord.com',
+  'telegram':      'https://web.telegram.org',
+};
+
+const detectOpenSite = (rawText) => {
+  const t = rawText.toLowerCase().trim().replace(/[!?.]+$/, '');
+  const m = t.match(/^(?:abr[ae]|abrir|abre|vai pra|vá pra|entra?r?\s+(?:no?|na)|acessa?r?|navega?r?\s+(?:até|para)?)\s+(?:o\s+|a\s+|no\s+|na\s+|um\s+)?(.+)/);
+  if (!m) return null;
+
+  const target = m[1].trim();
+
+  // URL direta digitada
+  if (/^https?:\/\//.test(target) || (/\.(?:com|net|org|br|io|tv|me)/.test(target) && !/\s/.test(target))) {
+    const url = target.startsWith('http') ? target : `https://${target}`;
+    openWebPopup(url, target);
+    return `Abrindo ${target}.`;
+  }
+
+  // Site do mapa
+  for (const [key, url] of Object.entries(SITE_MAP)) {
+    if (target.includes(key)) {
+      const label = key.charAt(0).toUpperCase() + key.slice(1);
+      openWebPopup(url, label);
+      return `Abrindo ${label}.`;
+    }
+  }
+
+  return null;
+};
+
 // ── Respostas locais (sem API) ─────────────────────────────────────────────────
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -1427,6 +1545,10 @@ const tryLocalResponse = (text) => {
   const t = text.toLowerCase().trim().replace(/[!?.]+$/, '').trim();
   const mem = getMem();
   const name = mem.userName ? `, ${mem.userName}` : '';
+
+  // ── Abrir sites (funciona sem API, com Gemini ou Ollama) ──
+  const siteResp = detectOpenSite(text);
+  if (siteResp !== null) return siteResp;
 
   // ── Saudações ──
   const saudacaoRe = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite|salve|eai|e aí)([\s,]*(.*))?$/;
