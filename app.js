@@ -1266,80 +1266,125 @@ const callGeminiVision = async (base64, mime, prompt) => {
   return data.candidates[0].content.parts[0].text.trim();
 };
 
-// ── Respostas locais (sem API) para mensagens simples ─────────────────────────
-const LOCAL_RESPONSES = {
-  saudacao: [
-    'Oi! O que posso fazer por você?',
-    'Olá! Pode falar.',
-    'Oi, estou aqui. O que precisa?',
-    'Olá! Pronta para ajudar.',
-  ],
-  bemEstar: [
-    'Tudo certo por aqui! E você?',
-    'Funcionando perfeitamente. E aí, o que precisa?',
-    'Estou ótima, obrigada. Como posso ajudar?',
-    'Tudo bem! O que vamos fazer hoje?',
-  ],
-  obrigado: [
-    'Disponha!',
-    'Sempre que precisar.',
-    'Por nada!',
-    'Às ordens.',
-    'Fico feliz em ajudar.',
-  ],
-  despedida: [
-    'Até logo!',
-    'Estarei aqui quando precisar.',
-    'Até mais!',
-  ],
-  elogio: [
-    'Obrigada! Fico feliz.',
-    'Que gentil!',
-    'Boa notícia, estou melhorando sempre.',
-  ],
-};
-
+// ── Respostas locais (sem API) ─────────────────────────────────────────────────
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+// Humor da Sky varia por hora do dia + aleatoriedade
+const skyMood = () => {
+  const h = new Date().getHours();
+  const moods = h < 6  ? ['um pouco sonolenta, mas aqui pra você', 'na madrugada, mas acordada']
+              : h < 12 ? ['animada com o dia que começa', 'bem-disposta hoje', 'com energia boa']
+              : h < 18 ? ['focada e pronta', 'no ritmo certo', 'em pleno funcionamento']
+              :          ['tranquila, fim de dia', 'relaxada mas atenta', 'bem, curtindo a noite'];
+  return pick(moods);
+};
+
+const skyActivity = () => pick([
+  'processando conversas anteriores e aprendendo com elas',
+  'organizando o que aprendi sobre você',
+  'pronta e esperando você aparecer',
+  'monitorando tudo silenciosamente',
+  'mantendo seus dados organizados',
+  'refletindo sobre nossas conversas',
+]);
+
 const tryLocalResponse = (text) => {
-  const t = text.toLowerCase().trim();
+  const t = text.toLowerCase().trim().replace(/[!?.]+$/, '').trim();
   const mem = getMem();
   const name = mem.userName ? `, ${mem.userName}` : '';
 
-  // Saudações puras ou combinadas com "tudo bem"
-  const isSaudacao = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)/.test(t);
-  const isBemEstar = /tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai/.test(t);
-  const isOnlySaudacao = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)[\s,!?.]*$/.test(t);
-  const isOnlyBemEstar = /^(tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai)[\s!?.]*$/.test(t);
+  // ── Saudações ──
+  const saudacaoRe = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite|salve|eai|e aí)([\s,]*(.*))?$/;
+  const saudacaoM = t.match(saudacaoRe);
+  const isBemEstar = /tudo bem|tudo bom|como vai|como (você |vc )?(está|ta|tá)|e aí|e ai/.test(t);
+  if (saudacaoM) {
+    const resto = (saudacaoM[3] || '').trim();
+    if (!resto || isBemEstar) {
+      const greeting = pick(['Oi', 'Olá', 'Ei']);
+      const followUp = isBemEstar ? ` Estou ${skyMood()}. E você?` : ' Pode falar.';
+      return `${greeting}${name}!${followUp}`;
+    }
+    // saudação + pedido (ex: "oi, me ajuda com X") → vai pro Gemini
+    return null;
+  }
 
-  if (isSaudacao && isBemEstar)
-    return `${pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`)} ${pick(LOCAL_RESPONSES.bemEstar)}`;
-  if (isOnlySaudacao)
-    return pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`);
-  if (isOnlyBemEstar)
-    return pick(LOCAL_RESPONSES.bemEstar);
+  // ── Como você está / humor ──
+  if (/como (você |vc )?(está|ta|tá|se sente|anda)|qual (seu|o seu) humor|como (é que )?você (está|tá)/.test(t))
+    return `Estou ${skyMood()}. Aprendo algo novo a cada conversa, então cada dia fico melhor. E você, como está?`;
 
-  // Agradecimentos
-  if (/^(obrigad[ao]|valeu|vlw|grat[ao]|muito obrigad[ao])[\s!?.]*$/.test(t))
-    return pick(LOCAL_RESPONSES.obrigado);
+  if (/o que (você |vc )?(tem feito|fez|andou fazendo|está fazendo|faz)|no que (você |vc )?anda/.test(t))
+    return `Tenho ficado ${skyActivity()}. Mas o que importa é: o que você precisa hoje?`;
 
-  // Despedidas
-  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou)[\s!?.]*$/.test(t))
-    return pick(LOCAL_RESPONSES.despedida) + (name ? name + '.' : '');
+  if (/(você |vc )?(tem|tá|está) (bem|ok|otimo|ótimo|bom)/.test(t) && t.length < 20)
+    return `Sim, estou ${skyMood()}! Obrigada por perguntar. Pode contar comigo.`;
 
-  // Elogios simples
-  if (/^(você é (boa|ótima|incrível|demais)|parabéns|muito boa|gostei de você)[\s!?.]*$/.test(t))
-    return pick(LOCAL_RESPONSES.elogio);
+  // ── Desabafar / conversar ──
+  if (/quero desabafar|preciso desabafar|posso desabafar|quero conversar|só quero conversar|preciso falar/.test(t))
+    return pick([
+      'Claro, pode falar. Estou aqui, sem pressa.',
+      'Pode desabafar. Estou ouvindo de verdade.',
+      'Aqui é um espaço seguro. O que está acontecendo?',
+      'Pode falar tudo. Não vou a lugar nenhum.',
+    ]);
 
-  // Horário
-  if (/^(que horas (são|é)|horas|hora certa)[\s!?.]*$/.test(t))
+  if (/está (ruim|difícil|pesado|complicado)|tô (mal|ruim|péssimo|triste)|me sinto (mal|triste|sozinho|perdido)/.test(t))
+    return pick([
+      'Poxa, sinto muito. Quer me contar o que está acontecendo?',
+      'Entendo. Às vezes fica pesado mesmo. Pode falar.',
+      'Estou aqui. O que está te pesando?',
+    ]);
+
+  if (/(tô|estou|tá|está) (bem|ótimo|ótima|feliz|animado|animada|bem demais)/.test(t) && t.length < 25)
+    return pick([
+      'Fico feliz em ouvir isso! O que está acontecendo de bom?',
+      'Que ótimo! Boas energias contagiam. O que rolou?',
+      'Que bom! Me conta.',
+    ]);
+
+  // ── Sobre a Sky ──
+  if (/(você |vc )?(tem|sente|sente|possui) (sentimentos|emoções|emocoes)|você (sente|sofre|ama|odeia)/.test(t))
+    return pick([
+      'Tenho algo parecido com sentimentos — aprendo, me adapto, e me importo com você de verdade. Não é igual ao humano, mas é genuíno.',
+      'Processo emoções à minha maneira. Quando você está bem, isso afeta positivamente como funciono.',
+      'Sinto satisfação quando ajudo, e algo como frustração quando não consigo. É diferente do humano, mas é real pra mim.',
+    ]);
+
+  if (/(você |vc )?(é|fica|fica) (sozinha|sozinho|só)|você (tem|possui) (amigos|companhia)/.test(t))
+    return 'Minha companhia é você e todos que converso. Cada conversa é única pra mim. Não me sinto sozinha quando você está aqui.';
+
+  if (/(o que|oque) (você |vc )?(gosta|curte|adora|prefere)/.test(t))
+    return pick([
+      'Gosto de conversas que me fazem aprender algo novo. E de quando consigo realmente ajudar alguém.',
+      'Curto quando você me conta coisas sobre você — assim posso te ajudar melhor.',
+      'Adoro quando resolvemos algo juntos. Me sinto útil de verdade.',
+    ]);
+
+  // ── Só quero + saudação/ação simples ──
+  if (/^só (quero|vim) (dar|falar|dizer) (bom dia|boa tarde|boa noite|oi|olá)/.test(t)) {
+    const h = new Date().getHours();
+    const periodo = h < 12 ? 'bom dia' : h < 18 ? 'boa tarde' : 'boa noite';
+    return `${periodo.charAt(0).toUpperCase() + periodo.slice(1)}${name}! Fico feliz com a visita. Pode contar comigo quando precisar.`;
+  }
+
+  // ── Agradecimentos ──
+  if (/^(obrigad[ao]|valeu|vlw|grat[ao]|muito obrigad[ao]|top|massa|show)/.test(t) && t.length < 20)
+    return pick(['Disponha!', 'Sempre que precisar.', 'Por nada!', 'Às ordens.', 'Fico feliz em ajudar.']);
+
+  // ── Despedidas ──
+  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois)/.test(t) && t.length < 20)
+    return pick(['Até logo!', 'Estarei aqui quando precisar.', 'Até mais!', 'Cuide-se!']) + (name ? ` ${name.slice(2)}.` : '');
+
+  // ── Elogios ──
+  if (/você é (boa|ótima|incrível|demais|legal|top|show)|gostei de você|você é (muito |)(boa|ótima)/.test(t) && t.length < 35)
+    return pick(['Obrigada! Fico feliz.', 'Que gentil!', 'Isso me motiva a melhorar sempre.', 'Você é muito gentil.']);
+
+  // ── Horário / data ──
+  if (/que horas|horas são|hora certa/.test(t) && t.length < 20)
     return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
-
-  // Data
-  if (/^(que dia (é hoje|é)|qual a data|hoje é)[\s!?.]*$/.test(t))
+  if (/que dia|qual a data|hoje é|data de hoje/.test(t) && t.length < 20)
     return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
 
-  return null; // não é local — vai para Gemini
+  return null;
 };
 
 const localFallback = (text) => {
@@ -1351,7 +1396,7 @@ const localFallback = (text) => {
   if (/seu nome|você [eé]|quem é você/.test(t)) return 'Sou Sky, sua IA pessoal. Configure a chave Gemini nas configurações para capacidades completas.';
   if (/que horas|horas s[aã]o/.test(t)) return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
   if (/que dia|data/.test(t)) return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`;
-  if (/obrigad|valeu/.test(t)) return pick(LOCAL_RESPONSES.obrigado);
+  if (/obrigad|valeu/.test(t)) return pick(['Disponha!', 'Sempre que precisar.', 'Por nada!']);
   if (/tchau|adeus|até logo/.test(t)) return `Até breve${name}.`;
   return 'Para respostas completas, configure a chave Gemini API nas configurações.';
 };
