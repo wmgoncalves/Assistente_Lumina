@@ -219,7 +219,7 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
 • checkHabit     → quando mencionar que fez um hábito
 • addFinance     → gasto, receita, pagamento, salário mencionado
 • saveNote       → pedido para salvar, anotar ou guardar informação
-• webSearch      → clima, previsão do tempo, cotações de câmbio — SEMPRE tente webSearch antes de abrir página
+• webSearch      → APENAS para informações em tempo real (clima, cotações, notícias). Se a BASE DE CONHECIMENTO já tem a resposta, use-a diretamente SEM webSearch
 • openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
 
 APRENDIZADO AUTÔNOMO: Ao final de TODA resposta, anexe um bloco oculto com o que aprendeu nesta troca:
@@ -1306,12 +1306,17 @@ const tryLocalResponse = (text) => {
   const mem = getMem();
   const name = mem.userName ? `, ${mem.userName}` : '';
 
-  // Saudações puras
-  if (/^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)[\s!?.]*$/.test(t))
-    return pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`);
+  // Saudações puras ou combinadas com "tudo bem"
+  const isSaudacao = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)/.test(t);
+  const isBemEstar = /tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai/.test(t);
+  const isOnlySaudacao = /^(oi|olá|ola|hey|ei|hello|bom dia|boa tarde|boa noite)[\s,!?.]*$/.test(t);
+  const isOnlyBemEstar = /^(tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai)[\s!?.]*$/.test(t);
 
-  // Tudo bem / como vai
-  if (/^(tudo bem|tudo bom|como vai|como você está|como tá|e aí|e ai)[\s!?.]*$/.test(t))
+  if (isSaudacao && isBemEstar)
+    return `${pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`)} ${pick(LOCAL_RESPONSES.bemEstar)}`;
+  if (isOnlySaudacao)
+    return pick(LOCAL_RESPONSES.saudacao).replace('!', `${name}!`);
+  if (isOnlyBemEstar)
     return pick(LOCAL_RESPONSES.bemEstar);
 
   // Agradecimentos
