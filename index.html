@@ -455,6 +455,11 @@
           <input type="text" id="cfg-voice-male" class="fld" placeholder="ex: pNInz6obpgDQGcFmaJgB">
           <p class="fld-hint">No ElevenLabs: clique na voz → ícone ⚙ → copie o Voice ID.</p>
         </div>
+        <div class="setting-section">
+          <label class="fld-lbl">Modelo Ollama <span style="color:var(--text-dim);font-size:0.68rem">(IA local offline)</span></label>
+          <input type="text" id="cfg-ollama-model" class="fld" placeholder="gemma3:4b">
+          <p class="fld-hint">Requer Ollama instalado (ollama.ai). Usado automaticamente quando Gemini está em limite. Rode: <em>ollama pull gemma3:4b</em></p>
+        </div>
         <button class="green-btn" id="cfg-save" style="margin-top:1.2rem">Salvar Configurações</button>
         <div class="setting-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
           <div class="setting-label" style="color:var(--text-dim);margin-bottom:0.5rem">Zona de perigo</div>

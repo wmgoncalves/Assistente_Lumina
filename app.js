@@ -11,7 +11,7 @@ const saveCfg = () => {
   }
 };
 
-const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ...loadCfg() };
+const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:4b', ...loadCfg() };
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
@@ -818,10 +818,30 @@ const processInput = async (text) => {
     } else if (msg.includes('403') || msg.includes('API_KEY')) {
       speak('Chave API inválida ou sem permissão. Verifique em Configurações e Notificações.');
     } else if (msg.includes('429')) {
+      // Tenta Ollama local primeiro
+      setFace('thinking');
+      setRespText('Limite Gemini — tentando IA local…');
+      const hasOllama = await ollamaAvailable();
+      if (hasOllama) {
+        try {
+          const raw2 = await callOllama();
+          const { clean: response2, learned: l2 } = extractLearn(raw2);
+          applyInlineLearn(l2);
+          app.history.push({ role: 'model', content: response2 });
+          addMsgUI('sky', response2);
+          saveHist();
+          speak(response2);
+          toast('Respondendo via Ollama (IA local).', 'info');
+          return;
+        } catch (ollamaErr) {
+          console.warn('Ollama falhou:', ollamaErr.message);
+        }
+      }
+      // Sem Ollama: countdown e retry Gemini
       setFace('error');
       const waitSec = 60;
       for (let s = waitSec; s > 0; s--) {
-        setRespText(`Limite de requisições atingido. Retentando em ${s}s…`);
+        setRespText(`Limite de requisições. ${hasOllama ? '' : 'Instale Ollama para resposta offline. '}Tentando em ${s}s…`);
         await new Promise(r => setTimeout(r, 1000));
       }
       setRespText('Tentando novamente…');
@@ -835,7 +855,7 @@ const processInput = async (text) => {
         saveHist();
         speak(response2);
       } catch {
-        speak('Ainda com limite de requisições. Se persistir, pode ser a cota diária do Gemini — tente novamente em algumas horas.');
+        speak('Ainda com limite. Instale o Ollama para usar a Sky sem internet.');
       }
     } else {
       speak(`Erro: ${msg.substring(0, 80)}`);
@@ -1184,6 +1204,37 @@ const executeTool = async (name, args) => {
     default:
       return 'Ferramenta desconhecida.';
   }
+};
+
+// ── Ollama (LLM local, fallback sem internet) ─────────────────────────────────
+const OLLAMA_URL = 'http://localhost:11434';
+
+const ollamaAvailable = async () => {
+  try {
+    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(1500) });
+    return r.ok;
+  } catch { return false; }
+};
+
+const callOllama = async (customHistory = null) => {
+  const history = customHistory || app.history;
+  const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
+  const model   = cfg.ollamaModel || 'gemma3:4b';
+
+  const messages = [
+    { role: 'system', content: buildSystem(lastMsg, app.currentEmotion || 'neutral') },
+    ...history.slice(-10).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content }))
+  ];
+
+  const res = await fetch(`${OLLAMA_URL}/v1/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, stream: false, options: { temperature: 0.75, num_predict: 400 } })
+  });
+
+  if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || '';
 };
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
@@ -2210,8 +2261,9 @@ const populateConfiguracoes = () => {
   document.getElementById('cfg-name').value         = cfg.username || '';
   document.getElementById('cfg-key').value          = cfg.geminiKey || '';
   document.getElementById('cfg-el-key').value       = cfg.elevenLabsKey || '';
-  document.getElementById('cfg-voice-female').value = cfg.elevenVoiceFemaleId || '';
-  document.getElementById('cfg-voice-male').value   = cfg.elevenVoiceMaleId   || '';
+  document.getElementById('cfg-voice-female').value  = cfg.elevenVoiceFemaleId || '';
+  document.getElementById('cfg-voice-male').value    = cfg.elevenVoiceMaleId   || '';
+  document.getElementById('cfg-ollama-model').value  = cfg.ollamaModel         || 'gemma3:4b';
 };
 
 const initConfiguracoes = () => {
@@ -2221,6 +2273,7 @@ const initConfiguracoes = () => {
     cfg.elevenLabsKey       = document.getElementById('cfg-el-key').value.trim();
     cfg.elevenVoiceFemaleId = document.getElementById('cfg-voice-female').value.trim();
     cfg.elevenVoiceMaleId   = document.getElementById('cfg-voice-male').value.trim();
+    cfg.ollamaModel         = document.getElementById('cfg-ollama-model').value.trim() || 'gemma3:4b';
     saveCfg(); toast('Configurações salvas.', 'success');
   });
   document.getElementById('cfg-clear-mem').addEventListener('click', () => {
