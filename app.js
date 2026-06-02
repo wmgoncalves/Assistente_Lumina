@@ -11,7 +11,7 @@ const saveCfg = () => {
   }
 };
 
-const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:1b', ...loadCfg() };
+const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:1b', piperVoiceMale: 'pt_BR-cadu-medium', piperVoiceFemale: '', ...loadCfg() };
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
@@ -410,6 +410,52 @@ const speakBrowser = (text, onEnd) => {
   window.speechSynthesis.speak(u);
 };
 
+// ── Piper TTS (local, offline) ────────────────────────────────────────────────
+let piperAvailable = null;
+const checkPiper = async () => {
+  if (piperAvailable !== null) return piperAvailable;
+  try {
+    const r = await fetch('/api/piper-available');
+    piperAvailable = (await r.json()).available;
+  } catch { piperAvailable = false; }
+  return piperAvailable;
+};
+
+const speakPiper = async (text, onEnd) => {
+  const clean = cleanForSpeech(text);
+  if (!clean) { onEnd?.(); return; }
+  const voice = app.voiceGender === 'male'
+    ? (cfg.piperVoiceMale   || 'pt_BR-cadu-medium')
+    : (cfg.piperVoiceFemale || '');
+  if (!voice) return speakEdge(text, onEnd);
+
+  app.isSpeaking = true;
+  setFace('speaking');
+  setRespText(text);
+  try {
+    const res = await fetch('/api/tts-piper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: clean, voice })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const url   = URL.createObjectURL(await res.blob());
+    const audio = new Audio(url);
+    currentAudio = audio;
+    const finish = () => {
+      currentAudio = null; URL.revokeObjectURL(url);
+      app.isSpeaking = false; setFace('idle'); onEnd?.();
+      if (app.continuous && !app.isListening) setTimeout(startListening, 600);
+    };
+    audio.onended = finish;
+    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakEdge(text, onEnd); };
+    audio.play();
+  } catch {
+    app.isSpeaking = false;
+    speakEdge(text, onEnd);
+  }
+};
+
 // ── Edge TTS (Microsoft Neural — sem API key) ─────────────────────────────────
 const speakEdge = async (text, onEnd) => {
   const clean = cleanForSpeech(text);
@@ -442,7 +488,14 @@ const speakEdge = async (text, onEnd) => {
   }
 };
 
-const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) : speakEdge(text, onEnd);
+const speakLocal = async (text, onEnd) => {
+  const hasPiper = await checkPiper();
+  const voiceSet = app.voiceGender === 'male' ? cfg.piperVoiceMale : cfg.piperVoiceFemale;
+  if (hasPiper && voiceSet) return speakPiper(text, onEnd);
+  return speakEdge(text, onEnd);
+};
+
+const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) : speakLocal(text, onEnd);
 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
 let recog = null;

@@ -1,7 +1,13 @@
-const express   = require('express');
-const path      = require('path');
-const fs        = require('fs');
+const express    = require('express');
+const path       = require('path');
+const fs         = require('fs');
+const { exec }   = require('child_process');
+const os         = require('os');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+
+const PIPER_DIR    = path.join(__dirname, 'piper');
+const PIPER_EXE    = path.join(PIPER_DIR, 'piper.exe');
+const PIPER_VOICES = path.join(PIPER_DIR, 'voices');
 const multer   = require('multer');
 const mammoth  = require('mammoth');
 const pdfParse = require('pdf-parse');
@@ -206,6 +212,36 @@ Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em 
     if (changed) writeJSON(MEMORY_FILE, m);
     res.json({ updated: changed, memory: { userName: m.userName, facts: m.facts } });
   } catch { res.json({ updated: false }); }
+});
+
+// ── Piper TTS (local, offline, sem internet) ─────────────────────────────────
+app.get('/api/piper-available', (_, res) => {
+  res.json({ available: fs.existsSync(PIPER_EXE) });
+});
+
+app.post('/api/tts-piper', (req, res) => {
+  const { text, voice = 'pt_BR-cadu-medium' } = req.body;
+  if (!text) return res.status(400).json({ error: 'text required' });
+  if (!fs.existsSync(PIPER_EXE)) return res.status(503).json({ error: 'Piper não instalado em C:\\Sky\\piper\\piper.exe' });
+
+  const modelPath = path.join(PIPER_VOICES, `${voice}.onnx`);
+  if (!fs.existsSync(modelPath)) return res.status(503).json({ error: `Modelo não encontrado: ${voice}.onnx` });
+
+  const tmpFile = path.join(os.tmpdir(), `sky_tts_${Date.now()}.wav`);
+  const clean   = text.replace(/"/g, "'").replace(/\n/g, ' ').substring(0, 1000);
+  const cmd     = `echo "${clean}" | "${PIPER_EXE}" --model "${modelPath}" --output_file "${tmpFile}"`;
+
+  exec(cmd, (err) => {
+    if (err || !fs.existsSync(tmpFile)) {
+      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+      return res.status(500).json({ error: err?.message || 'Piper falhou' });
+    }
+    res.set('Content-Type', 'audio/wav');
+    const stream = fs.createReadStream(tmpFile);
+    stream.pipe(res);
+    stream.on('end', () => { try { fs.unlinkSync(tmpFile); } catch {} });
+    stream.on('error', () => res.status(500).end());
+  });
 });
 
 // ── Edge TTS (Microsoft Neural — gratuito, sem API key) ──────────────────────
