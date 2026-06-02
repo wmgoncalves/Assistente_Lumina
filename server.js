@@ -33,9 +33,10 @@ const getMem = () => readJSON(MEMORY_FILE, { userName: null, facts: [], sessions
 const app = express();
 app.use(express.json({ limit: '20mb' }));
 // Serve arquivos da raiz (versão atual da Sky) antes do public/
-app.get('/',          (_, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/style.css', (_, res) => res.sendFile(path.join(__dirname, 'style.css')));
-app.get('/app.js',    (_, res) => res.sendFile(path.join(__dirname, 'app.js')));
+const noCache = (res) => res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+app.get('/',          (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/style.css', (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'style.css')); });
+app.get('/app.js',    (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'app.js')); });
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Config ────────────────────────────────────────────────────────────────────
