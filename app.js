@@ -873,7 +873,8 @@ const processInput = async (text) => {
   try {
     const infoResp = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
-    const raw = localResp ?? (cfg.geminiKey ? await callGemini() : localFallback(text));
+    const useGemini = cfg.geminiKey && !geminiBlocked();
+    const raw = localResp ?? (useGemini ? await callGemini() : (ollamaCache ? await callOllama() : localFallback(text)));
     const { clean: response, learned } = extractLearn(raw);
     applyInlineLearn(learned);
     const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
@@ -889,9 +890,9 @@ const processInput = async (text) => {
     } else if (msg.includes('403') || msg.includes('API_KEY')) {
       speak('Chave API inválida ou sem permissão. Verifique em Configurações e Notificações.');
     } else if (msg.includes('429')) {
-      // Tenta Ollama local primeiro
+      blockGemini(); // bloqueia Gemini por 5 min — próximas mensagens vão direto ao Ollama
       setFace('thinking');
-      setRespText('Limite Gemini — tentando IA local…');
+      setRespText('Mudando para IA local…');
       const hasOllama = await ollamaAvailable();
       if (hasOllama) {
         try {
@@ -1323,11 +1324,15 @@ const executeTool = async (name, args) => {
 // ── Ollama (LLM local, fallback sem internet) ─────────────────────────────────
 const OLLAMA_URL = 'http://localhost:11434';
 
+// Cache de disponibilidade: evita checar toda vez
+let ollamaCache = null; // null=desconhecido, true/false
 const ollamaAvailable = async () => {
+  if (ollamaCache !== null) return ollamaCache;
   try {
-    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(1500) });
-    return r.ok;
-  } catch { return false; }
+    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(300) });
+    ollamaCache = r.ok;
+  } catch { ollamaCache = false; }
+  return ollamaCache;
 };
 
 const callOllama = async (customHistory = null) => {
@@ -1360,8 +1365,14 @@ const callOllama = async (customHistory = null) => {
   return (data.response || '').trim();
 };
 
+// ── Controle de cota Gemini ────────────────────────────────────────────────────
+let geminiBlockedUntil = 0;
+const geminiBlocked = () => Date.now() < geminiBlockedUntil;
+const blockGemini   = () => { geminiBlockedUntil = Date.now() + 5 * 60 * 1000; }; // 5 min
+
 // ── Agentic loop ───────────────────────────────────────────────────────────────
 const callGemini = async (customHistory = null) => {
+  if (geminiBlocked()) throw new Error('429');
   const history = customHistory || app.history;
   const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
 
@@ -1976,8 +1987,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Settings (gear icon → navigate to settings view) ──
   document.getElementById('btn-settings').addEventListener('click', () => switchView('configuracoes'));
 
-  // ── Sincroniza dados do servidor para o cache local ──
+  // ── Sincroniza dados e pré-aquece Ollama em paralelo ──
   syncFromServer();
+  ollamaAvailable(); // popula ollamaCache em background, sem bloquear
 
   // ── Init modules ──
   initSidebar();
