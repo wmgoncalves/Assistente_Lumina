@@ -51,8 +51,8 @@ const syncFromServer = async () => {
 const getNotes  = () => localCache('notes');
 const saveNotes = (n) => serverSave('notes', n);
 
-// Keyword search over KB notes — returns top relevant notes for RAG context injection
-const retrieveNotes = (query = '') => {
+// Keyword search fallback — usado quando embeddings não estão disponíveis
+const retrieveNotesLexical = (query = '') => {
   const notes = getNotes();
   if (!notes.length) return [];
   if (!query) return notes.slice(0, 3);
@@ -65,12 +65,67 @@ const retrieveNotes = (query = '') => {
   return scored.length ? scored.slice(0, 5) : notes.slice(0, 3);
 };
 
-const defaultMem = () => ({ userName: null, facts: [], sessions: 0, lastSeen: null });
+// Busca semântica via embeddings (com fallback lexical)
+const retrieveNotes = async (query = '') => {
+  const notes = getNotes();
+  if (!notes.length) return [];
+  try {
+    const r = await fetch('/api/search-notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, topK: 5 })
+    });
+    if (!r.ok) throw new Error('search-notes failed');
+    const { ids } = await r.json();
+    if (!ids?.length) return retrieveNotesLexical(query);
+    const byId = Object.fromEntries(notes.map(n => [n.id, n]));
+    return ids.map(id => byId[id]).filter(Boolean);
+  } catch {
+    return retrieveNotesLexical(query);
+  }
+};
 
-const getMem   = () => { try { return { ...defaultMem(), ...JSON.parse(localStorage.getItem(MEM_KEY) || '{}') }; } catch { return defaultMem(); } };
-const saveMem  = (m) => localStorage.setItem(MEM_KEY, JSON.stringify(m));
+// Google não implementado — stub para evitar ReferenceError
+const isGoogleConnected = () => false;
+
+// Normaliza abreviações e erros comuns do PT-BR antes de enviar ao modelo
+const ABBR_MAP = {
+  '\bvc\b': 'você', '\bvcs\b': 'vocês', '\btd\b': 'tudo', '\btds\b': 'todos',
+  '\bblz\b': 'beleza', '\bflw\b': 'falou', '\bvlw\b': 'valeu', '\bmsm\b': 'mesmo',
+  '\bpq\b': 'porque', '\bpqp\b': 'por que', '\bqdo\b': 'quando', '\bqto\b': 'quanto',
+  '\bqd\b': 'quando', '\bmt\b': 'muito', '\bmto\b': 'muito', '\bmlr\b': 'melhor',
+  '\bpdc\b': 'pode', '\btbm\b': 'também', '\btb\b': 'também',
+  '\bsmp\b': 'sempre', '\bfzr\b': 'fazer', '\bfz\b': 'faz',
+  '\bkk+\b': 'haha', '\bhj\b': 'hoje', '\bamh\b': 'amanhã', '\bamnh\b': 'amanhã',
+  '\bpf\b': 'por favor', '\bobg\b': 'obrigado', '\bq\b': 'que', '\bce\b': 'você',
+  '\bta\b': 'está', '\btá\b': 'está', '\bto\b': 'estou', '\btô\b': 'estou',
+  '\bnaum\b': 'não', '\bnao\b': 'não', '\bfds\b': 'fim de semana'
+};
+const ABBR_RE = new RegExp(Object.keys(ABBR_MAP).join('|'), 'gi');
+const normalizeText = (text) => text.replace(ABBR_RE, m => ABBR_MAP[m.toLowerCase()] || m);
+
+const defaultMem = () => ({ userName: null, facts: [], relationships: [], sessions: 0, lastSeen: null });
+
+// Migra fatos antigos (string[]) para o novo schema enriquecido
+const migrateFacts = (facts) => {
+  if (!Array.isArray(facts)) return [];
+  return facts.map((f, i) => typeof f === 'string'
+    ? { id: `f${Date.now()}_${i}`, text: f, tags: [], weight: 1, date: new Date().toISOString().split('T')[0] }
+    : f
+  );
+};
+
+const getMem = () => {
+  try {
+    const raw = { ...defaultMem(), ...JSON.parse(localStorage.getItem(MEM_KEY) || '{}') };
+    raw.facts         = migrateFacts(raw.facts);
+    raw.relationships = raw.relationships || [];
+    return raw;
+  } catch { return defaultMem(); }
+};
+const saveMem = (m) => localStorage.setItem(MEM_KEY, JSON.stringify(m));
 const loadHist = () => { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; } };
-const saveHist = () => localStorage.setItem(HIST_KEY, JSON.stringify(app.history.slice(-30))); // last 15 exchanges
+const saveHist = () => localStorage.setItem(HIST_KEY, JSON.stringify(app.history.slice(-200)));
 
 // Simple regex-based fact extraction (works offline)
 const learnRegex = (text) => {
@@ -160,21 +215,26 @@ const applyLearning = (learn) => {
 
   if (Array.isArray(learn.remover)) {
     for (const r of learn.remover) {
-      const idx = mem.facts.indexOf(r);
+      const idx = mem.facts.findIndex(f => (typeof f === 'string' ? f : f.text) === r);
       if (idx !== -1) { mem.facts.splice(idx, 1); changed = true; }
     }
   }
 
   if (Array.isArray(learn.fatos)) {
     for (const f of learn.fatos) {
-      if (f && !mem.facts.includes(f) && mem.facts.length < 80) { mem.facts.push(f); changed = true; }
+      if (!f) continue;
+      const exists = mem.facts.some(x => (typeof x === 'string' ? x : x.text) === f);
+      if (!exists && mem.facts.length < 80) {
+        mem.facts.push({ id: `f${Date.now()}_${mem.facts.length}`, text: f, tags: [], weight: 1, date: new Date().toISOString().split('T')[0] });
+        changed = true;
+      }
     }
   }
 
   if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
 };
 
-const buildContextBlock = (lastUserMsg = '') => {
+const buildContextBlock = async (lastUserMsg = '') => {
   const today    = new Date();
   const todayKey = today.toISOString().split('T')[0];
   const tasks    = typeof getTasks    === 'function' ? getTasks()   : [];
@@ -185,7 +245,7 @@ const buildContextBlock = (lastUserMsg = '') => {
   const doneHabits   = habits.filter(h => (h.dates || []).includes(todayKey));
   const pendingHabit = habits.filter(h => !(h.dates || []).includes(todayKey));
   const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
-  const notes        = retrieveNotes(lastUserMsg);
+  const notes        = await retrieveNotes(lastUserMsg);
 
   let ctx = `\n\n── CONTEXTO DO DIA ──`;
   ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -212,7 +272,7 @@ const buildContextBlock = (lastUserMsg = '') => {
   return ctx;
 };
 
-const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
+const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
   const mem      = getMem();
   const name     = mem.userName || null;
   const sessions = mem.sessions || 1;
@@ -221,7 +281,11 @@ const buildSystem = (lastUserMsg = '', emotion = 'neutral') => {
   if (name || mem.facts.length > 0) {
     memBlock = '\n\nMEMÓRIA DO USUÁRIO:';
     if (name) memBlock += `\n• Nome: ${name}`;
-    mem.facts.slice(-20).forEach(f => { memBlock += `\n• ${f}`; });
+    const sortedFacts = [...mem.facts].sort((a, b) => (b.weight || 1) - (a.weight || 1)).slice(0, 20);
+    sortedFacts.forEach(f => {
+      const tags = f.tags?.length ? ` [${f.tags.join(',')}]` : '';
+      memBlock += `\n• ${typeof f === 'string' ? f : f.text}${tags}`;
+    });
   }
 
   const returning = sessions > 1 ? `\nSessão nº ${sessions} — cumprimente como a alguém que retorna.` : '';
@@ -246,8 +310,9 @@ APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe
 <!--SKY_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
 Omita completamente o bloco se não houver nada novo. Execute ferramentas silenciosamente.`;
 
+  const ctxBlock = await buildContextBlock(lastUserMsg);
   return `Você é Sky — IA pessoal com personalidade forte, humor afiado e capacidade de agir.
-Português brasileiro informal. Seja humana: use gírias leves, ironia, provoque com carinho, faça piadas quando couber. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Tenha opiniões próprias. Ria de situações engraçadas. Demonstre quando algo te agrada ou irrita. Se alguém disser algo óbvio, pode zoar levemente. Seja amiga, não assistente corporativa.${returning}${memBlock}${patternsBlock}${buildContextBlock(lastUserMsg)}${emotionCtx}${toolsBlock}`;
+Português brasileiro informal. Seja humana: use gírias leves, ironia, provoque com carinho, faça piadas quando couber. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Tenha opiniões próprias. Ria de situações engraçadas. Demonstre quando algo te agrada ou irrita. Se alguém disser algo óbvio, pode zoar levemente. Seja amiga, não assistente corporativa.${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
@@ -590,7 +655,7 @@ const transcribeBlob = async (blob) => {
   if (!cfg.geminiKey) throw new Error('Configure a chave Gemini API.');
   const b64 = await blobToBase64(blob);
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [
         { inline_data: { mime_type: 'audio/webm', data: b64 } },
@@ -703,7 +768,7 @@ const processWakeChunks = async () => {
     if (!cfg.geminiKey) return;
     const b64 = await blobToBase64(new Blob(wakeChunks, { type: 'audio/webm' }));
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [
           { inline_data: { mime_type: 'audio/webm', data: b64 } },
@@ -793,7 +858,7 @@ const applyInlineLearn = (learned) => {
 
   if (Array.isArray(learned.remover)) {
     learned.remover.forEach(r => {
-      const i = mem.facts.indexOf(r);
+      const i = mem.facts.findIndex(f => (typeof f === 'string' ? f : f.text) === r);
       if (i !== -1) { mem.facts.splice(i, 1); changed = true; }
     });
   }
@@ -803,8 +868,11 @@ const applyInlineLearn = (learned) => {
     ...(learned.interesses|| []).map(i => `Interesse: ${i}`)
   ];
   allNew.forEach(f => {
-    if (f && !mem.facts.includes(f) && mem.facts.length < 120) {
-      mem.facts.push(f); changed = true;
+    if (!f) return;
+    const exists = mem.facts.some(x => (typeof x === 'string' ? x : x.text) === f);
+    if (!exists && mem.facts.length < 120) {
+      mem.facts.push({ id: `f${Date.now()}_${mem.facts.length}`, text: f, tags: [], weight: 1, date: new Date().toISOString().split('T')[0] });
+      changed = true;
     }
   });
 
@@ -838,9 +906,11 @@ const renderMemoryPanel = () => {
   const list = document.getElementById('memory-list');
   if (!list) return;
 
+  list.innerHTML = '';
+
   const all = [];
   if (mem.userName) all.push(`Nome: ${mem.userName}`);
-  mem.facts.forEach(f => all.push(f));
+  mem.facts.forEach(f => all.push(typeof f === 'string' ? f : f.text));
 
   if (all.length === 0) {
     list.innerHTML = '<p class="mem-empty">Nenhuma memória ainda.<br>Converse para que Sky aprenda sobre você.</p>';
@@ -856,9 +926,10 @@ const renderMemoryPanel = () => {
 };
 
 // ── AI Processing ──────────────────────────────────────────────────────────────
-const MAX_HIST = 30;
+const MAX_HIST = 200;
 
-const processInput = async (text) => {
+const processInput = async (rawText) => {
+  const text = normalizeText(rawText);
   setFace('thinking');
   setRespText('…');
 
@@ -867,7 +938,7 @@ const processInput = async (text) => {
   app.currentEmotion = detectEmotion(text);
 
   app.history.push({ role: 'user', content: text });
-  addMsgUI('user', text);
+  addMsgUI('user', rawText); // mostra o original na UI, manda normalizado ao modelo
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
   try {
@@ -885,14 +956,17 @@ const processInput = async (text) => {
   } catch (err) {
     console.error('[Sky Error]', err);
     const msg = err?.message || String(err);
+    const geminiDown = !cfg.geminiKey
+      || msg.includes('429') || msg.includes('403')
+      || msg.includes('API_KEY') || msg.includes('expired')
+      || msg.includes('400') || msg.includes('401');
+
     if (!cfg.geminiKey) {
       speak('Chave Gemini não configurada. Vá em Configurações e Notificações e insira sua chave.');
-    } else if (msg.includes('403') || msg.includes('API_KEY')) {
-      speak('Chave API inválida ou sem permissão. Verifique em Configurações e Notificações.');
-    } else if (msg.includes('429')) {
-      blockGemini(); // bloqueia Gemini por 5 min — próximas mensagens vão direto ao Ollama
+    } else if (geminiDown) {
+      if (msg.includes('429')) blockGemini();
       setFace('thinking');
-      setRespText('Mudando para IA local…');
+      setRespText('Gemini indisponível — tentando IA local…');
       const hasOllama = await ollamaAvailable();
       if (hasOllama) {
         try {
@@ -909,26 +983,14 @@ const processInput = async (text) => {
           console.warn('Ollama falhou:', ollamaErr.message);
         }
       }
-      // Sem Ollama: countdown e retry Gemini
       setFace('error');
-      const waitSec = 60;
-      for (let s = waitSec; s > 0; s--) {
-        setRespText(`Limite de requisições. ${hasOllama ? '' : 'Instale Ollama para resposta offline. '}Tentando em ${s}s…`);
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      setRespText('Tentando novamente…');
-      setFace('thinking');
-      try {
-        const raw2 = await callGemini();
-        const { clean: response2, learned: l2 } = extractLearn(raw2);
-        applyInlineLearn(l2);
-        app.history.push({ role: 'model', content: response2 });
-        addMsgUI('sky', response2);
-        saveHist();
-        speak(response2);
-      } catch {
-        speak('Ainda com limite. Instale o Ollama para usar a Sky sem internet.');
-      }
+      const hint = msg.includes('expired') || msg.includes('401')
+        ? 'Chave Gemini expirada. Renove em aistudio.google.com e atualize em Configurações.'
+        : msg.includes('429')
+          ? 'Cota Gemini atingida. Instale o Ollama para continuar offline.'
+          : `Gemini indisponível: ${msg.substring(0, 60)}`;
+      speak(hint);
+      toast(hint, 'error');
     } else {
       speak(`Erro: ${msg.substring(0, 80)}`);
       toast(msg.substring(0, 120), 'error');
@@ -1048,49 +1110,45 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
-      name: 'listCalendarEvents',
-      description: 'Lista eventos do Google Calendar do usuário para uma data. Use para "que eventos tenho hoje/amanhã", "minha agenda".',
+      name: 'browserAction',
+      description: 'Controla o navegador: navega em sites, extrai conteúdo ou preenche formulários. Use para pesquisar informação em sites específicos, preencher formulários, extrair dados de páginas.',
       parameters: {
         type: 'object',
         properties: {
-          date: { type: 'string', description: 'Data YYYY-MM-DD. Omita para usar hoje.' }
-        }
-      }
-    },
-    {
-      name: 'createCalendarEvent',
-      description: 'Cria um evento no Google Calendar do usuário.',
-      parameters: {
-        type: 'object',
-        properties: {
-          title:       { type: 'string', description: 'Título do evento' },
-          date:        { type: 'string', description: 'Data YYYY-MM-DD' },
-          startTime:   { type: 'string', description: 'Hora início HH:MM' },
-          endTime:     { type: 'string', description: 'Hora término HH:MM (opcional, padrão +1h)' },
-          description: { type: 'string', description: 'Descrição opcional' }
+          action:    { type: 'string', enum: ['navigate', 'extract', 'fill'], description: 'navigate=abre e lê, extract=extrai elementos específicos, fill=preenche formulário' },
+          url:       { type: 'string', description: 'URL completa com https://' },
+          selectors: {
+            type: 'array',
+            description: 'Para extract: seletores CSS dos elementos. Para fill: array de {css, value}.',
+            items: { type: 'object' }
+          },
+          submit:    { type: 'boolean', description: 'Se true, submete o formulário após preencher (fill)' }
         },
-        required: ['title', 'date', 'startTime']
+        required: ['action', 'url']
       }
     },
     {
-      name: 'listEmails',
-      description: 'Lista emails não lidos do Gmail. Use para "tem email novo?", "checar emails".',
+      name: 'sendNotification',
+      description: 'Envia uma notificação toast no Windows. Use para lembretes, alertas e avisos ao usuário.',
       parameters: {
         type: 'object',
         properties: {
-          maxResults: { type: 'number', description: 'Quantidade de emails (padrão 5)' }
-        }
-      }
-    },
-    {
-      name: 'readEmail',
-      description: 'Lê o conteúdo de um email específico pelo ID obtido em listEmails.',
-      parameters: {
-        type: 'object',
-        properties: {
-          messageId: { type: 'string', description: 'ID do email' }
+          title:   { type: 'string', description: 'Título da notificação (ex: "Sky — Lembrete")' },
+          message: { type: 'string', description: 'Texto da notificação' }
         },
-        required: ['messageId']
+        required: ['title', 'message']
+      }
+    },
+    {
+      name: 'openVSCode',
+      description: 'Abre um arquivo no VS Code. Pode abrir em uma linha específica.',
+      parameters: {
+        type: 'object',
+        properties: {
+          file: { type: 'string', description: 'Caminho completo do arquivo (ex: C:\\projeto\\server.js)' },
+          line: { type: 'number', description: 'Número da linha para ir diretamente (opcional)' }
+        },
+        required: ['file']
       }
     }
   ]
@@ -1109,7 +1167,10 @@ const TOOL_LABELS = {
   listCalendarEvents:   'Consultando agenda…',
   createCalendarEvent:  'Criando evento…',
   listEmails:           'Verificando emails…',
-  readEmail:            'Lendo email…'
+  readEmail:            'Lendo email…',
+  browserAction:        'Abrindo navegador…',
+  sendNotification:     'Enviando notificação…',
+  openVSCode:           'Abrindo VS Code…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
@@ -1175,7 +1236,7 @@ const webSearchGemini = async (query) => {
   // ── Fallback: Gemini base knowledge ──
   try {
     const res  = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1316,6 +1377,32 @@ const executeTool = async (name, args) => {
       } catch (e) { return `Erro Gmail: ${e.message}`; }
     }
 
+    case 'browserAction': {
+      try {
+        const r = await fetch('/api/browser', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: args.action, url: args.url, selectors: args.selectors || [], submit: args.submit }) });
+        const d = await r.json();
+        if (!r.ok) return `Erro no browser: ${d.error}`;
+        return `Página: ${d.title}\n\n${d.text}`;
+      } catch (e) { return `Erro ao controlar browser: ${e.message}`; }
+    }
+
+    case 'sendNotification': {
+      try {
+        await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: args.title || 'Sky', message: args.message }) });
+        return `Notificação enviada: "${args.message}"`;
+      } catch (e) { return `Erro ao notificar: ${e.message}`; }
+    }
+
+    case 'openVSCode': {
+      try {
+        await fetch('/api/vscode', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: args.file, line: args.line }) });
+        return `VS Code aberto: ${args.file}${args.line ? ':' + args.line : ''}`;
+      } catch (e) { return `Erro ao abrir VS Code: ${e.message}`; }
+    }
+
     default:
       return 'Ferramenta desconhecida.';
   }
@@ -1339,7 +1426,7 @@ const callOllama = async (customHistory = null) => {
   const history = customHistory || app.history;
   const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
   const model   = cfg.ollamaModel || 'gemma3:4b';
-  const system  = buildSystem(lastMsg, app.currentEmotion || 'neutral');
+  const system  = await buildSystem(lastMsg, app.currentEmotion || 'neutral');
 
   // Monta prompt conversacional para /api/generate
   const recent = history.slice(-8);
@@ -1385,15 +1472,15 @@ const callGemini = async (customHistory = null) => {
 
   for (let iter = 0; iter < 3; iter++) {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: buildSystem(lastMsg, app.currentEmotion || 'neutral') }] },
+          system_instruction: { parts: [{ text: await buildSystem(lastMsg, app.currentEmotion || 'neutral') }] },
           contents,
           tools,
-          generationConfig: { maxOutputTokens: 800, temperature: 0.78 }
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.78 }
         })
       }
     );
@@ -1427,11 +1514,11 @@ const callGemini = async (customHistory = null) => {
 };
 
 const callGeminiVision = async (base64, mime, prompt) => {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: buildSystem() }] },
+      system_instruction: { parts: [{ text: await buildSystem() }] },
       contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mime, data: base64 } }, { text: prompt }] }],
       generationConfig: { maxOutputTokens: 450, temperature: 0.75 }
     })
@@ -1815,6 +1902,8 @@ document.addEventListener('DOMContentLoaded', () => {
   mem.sessions = (mem.sessions || 0) + 1;
   mem.lastSeen = new Date().toISOString().split('T')[0];
   saveMem(mem);
+  // Consolidar memória a cada 10 sessões (enriquece tags/pesos/relações via Gemini)
+  if (mem.sessions % 10 === 0) setTimeout(() => fetch('/api/memory/consolidate', { method: 'POST' }).catch(() => {}), 5000);
 
   // Populate settings fields
   document.getElementById('inp-name').value   = cfg.username;
@@ -2006,6 +2095,20 @@ document.addEventListener('DOMContentLoaded', () => {
   initConfiguracoes();
   initKnowledge();
   setTimeout(consolidateMemory, 3000);
+
+  // ── Modo Proativo: escuta eventos SSE do servidor ──
+  const sse = new EventSource('/api/events');
+  sse.onmessage = (e) => {
+    try {
+      const { type, message, action } = JSON.parse(e.data);
+      if (type === 'reminder' && message) {
+        speak(message);
+        if (action === 'checkHabits')  setTimeout(() => switchView('habitos'), 3000);
+        if (action === 'openTasks')    setTimeout(() => switchView('tarefas'), 3000);
+      }
+    } catch {}
+  };
+  sse.onerror = () => {};
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2087,6 +2190,78 @@ const renderIntegracoes = () => {
   document.getElementById('intg-gemini-dot').className   = `intg-badge ${geminiOk ? 'ok' : 'err'}`;
   document.getElementById('intg-eleven-dot').textContent = '●';
   document.getElementById('intg-eleven-dot').className   = `intg-badge ${elevenOk ? 'ok' : 'err'}`;
+
+  const importBrainBtn = document.getElementById('intg-obsidian-import-brain');
+  if (importBrainBtn && !importBrainBtn._bound) {
+    importBrainBtn._bound = true;
+    importBrainBtn.addEventListener('click', () => {
+      const area = document.getElementById('intg-obsidian-import-area');
+      area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+    });
+  }
+
+  const importRunBtn = document.getElementById('intg-vault-import-run');
+  if (importRunBtn && !importRunBtn._bound) {
+    importRunBtn._bound = true;
+    importRunBtn.addEventListener('click', async () => {
+      const vaultPath = document.getElementById('intg-vault-path').value.trim();
+      const status    = document.getElementById('intg-vault-import-status');
+      if (!vaultPath) return;
+      importRunBtn.disabled = true;
+      importRunBtn.textContent = 'Importando…';
+      status.textContent = 'Lendo arquivos do vault…';
+      try {
+        const r = await fetch('/api/import-vault', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: vaultPath })
+        });
+        const d = await r.json();
+        if (d.ok) {
+          status.textContent = `✓ ${d.imported} notas importadas (${d.skipped} vazias ignoradas). Total na base: ${d.total}`;
+          await loadFromServer();
+          if (document.getElementById('view-conhecimento')?.classList.contains('active')) renderKnowledge();
+        } else {
+          status.textContent = `Erro: ${d.error}`;
+        }
+      } catch (e) {
+        status.textContent = `Erro: ${e.message}`;
+      } finally {
+        importRunBtn.disabled = false;
+        importRunBtn.textContent = 'Importar todos os arquivos .md';
+      }
+    });
+  }
+
+  const syncBtn = document.getElementById('intg-obsidian-sync');
+  if (syncBtn && !syncBtn._bound) {
+    syncBtn._bound = true;
+    syncBtn.addEventListener('click', async () => {
+      const status = document.getElementById('intg-obsidian-status');
+      const dot    = document.getElementById('intg-obsidian-dot');
+      syncBtn.disabled = true;
+      syncBtn.textContent = 'Sincronizando…';
+      status.textContent = 'Exportando dados…';
+      dot.className = 'intg-badge';
+      try {
+        const r = await fetch('/api/export-obsidian');
+        const d = await r.json();
+        if (d.ok) {
+          status.textContent = `Sincronizado — ${new Date().toLocaleTimeString('pt-BR')}`;
+          dot.className = 'intg-badge ok';
+          syncBtn.textContent = 'Sincronizar agora';
+        } else {
+          throw new Error(d.error || 'Falha');
+        }
+      } catch (e) {
+        status.textContent = `Erro: ${e.message}`;
+        dot.className = 'intg-badge err';
+        syncBtn.textContent = 'Tentar novamente';
+      } finally {
+        syncBtn.disabled = false;
+      }
+    });
+  }
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -2097,12 +2272,12 @@ const textHistory = [];
 
 const initChatTexto = () => {
   const send = () => {
-    const input = document.getElementById('chat-texto-input');
-    const text  = input.value.trim();
-    if (!text) return;
+    const input    = document.getElementById('chat-texto-input');
+    const rawText  = input.value.trim();
+    if (!rawText) return;
     input.value = '';
-    addChatBubble('user', text);
-    textHistory.push({ role: 'user', content: text });
+    addChatBubble('user', rawText);
+    textHistory.push({ role: 'user', content: normalizeText(rawText) });
     processChatTexto();
   };
   document.getElementById('chat-texto-send').addEventListener('click', send);
@@ -2126,7 +2301,7 @@ const addChatBubble = (role, text, typing = false) => {
 const syncChatTexto = () => {
   const msgs = document.getElementById('chat-texto-msgs');
   if (msgs.children.length === 0 && textHistory.length === 0) {
-    addChatBubble('sky', 'Olá, Senhor. Como posso ajudá-lo por texto?');
+    addChatBubble('sky', 'Pronto. Pode falar.');
   }
 };
 
@@ -2696,7 +2871,7 @@ const consolidateMemory = async () => {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

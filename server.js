@@ -8,9 +8,11 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const PIPER_DIR    = path.join(__dirname, 'piper');
 const PIPER_EXE    = path.join(PIPER_DIR, 'piper.exe');
 const PIPER_VOICES = path.join(PIPER_DIR, 'voices');
-const multer   = require('multer');
-const mammoth  = require('mammoth');
-const pdfParse = require('pdf-parse');
+const multer    = require('multer');
+const mammoth   = require('mammoth');
+const pdfParse  = require('pdf-parse');
+const notifier   = require('node-notifier');
+const puppeteer  = require('puppeteer');
 
 // Node 18+ required (built-in fetch)
 if (!globalThis.fetch) {
@@ -92,9 +94,60 @@ app.get('/api/history', (req, res) => {
 
 app.post('/api/history', (req, res) => {
   const m = getMem();
-  m.history = (req.body.history || []).slice(-30);
+  m.history = (req.body.history || []).slice(-200);
   writeJSON(MEMORY_FILE, m);
   res.json({ ok: true });
+});
+
+// ── Memory: relate two facts ──────────────────────────────────────────────────
+app.post('/api/memory/relate', (req, res) => {
+  const { a, b, type = 'related_to' } = req.body;
+  if (!a || !b) return res.status(400).json({ error: 'a and b required' });
+  const m = getMem();
+  if (!m.relationships) m.relationships = [];
+  const exists = m.relationships.find(r => (r.a === a && r.b === b) || (r.a === b && r.b === a));
+  if (!exists) m.relationships.push({ a, b, type });
+  writeJSON(MEMORY_FILE, m);
+  res.json({ ok: true });
+});
+
+// ── Memory: consolidate via Gemini ────────────────────────────────────────────
+app.post('/api/memory/consolidate', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const m = getMem();
+  const rawFacts = (m.facts || []).map(f => typeof f === 'string' ? f : f.text).filter(Boolean);
+  if (rawFacts.length < 2) return res.json({ ok: true, message: 'Poucos fatos para consolidar.' });
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Analise estes fatos sobre um usuário e retorne JSON enriquecido.
+Fatos: ${JSON.stringify(rawFacts)}
+Retorne APENAS JSON válido:
+{
+  "facts": [{"id":"f1","text":"fato limpo","tags":["categoria"],"weight":1}],
+  "relationships": [{"a":"f1","b":"f2","type":"related_to"}]
+}
+Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúde/família/hobby/preferência/habilidade), peso 1-3 por importância, máx 60 fatos.` }] }],
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
+        })
+      }
+    );
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d   = await r.json();
+    const raw = d.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const enriched = JSON.parse(raw);
+    m.facts         = enriched.facts         || m.facts;
+    m.relationships = enriched.relationships || m.relationships || [];
+    writeJSON(MEMORY_FILE, m);
+    syncMemoryToObsidian(m);
+    res.json({ ok: true, facts: m.facts.length, relationships: m.relationships.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Gemini Chat ───────────────────────────────────────────────────────────────
@@ -112,7 +165,7 @@ app.post('/api/chat', async (req, res) => {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: system }] },
           contents: messages,
-          generationConfig: { maxOutputTokens: 500, temperature: 0.82 }
+          generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
         })
       }
     );
@@ -202,7 +255,13 @@ Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em 
     if (json.nome && !m.userName)         { m.userName = json.nome; changed = true; }
     if (Array.isArray(json.fatos)) {
       for (const f of json.fatos) {
-        if (f && !m.facts.includes(f) && m.facts.length < 80) { m.facts.push(f); changed = true; }
+        if (!f) continue;
+        const exists = (m.facts || []).some(x => (typeof x === 'string' ? x : x.text) === f);
+        if (!exists && (m.facts || []).length < 80) {
+          if (!m.facts) m.facts = [];
+          m.facts.push({ id: `f${Date.now()}_${m.facts.length}`, text: f, tags: [], weight: 1, date: new Date().toISOString().split('T')[0] });
+          changed = true;
+        }
       }
     }
     if (changed) writeJSON(MEMORY_FILE, m);
@@ -286,9 +345,20 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
     }
     // Corrige espaços perdidos na extração de PDF
     text = text
+      // camelCase / PascalCase: minúscula seguida de maiúscula
       .replace(/([a-záéíóúàâêôãõç])([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ])/g, '$1 $2')
-      .replace(/([.,;:!?])([^\s])/g, '$1 $2')
-      .replace(/\s+/g, ' ')
+      // pontuação grudada em letra
+      .replace(/([.,;:!?])([^\s\d])/g, '$1 $2')
+      // letra minúscula grudada em dígito e vice-versa
+      .replace(/([a-záéíóúàâêôãõç])(\d)/g, '$1 $2')
+      .replace(/(\d)([a-záéíóúàâêôãõç])/g, '$1 $2')
+      // palavras em ALLCAPS coladas: sequência caps seguida de caps+minúscula (ex: "PIXFormade" → "PIX Formade")
+      .replace(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,})([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][a-záéíóúàâêôãõç])/g, '$1 $2')
+      // remove hifens de quebra de linha
+      .replace(/-\n\s*/g, '')
+      // normaliza múltiplos espaços/quebras
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
     if (!text) return res.status(422).json({ error: 'Não foi possível extrair texto do arquivo.' });
     const baseName = originalname.replace(/\.[^.]+$/, '');
@@ -315,6 +385,7 @@ DATA_STORES.forEach(store => {
   app.post(`/api/data/${store}`, (req, res) => {
     writeJSON(dataFile(store), req.body);
     syncStoreToObsidian(store, req.body).catch(() => {});
+    if (store === 'notes') setTimeout(triggerReindex, 2000);
     res.json({ ok: true });
   });
 });
@@ -334,11 +405,15 @@ const writeVault = (relPath, content) => {
 
 const syncStoreToObsidian = async (store, data) => {
   if (!Array.isArray(data)) return;
+
   if (store === 'tasks') {
+    const slugs = [];
     data.forEach(t => {
       const status = t.done ? '✅ Concluída' : '⏳ Pendente';
       const tag    = t.done ? 'concluida' : 'pendente';
-      writeVault(`Tarefas/${safeSlug(t.text)}.md`,
+      const slug   = safeSlug(t.text);
+      slugs.push(slug);
+      writeVault(`Tarefas/${slug}.md`,
 `---
 tags: [sky, tarefa, ${tag}]
 status: ${tag}
@@ -347,14 +422,30 @@ id: "${t.id}"
 # ${t.text}
 
 **Status:** ${status}
+
+---
+← [[Cérebro]]
 `);
     });
+    writeVault('Tarefas/Tarefas.md',
+`---
+tags: [sky, index]
+---
+# Tarefas
+
+← [[Cérebro]]
+
+${slugs.map(s => `- [[Tarefas/${s}]]`).join('\n') || '- nenhuma ainda'}
+`);
   }
 
   if (store === 'habits') {
+    const slugs = [];
     data.forEach(h => {
       const streak = (h.dates || []).length;
-      writeVault(`Hábitos/${safeSlug(h.name)}.md`,
+      const slug   = safeSlug(h.name);
+      slugs.push(slug);
+      writeVault(`Hábitos/${slug}.md`,
 `---
 tags: [sky, habito]
 streak: ${streak}
@@ -363,12 +454,25 @@ streak: ${streak}
 
 **Sequência:** ${streak} dias registrados
 **Datas:** ${(h.dates || []).slice(-10).join(', ') || 'nenhuma ainda'}
+
+---
+← [[Cérebro]]
 `);
     });
+    writeVault('Hábitos/Hábitos.md',
+`---
+tags: [sky, index]
+---
+# Hábitos
+
+← [[Cérebro]]
+
+${slugs.map(s => `- [[Hábitos/${s}]]`).join('\n') || '- nenhum ainda'}
+`);
   }
 
   if (store === 'finances') {
-    const total = data.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
+    const total  = data.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
     const linhas = data.slice(0, 30).map(f =>
       `| ${f.date} | ${f.desc} | ${f.type === 'rec' ? '+' : '-'}R$ ${Number(f.val).toFixed(2)} |`
     ).join('\n');
@@ -378,6 +482,8 @@ tags: [sky, financas]
 updated: ${now()}
 ---
 # Finanças
+
+← [[Cérebro]]
 
 **Saldo atual:** R$ ${total.toFixed(2)}
 
@@ -389,8 +495,11 @@ ${linhas}
   }
 
   if (store === 'notes') {
+    const slugs = [];
     data.forEach(n => {
-      writeVault(`Conhecimento/${safeSlug(n.title)}.md`,
+      const slug = safeSlug(n.title);
+      slugs.push(slug);
+      writeVault(`Conhecimento/${slug}.md`,
 `---
 tags: [sky, conhecimento]
 source: "${n.source || 'manual'}"
@@ -399,14 +508,28 @@ date: "${(n.date || '').split('T')[0]}"
 # ${n.title}
 
 ${n.content}
+
+---
+← [[Cérebro]]
 `);
     });
+    writeVault('Conhecimento/Conhecimento.md',
+`---
+tags: [sky, index]
+---
+# Base de Conhecimento
+
+← [[Cérebro]]
+
+${slugs.map(s => `- [[Conhecimento/${s}]]`).join('\n') || '- nenhuma ainda'}
+`);
   }
 };
 
 const syncMemoryToObsidian = (mem) => {
   if (!mem) return;
-  const fatos = (mem.facts || []).map(f => `- ${f}`).join('\n') || '- nenhum ainda';
+  const fatos = (mem.facts || []).map(f => `- ${typeof f === 'string' ? f : f.text}`).join('\n') || '- nenhum ainda';
+
   writeVault('Memória/Perfil.md',
 `---
 tags: [sky, memoria, perfil]
@@ -415,29 +538,82 @@ sessions: ${mem.sessions || 0}
 ---
 # Perfil — ${mem.userName || 'Usuário'}
 
+← [[Cérebro]]
+
 **Nome:** ${mem.userName || 'desconhecido'}
 **Sessões:** ${mem.sessions || 0}
 **Último acesso:** ${mem.lastSeen || now()}
 
 ## O que a Sky sabe sobre você
 ${fatos}
+
+## Conversas recentes
+→ [[Conversas/Conversas]]
 `);
 
   const hist = (mem.history || []).slice(-20);
+  const dateSlug = now();
   if (hist.length) {
     const linhas = hist.map(h =>
       `**${h.role === 'user' ? '🧑 Você' : '🤖 Sky'}:** ${String(h.content).substring(0, 200)}`
     ).join('\n\n');
-    writeVault(`Conversas/${now()}.md`,
+    writeVault(`Conversas/${dateSlug}.md`,
 `---
 tags: [sky, conversa]
-date: ${now()}
+date: ${dateSlug}
 ---
-# Conversa — ${now()}
+# Conversa — ${dateSlug}
+
+← [[Conversas/Conversas]] | [[Memória/Perfil]]
 
 ${linhas}
 `);
   }
+
+  // Reconstrói o índice de conversas a partir dos arquivos existentes
+  try {
+    const convDir = path.join(VAULT_PATH, 'Conversas');
+    if (fs.existsSync(convDir)) {
+      const files = fs.readdirSync(convDir)
+        .filter(f => f.endsWith('.md') && f !== 'Conversas.md')
+        .sort().reverse().slice(0, 30);
+      writeVault('Conversas/Conversas.md',
+`---
+tags: [sky, index]
+---
+# Conversas
+
+← [[Cérebro]] | [[Memória/Perfil]]
+
+${files.map(f => `- [[Conversas/${f.replace('.md', '')}]]`).join('\n') || '- nenhuma ainda'}
+`);
+    }
+  } catch {}
+
+  // Nó central — Cérebro da Sky
+  writeVault('Cérebro.md',
+`---
+tags: [sky, cerebro, hub]
+updated: ${now()}
+---
+# 🧠 Cérebro da Sky
+
+> Mapa central de tudo que a Sky conhece e registra.
+
+## Usuário
+- [[Memória/Perfil]]
+
+## Atividades
+- [[Tarefas/Tarefas]]
+- [[Hábitos/Hábitos]]
+- [[Finanças/Resumo]]
+
+## Conhecimento
+- [[Conhecimento/Conhecimento]]
+
+## Conversas
+- [[Conversas/Conversas]]
+`);
 };
 
 app.post('/api/memory', (req, res) => {
@@ -446,6 +622,217 @@ app.post('/api/memory', (req, res) => {
   writeJSON(MEMORY_FILE, updated);
   syncMemoryToObsidian(updated);
   res.json({ ok: true });
+});
+
+// ── Import de vault Obsidian externo → Base de Conhecimento da Sky ───────────
+app.post('/api/import-vault', (req, res) => {
+  const vaultRoot = req.body.path;
+  if (!vaultRoot || !fs.existsSync(vaultRoot)) {
+    return res.status(400).json({ error: 'Caminho não encontrado: ' + vaultRoot });
+  }
+
+  const IGNORE_DIRS  = new Set(['.obsidian', '.trash', '.git', 'node_modules']);
+  const IGNORE_FILES = new Set(['MEMORY.md']);
+
+  const readAllMd = (dir, results = []) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (!IGNORE_DIRS.has(entry.name)) readAllMd(path.join(dir, entry.name), results);
+      } else if (entry.name.endsWith('.md') && !IGNORE_FILES.has(entry.name)) {
+        results.push(path.join(dir, entry.name));
+      }
+    }
+    return results;
+  };
+
+  const stripFrontmatter = (text) => text.replace(/^---[\s\S]*?---\n?/, '').trim();
+
+  try {
+    const files   = readAllMd(vaultRoot);
+    const notes   = [];
+    let   skipped = 0;
+
+    for (const filePath of files) {
+      const raw     = fs.readFileSync(filePath, 'utf8');
+      const content = stripFrontmatter(raw);
+      if (content.length < 30) { skipped++; continue; }
+
+      const title = path.basename(filePath, '.md');
+      const rel   = path.relative(vaultRoot, filePath).replace(/\\/g, '/');
+
+      notes.push({
+        id:      `vault_${Date.now()}_${notes.length}`,
+        title:   title,
+        content: content.substring(0, 3000),
+        source:  rel,
+        date:    new Date().toISOString()
+      });
+    }
+
+    const existing  = readJSON(dataFile('notes'), []);
+    const merged    = [...notes, ...existing.filter(n => !n.source?.startsWith('vault_') && !notes.some(nn => nn.title === n.title))];
+    writeJSON(dataFile('notes'), merged);
+    syncStoreToObsidian('notes', merged).catch(() => {});
+    setTimeout(triggerReindex, 3000);
+
+    res.json({ ok: true, imported: notes.length, skipped, total: merged.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── RAG: Embeddings Vetoriais ─────────────────────────────────────────────────
+const EMBED_FILE = path.join(__dirname, 'embeddings.json');
+const readEmbed  = () => readJSON(EMBED_FILE, {});
+
+const cosineSim = (a, b) => {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
+};
+
+const geminiEmbed = async (key, texts) => {
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key=${key}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: texts.map(t => ({
+          model: 'models/text-embedding-004',
+          content: { parts: [{ text: String(t).substring(0, 2000) }] }
+        }))
+      })
+    }
+  );
+  if (!r.ok) throw new Error(`Embed HTTP ${r.status}`);
+  const d = await r.json();
+  return d.embeddings.map(e => e.values);
+};
+
+app.post('/api/index-notes', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const notes = readJSON(dataFile('notes'), []);
+  if (!notes.length) return res.json({ ok: true, indexed: 0 });
+
+  const embed  = readEmbed();
+  const toIdx  = notes.filter(n => !embed[n.id]);
+  if (!toIdx.length) return res.json({ ok: true, indexed: 0, cached: Object.keys(embed).length });
+
+  const BATCH = 50;
+  let indexed = 0;
+  try {
+    for (let i = 0; i < toIdx.length; i += BATCH) {
+      const batch  = toIdx.slice(i, i + BATCH);
+      const texts  = batch.map(n => `${n.title}: ${n.content}`);
+      const vecs   = await geminiEmbed(c.geminiKey, texts);
+      batch.forEach((n, j) => { embed[n.id] = vecs[j]; });
+      indexed += batch.length;
+    }
+    writeJSON(EMBED_FILE, embed);
+    res.json({ ok: true, indexed, cached: Object.keys(embed).length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/search-notes', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const { query = '', topK = 5 } = req.body;
+  if (!query) return res.json({ ids: [] });
+
+  try {
+    const [qVec]  = await geminiEmbed(c.geminiKey, [query]);
+    const embed   = readEmbed();
+    const scores  = Object.entries(embed)
+      .map(([id, vec]) => ({ id, score: cosineSim(qVec, vec) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topK);
+    res.json({ ids: scores.map(s => s.id), scores });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Reindexar automaticamente quando notas são salvas já está coberto pelo POST /api/data/notes
+// que chama syncStoreToObsidian — adicionamos trigger aqui também:
+const triggerReindex = () => {
+  const c = getCfg();
+  if (!c.geminiKey) return;
+  fetch(`http://localhost:${PORT}/api/index-notes`, { method: 'POST' }).catch(() => {});
+};
+
+// ── Windows Notifications ─────────────────────────────────────────────────────
+app.post('/api/notify', (req, res) => {
+  const { title = 'Sky', message = '', sound = true } = req.body;
+  notifier.notify({ title, message, sound, icon: path.join(__dirname, 'public', 'icon.png'), wait: false });
+  res.json({ ok: true });
+});
+
+// ── Browser Automation (Puppeteer) ───────────────────────────────────────────
+let browserInstance = null;
+
+const getBrowser = async () => {
+  if (!browserInstance || !browserInstance.connected) {
+    browserInstance = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  }
+  return browserInstance;
+};
+
+const pageText = async (page) => {
+  return page.evaluate(() => {
+    document.querySelectorAll('script,style,noscript,nav,footer,header').forEach(el => el.remove());
+    return (document.body?.innerText || '').replace(/\s+/g, ' ').trim().substring(0, 4000);
+  });
+};
+
+app.post('/api/browser', async (req, res) => {
+  const { action, url, selectors = [], submit = false } = req.body;
+  if (!url) return res.status(400).json({ error: 'url required' });
+
+  let page;
+  try {
+    const browser = await getBrowser();
+    page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(30000);
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    const title = await page.title();
+
+    if (action === 'navigate' || action === 'extract') {
+      const text = selectors.length
+        ? (await Promise.all(selectors.map(sel =>
+            page.$eval(sel, el => el.innerText).catch(() => '')
+          ))).join('\n')
+        : await pageText(page);
+      res.json({ ok: true, title, text });
+
+    } else if (action === 'fill') {
+      for (const { css, value } of selectors) {
+        await page.$eval(css, (el, v) => { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }, value).catch(() => {});
+      }
+      if (submit) {
+        await Promise.all([page.keyboard.press('Enter'), page.waitForNavigation({ timeout: 10000 }).catch(() => {})]);
+      }
+      const text = await pageText(page);
+      res.json({ ok: true, title: await page.title(), text });
+
+    } else {
+      res.status(400).json({ error: 'action must be navigate, extract or fill' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  } finally {
+    if (page) await page.close().catch(() => {});
+  }
+});
+
+// ── VS Code Integration ───────────────────────────────────────────────────────
+app.post('/api/vscode', (req, res) => {
+  const { file = '', line } = req.body;
+  if (!file) return res.status(400).json({ error: 'file required' });
+  const target = line ? `"${file}:${line}"` : `"${file}"`;
+  exec(`code --goto ${target}`, (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ ok: true });
+  });
 });
 
 app.get('/api/export-obsidian', (req, res) => {
@@ -493,6 +880,58 @@ app.get('/api/news', async (_, res) => {
   if (!headlines.length) return res.status(503).json({ error: 'Não foi possível buscar notícias.' });
   res.json({ headlines: headlines.slice(0, 8) });
 });
+
+// ── Modo Proativo — SSE + Scheduler ──────────────────────────────────────────
+const sseClients = new Set();
+
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const heartbeat = setInterval(() => res.write(': ping\n\n'), 25000);
+  sseClients.add(res);
+
+  req.on('close', () => { clearInterval(heartbeat); sseClients.delete(res); });
+});
+
+const pushEvent = (type, message, action = null) => {
+  const data = JSON.stringify({ type, message, action });
+  sseClients.forEach(client => {
+    try { client.write(`data: ${data}\n\n`); } catch {}
+  });
+  // também dispara toast Windows
+  notifier.notify({ title: 'Sky', message, sound: true, wait: false });
+};
+
+const checkProactive = () => {
+  const now     = new Date();
+  const hour    = now.getHours();
+  const todayKey = now.toISOString().split('T')[0];
+
+  // Hábitos não feitos às 21h+
+  if (hour >= 21) {
+    const habits = readJSON(path.join(__dirname, 'habits.json'), []);
+    const pending = habits.filter(h => !(h.dates || []).includes(todayKey));
+    if (pending.length > 0 && sseClients.size > 0) {
+      const names = pending.map(h => h.name).join(', ');
+      pushEvent('reminder', `Você ainda não registrou: ${names}`, 'checkHabits');
+    }
+  }
+
+  // Tarefas com prazo — notifica às 9h se houver pendentes
+  if (hour === 9) {
+    const tasks = readJSON(path.join(__dirname, 'tasks.json'), []);
+    const pending = tasks.filter(t => !t.done);
+    if (pending.length > 0 && sseClients.size > 0) {
+      pushEvent('reminder', `Bom dia! Você tem ${pending.length} tarefa(s) pendente(s).`, 'openTasks');
+    }
+  }
+};
+
+// Roda a cada 60 segundos
+setInterval(checkProactive, 60 * 1000);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
