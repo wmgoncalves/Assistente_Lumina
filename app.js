@@ -418,7 +418,7 @@ const speakBrowser = (text, onEnd) => {
   const clean = cleanForSpeech(text);
   const u = new SpeechSynthesisUtterance(clean);
   u.lang   = 'pt-BR';
-  u.rate   = app.voiceGender === 'male' ? 1.45 : 1.55;
+  u.rate   = app.voiceGender === 'male' ? 1.75 : 1.85;
   u.pitch  = app.voiceGender === 'male' ? 0.85 : 0.92;
   u.volume = 1.0;
   const v = getVoice();
@@ -1327,9 +1327,9 @@ const OLLAMA_URL = 'http://localhost:11434';
 // Cache de disponibilidade: evita checar toda vez
 let ollamaCache = null; // null=desconhecido, true/false
 const ollamaAvailable = async () => {
-  if (ollamaCache !== null) return ollamaCache;
+  if (ollamaCache === true) return true; // só usa cache positivo — false pode ser startup precoce
   try {
-    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(300) });
+    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(1000) });
     ollamaCache = r.ok;
   } catch { ollamaCache = false; }
   return ollamaCache;
