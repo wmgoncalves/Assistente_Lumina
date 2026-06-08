@@ -1709,7 +1709,10 @@ const openWebPopup = (url, title = '') => {
   const fullUrl = url.startsWith('http') ? url : `https://${url}`;
 
   if (IFRAME_BLOCKERS.test(fullUrl)) {
-    window.open(fullUrl, '_blank', 'noopener');
+    const a = Object.assign(document.createElement('a'), { href: fullUrl, target: '_blank', rel: 'noopener noreferrer' });
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 100);
     return;
   }
 
