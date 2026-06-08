@@ -77,11 +77,7 @@ app.get('/api/memory', (req, res) => {
   res.json({ userName: m.userName, facts: m.facts || [], sessions: m.sessions || 0 });
 });
 
-app.post('/api/memory', (req, res) => {
-  const m = getMem();
-  writeJSON(MEMORY_FILE, { ...m, ...req.body });
-  res.json({ ok: true });
-});
+// /api/memory POST — definido abaixo junto com o sync Obsidian
 
 app.delete('/api/memory', (req, res) => {
   const m = getMem();
@@ -318,8 +314,150 @@ DATA_STORES.forEach(store => {
   });
   app.post(`/api/data/${store}`, (req, res) => {
     writeJSON(dataFile(store), req.body);
+    syncStoreToObsidian(store, req.body).catch(() => {});
     res.json({ ok: true });
   });
+});
+
+// ── Obsidian Sync ─────────────────────────────────────────────────────────────
+const VAULT_PATH = path.join(os.homedir(), 'Documents', 'Sky Vault');
+
+const vaultDir  = (...parts) => path.join(VAULT_PATH, ...parts);
+const safeSlug  = (s) => String(s).replace(/[\\/:*?"<>|]/g, '-').trim().substring(0, 80);
+const now       = () => new Date().toISOString().split('T')[0];
+
+const writeVault = (relPath, content) => {
+  const full = vaultDir(relPath);
+  fs.mkdirSync(path.dirname(full), { recursive: true });
+  fs.writeFileSync(full, content, 'utf8');
+};
+
+const syncStoreToObsidian = async (store, data) => {
+  if (!Array.isArray(data)) return;
+  if (store === 'tasks') {
+    data.forEach(t => {
+      const status = t.done ? '✅ Concluída' : '⏳ Pendente';
+      const tag    = t.done ? 'concluida' : 'pendente';
+      writeVault(`Tarefas/${safeSlug(t.text)}.md`,
+`---
+tags: [sky, tarefa, ${tag}]
+status: ${tag}
+id: "${t.id}"
+---
+# ${t.text}
+
+**Status:** ${status}
+`);
+    });
+  }
+
+  if (store === 'habits') {
+    data.forEach(h => {
+      const streak = (h.dates || []).length;
+      writeVault(`Hábitos/${safeSlug(h.name)}.md`,
+`---
+tags: [sky, habito]
+streak: ${streak}
+---
+# ${h.name}
+
+**Sequência:** ${streak} dias registrados
+**Datas:** ${(h.dates || []).slice(-10).join(', ') || 'nenhuma ainda'}
+`);
+    });
+  }
+
+  if (store === 'finances') {
+    const total = data.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
+    const linhas = data.slice(0, 30).map(f =>
+      `| ${f.date} | ${f.desc} | ${f.type === 'rec' ? '+' : '-'}R$ ${Number(f.val).toFixed(2)} |`
+    ).join('\n');
+    writeVault('Finanças/Resumo.md',
+`---
+tags: [sky, financas]
+updated: ${now()}
+---
+# Finanças
+
+**Saldo atual:** R$ ${total.toFixed(2)}
+
+## Últimas transações
+| Data | Descrição | Valor |
+|------|-----------|-------|
+${linhas}
+`);
+  }
+
+  if (store === 'notes') {
+    data.forEach(n => {
+      writeVault(`Conhecimento/${safeSlug(n.title)}.md`,
+`---
+tags: [sky, conhecimento]
+source: "${n.source || 'manual'}"
+date: "${(n.date || '').split('T')[0]}"
+---
+# ${n.title}
+
+${n.content}
+`);
+    });
+  }
+};
+
+const syncMemoryToObsidian = (mem) => {
+  if (!mem) return;
+  const fatos = (mem.facts || []).map(f => `- ${f}`).join('\n') || '- nenhum ainda';
+  writeVault('Memória/Perfil.md',
+`---
+tags: [sky, memoria, perfil]
+updated: ${now()}
+sessions: ${mem.sessions || 0}
+---
+# Perfil — ${mem.userName || 'Usuário'}
+
+**Nome:** ${mem.userName || 'desconhecido'}
+**Sessões:** ${mem.sessions || 0}
+**Último acesso:** ${mem.lastSeen || now()}
+
+## O que a Sky sabe sobre você
+${fatos}
+`);
+
+  const hist = (mem.history || []).slice(-20);
+  if (hist.length) {
+    const linhas = hist.map(h =>
+      `**${h.role === 'user' ? '🧑 Você' : '🤖 Sky'}:** ${String(h.content).substring(0, 200)}`
+    ).join('\n\n');
+    writeVault(`Conversas/${now()}.md`,
+`---
+tags: [sky, conversa]
+date: ${now()}
+---
+# Conversa — ${now()}
+
+${linhas}
+`);
+  }
+};
+
+app.post('/api/memory', (req, res) => {
+  const m = getMem();
+  const updated = { ...m, ...req.body };
+  writeJSON(MEMORY_FILE, updated);
+  syncMemoryToObsidian(updated);
+  res.json({ ok: true });
+});
+
+app.get('/api/export-obsidian', (req, res) => {
+  try {
+    fs.mkdirSync(VAULT_PATH, { recursive: true });
+    DATA_STORES.forEach(store => {
+      const data = readJSON(dataFile(store), []);
+      syncStoreToObsidian(store, data);
+    });
+    syncMemoryToObsidian(getMem());
+    res.json({ ok: true, vault: VAULT_PATH });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── News RSS (G1 + BBC Brasil — sem API key) ──────────────────────────────────
