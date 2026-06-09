@@ -959,17 +959,20 @@ const processInput = async (rawText) => {
   } catch (err) {
     console.error('[Sky Error]', err);
     const msg = err?.message || String(err);
-    const geminiDown = !cfg.geminiKey
-      || msg.includes('429') || msg.includes('403')
-      || msg.includes('API_KEY') || msg.includes('expired')
-      || msg.includes('400') || msg.includes('401');
+    const isExpired = msg.includes('expired') || msg.includes('401') || msg.includes('API_KEY_INVALID');
+    const isQuota   = msg.includes('429');
+    const geminiDown = !cfg.geminiKey || isExpired || isQuota
+      || msg.includes('403') || msg.includes('400');
 
     if (!cfg.geminiKey) {
-      speak('Chave Gemini não configurada. Vá em Configurações e Notificações e insira sua chave.');
+      speak('Chave Gemini não configurada. Vá em Configurações e insira sua chave.');
     } else if (geminiDown) {
-      if (msg.includes('429')) blockGemini();
+      // Chave expirada/inválida → bloqueia pelo resto da sessão para não tentar de novo
+      if (isExpired) blockGeminiForever();
+      else if (isQuota) blockGemini();
+
       setFace('thinking');
-      setRespText('Gemini indisponível — tentando IA local…');
+      setRespText('Usando IA local…');
       const hasOllama = await ollamaAvailable();
       if (hasOllama) {
         try {
@@ -980,18 +983,19 @@ const processInput = async (rawText) => {
           addMsgUI('sky', response2);
           saveHist();
           speak(response2);
-          toast('Respondendo via Ollama (IA local).', 'info');
+          if (isExpired) toast('Gemini expirado — usando Ollama local.', 'info');
           return;
         } catch (ollamaErr) {
           console.warn('Ollama falhou:', ollamaErr.message);
         }
       }
+      // Ollama também não disponível
       setFace('error');
-      const hint = msg.includes('expired') || msg.includes('401')
-        ? 'Chave Gemini expirada. Renove em aistudio.google.com e atualize em Configurações.'
-        : msg.includes('429')
+      const hint = isExpired
+        ? 'Gemini expirado e Ollama offline. Renove a chave em aistudio.google.com ou instale o Ollama.'
+        : isQuota
           ? 'Cota Gemini atingida. Instale o Ollama para continuar offline.'
-          : `Gemini indisponível: ${msg.substring(0, 60)}`;
+          : `Gemini indisponível. Instale o Ollama para usar a Sky offline.`;
       speak(hint);
       toast(hint, 'error');
     } else {
@@ -1567,8 +1571,9 @@ const callOllama = async (customHistory = null) => {
 
 // ── Controle de cota Gemini ────────────────────────────────────────────────────
 let geminiBlockedUntil = 0;
-const geminiBlocked = () => Date.now() < geminiBlockedUntil;
-const blockGemini   = () => { geminiBlockedUntil = Date.now() + 5 * 60 * 1000; }; // 5 min
+const geminiBlocked     = () => Date.now() < geminiBlockedUntil;
+const blockGemini       = (ms = 5 * 60 * 1000) => { geminiBlockedUntil = Date.now() + ms; };
+const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reiniciar
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
 const callGemini = async (customHistory = null) => {
@@ -2009,6 +2014,8 @@ const analyzeFile = async (file) => {
 document.addEventListener('DOMContentLoaded', () => {
   scheduleBlink();
   renderMemoryPanel();
+  // Pré-aquece cache do Ollama para fallback ser instantâneo
+  ollamaAvailable().catch(() => {});
 
   // Update session counter
   const mem = getMem();
