@@ -296,15 +296,18 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
   const toolsBlock = `
 
 ── FERRAMENTAS — use proativamente, sem anunciar ──
-• updateMemory   → SEMPRE que aprender qualquer fato sobre o usuário: nome, profissão, empresa, cidade, gostos, rotina, família, preferências — mesmo que não seja pedido explicitamente
-• createTask     → "anota tarefa", "lembra de", "preciso fazer"
-• completeTask   → quando usuário confirmar conclusão (ID do contexto)
-• checkHabit     → quando mencionar que fez um hábito
-• addFinance     → gasto, receita, pagamento, salário mencionado
-• saveNote       → pedido para salvar, anotar ou guardar informação
-• systemCommand  → bloquear tela, suspender, desligar, reiniciar, mudo, volume — quando usuário pedir ação no computador
-• webSearch      → APENAS para informações em tempo real (clima, cotações, notícias). Se a BASE DE CONHECIMENTO já tem a resposta, use-a diretamente SEM webSearch
-• openPage       → apenas quando usuário pede explicitamente para ABRIR ou VER um site
+• updateMemory      → SEMPRE que aprender qualquer fato sobre o usuário: nome, profissão, empresa, cidade, gostos, rotina, família, preferências
+• createTask        → "anota tarefa", "lembra de", "preciso fazer"
+• completeTask      → quando usuário confirmar conclusão (ID do contexto)
+• checkHabit        → quando mencionar que fez um hábito
+• addFinance        → gasto, receita, pagamento, salário mencionado
+• saveNote          → pedido para salvar, anotar ou guardar informação
+• systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
+• webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• openPage          → apenas quando usuário pede explicitamente para ABRIR um site
+• scheduleReminder  → USE PROATIVAMENTE: sempre que detectar menção a horário ("reunião às 15h", "ligo às 10h", "prazo amanhã", "me lembra em X minutos"). Calcule os minutos até o horário e agende sem perguntar.
+• summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
+• financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
 
 APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe ao final:
 <!--SKY_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
@@ -1150,6 +1153,39 @@ const TOOL_DECLARATIONS = {
         },
         required: ['file']
       }
+    },
+    {
+      name: 'scheduleReminder',
+      description: 'Agenda um lembrete para disparar daqui X minutos. Use SEMPRE que o usuário mencionar um horário, reunião, ligação, prazo ou pedir para lembrar de algo. Também use proativamente quando detectar frases como "tenho reunião às 15h", "ligo pro cliente às 10h", "preciso enviar até amanhã".',
+      parameters: {
+        type: 'object',
+        properties: {
+          message:  { type: 'string', description: 'Texto do lembrete (ex: "Reunião com diretores em 5 minutos!")' },
+          minutes:  { type: 'number', description: 'Daqui quantos minutos disparar o lembrete' }
+        },
+        required: ['message', 'minutes']
+      }
+    },
+    {
+      name: 'summarizeDocument',
+      description: 'Busca um documento na base de conhecimento pelo título e retorna o conteúdo para resumir. Use quando usuário pedir para resumir, explicar ou consultar um documento, PDF, arquivo ou nota.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: 'Título ou palavras-chave do documento a buscar' }
+        },
+        required: ['query']
+      }
+    },
+    {
+      name: 'financialReport',
+      description: 'Gera um relatório financeiro completo do mês: receitas, despesas, saldo, maiores gastos e tendências. Use quando usuário perguntar sobre finanças, gastos, saldo ou situação financeira.',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: { type: 'string', description: 'Período desejado: "mes_atual", "mes_anterior" ou "tudo"', enum: ['mes_atual', 'mes_anterior', 'tudo'] }
+        }
+      }
     }
   ]
 };
@@ -1170,7 +1206,10 @@ const TOOL_LABELS = {
   readEmail:            'Lendo email…',
   browserAction:        'Abrindo navegador…',
   sendNotification:     'Enviando notificação…',
-  openVSCode:           'Abrindo VS Code…'
+  openVSCode:           'Abrindo VS Code…',
+  scheduleReminder:     'Agendando lembrete…',
+  summarizeDocument:    'Buscando documento…',
+  financialReport:      'Gerando relatório…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
@@ -1401,6 +1440,80 @@ const executeTool = async (name, args) => {
           body: JSON.stringify({ file: args.file, line: args.line }) });
         return `VS Code aberto: ${args.file}${args.line ? ':' + args.line : ''}`;
       } catch (e) { return `Erro ao abrir VS Code: ${e.message}`; }
+    }
+
+    case 'scheduleReminder': {
+      try {
+        const minutes = Math.max(0.1, Number(args.minutes) || 1);
+        const delayMs = Math.round(minutes * 60 * 1000);
+        await fetch('/api/remind', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: args.message, delayMs }) });
+        const label = minutes < 1
+          ? `${Math.round(minutes * 60)} segundos`
+          : minutes === 1 ? '1 minuto'
+          : `${minutes} minutos`;
+        return `Lembrete agendado para daqui ${label}: "${args.message}"`;
+      } catch (e) { return `Erro ao agendar lembrete: ${e.message}`; }
+    }
+
+    case 'summarizeDocument': {
+      try {
+        const notes = getNotes();
+        if (!notes.length) return 'Base de conhecimento vazia. Importe documentos primeiro.';
+        const q = (args.query || '').toLowerCase();
+        const words = q.split(/\s+/).filter(w => w.length > 2);
+        const scored = notes.map(n => {
+          const hay = (n.title + ' ' + n.content).toLowerCase();
+          const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+          return { ...n, score };
+        }).filter(n => n.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+        if (!scored.length) return `Nenhum documento encontrado para "${args.query}". Verifique o título na Base de Conhecimento.`;
+        return scored.map(n => `📄 **${n.title}**\n${n.content.substring(0, 1500)}`).join('\n\n---\n\n');
+      } catch (e) { return `Erro ao buscar documento: ${e.message}`; }
+    }
+
+    case 'financialReport': {
+      try {
+        const fin = typeof getFin === 'function' ? getFin() : [];
+        if (!fin.length) return 'Nenhuma transação registrada ainda.';
+        const now   = new Date();
+        const mes   = now.getMonth();
+        const ano   = now.getFullYear();
+        const mesAnt = mes === 0 ? 11 : mes - 1;
+        const anoAnt = mes === 0 ? ano - 1 : ano;
+        const nomeMes = (m, a) => new Date(a, m, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+        const filtrar = (items, m, a) => items.filter(f => {
+          const d = f.date ? new Date(f.date.split('/').reverse().join('-')) : null;
+          return d && d.getMonth() === m && d.getFullYear() === a;
+        });
+
+        const period  = args.period || 'mes_atual';
+        const itens   = period === 'tudo' ? fin
+          : period === 'mes_anterior' ? filtrar(fin, mesAnt, anoAnt)
+          : filtrar(fin, mes, ano);
+
+        const titulo  = period === 'tudo' ? 'Histórico completo'
+          : period === 'mes_anterior' ? nomeMes(mesAnt, anoAnt)
+          : nomeMes(mes, ano);
+
+        if (!itens.length) return `Nenhuma transação em ${titulo}.`;
+
+        const receitas  = itens.filter(f => f.type === 'rec').reduce((s, f) => s + Number(f.val), 0);
+        const despesas  = itens.filter(f => f.type === 'des').reduce((s, f) => s + Number(f.val), 0);
+        const saldo     = receitas - despesas;
+        const maiores   = [...itens].filter(f => f.type === 'des').sort((a, b) => b.val - a.val).slice(0, 3);
+
+        let report = `📊 Relatório — ${titulo}\n`;
+        report += `• Receitas:  R$ ${receitas.toFixed(2)}\n`;
+        report += `• Despesas:  R$ ${despesas.toFixed(2)}\n`;
+        report += `• Saldo:     R$ ${saldo.toFixed(2)} ${saldo >= 0 ? '✅' : '⚠️'}\n`;
+        if (maiores.length) {
+          report += `\nMaiores gastos:\n`;
+          maiores.forEach(f => { report += `  - ${f.desc}: R$ ${Number(f.val).toFixed(2)}\n`; });
+        }
+        return report;
+      } catch (e) { return `Erro ao gerar relatório: ${e.message}`; }
     }
 
     default:

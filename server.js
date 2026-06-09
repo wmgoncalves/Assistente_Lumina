@@ -765,6 +765,17 @@ app.post('/api/notify', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Lembretes agendados (timer server-side → SSE + toast) ─────────────────────
+app.post('/api/remind', (req, res) => {
+  const { message = '', delayMs = 60000 } = req.body;
+  if (!message) return res.status(400).json({ error: 'message required' });
+  const capped = Math.min(Math.max(delayMs, 5000), 24 * 60 * 60 * 1000); // 5s a 24h
+  setTimeout(() => {
+    pushEvent('reminder', message, 'reminder');
+  }, capped);
+  res.json({ ok: true, firesIn: capped });
+});
+
 // ── Browser Automation (Puppeteer) ───────────────────────────────────────────
 let browserInstance = null;
 
