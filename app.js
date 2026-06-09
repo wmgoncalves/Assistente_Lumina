@@ -245,7 +245,10 @@ const buildContextBlock = async (lastUserMsg = '') => {
   const doneHabits   = habits.filter(h => (h.dates || []).includes(todayKey));
   const pendingHabit = habits.filter(h => !(h.dates || []).includes(todayKey));
   const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
-  const notes        = await retrieveNotes(lastUserMsg);
+  // Só busca embeddings quando a mensagem parece pedir conhecimento — economiza cota
+  const needsKnowledge = getNotes().length > 0 && lastUserMsg.length > 8 &&
+    /resum|explica|fala sobre|o que é|o que sabe|document|pdf|arquivo|nota|conhec|pesquis|procur|busca|sobre o|sobre a/i.test(lastUserMsg);
+  const notes = needsKnowledge ? await retrieveNotes(lastUserMsg) : retrieveNotesLexical(lastUserMsg);
 
   let ctx = `\n\n── CONTEXTO DO DIA ──`;
   ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -1581,7 +1584,11 @@ const callGemini = async (customHistory = null) => {
   const history = customHistory || app.history;
   const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
 
-  let contents = history.map(h => ({
+  // Constrói system prompt UMA vez — reutilizado em todas as iterações do loop
+  const systemText = await buildSystem(lastMsg, app.currentEmotion || 'neutral');
+
+  // Envia só as últimas 40 mensagens para economizar tokens (contexto suficiente)
+  let contents = history.slice(-40).map(h => ({
     role: h.role === 'user' ? 'user' : 'model',
     parts: [{ text: h.content }]
   }));
@@ -1595,10 +1602,10 @@ const callGemini = async (customHistory = null) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: await buildSystem(lastMsg, app.currentEmotion || 'neutral') }] },
+          system_instruction: { parts: [{ text: systemText }] },
           contents,
           tools,
-          generationConfig: { maxOutputTokens: 2000, temperature: 0.78 }
+          generationConfig: { maxOutputTokens: 1200, temperature: 0.78 }
         })
       }
     );
