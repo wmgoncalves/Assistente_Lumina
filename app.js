@@ -2500,7 +2500,7 @@ const switchView = (id) => {
   if (id === 'apresentacao')  initApresentacao();
 };
 
-let presState = { current: 0, total: 9, initialized: false };
+let presState = { current: 0, total: 13, initialized: false };
 
 const initApresentacao = () => {
   const slides = document.querySelectorAll('.pres-slide');
