@@ -458,7 +458,9 @@ const speakElevenLabs = async (text, onEnd) => {
       body: JSON.stringify({
         text: clean,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.68, similarity_boost: 0.80, style: 0.08, use_speaker_boost: false }
+        voice_settings: app.voiceGender === 'female'
+          ? { stability: 0.42, similarity_boost: 0.88, style: 0.38, use_speaker_boost: true }
+          : { stability: 0.68, similarity_boost: 0.80, style: 0.08, use_speaker_boost: false }
       })
     });
     if (!res.ok) throw new Error(`ElevenLabs ${res.status}`);
@@ -3138,6 +3140,9 @@ const initConfiguracoes = () => {
     if (confirm('Apagar toda a memória de Sky?')) {
       saveMem(defaultMem()); renderMemoryPanel(); toast('Memória apagada.', 'info');
     }
+  });
+  document.getElementById('btn-test-voice').addEventListener('click', () => {
+    speak('Olá! Estou aqui para ajudar. Como posso ser útil para você hoje?');
   });
 };
 
