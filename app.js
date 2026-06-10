@@ -1396,22 +1396,43 @@ const executeTool = async (name, args) => {
     case 'downloadDocument': {
       const notes = getNotes();
       const q     = (args.query || '').toLowerCase();
-      const note  = notes.find(n =>
-        n.title.toLowerCase().includes(q) ||
-        q.split(' ').some(w => w.length > 3 && n.title.toLowerCase().includes(w))
-      ) || notes.find(n => n.content.toLowerCase().includes(q));
-      if (!note) return `Documento "${args.query}" não encontrado na base de conhecimento.`;
+      const words = q.split(/\s+/).filter(w => w.length > 2);
+
+      // Encontra nota base (qualquer chunk que bata)
+      const match = notes.find(n =>
+        words.some(w => n.title.toLowerCase().includes(w) || n.content.toLowerCase().includes(w))
+      );
+      if (!match) return `Documento "${args.query}" não encontrado na base de conhecimento.`;
+
+      // Descobre o nome base para reunir todos os chunks do mesmo PDF
+      const chunkMatch = match.title.match(/^(.+)\s+\(\d+\/\d+\)$/);
+      let docTitle, content;
+
+      if (chunkMatch) {
+        // PDF em chunks — junta todos em ordem
+        const base   = chunkMatch[1];
+        const chunks = notes
+          .filter(n => n.title.startsWith(base + ' ('))
+          .sort((a, b) => {
+            const na = parseInt(a.title.match(/\((\d+)\//)?.[1] || '0');
+            const nb = parseInt(b.title.match(/\((\d+)\//)?.[1] || '0');
+            return na - nb;
+          });
+        docTitle = base;
+        content  = chunks.map(c => c.content).join('\n\n');
+      } else {
+        docTitle = match.title;
+        content  = match.content;
+      }
+
       const ext      = args.format === 'md' ? 'md' : 'txt';
-      const filename = note.title.replace(/[\\/:*?"<>|]/g, '-') + '.' + ext;
-      const content  = ext === 'md'
-        ? `# ${note.title}\n\n${note.content}`
-        : note.content;
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+      const filename = docTitle.replace(/[\\/:*?"<>|]/g, '-') + '.' + ext;
+      const blob     = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url      = URL.createObjectURL(blob);
+      const a        = Object.assign(document.createElement('a'), { href: url, download: filename });
       document.body.appendChild(a); a.click();
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-      return `Documento "${note.title}" baixado como ${filename}.`;
+      return `Documento "${docTitle}" baixado como ${filename}.`;
     }
 
     case 'systemCommand': {
