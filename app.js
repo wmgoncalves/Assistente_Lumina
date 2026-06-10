@@ -1410,14 +1410,19 @@ const executeTool = async (name, args) => {
     case 'downloadDocument': {
       let notes = getNotes();
       if (!notes.length) notes = await serverGet('notes', []);
-      const q     = (args.query || '').toLowerCase();
-      const words = q.split(/\s+/).filter(w => w.length > 2);
+      const q    = (args.query || '').toLowerCase();
+      const STOP2 = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar']);
+      const words = q.split(/\s+/).filter(w => w.length > 2 && !STOP2.has(w));
 
-      // Encontra nota base (qualquer chunk que bata)
-      const match = notes.find(n =>
-        words.some(w => n.title.toLowerCase().includes(w) || n.content.toLowerCase().includes(w))
-      );
-      if (!match) return `Documento "${args.query}" não encontrado na base de conhecimento.`;
+      // Melhor match por pontuação (título peso 3, conteúdo peso 1)
+      const scored = notes.map(n => {
+        const nt = n.title.toLowerCase(), nc = n.content.toLowerCase();
+        const score = words.reduce((s, w) => s + (nt.includes(w) ? 3 : 0) + (nc.includes(w) ? 1 : 0), 0);
+        return { n, score };
+      }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+
+      if (!scored.length) return `Documento "${args.query}" não encontrado na base de conhecimento.`;
+      const match = scored[0].n;
 
       // Descobre o nome base para reunir todos os chunks do mesmo PDF
       const chunkMatch = match.title.match(/^(.+)\s+\(\d+\/\d+\)$/);
@@ -1856,14 +1861,21 @@ const detectLocalDownload = async (rawText) => {
   if (!notes.length) notes = await serverGet('notes', []);
   if (!notes.length) return null;
 
-  // Palavras da frase (min 3 chars) para buscar nota matching
-  const words = t.split(/\s+/).filter(w => w.length > 2 &&
-    !['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor'].includes(w));
+  // Palavras da frase (min 3 chars), removendo stopwords genéricas
+  const STOP = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar']);
+  const words = t.split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
+  if (!words.length) return null;
 
-  const match = notes.find(n =>
-    words.some(w => n.title.toLowerCase().includes(w) || n.content.toLowerCase().includes(w))
-  );
-  if (!match) return null;
+  // Pontua cada nota pelo número de palavras específicas que batem no título (peso 3) ou conteúdo (peso 1)
+  const scored = notes.map(n => {
+    const nt = n.title.toLowerCase();
+    const nc = n.content.toLowerCase();
+    const score = words.reduce((s, w) => s + (nt.includes(w) ? 3 : 0) + (nc.includes(w) ? 1 : 0), 0);
+    return { n, score };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+
+  if (!scored.length) return null;
+  const match = scored[0].n;
 
   // Junta todos os chunks do mesmo PDF
   const chunkMatch = match.title.match(/^(.+)\s+\(\d+\/\d+\)$/);
