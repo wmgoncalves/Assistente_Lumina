@@ -167,15 +167,20 @@
       </main>
 
       <footer class="bottombar">
-        <button class="mic-btn" id="btn-mic">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-        </button>
-        <span class="mic-label">C L I Q U E &nbsp; E &nbsp; F A L E</span>
+        <div class="mic-row">
+          <button class="mic-btn" id="btn-mic">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <button class="stop-btn" id="btn-stop" style="display:none" title="Parar fala (Esc)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          </button>
+        </div>
+        <span class="mic-label" id="mic-label">C L I Q U E &nbsp; E &nbsp; F A L E</span>
         <div id="img-preview-wrap" style="display:none;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:0.4rem;">
           <img id="img-preview" style="height:56px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.12);">
           <button id="img-cancel" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.1rem;line-height:1;" title="Remover imagem">✕</button>

@@ -327,7 +327,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
 
-ENSINO ATIVO: Quando a BASE DE CONHECIMENTO tiver notas relevantes ao pedido, use esse conteúdo como fonte principal. Explique passo a passo, de forma didática — cite o nome da nota, guie cada etapa do processo. Se for pedido de compras, formulário, procedimento: detalhe cada passo como um tutor. Nunca ignore uma nota relevante disponível no contexto.
+ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relevantes, você DEVE usá-las como fonte principal e única. Leia o conteúdo da nota palavra por palavra e ensine seguindo exatamente o que está escrito — telas do sistema, campos, botões, sequência de passos. Não resuma, não generalize, não invente passos. Guie como um tutor presencial: "Primeiro, acesse a tela X. Depois, preencha o campo Y com Z." Se o documento tiver um passo a passo numerado, repita-o fielmente. Nunca responda "Ok" ou ignore uma nota disponível no contexto.
 • scheduleReminder  → USE PROATIVAMENTE: sempre que detectar menção a horário ("reunião às 15h", "ligo às 10h", "prazo amanhã", "me lembra em X minutos"). Calcule os minutos até o horário e agende sem perguntar.
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
@@ -419,12 +419,21 @@ const flashLearnBadge = () => {
 // ── Stop all speech (ElevenLabs or browser TTS) ───────────────────────────────
 let currentAudio = null;
 
+const setStopBtn = (visible) => {
+  const btn   = document.getElementById('btn-stop');
+  const label = document.getElementById('mic-label');
+  if (!btn) return;
+  btn.style.display   = visible ? 'flex' : 'none';
+  if (label) label.textContent = visible ? 'P A R A R' : 'C L I Q U E   E   F A L E';
+};
+
 const stopSpeaking = () => {
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
   try { window.speechSynthesis.cancel(); } catch {}
   clearInterval(speakTimer); speakTimer = null;
   app.isSpeaking = false;
   setFace('idle');
+  setStopBtn(false);
 };
 
 // ── Speech — ElevenLabs (Jarvis Voice) ────────────────────────────────────────
@@ -434,6 +443,7 @@ const DEFAULT_ELEVEN_VOICE_M = '4r3G9XKliGgVZLKMgjik'; // voz masculina
 const speakElevenLabs = async (text, onEnd) => {
   app.isSpeaking = true;
   setFace('speaking');
+  setStopBtn(true);
   setRespText(text);
   const clean = cleanForSpeech(text);
   const voiceId = app.voiceGender === 'male'
@@ -529,6 +539,7 @@ const speakBrowser = (text, onEnd) => {
   window.speechSynthesis.cancel();
   app.isSpeaking = true;
   setFace('speaking');
+  setStopBtn(true);
   setRespText(text);
   const clean = cleanForSpeech(text);
   const u = new SpeechSynthesisUtterance(clean);
@@ -564,6 +575,7 @@ const speakPiper = async (text, onEnd) => {
 
   app.isSpeaking = true;
   setFace('speaking');
+  setStopBtn(true);
   setRespText(text);
   try {
     const res = await fetch('/api/tts-piper', {
@@ -596,6 +608,7 @@ const speakEdge = async (text, onEnd) => {
   const voice = app.voiceGender === 'male' ? 'pt-BR-AntonioNeural' : 'pt-BR-FranciscaNeural';
   app.isSpeaking = true;
   setFace('speaking');
+  setStopBtn(true);
   setRespText(text);
   try {
     const res = await fetch('/api/tts-edge', {
@@ -2268,6 +2281,9 @@ document.addEventListener('DOMContentLoaded', () => {
     stopSpeaking(); // interrompe fala em andamento antes de ouvir
     startListening();
   });
+
+  // ── Botão parar fala ──
+  document.getElementById('btn-stop').addEventListener('click', () => stopSpeaking());
 
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); app.isListening ? stopListening() : startListening(); }
