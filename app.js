@@ -260,9 +260,13 @@ const buildContextBlock = async (lastUserMsg = '') => {
   const doneHabits   = habits.filter(h => (h.dates || []).includes(todayKey));
   const pendingHabit = habits.filter(h => !(h.dates || []).includes(todayKey));
   const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
-  // Só busca embeddings quando a mensagem parece pedir conhecimento — economiza cota
-  // Sempre busca na base quando tem notas — usuário adicionou conteúdo para Sky usar
-  const notes = getNotes().length > 0 ? await retrieveNotes(lastUserMsg) : [];
+  // Garante que as notas estão carregadas (localStorage pode estar vazio antes do sync terminar)
+  let allNotes = getNotes();
+  if (!allNotes.length) {
+    const fromServer = await serverGet('notes', []);
+    if (fromServer.length) { localStorage.setItem('sky_notes', JSON.stringify(fromServer)); allNotes = fromServer; }
+  }
+  const notes = allNotes.length > 0 ? await retrieveNotes(lastUserMsg) : [];
 
   let ctx = `\n\n── CONTEXTO DO DIA ──`;
   ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
@@ -964,6 +968,16 @@ const processInput = async (rawText) => {
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
   try {
+    // Download local — funciona com ou sem API (Ollama incluso)
+    const dlResp = await detectLocalDownload(text);
+    if (dlResp) {
+      app.history.push({ role: 'model', content: dlResp });
+      addMsgUI('sky', dlResp);
+      saveHist();
+      speak(dlResp);
+      return;
+    }
+
     const infoResp = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
     const useGemini = cfg.geminiKey && !geminiBlocked();
@@ -1394,7 +1408,8 @@ const executeTool = async (name, args) => {
     }
 
     case 'downloadDocument': {
-      const notes = getNotes();
+      let notes = getNotes();
+      if (!notes.length) notes = await serverGet('notes', []);
       const q     = (args.query || '').toLowerCase();
       const words = q.split(/\s+/).filter(w => w.length > 2);
 
@@ -1408,6 +1423,7 @@ const executeTool = async (name, args) => {
       const chunkMatch = match.title.match(/^(.+)\s+\(\d+\/\d+\)$/);
       let docTitle, content;
 
+      let chunkCount = 1;
       if (chunkMatch) {
         // PDF em chunks — junta todos em ordem
         const base   = chunkMatch[1];
@@ -1418,8 +1434,9 @@ const executeTool = async (name, args) => {
             const nb = parseInt(b.title.match(/\((\d+)\//)?.[1] || '0');
             return na - nb;
           });
-        docTitle = base;
-        content  = chunks.map(c => c.content).join('\n\n');
+        docTitle   = base;
+        content    = chunks.map(c => c.content).join('\n\n');
+        chunkCount = chunks.length;
       } else {
         docTitle = match.title;
         content  = match.content;
@@ -1432,7 +1449,8 @@ const executeTool = async (name, args) => {
       const a        = Object.assign(document.createElement('a'), { href: url, download: filename });
       document.body.appendChild(a); a.click();
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-      return `Documento "${docTitle}" baixado como ${filename}.`;
+      const partes = chunkCount > 1 ? ` (${chunkCount} partes reunidas em um único arquivo)` : '';
+      return `Documento completo "${docTitle}" baixado como ${filename}${partes}. Verifique a pasta Downloads do seu computador.`;
     }
 
     case 'systemCommand': {
@@ -1536,7 +1554,8 @@ const executeTool = async (name, args) => {
 
     case 'summarizeDocument': {
       try {
-        const notes = getNotes();
+        let notes = getNotes();
+        if (!notes.length) notes = await serverGet('notes', []);
         if (!notes.length) return 'Base de conhecimento vazia. Importe documentos primeiro.';
         const q = (args.query || '').toLowerCase();
         const words = q.split(/\s+/).filter(w => w.length > 2);
@@ -1826,6 +1845,56 @@ const detectOpenSite = (rawText) => {
   }
 
   return null;
+};
+
+// ── Download direto (funciona sem API, com Gemini ou Ollama) ──────────────────
+const detectLocalDownload = async (rawText) => {
+  const t = rawText.toLowerCase().trim().replace(/[!?.]+$/, '');
+  if (!/baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulário|pdf)/.test(t)) return null;
+
+  let notes = getNotes();
+  if (!notes.length) notes = await serverGet('notes', []);
+  if (!notes.length) return null;
+
+  // Palavras da frase (min 3 chars) para buscar nota matching
+  const words = t.split(/\s+/).filter(w => w.length > 2 &&
+    !['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor'].includes(w));
+
+  const match = notes.find(n =>
+    words.some(w => n.title.toLowerCase().includes(w) || n.content.toLowerCase().includes(w))
+  );
+  if (!match) return null;
+
+  // Junta todos os chunks do mesmo PDF
+  const chunkMatch = match.title.match(/^(.+)\s+\(\d+\/\d+\)$/);
+  let docTitle, content, chunkCount = 1;
+
+  if (chunkMatch) {
+    const base   = chunkMatch[1];
+    const chunks = notes
+      .filter(n => n.title.startsWith(base + ' ('))
+      .sort((a, b) => {
+        const na = parseInt(a.title.match(/\((\d+)\//)?.[1] || '0');
+        const nb = parseInt(b.title.match(/\((\d+)\//)?.[1] || '0');
+        return na - nb;
+      });
+    docTitle   = base;
+    content    = chunks.map(c => c.content).join('\n\n');
+    chunkCount = chunks.length;
+  } else {
+    docTitle = match.title;
+    content  = match.content;
+  }
+
+  const filename = docTitle.replace(/[\\/:*?"<>|]/g, '-') + '.txt';
+  const blob     = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url      = URL.createObjectURL(blob);
+  const a        = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+
+  const partes = chunkCount > 1 ? ` (${chunkCount} partes reunidas)` : '';
+  return `Documento "${docTitle}" baixado como ${filename}${partes}. Verifique sua pasta Downloads!`;
 };
 
 // ── Respostas locais (sem API) ─────────────────────────────────────────────────
