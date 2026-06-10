@@ -1625,8 +1625,12 @@ const executeTool = async (name, args) => {
         const nomeMes = (m, a) => new Date(a, m, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
 
         const filtrar = (items, m, a) => items.filter(f => {
-          const d = f.date ? new Date(f.date.split('/').reverse().join('-')) : null;
-          return d && d.getMonth() === m && d.getFullYear() === a;
+          if (!f.date) return false;
+          // Parse DD/MM/YYYY como data local (evita offset UTC que muda o mês no dia 1)
+          const parts = f.date.split('/');
+          if (parts.length !== 3) return false;
+          const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+          return d.getMonth() === m && d.getFullYear() === a;
         });
 
         const period  = args.period || 'mes_atual';

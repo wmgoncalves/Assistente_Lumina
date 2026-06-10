@@ -142,8 +142,8 @@ Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúd
     const d   = await r.json();
     const raw = d.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
     const enriched = JSON.parse(raw);
-    m.facts         = enriched.facts         || m.facts;
-    m.relationships = enriched.relationships || m.relationships || [];
+    m.facts         = enriched.facts?.length  ? enriched.facts  : m.facts;
+    m.relationships = enriched.relationships?.length ? enriched.relationships : (m.relationships || []);
     writeJSON(MEMORY_FILE, m);
     syncMemoryToObsidian(m);
     res.json({ ok: true, facts: m.facts.length, relationships: m.relationships.length });
