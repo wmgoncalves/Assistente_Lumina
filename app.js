@@ -1417,13 +1417,13 @@ const executeTool = async (name, args) => {
     case 'downloadDocument': {
       let notes = getNotes();
       if (!notes.length) notes = await serverGet('notes', []);
-      const q    = (args.query || '').toLowerCase();
-      const STOP2 = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar']);
+      const q    = stripAccents((args.query || '').toLowerCase());
+      const STOP2 = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar']);
       const words = q.split(/\s+/).filter(w => w.length > 2 && !STOP2.has(w));
 
-      // Melhor match por pontuação (título peso 3, conteúdo peso 1)
+      // Melhor match por pontuação sem acentos (título peso 3, conteúdo peso 1)
       const scored = notes.map(n => {
-        const nt = n.title.toLowerCase(), nc = n.content.toLowerCase();
+        const nt = stripAccents(n.title.toLowerCase()), nc = stripAccents(n.content.toLowerCase());
         const score = words.reduce((s, w) => s + (nt.includes(w) ? 3 : 0) + (nc.includes(w) ? 1 : 0), 0);
         return { n, score };
       }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
@@ -1859,24 +1859,27 @@ const detectOpenSite = (rawText) => {
   return null;
 };
 
+// Remove acentos para comparação sem diferenciar "devolução" vs "devolucao"
+const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 // ── Download direto (funciona sem API, com Gemini ou Ollama) ──────────────────
 const detectLocalDownload = async (rawText) => {
-  const t = rawText.toLowerCase().trim().replace(/[!?.]+$/, '');
-  if (!/baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulário|pdf)/.test(t)) return null;
+  const t = stripAccents(rawText.toLowerCase().trim().replace(/[!?.]+$/, ''));
+  if (!/baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulario|pdf)/.test(t)) return null;
 
   let notes = getNotes();
   if (!notes.length) notes = await serverGet('notes', []);
   if (!notes.length) return null;
 
   // Palavras da frase (min 3 chars), removendo stopwords genéricas
-  const STOP = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','formulário','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar']);
+  const STOP = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar','sky','entao','então','isso','esse','esta','este']);
   const words = t.split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
   if (!words.length) return null;
 
-  // Pontua cada nota pelo número de palavras específicas que batem no título (peso 3) ou conteúdo (peso 1)
+  // Pontua cada nota (sem acentos) pelo número de palavras que batem no título (peso 3) ou conteúdo (peso 1)
   const scored = notes.map(n => {
-    const nt = n.title.toLowerCase();
-    const nc = n.content.toLowerCase();
+    const nt = stripAccents(n.title.toLowerCase());
+    const nc = stripAccents(n.content.toLowerCase());
     const score = words.reduce((s, w) => s + (nt.includes(w) ? 3 : 0) + (nc.includes(w) ? 1 : 0), 0);
     return { n, score };
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
@@ -1928,8 +1931,9 @@ const detectLocalDownload = async (rawText) => {
   document.body.appendChild(a); a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
 
-  const partes = chunkCount > 1 ? ` (${chunkCount} partes reunidas)` : '';
-  return `Documento "${docTitle}" baixado como ${filename}${partes}. Verifique sua pasta Downloads!`;
+  const nomeAmigavel = docTitle.replace(/_/g, ' ');
+  const partes = chunkCount > 1 ? `, ${chunkCount} partes reunidas` : '';
+  return `Pronto! Baixei o documento ${nomeAmigavel}${partes}. Verifique sua pasta Downloads.`;
 };
 
 // ── Respostas locais (sem API) ─────────────────────────────────────────────────
