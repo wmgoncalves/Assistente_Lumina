@@ -470,23 +470,40 @@ const loadVoices = () => { voices = window.speechSynthesis.getVoices(); };
 window.speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
 
-// Limpa markdown e símbolos antes de falar
+// Limpa markdown e símbolos antes de falar — Sky não lê NENHUMA pontuação técnica
 const cleanForSpeech = (text) => text
+  // Markdown bold/italic → texto puro
+  .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
   .replace(/\*\*(.*?)\*\*/g, '$1')
   .replace(/\*(.*?)\*/g, '$1')
+  // Asteriscos soltos restantes
+  .replace(/\*/g, '')
+  // Títulos markdown
   .replace(/#{1,6}\s*/g, '')
+  // Código inline
   .replace(/`[^`]*`/g, '')
+  // Links markdown → só o texto
   .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-  .replace(/[•→←↑↓✓✗⚡🔥💬🧠📅💰🎯⭐]/g, '')
-  .replace(/──[^──]*──/g, '')
+  // Emojis e símbolos visuais
+  .replace(/[•→←↑↓✓✗⚡🔥💬🧠📅💰🎯⭐✅⏳🔔📄]/g, '')
+  // Separadores tipo ── TÍTULO ──
+  .replace(/──.*?──/g, '')
+  // Pipe vira vírgula
   .replace(/[|]/g, ', ')
-  // Nomes de arquivo: remove extensões (.pdf .txt .docx etc) e converte _ em espaço
+  // Nomes de arquivo: remove extensão e converte _ em espaço
   .replace(/\b(\w[\w-]*)\.(pdf|txt|docx?|xlsx?|png|jpg|csv|json|zip)\b/gi, '$1')
   .replace(/_/g, ' ')
-  // Remove parênteses com conteúdo técnico como (1/3), (ok), etc
+  // Parênteses técnicos tipo (1/3), (2/2)
   .replace(/\s*\(\s*\d+\/\d+\s*\)/g, '')
-  // Remove aspas duplas soltas ao redor de nomes
+  // Aspas duplas ao redor de nomes
   .replace(/"([^"]+)"/g, '$1')
+  // Numeração de lista tipo "1." "2." no início
+  .replace(/^\s*\d+\.\s*/gm, '')
+  // Hífens de item de lista no início de linha
+  .replace(/^\s*[-–]\s*/gm, '')
+  // Dois pontos duplos ou múltiplos
+  .replace(/:{2,}/g, ':')
+  // Quebras de linha
   .replace(/\n{2,}/g, '. ')
   .replace(/\n/g, ' ')
   .replace(/\s{2,}/g, ' ')
@@ -2245,8 +2262,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => speak(`${gr}. ${returning}Sou Sky. ${ready}`), 700);
   }
 
-  // ── Microphone ──
-  document.getElementById('btn-mic').addEventListener('click', () => app.isListening ? stopListening() : startListening());
+  // ── Microphone — clique para fala imediatamente e começa a ouvir ──
+  document.getElementById('btn-mic').addEventListener('click', () => {
+    if (app.isListening) { stopListening(); return; }
+    stopSpeaking(); // interrompe fala em andamento antes de ouvir
+    startListening();
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); app.isListening ? stopListening() : startListening(); }
