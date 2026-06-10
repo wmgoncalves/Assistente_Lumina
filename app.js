@@ -1742,7 +1742,7 @@ const callGemini = async (customHistory = null) => {
 
   for (let iter = 0; iter < 3; iter++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
     let res;
     try {
       res = await fetch(
