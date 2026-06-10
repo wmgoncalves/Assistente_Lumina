@@ -2482,6 +2482,66 @@ const switchView = (id) => {
   if (id === 'conhecimento') renderKnowledge();
   if (id === 'chat-texto')   syncChatTexto();
   if (id === 'configuracoes') populateConfiguracoes();
+  if (id === 'apresentacao')  initApresentacao();
+};
+
+let presState = { current: 0, total: 9, initialized: false };
+
+const initApresentacao = () => {
+  const slides = document.querySelectorAll('.pres-slide');
+  const dotsEl = document.getElementById('pres-dots');
+  const counter = document.getElementById('pres-counter');
+  const prevBtn = document.getElementById('pres-prev');
+  const nextBtn = document.getElementById('pres-next');
+  const fsBtn   = document.getElementById('pres-fullscreen');
+  if (!slides.length) return;
+
+  presState.total = slides.length;
+
+  if (!presState.initialized) {
+    presState.initialized = true;
+
+    const buildDots = () => {
+      dotsEl.innerHTML = '';
+      slides.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'pres-dot' + (i === presState.current ? ' active' : '');
+        d.addEventListener('click', () => goTo(i));
+        dotsEl.appendChild(d);
+      });
+    };
+
+    const goTo = (n) => {
+      const prev = presState.current;
+      presState.current = Math.max(0, Math.min(n, presState.total - 1));
+      slides[prev].classList.remove('active');
+      slides[prev].classList.add('exit');
+      setTimeout(() => slides[prev].classList.remove('exit'), 500);
+      slides[presState.current].classList.add('active');
+      counter.textContent = `${presState.current + 1} / ${presState.total}`;
+      prevBtn.disabled = presState.current === 0;
+      nextBtn.disabled = presState.current === presState.total - 1;
+      document.querySelectorAll('.pres-dot').forEach((d, i) => d.classList.toggle('active', i === presState.current));
+    };
+
+    prevBtn.addEventListener('click', () => goTo(presState.current - 1));
+    nextBtn.addEventListener('click', () => goTo(presState.current + 1));
+    fsBtn.addEventListener('click', () => {
+      const el = document.getElementById('view-apresentacao');
+      if (!document.fullscreenElement) el.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const view = document.getElementById('view-apresentacao');
+      if (!view?.classList.contains('active')) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(presState.current + 1);
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(presState.current - 1);
+    });
+
+    buildDots();
+    goTo(0);
+  }
 };
 
 const initSidebar = () => {
