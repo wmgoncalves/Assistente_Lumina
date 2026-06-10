@@ -247,7 +247,7 @@ const buildContextBlock = async (lastUserMsg = '') => {
   const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
   // Só busca embeddings quando a mensagem parece pedir conhecimento — economiza cota
   const needsKnowledge = getNotes().length > 0 && lastUserMsg.length > 8 &&
-    /resum|explica|fala sobre|o que é|o que sabe|document|pdf|arquivo|nota|conhec|pesquis|procur|busca|sobre o|sobre a/i.test(lastUserMsg);
+    /resum|explica|fala sobre|o que é|o que sabe|document|pdf|arquivo|nota|conhec|pesquis|procur|busca|sobre o|sobre a|como fa[çz]|me ensina|me mostra|como usar|como funciona|passo a passo|tutorial|processo|procedimento|pedido|compra|formulário|template|modelo/i.test(lastUserMsg);
   const notes = needsKnowledge ? await retrieveNotes(lastUserMsg) : retrieveNotesLexical(lastUserMsg);
 
   let ctx = `\n\n── CONTEXTO DO DIA ──`;
@@ -269,7 +269,7 @@ const buildContextBlock = async (lastUserMsg = '') => {
 
   if (notes.length) {
     ctx += `\n\n── BASE DE CONHECIMENTO (notas relevantes) ──`;
-    notes.forEach(n => { ctx += `\n📄 "${n.title}": ${n.content.substring(0, 500)}${n.content.length > 500 ? '…' : ''}`; });
+    notes.forEach(n => { ctx += `\n📄 "${n.title}":\n${n.content.substring(0, 1500)}${n.content.length > 1500 ? '…' : ''}`; });
   }
 
   return ctx;
@@ -308,6 +308,8 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
+
+ENSINO ATIVO: Quando a BASE DE CONHECIMENTO tiver notas relevantes ao pedido, use esse conteúdo como fonte principal. Explique passo a passo, de forma didática — cite o nome da nota, guie cada etapa do processo. Se for pedido de compras, formulário, procedimento: detalhe cada passo como um tutor. Nunca ignore uma nota relevante disponível no contexto.
 • scheduleReminder  → USE PROATIVAMENTE: sempre que detectar menção a horário ("reunião às 15h", "ligo às 10h", "prazo amanhã", "me lembra em X minutos"). Calcule os minutos até o horário e agende sem perguntar.
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
