@@ -480,6 +480,13 @@ const cleanForSpeech = (text) => text
   .replace(/[•→←↑↓✓✗⚡🔥💬🧠📅💰🎯⭐]/g, '')
   .replace(/──[^──]*──/g, '')
   .replace(/[|]/g, ', ')
+  // Nomes de arquivo: remove extensões (.pdf .txt .docx etc) e converte _ em espaço
+  .replace(/\b(\w[\w-]*)\.(pdf|txt|docx?|xlsx?|png|jpg|csv|json|zip)\b/gi, '$1')
+  .replace(/_/g, ' ')
+  // Remove parênteses com conteúdo técnico como (1/3), (ok), etc
+  .replace(/\s*\(\s*\d+\/\d+\s*\)/g, '')
+  // Remove aspas duplas soltas ao redor de nomes
+  .replace(/"([^"]+)"/g, '$1')
   .replace(/\n{2,}/g, '. ')
   .replace(/\n/g, ' ')
   .replace(/\s{2,}/g, ' ')
