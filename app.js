@@ -1886,6 +1886,22 @@ const detectLocalDownload = async (rawText) => {
     content  = match.content;
   }
 
+  // Tenta baixar o arquivo original (PDF/DOCX) se existir no servidor
+  const originalFile = match.file || (notes.find(n => n.title.startsWith(docTitle) && n.file)?.file);
+  if (originalFile) {
+    const checkUrl = `/api/download-doc/${encodeURIComponent(originalFile)}`;
+    try {
+      const check = await fetch(checkUrl, { method: 'HEAD' });
+      if (check.ok) {
+        const a = Object.assign(document.createElement('a'), { href: checkUrl, download: originalFile });
+        document.body.appendChild(a); a.click();
+        setTimeout(() => document.body.removeChild(a), 200);
+        return `Arquivo original "${originalFile}" baixado! Verifique sua pasta Downloads.`;
+      }
+    } catch { /* fallback para txt */ }
+  }
+
+  // Fallback: texto extraído
   const filename = docTitle.replace(/[\\/:*?"<>|]/g, '-') + '.txt';
   const blob     = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url      = URL.createObjectURL(blob);

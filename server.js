@@ -317,6 +317,8 @@ app.post('/api/tts-edge', async (req, res) => {
 });
 
 // ── Ingestão de Documentos (PDF / DOCX / TXT) ────────────────────────────────
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const chunkText = (text, size = 800, overlap = 100) => {
@@ -361,6 +363,11 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
       .replace(/\n{3,}/g, '\n\n')
       .trim();
     if (!text) return res.status(422).json({ error: 'Não foi possível extrair texto do arquivo.' });
+
+    // Salva arquivo original para download posterior
+    const safeName = originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    fs.writeFileSync(path.join(UPLOADS_DIR, safeName), buffer);
+
     const baseName = originalname.replace(/\.[^.]+$/, '');
     const chunks   = chunkText(text);
     const notes    = chunks.map((c, i) => ({
@@ -368,10 +375,19 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
       title:   `${baseName} (${i + 1}/${chunks.length})`,
       content: c,
       source:  originalname,
+      file:    safeName,
       date:    new Date().toISOString()
     }));
     res.json({ ok: true, chunks: notes.length, notes });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Download de arquivo original da base de conhecimento ─────────────────────
+app.get('/api/download-doc/:filename', (req, res) => {
+  const safeName = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filePath = path.join(UPLOADS_DIR, safeName);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado.' });
+  res.download(filePath, req.params.filename);
 });
 
 // ── Dados persistentes (tarefas, hábitos, finanças, notas) ───────────────────
