@@ -104,20 +104,22 @@ const retrieveNotes = async (query = '') => {
 const isGoogleConnected = () => false;
 
 // Normaliza abreviações e erros comuns do PT-BR antes de enviar ao modelo
+// Chaves sem \b — o regex aplica os word boundaries ao construir ABBR_RE
 const ABBR_MAP = {
-  '\bvc\b': 'você', '\bvcs\b': 'vocês', '\btd\b': 'tudo', '\btds\b': 'todos',
-  '\bblz\b': 'beleza', '\bflw\b': 'falou', '\bvlw\b': 'valeu', '\bmsm\b': 'mesmo',
-  '\bpq\b': 'porque', '\bpqp\b': 'por que', '\bqdo\b': 'quando', '\bqto\b': 'quanto',
-  '\bqd\b': 'quando', '\bmt\b': 'muito', '\bmto\b': 'muito', '\bmlr\b': 'melhor',
-  '\bpdc\b': 'pode', '\btbm\b': 'também', '\btb\b': 'também',
-  '\bsmp\b': 'sempre', '\bfzr\b': 'fazer', '\bfz\b': 'faz',
-  '\bkk+\b': 'haha', '\bhj\b': 'hoje', '\bamh\b': 'amanhã', '\bamnh\b': 'amanhã',
-  '\bpf\b': 'por favor', '\bobg\b': 'obrigado', '\bq\b': 'que', '\bce\b': 'você',
-  '\bta\b': 'está', '\btá\b': 'está', '\bto\b': 'estou', '\btô\b': 'estou',
-  '\bnaum\b': 'não', '\bnao\b': 'não', '\bfds\b': 'fim de semana'
+  'vc': 'você', 'vcs': 'vocês', 'td': 'tudo', 'tds': 'todos',
+  'blz': 'beleza', 'flw': 'falou', 'vlw': 'valeu', 'msm': 'mesmo',
+  'pq': 'porque', 'pqp': 'por que', 'qdo': 'quando', 'qto': 'quanto',
+  'qd': 'quando', 'mt': 'muito', 'mto': 'muito', 'mlr': 'melhor',
+  'pdc': 'pode', 'tbm': 'também', 'tb': 'também',
+  'smp': 'sempre', 'fzr': 'fazer', 'fz': 'faz',
+  'kk+': 'haha', 'hj': 'hoje', 'amh': 'amanhã', 'amnh': 'amanhã',
+  'pf': 'por favor', 'obg': 'obrigado', 'q': 'que', 'ce': 'você',
+  'ta': 'está', 'tá': 'está', 'to': 'estou', 'tô': 'estou',
+  'naum': 'não', 'nao': 'não', 'fds': 'fim de semana'
 };
-const ABBR_RE = new RegExp(Object.keys(ABBR_MAP).join('|'), 'gi');
-const normalizeText = (text) => text.replace(ABBR_RE, m => ABBR_MAP[m.toLowerCase()] || m);
+// \\b no string = \b no regex = word boundary
+const ABBR_RE = new RegExp('\\b(' + Object.keys(ABBR_MAP).join('|') + ')\\b', 'gi');
+const normalizeText = (text) => text.replace(ABBR_RE, (_, m) => ABBR_MAP[m.toLowerCase()] || m);
 
 const defaultMem = () => ({ userName: null, facts: [], relationships: [], sessions: 0, lastSeen: null });
 
@@ -1018,7 +1020,7 @@ const processInput = async (rawText) => {
     const infoResp = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
     const useGemini = cfg.geminiKey && !geminiBlocked();
-    const raw = localResp ?? (useGemini ? await callGemini() : (ollamaCache ? await callOllama() : localFallback(text)));
+    const raw = localResp ?? (useGemini ? await callGemini() : ((await ollamaAvailable()) ? await callOllama() : localFallback(text)));
     const { clean: response, learned } = extractLearn(raw);
     applyInlineLearn(learned);
     const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);

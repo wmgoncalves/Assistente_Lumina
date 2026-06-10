@@ -686,7 +686,8 @@ app.post('/api/import-vault', (req, res) => {
     }
 
     const existing  = readJSON(dataFile('notes'), []);
-    const merged    = [...notes, ...existing.filter(n => !n.source?.startsWith('vault_') && !notes.some(nn => nn.title === n.title))];
+    // Remove notas de vault anterior (id começa com vault_) e evita títulos duplicados
+    const merged    = [...notes, ...existing.filter(n => !n.id?.startsWith('vault_') && !notes.some(nn => nn.title === n.title))];
     writeJSON(dataFile('notes'), merged);
     syncStoreToObsidian('notes', merged).catch(() => {});
     setTimeout(triggerReindex, 3000);
@@ -932,26 +933,31 @@ const pushEvent = (type, message, action = null) => {
   notifier.notify({ title: 'Sky', message, sound: true, wait: false });
 };
 
+// Guarda a última data em que cada tipo de notificação foi enviada
+const proactiveLastSent = {};
+
 const checkProactive = () => {
-  const now     = new Date();
-  const hour    = now.getHours();
+  const now      = new Date();
+  const hour     = now.getHours();
   const todayKey = now.toISOString().split('T')[0];
 
-  // Hábitos não feitos às 21h+
-  if (hour >= 21) {
-    const habits = readJSON(path.join(__dirname, 'habits.json'), []);
+  // Hábitos não feitos — notifica 1x após as 21h
+  if (hour >= 21 && proactiveLastSent.habits !== todayKey) {
+    const habits  = readJSON(path.join(__dirname, 'habits.json'), []);
     const pending = habits.filter(h => !(h.dates || []).includes(todayKey));
     if (pending.length > 0 && sseClients.size > 0) {
+      proactiveLastSent.habits = todayKey;
       const names = pending.map(h => h.name).join(', ');
       pushEvent('reminder', `Você ainda não registrou: ${names}`, 'checkHabits');
     }
   }
 
-  // Tarefas com prazo — notifica às 9h se houver pendentes
-  if (hour === 9) {
-    const tasks = readJSON(path.join(__dirname, 'tasks.json'), []);
+  // Tarefas pendentes — notifica 1x às 9h
+  if (hour === 9 && proactiveLastSent.tasks !== todayKey) {
+    const tasks   = readJSON(path.join(__dirname, 'tasks.json'), []);
     const pending = tasks.filter(t => !t.done);
     if (pending.length > 0 && sseClients.size > 0) {
+      proactiveLastSent.tasks = todayKey;
       pushEvent('reminder', `Bom dia! Você tem ${pending.length} tarefa(s) pendente(s).`, 'openTasks');
     }
   }
