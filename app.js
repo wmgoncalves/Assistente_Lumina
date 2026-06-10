@@ -1187,6 +1187,18 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'downloadDocument',
+      description: 'Baixa um documento da base de conhecimento como arquivo. Use quando usuário pedir para baixar, salvar, exportar ou gerar um documento/termo/formulário.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query:  { type: 'string', description: 'Título ou palavras-chave do documento a baixar' },
+          format: { type: 'string', enum: ['txt', 'md'], description: 'Formato do arquivo: txt ou md (padrão: txt)' }
+        },
+        required: ['query']
+      }
+    },
+    {
       name: 'financialReport',
       description: 'Gera um relatório financeiro completo do mês: receitas, despesas, saldo, maiores gastos e tendências. Use quando usuário perguntar sobre finanças, gastos, saldo ou situação financeira.',
       parameters: {
@@ -1205,8 +1217,9 @@ const TOOL_LABELS = {
   completeTask: 'Concluindo tarefa…',
   checkHabit:   'Registrando hábito…',
   addFinance:   'Registrando transação…',
-  saveNote:      'Salvando nota…',
-  systemCommand: 'Executando comando…',
+  saveNote:         'Salvando nota…',
+  systemCommand:    'Executando comando…',
+  downloadDocument: 'Preparando download…',
   webSearch:    'Pesquisando na web…',
   openPage:             'Abrindo página…',
   listCalendarEvents:   'Consultando agenda…',
@@ -1364,6 +1377,27 @@ const executeTool = async (name, args) => {
       saveNotes(notes);
       if (document.getElementById('view-conhecimento')?.classList.contains('active')) renderKnowledge();
       return `Nota "${args.title}" salva na base de conhecimento.`;
+    }
+
+    case 'downloadDocument': {
+      const notes = getNotes();
+      const q     = (args.query || '').toLowerCase();
+      const note  = notes.find(n =>
+        n.title.toLowerCase().includes(q) ||
+        q.split(' ').some(w => w.length > 3 && n.title.toLowerCase().includes(w))
+      ) || notes.find(n => n.content.toLowerCase().includes(q));
+      if (!note) return `Documento "${args.query}" não encontrado na base de conhecimento.`;
+      const ext      = args.format === 'md' ? 'md' : 'txt';
+      const filename = note.title.replace(/[\\/:*?"<>|]/g, '-') + '.' + ext;
+      const content  = ext === 'md'
+        ? `# ${note.title}\n\n${note.content}`
+        : note.content;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+      return `Documento "${note.title}" baixado como ${filename}.`;
     }
 
     case 'systemCommand': {
