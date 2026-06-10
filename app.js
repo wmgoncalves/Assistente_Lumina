@@ -472,7 +472,9 @@ const speakElevenLabs = async (text, onEnd) => {
     audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakEdge(text, onEnd); };
     audio.play();
   } catch (e) {
-    console.warn('ElevenLabs falhou:', e.message);
+    const isQuota = e.message?.includes('401') || e.message?.includes('429');
+    if (isQuota) console.info('ElevenLabs sem créditos — usando Edge TTS.');
+    else console.warn('ElevenLabs falhou:', e.message);
     app.isSpeaking = false;
     speakEdge(text, onEnd);
   }
