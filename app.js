@@ -55,14 +55,29 @@ const saveNotes = (n) => serverSave('notes', n);
 const retrieveNotesLexical = (query = '') => {
   const notes = getNotes();
   if (!notes.length) return [];
-  if (!query) return notes.slice(0, 3);
-  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  if (!query) return notes.slice(0, 5);
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
   const scored = notes.map(n => {
     const hay = (n.title + ' ' + n.content).toLowerCase();
     const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
     return { ...n, score };
   }).filter(n => n.score > 0).sort((a, b) => b.score - a.score);
-  return scored.length ? scored.slice(0, 5) : notes.slice(0, 3);
+
+  const top = scored.length ? scored.slice(0, 8) : notes.slice(0, 5);
+
+  // Para PDFs em chunks (título "arquivo (N/M)"), inclui chunks vizinhos para contexto contínuo
+  const allIds = new Set(top.map(n => n.id));
+  top.forEach(n => {
+    const m = n.title.match(/^(.+)\s+\((\d+)\/(\d+)\)$/);
+    if (!m) return;
+    const [, base, num, total] = m;
+    const prev = notes.find(x => x.title === `${base} (${+num - 1}/${total})`);
+    const next = notes.find(x => x.title === `${base} (${+num + 1}/${total})`);
+    if (prev && !allIds.has(prev.id)) { top.push(prev); allIds.add(prev.id); }
+    if (next && !allIds.has(next.id)) { top.push(next); allIds.add(next.id); }
+  });
+
+  return top.slice(0, 10);
 };
 
 // Busca semântica via embeddings (com fallback lexical)
@@ -73,7 +88,7 @@ const retrieveNotes = async (query = '') => {
     const r = await fetch('/api/search-notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, topK: 5 })
+      body: JSON.stringify({ query, topK: 8 })
     });
     if (!r.ok) throw new Error('search-notes failed');
     const { ids } = await r.json();
@@ -246,9 +261,8 @@ const buildContextBlock = async (lastUserMsg = '') => {
   const pendingHabit = habits.filter(h => !(h.dates || []).includes(todayKey));
   const balance      = fin.reduce((s, f) => f.type === 'rec' ? s + f.val : s - f.val, 0);
   // Só busca embeddings quando a mensagem parece pedir conhecimento — economiza cota
-  const needsKnowledge = getNotes().length > 0 && lastUserMsg.length > 8 &&
-    /resum|explica|fala sobre|o que é|o que sabe|document|pdf|arquivo|nota|conhec|pesquis|procur|busca|sobre o|sobre a|como fa[çz]|me ensina|me mostra|como usar|como funciona|passo a passo|tutorial|processo|procedimento|pedido|compra|formulário|template|modelo/i.test(lastUserMsg);
-  const notes = needsKnowledge ? await retrieveNotes(lastUserMsg) : retrieveNotesLexical(lastUserMsg);
+  // Sempre busca na base quando tem notas — usuário adicionou conteúdo para Sky usar
+  const notes = getNotes().length > 0 ? await retrieveNotes(lastUserMsg) : [];
 
   let ctx = `\n\n── CONTEXTO DO DIA ──`;
   ctx += `\n📅 ${today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} • ${today.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
