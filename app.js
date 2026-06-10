@@ -1033,7 +1033,8 @@ const processInput = async (rawText) => {
     const msg = err?.message || String(err);
     const isExpired = msg.includes('expired') || msg.includes('401') || msg.includes('API_KEY_INVALID');
     const isQuota   = msg.includes('429');
-    const geminiDown = !cfg.geminiKey || isExpired || isQuota
+    const isTimeout = msg.includes('timed out') || msg.includes('timeout') || msg.includes('AbortError') || msg.includes('fetch');
+    const geminiDown = !cfg.geminiKey || isExpired || isQuota || isTimeout
       || msg.includes('403') || msg.includes('400');
 
     if (!cfg.geminiKey) {
@@ -1042,6 +1043,7 @@ const processInput = async (rawText) => {
       // Chave expirada/inválida → bloqueia pelo resto da sessão para não tentar de novo
       if (isExpired) blockGeminiForever();
       else if (isQuota) blockGemini();
+      else if (isTimeout) blockGemini(2 * 60 * 1000); // timeout → bloqueia 2min e tenta Ollama
 
       setFace('thinking');
       setRespText('Usando IA local…');
@@ -1056,6 +1058,7 @@ const processInput = async (rawText) => {
           saveHist();
           speak(response2);
           if (isExpired) toast('Gemini expirado — usando Ollama local.', 'info');
+          else if (isTimeout) toast('Gemini sem resposta — usando Ollama local.', 'info');
           return;
         } catch (ollamaErr) {
           console.warn('Ollama falhou:', ollamaErr.message);
@@ -1734,19 +1737,27 @@ const callGemini = async (customHistory = null) => {
   const tools = [TOOL_DECLARATIONS];
 
   for (let iter = 0; iter < 3; iter++) {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemText }] },
-          contents,
-          tools,
-          generationConfig: { maxOutputTokens: 1200, temperature: 0.78 }
-        })
-      }
-    );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    let res;
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemText }] },
+            contents,
+            tools,
+            generationConfig: { maxOutputTokens: 1200, temperature: 0.78 }
+          })
+        }
+      );
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (res.status === 429) throw new Error('429');
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
@@ -2541,8 +2552,23 @@ const initApresentacao = () => {
 
     buildDots();
     goTo(0);
+
+    const activateBtn = document.getElementById('pres-activate-btn');
+    if (activateBtn) activateBtn.addEventListener('click', activateSkyReveal);
   }
 };
+
+const activateSkyReveal = () => {
+  const btn = document.getElementById('pres-activate-btn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  setTimeout(() => {
+    switchView('chat-voz');
+    setTimeout(() => speak('Olá. Estou pronta. Pode começar.'), 800);
+  }, 600);
+};
+
+// expõe globalmente para o onclick do HTML
+window.activateSkyReveal = activateSkyReveal;
 
 const initSidebar = () => {
   document.querySelectorAll('.sb-item').forEach(item => {
