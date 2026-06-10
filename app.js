@@ -546,8 +546,8 @@ const speakBrowser = (text, onEnd) => {
   const clean = cleanForSpeech(text);
   const u = new SpeechSynthesisUtterance(clean);
   u.lang   = 'pt-BR';
-  u.rate   = app.voiceGender === 'male' ? 1.75 : 1.85;
-  u.pitch  = app.voiceGender === 'male' ? 0.85 : 0.92;
+  u.rate   = app.voiceGender === 'male' ? 1.75 : 1.65;
+  u.pitch  = app.voiceGender === 'male' ? 0.85 : 1.0;
   u.volume = 1.0;
   const v = getVoice();
   if (v) u.voice = v;
@@ -607,7 +607,7 @@ const speakPiper = async (text, onEnd) => {
 const speakEdge = async (text, onEnd) => {
   const clean = cleanForSpeech(text);
   if (!clean) { onEnd?.(); return; }
-  const voice = app.voiceGender === 'male' ? 'pt-BR-AntonioNeural' : 'pt-BR-FranciscaNeural';
+  const voice = app.voiceGender === 'male' ? 'pt-BR-AntonioNeural' : 'pt-BR-ThalitaNeural';
   app.isSpeaking = true;
   setFace('speaking');
   setStopBtn(true);

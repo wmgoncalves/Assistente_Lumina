@@ -301,7 +301,7 @@ app.post('/api/tts-piper', (req, res) => {
 
 // ── Edge TTS (Microsoft Neural — gratuito, sem API key) ──────────────────────
 app.post('/api/tts-edge', async (req, res) => {
-  const { text, voice = 'pt-BR-FranciscaNeural' } = req.body;
+  const { text, voice = 'pt-BR-ThalitaNeural' } = req.body;
   if (!text) return res.status(400).json({ error: 'text required' });
   try {
     const tts    = new MsEdgeTTS();
