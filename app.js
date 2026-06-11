@@ -1163,6 +1163,12 @@ const processInput = async (rawText) => {
     const localResp = infoResp ?? tryLocalResponse(text);
     if (localResp) { _hideDemoMode(); _finalize(localResp, 'local'); return; }
 
+    // ── DEMO_QA — respostas preparadas para o workshop (sempre instantâneas) ───
+    const stripped = stripAccents(text.toLowerCase());
+    for (const { re, r } of DEMO_QA) {
+      if (re.test(stripped)) { _hideDemoMode(); _finalize(pick(r), 'local'); return; }
+    }
+
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
     if (cfg.geminiKey && !geminiBlocked()) {
       try {
