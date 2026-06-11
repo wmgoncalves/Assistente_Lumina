@@ -1,0 +1,116 @@
+# =============================================================================
+# Dockerfile SEGURO — Template multi-stage Node (adaptar para outras stacks)
+# Princípios: non-root, multi-stage, imagem mínima, sem segredo em layer
+# =============================================================================
+
+# ====== STAGE 1: build ======
+# Pin específico (não 'latest'). Atualizar conscientemente.
+FROM node:20.11-alpine AS builder
+
+# Diretório de trabalho
+WORKDIR /app
+
+# Copia só os arquivos de manifesto primeiro (aproveita cache)
+COPY package.json package-lock.json ./
+
+# Instalação determinística (não permite mudança no lockfile)
+RUN npm ci --ignore-scripts && \
+    npm cache clean --force
+
+# Copia o resto do código
+COPY . .
+
+# Build da aplicação
+RUN npm run build
+
+# Remove devDependencies (se aplicável)
+RUN npm prune --production
+
+
+# ====== STAGE 2: runtime ======
+# Imagem mínima — só o necessário para rodar
+FROM node:20.11-alpine AS runtime
+
+# Atualiza pacotes do sistema (para corrigir CVEs)
+RUN apk update && apk upgrade && \
+    apk add --no-cache dumb-init && \
+    rm -rf /var/cache/apk/*
+
+# Cria usuário não-root
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+WORKDIR /app
+
+# Copia do builder, com ownership correto
+COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:appgroup /app/dist ./dist
+COPY --from=builder --chown=appuser:appgroup /app/package.json ./package.json
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# Variáveis de runtime (NUNCA segredo aqui — usar secrets do orchestrator)
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Expõe porta
+EXPOSE 3000
+
+# Roda como non-root
+USER appuser
+
+# Usa dumb-init como PID 1 (handle correto de signals)
+ENTRYPOINT ["dumb-init", "--"]
+
+# Comando principal
+CMD ["node", "dist/server.js"]
+
+
+# =============================================================================
+# RECEITAS por stack:
+#
+# PHP (Composer):
+#   FROM composer:2 AS builder
+#   ... COPY composer.json composer.lock ./
+#   ... RUN composer install --no-dev --optimize-autoloader --no-scripts
+#
+#   FROM php:8.3-fpm-alpine AS runtime
+#   ... USER www-data
+#
+# Python:
+#   FROM python:3.12-slim AS builder
+#   ... RUN pip install --user --no-cache-dir -r requirements.txt
+#
+#   FROM python:3.12-slim AS runtime
+#   ... RUN useradd --create-home --uid 1001 appuser
+#   ... USER appuser
+#
+# Go:
+#   FROM golang:1.22-alpine AS builder
+#   ... RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app
+#
+#   FROM scratch AS runtime    # imagem mínima total
+#   ... COPY --from=builder /app /app
+#   ... USER 1001:1001
+# =============================================================================
+
+# =============================================================================
+# CHECKLIST de segurança Docker:
+# - [ ] FROM com versão fixa (não 'latest')
+# - [ ] Multi-stage (build separado do runtime)
+# - [ ] Imagem base mínima (alpine, distroless, scratch)
+# - [ ] Usuário não-root
+# - [ ] apk update + upgrade para CVEs
+# - [ ] --no-cache em apk
+# - [ ] --ignore-scripts no npm/composer (postinstall pode ser malicioso)
+# - [ ] Lockfile copiado primeiro (cache)
+# - [ ] npm ci / composer install --no-dev (determinístico)
+# - [ ] HEALTHCHECK definido
+# - [ ] Sem segredo em ENV (usar secrets do orchestrator)
+# - [ ] .dockerignore exclui .env, .git, node_modules, etc.
+# - [ ] EXPOSE só portas necessárias
+# - [ ] dumb-init ou similar como PID 1
+# - [ ] Scan da imagem (Trivy, Snyk, Docker Scout) antes de push
+# =============================================================================

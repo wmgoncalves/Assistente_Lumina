@@ -1,0 +1,90 @@
+# =============================================================================
+# security-headers.conf — Headers de segurança para Nginx
+# Incluir em server block ou em http block: include /etc/nginx/security-headers.conf;
+# =============================================================================
+
+# HSTS — força HTTPS por 1 ano (adicionar preload quando confiante)
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+# Impede MIME-sniffing
+add_header X-Content-Type-Options "nosniff" always;
+
+# Bloqueia carregamento em iframe (ajustar para SAMEORIGIN se necessário)
+add_header X-Frame-Options "DENY" always;
+
+# Referrer policy
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+# Permissions policy — restringe APIs do browser
+add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()" always;
+
+# X-XSS-Protection (desativado — moderno é CSP, mas alguns browsers antigos ainda usam)
+add_header X-XSS-Protection "0" always;
+
+# Content Security Policy — AJUSTAR de acordo com a aplicação
+# Versão restritiva (sem inline — ideal, exige nonces ou hashes):
+# add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+
+# Versão moderada (permite estilos inline — comum em frameworks):
+add_header Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+
+# Cache-Control para conteúdo dinâmico/sensível (página de login, painel)
+# add_header Cache-Control "no-store, no-cache, must-revalidate, private" always;
+
+# Remove headers que vazam informação
+server_tokens off;
+# Em http block: more_clear_headers Server;  (precisa de mod headers-more)
+
+# =============================================================================
+# CSP — Cheat sheet de diretivas
+# =============================================================================
+# default-src       fallback para todas as outras
+# script-src        de onde scripts podem vir
+# style-src         de onde CSS pode vir
+# img-src           imagens (incluir 'data:' se usar data URIs)
+# font-src          fontes
+# connect-src       XHR, WebSocket, fetch destinos
+# frame-src         iframes
+# frame-ancestors   quem pode embedar você em iframe
+# form-action       para onde formulários podem postar
+# base-uri          restringe <base>
+# object-src        Flash/plugin (recomendado: 'none')
+# media-src         áudio/vídeo
+# manifest-src      manifest.json
+# worker-src        Web Workers
+# child-src         filhos (workers + frames)
+# upgrade-insecure-requests   upgrade automático http→https
+# block-all-mixed-content     bloqueia mixed
+# report-uri        endpoint para receber violações (CSP report)
+# report-to         versão moderna do report-uri (precisa Report-To header)
+
+# Valores especiais:
+#   'self'           mesmo origin
+#   'none'           nada
+#   'unsafe-inline'  permite inline (script/style)
+#   'unsafe-eval'    permite eval()
+#   'strict-dynamic' nonces propagam confiança
+#   data:            data URIs
+#   https:           qualquer HTTPS
+#   *.example.com    qualquer subdomínio
+#   'nonce-{value}'  inline com nonce específico
+#   'sha256-{hash}'  inline com hash específico
+# =============================================================================
+
+# =============================================================================
+# Exemplos com nonce (recomendado para apps modernas):
+#
+# Em PHP (em cada request, antes de qualquer output):
+#   $nonce = base64_encode(random_bytes(16));
+#   header("Content-Security-Policy: script-src 'self' 'nonce-{$nonce}'");
+#   // No HTML:  <script nonce="<?= $nonce ?>"> ... </script>
+#
+# Em Node/Express:
+#   import { randomBytes } from 'crypto';
+#   app.use((req, res, next) => {
+#     res.locals.cspNonce = randomBytes(16).toString('base64');
+#     res.setHeader('Content-Security-Policy',
+#       `script-src 'self' 'nonce-${res.locals.cspNonce}'`);
+#     next();
+#   });
+# =============================================================================

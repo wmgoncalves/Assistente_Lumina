@@ -1,0 +1,79 @@
+# =============================================================================
+# security-headers.conf — Headers de segurança para Apache
+# Adicionar em httpd.conf, .htaccess ou em config do VirtualHost
+# Requer: mod_headers ativo
+# =============================================================================
+
+<IfModule mod_headers.c>
+
+    # HSTS — força HTTPS por 1 ano
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Impede MIME-sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Bloqueia carregamento em iframe (ajustar para SAMEORIGIN se necessário)
+    Header always set X-Frame-Options "DENY"
+
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Permissions policy
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()"
+
+    # X-XSS-Protection (desativado — moderno é CSP)
+    Header always set X-XSS-Protection "0"
+
+    # Content Security Policy — AJUSTAR de acordo com a aplicação
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+    # Remove headers que vazam informação
+    Header unset Server
+    Header unset X-Powered-By
+    Header unset X-AspNet-Version
+    Header unset X-AspNetMvc-Version
+
+    # Em páginas sensíveis (login, painel), adicionar:
+    # <LocationMatch "^/admin">
+    #     Header always set Cache-Control "no-store, no-cache, must-revalidate, private"
+    # </LocationMatch>
+
+</IfModule>
+
+# Desliga assinatura do servidor
+ServerTokens Prod
+ServerSignature Off
+
+# Desliga TRACE (anti-cross-site tracing)
+TraceEnable Off
+
+# =============================================================================
+# Para hospedagem compartilhada (HostGator/cPanel) onde não controla httpd.conf:
+# Use .htaccess com as mesmas diretivas <IfModule mod_headers.c> ... </IfModule>
+# =============================================================================
+
+# =============================================================================
+# CSP nonce em PHP — exemplo:
+#
+# Em php.ini ou .user.ini (early in request):
+#   auto_prepend_file = /path/to/csp-nonce.php
+#
+# csp-nonce.php:
+#   <?php
+#   $nonce = base64_encode(random_bytes(16));
+#   header("Content-Security-Policy: " .
+#     "default-src 'self'; " .
+#     "script-src 'self' 'nonce-{$nonce}'; " .
+#     "style-src 'self' 'nonce-{$nonce}' 'unsafe-inline'; " .
+#     "img-src 'self' data: https:; " .
+#     "font-src 'self' data:; " .
+#     "frame-ancestors 'none'; " .
+#     "form-action 'self'; " .
+#     "base-uri 'self'");
+#   define('CSP_NONCE', $nonce);
+#   ?>
+#
+# Em templates:
+#   <script nonce="<?= CSP_NONCE ?>"> ... </script>
+#   <style nonce="<?= CSP_NONCE ?>"> ... </style>
+# =============================================================================

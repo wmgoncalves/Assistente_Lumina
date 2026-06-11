@@ -1,0 +1,151 @@
+# =============================================================================
+# .gitignore SEGURO — Template universal
+# Copiar como .gitignore na raiz do projeto. Adicionar específicos da stack.
+# =============================================================================
+
+# --------------------------------- SEGREDOS ---------------------------------
+# CRITICAL: nunca commitar arquivos com credenciais
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+id_ecdsa
+*.crt
+*.cer
+secrets/
+.secrets/
+credentials.json
+service-account*.json
+**/firebase-adminsdk*.json
+config/secrets.yml
+config/database.yml
+.aws/
+.gcp/
+.azure/
+
+# Tokens npm/composer
+.npmrc
+!.npmrc.example
+
+# --------------------------- DEPENDÊNCIAS / BUILD ---------------------------
+node_modules/
+bower_components/
+vendor/
+.bundle/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.venv/
+venv/
+env/
+*.egg-info/
+target/
+build/
+dist/
+out/
+.next/
+.nuxt/
+.vite/
+.cache/
+.parcel-cache/
+.turbo/
+
+# --------------------------- ARQUIVOS DE SISTEMA ---------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+*.swp
+*~
+
+# --------------------------------- LOGS ------------------------------------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.npm/
+.yarn/
+
+# ------------------------------ COVERAGE / TEST -----------------------------
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+htmlcov/
+
+# ----------------------------- IDE / EDITOR --------------------------------
+.idea/
+.vscode/
+!.vscode/settings.json.example
+!.vscode/extensions.json
+*.iml
+*.code-workspace
+
+# --------------------------- BACKUPS / DUMPS -------------------------------
+# IMPORTANTE: dumps e backups frequentemente contêm PII
+*.sql
+*.sql.gz
+*.dump
+*.bak
+*.backup
+backup/
+backups/
+db_backup*/
+*.tar.gz
+*.zip
+# Exceção: se versionar schema/seed sem PII, criar pasta seeds/ explícita
+
+# ------------------------- AGENTE IA / CLAUDE --------------------------------
+# Não commitar configurações pessoais de agente IA
+.claude/settings.local.json
+.cursor/
+.copilot/
+.aider*
+
+# ----------------------- DIAGNÓSTICO / DEBUG -------------------------------
+phpinfo.php
+info.php
+test.php
+debug.php
+adminer.php
+phpmyadmin/
+
+# ------------------------------ UPLOADS ------------------------------------
+# Se uploads são versionados em algum cenário, ajustar
+uploads/
+public/uploads/
+storage/
+
+# ----------------------- WORDPRESS específico -------------------------------
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/backups/
+
+# ------------------------ Docker / Compose locais ---------------------------
+docker-compose.override.yml
+.docker/
+
+# ------------------------- Documentos sensíveis -----------------------------
+*.pdf  # avaliar caso a caso — pode ser doc público
+*.docx
+*.xlsx
+
+# ------------------------- Específicos do projeto ---------------------------
+# Adicione aqui paths específicos do seu projeto que não devem versionar

@@ -1,0 +1,131 @@
+# =============================================================================
+# .htaccess SEGURO — Template para PHP em hospedagem compartilhada (HostGator/cPanel)
+# Copiar para a raiz do site (public_html ou pasta do domínio).
+# Ajustar regras de URL conforme aplicação.
+# =============================================================================
+
+# ============================ HTTPS OBRIGATÓRIO ==============================
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,NE]
+
+# ============================ HEADERS DE SEGURANÇA ===========================
+<IfModule mod_headers.c>
+    # HSTS — força HTTPS por 1 ano. Adicionar 'preload' só quando confiante.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Impede MIME-sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Bloqueia ser carregado em iframe (ajuste para SAMEORIGIN se precisar)
+    Header always set X-Frame-Options "DENY"
+
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Permissions policy — restringe APIs do browser
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+    # Content Security Policy — AJUSTAR de acordo com o site
+    # Exemplo restritivo (sem inline script — ideal):
+    # Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+    # Remove header que vaza versão do servidor
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+
+# Remove versão do PHP do header
+<IfModule mod_php7.c>
+    php_flag expose_php Off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag expose_php Off
+</IfModule>
+
+# ============================ ARQUIVOS BLOQUEADOS ============================
+# Bloqueia acesso a arquivos sensíveis
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(env|env\..*|gitignore|gitattributes|htaccess|htpasswd|md|log|sql|sql\.gz|dump|bak|backup|swp|swo|orig|original|old|tmp|temp|ini|conf|config|json|lock|yml|yaml|toml|cnf|cfg|tar|tar\.gz|zip|rar|7z)$">
+    Require all denied
+</FilesMatch>
+
+# Bloqueia phpinfo e similares
+<FilesMatch "(phpinfo|info|test|debug|adminer)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Bloqueia composer e arquivos de build/CI
+<FilesMatch "(composer\.(json|lock)|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|Gemfile(\.lock)?|requirements\.txt|Dockerfile|docker-compose\.ya?ml|\.travis\.yml|\.gitlab-ci\.yml)$">
+    Require all denied
+</FilesMatch>
+
+# ============================ DIRETÓRIOS PROTEGIDOS ==========================
+# Diretórios que não devem listar conteúdo
+Options -Indexes -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch
+
+# ============================ UPLOADS (executar restrição) ===================
+# Adicionar/garantir em pastas de upload separadamente:
+# <Directory "/path/to/uploads">
+#     <FilesMatch "\.(php|phtml|phps|cgi|pl|py|jsp|asp|aspx|sh|exe)$">
+#         Require all denied
+#     </FilesMatch>
+#     Options -Indexes -ExecCGI
+#     AddType text/plain .php .phtml .phps
+#     RemoveHandler .php .phtml .phps
+#     RemoveType .php .phtml .phps
+# </Directory>
+
+# ============================ BLOQUEIOS DE BOTS RUINS ========================
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_USER_AGENT} (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner|libcurl) [NC]
+    RewriteCond %{REQUEST_URI} !^/api/      # exceção: APIs públicas
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# ============================ LIMITE DE TAMANHO ==============================
+<IfModule mod_security.c>
+    SecRequestBodyLimit 10485760
+    SecRequestBodyInMemoryLimit 1048576
+</IfModule>
+
+# Para PHP, ajustar também em php.ini ou .user.ini:
+# post_max_size = 10M
+# upload_max_filesize = 10M
+
+# ============================ DESLIGAR ETAGS =================================
+# Não vazar inode/info do filesystem
+FileETag None
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+
+# ============================ CACHE de assets estáticos ======================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType application/pdf "access plus 1 month"
+</IfModule>
+
+# ============================ COMPRESSÃO =====================================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ============================ ERROR DOCS (não vazar info) ===================
+ErrorDocument 400 /erro.html
+ErrorDocument 401 /erro.html
+ErrorDocument 403 /erro.html
+ErrorDocument 404 /erro.html
+ErrorDocument 500 /erro.html

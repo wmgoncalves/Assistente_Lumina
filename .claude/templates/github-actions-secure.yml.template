@@ -1,0 +1,157 @@
+# =============================================================================
+# Template GitHub Actions SEGURO
+# Copiar para .github/workflows/ci.yml e ajustar
+#
+# Princípios:
+# - Actions pinadas em commit SHA (não tag — tags podem mover)
+# - Permissões mínimas
+# - Sem secrets em logs
+# - Cache controlado
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+# Permissões padrão restritivas — explicitar quando precisar mais
+permissions:
+  contents: read
+
+# Concorrência: cancelar runs antigas do mesmo PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ============================ SECURITY SCAN ===============================
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write  # para uploads SARIF
+    steps:
+      # Checkout com pin em SHA + persist-credentials false (não expõe GITHUB_TOKEN)
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Secrets scanning
+      - name: Detect secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@44c470ffc35caa8b1eb1e8b8a01fd5d4ce8bb13b  # v2.3.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Dependency vulnerability scan (escolher conforme stack)
+      # Node:
+      # - run: npm audit --audit-level=high
+      # PHP:
+      # - run: composer audit
+      # Python:
+      # - run: pip-audit
+
+      # SAST (escolher conforme linguagem)
+      # - name: Run CodeQL
+      #   uses: github/codeql-action/init@012739e5082ff0c22ca6d6ab32e07c36df03c4a4  # v3
+      #   with:
+      #     languages: javascript
+      # - uses: github/codeql-action/analyze@012739e5082ff0c22ca6d6ab32e07c36df03c4a4  # v3
+
+  # ============================ BUILD + TEST ================================
+  test:
+    name: Build & test
+    needs: security  # roda só se security passar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+        with:
+          persist-credentials: false
+
+      # Setup da linguagem (exemplo Node — adaptar)
+      - name: Setup Node
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8  # v4.0.2
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Install determinístico (não muda lockfile)
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      # Lint
+      - name: Lint
+        run: npm run lint
+
+      # Type check (se aplicável)
+      - name: Type check
+        run: npm run typecheck
+
+      # Tests
+      - name: Tests
+        run: npm test -- --ci
+
+      # Coverage upload (opcional)
+      # - uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457  # v3
+      #   with:
+      #     fail_ci_if_error: false
+
+  # ============================ DEPLOY (separado) ============================
+  # Jobs de deploy em workflow separado, só na branch main:
+  #
+  # name: Deploy
+  # on:
+  #   push:
+  #     branches: [main]
+  # jobs:
+  #   deploy:
+  #     environment:
+  #       name: production
+  #       url: https://meusite.com.br
+  #     runs-on: ubuntu-latest
+  #     permissions:
+  #       contents: read
+  #       id-token: write  # OIDC para AWS/GCP sem armazenar credencial
+  #     steps:
+  #       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+  #       # ... deploy com OIDC ou secret específico
+
+
+# =============================================================================
+# REGRAS:
+#
+# 1. Actions PINADAS em commit SHA, não em tag (@v4)
+#    Por quê: tag pode ser movida (ex: v4 → v4.1 → v4.2). Atacante que comprometer
+#    o repo da action e mover a tag executa código em seu CI.
+#    Atualizar SHA conscientemente (Dependabot ajuda — `groups` em dependabot.yml).
+#
+# 2. permissions: contents: read no topo. Adicionar específicos por job quando precisa
+#
+# 3. persist-credentials: false no checkout
+#    Evita que outras steps usem o GITHUB_TOKEN sem você saber
+#
+# 4. Secrets via ${{ secrets.NOME }} — nunca em log ou echo
+#
+# 5. Environment-protected secrets para produção
+#    (settings → environments → production → required reviewers)
+#
+# 6. Concurrency com cancel-in-progress em PR
+#
+# 7. fetch-depth: 0 só quando precisa de história (blame, changelog)
+#
+# 8. Lockfile commitado, npm ci (não npm install)
+#
+# 9. --ignore-scripts em npm install para evitar postinstall malicioso
+#
+# 10. Job de deploy SEPARADO, só na main, com environment de aprovação
+#
+# 11. OIDC para AWS/GCP/Azure quando possível (sem credencial estática)
+# =============================================================================

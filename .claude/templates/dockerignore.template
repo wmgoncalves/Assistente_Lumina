@@ -1,0 +1,87 @@
+# =============================================================================
+# .dockerignore SEGURO — Template universal
+# Evita copiar segredos e arquivos desnecessários para a imagem.
+# Copiar como .dockerignore na raiz do projeto.
+# =============================================================================
+
+# Segredos (CRITICAL — nunca dentro da imagem)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.crt
+secrets/
+credentials.json
+service-account*.json
+
+# Controle de versão
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependências (rebuild na imagem)
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+.pytest_cache/
+.tox/
+.venv/
+venv/
+target/
+
+# Build artifacts (rebuild)
+dist/
+build/
+out/
+.next/
+.nuxt/
+coverage/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Docs / Markdown (geralmente não precisam na imagem)
+README.md
+*.md
+docs/
+LICENSE
+
+# Configuração de IDE/build local
+docker-compose.override.yml
+.editorconfig
+
+# Testes (depende — em geral não precisa na imagem de produção)
+tests/
+test/
+*.test.js
+*.spec.js
+__tests__/
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+.github/workflows/
+
+# Agente IA
+.claude/
+.cursor/
+.aider*
