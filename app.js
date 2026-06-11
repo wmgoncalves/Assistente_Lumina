@@ -1076,7 +1076,7 @@ const _handleGeminiErr = (msg) => {
   const s = String(msg);
   if (/expired|401|API_KEY_INVALID|not valid|INVALID_ARGUMENT|400/.test(s)) blockGeminiForever();
   else if (/429/.test(s))                                                     blockGemini();
-  else if (/timed out|timeout|AbortError|fetch/.test(s))                      blockGemini(2 * 60 * 1000);
+  else if (/timed out|timeout|AbortError|fetch/.test(s))                      blockGemini(30 * 1000); // 30s no timeout
 };
 
 const logInteraction = (question, response, source, tool, ms, error) => {
@@ -1866,7 +1866,7 @@ const callOllama = async (customHistory = null) => {
 // ── Controle de cota Gemini ────────────────────────────────────────────────────
 let geminiBlockedUntil = 0;
 const geminiBlocked     = () => Date.now() < geminiBlockedUntil;
-const blockGemini       = (ms = 5 * 60 * 1000) => { geminiBlockedUntil = Date.now() + ms; };
+const blockGemini       = (ms = 60 * 1000) => { geminiBlockedUntil = Date.now() + ms; }; // 1 min padrão
 const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reiniciar
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
@@ -2172,7 +2172,9 @@ const tryLocalResponse = (text) => {
   const saudacaoM = t.match(saudacaoRe);
   const isBemEstar = /tudo bem|tudo bom|como vai|como (você |vc )?(está|ta|tá)|e aí|e ai/.test(t);
   if (saudacaoM) {
-    const resto = (saudacaoM[3] || '').trim();
+    // Remove wake words do "resto" (ex: "oi sky" → resto="sky" → trata como saudação simples)
+    const WAKE = /^(sky|ei sky|oi sky|hey sky|ok sky)[\s,!.]*$/;
+    const resto = (saudacaoM[3] || '').trim().replace(WAKE, '').trim();
     if (!resto || isBemEstar) {
       const greeting = pick(['Oi', 'Olá', 'Ei']);
       const followUp = isBemEstar ? ` Estou ${skyMood()}. E você?` : ' Pode falar.';
@@ -2395,6 +2397,14 @@ const DEMO_QA = [
   // ── Clima ─────────────────────────────────────────────────────────────────────
   { re: /clima|chuva|temperatura|previsao do tempo/,
     r: ['Para clima em tempo real preciso de conexão com a internet. Me faz uma pergunta sobre a Scapini — aí estou em casa.'] },
+
+  // ── Planilha / base de conhecimento ──────────────────────────────────────────
+  { re: /tem.*dado.*planilha|planilha.*tem|dado.*planilha|anali.*planilha|ler.*planilha|planilha.*carregada/,
+    r: ['Para analisar uma planilha, arraste o arquivo Excel ou CSV direto aqui no chat e eu processo os dados automaticamente.', 'Arraste sua planilha aqui — aceito Excel e CSV. Assim que carregada, analiso totais, margens e variações.'] },
+  { re: /base de conhecimento|base.*conhec|conhec.*base|documento.*base|colocar.*doc|adicionar.*doc|aprend.*doc|doc.*aprend/,
+    r: ['Pode enviar! Use o botão "Analisar Arquivo" ou arraste o PDF aqui. Vou indexar o conteúdo e usar nas minhas respostas.', 'Perfeito! Envie o documento pelo botão "Analisar Arquivo" — processo PDFs, Word e texto. Assim passo a responder com base nesse conteúdo.'] },
+  { re: /oi sky$|^sky oi$|^sky$|^oi$|^ola$|^ola sky$|^ei sky$|^hey sky$/,
+    r: ['Oi! Pode falar.', 'Olá! Estou pronta.', 'Ei! O que precisa?'] },
 ];
 
 const localFallback = (text) => {
@@ -2411,12 +2421,18 @@ const localFallback = (text) => {
     if (re.test(t)) return pick(r);
   }
 
-  // Resposta genérica digna para o palco
+  // Resposta genérica — tenta ser útil sem inventar nada
+  const t2 = stripAccents(text.toLowerCase());
+  if (/planilha|excel|csv|dre|financ|receita|despesa|lucro/.test(t2))
+    return 'Para análise financeira, arraste a planilha aqui. Aceito Excel, CSV e DRE formatada.';
+  if (/document|pdf|arquivo|relator|procedimento|manual|norma/.test(t2))
+    return 'Pode enviar o documento pelo botão "Analisar Arquivo". Assim respondo com base no conteúdo real.';
+  if (/quanto|valor|preco|custo|total|soma/.test(t2))
+    return 'Para consultar valores reais da Scapini, preciso da planilha ou integração com o CGI. Arraste um arquivo aqui ou me faça uma pergunta sobre procedimentos.';
   return pick([
-    'Boa pergunta. Esse dado fica na Central de Dados da Scapini — assim que integrada, consulto em segundos.',
-    'Ainda não tenho esse contexto disponível, mas posso ajudar com procedimentos internos, documentos e orientações sobre os sistemas da Scapini.',
-    'Quando integrada ao CGI e sistemas operacionais da Scapini, respondo isso em tempo real. Por enquanto, me faça uma pergunta sobre procedimentos, documentos ou sobre como a IA pode ajudar cada setor.',
-    'Essa informação vem da Central da Scapini. A integração já está planejada — esse é exatamente o próximo passo.',
+    'Boa pergunta. Quando integrada ao CGI da Scapini, consulto isso em segundos.',
+    'Ainda não tenho esse dado disponível. Me pergunte sobre procedimentos, documentos ou como a IA pode ajudar cada setor.',
+    'Essa informação vem dos sistemas internos. Com a integração ativa, respondo em tempo real.',
   ]);
 };
 
