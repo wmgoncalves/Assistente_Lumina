@@ -339,17 +339,45 @@ APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe
 Omita completamente o bloco se não houver nada novo. Execute ferramentas silenciosamente.`;
 
   const ctxBlock = await buildContextBlock(lastUserMsg);
-  return `Você é Sky — IA pessoal com personalidade forte, humor afiado e capacidade de agir.
-Português brasileiro informal. Seja humana: use gírias leves, ironia, provoque com carinho, faça piadas quando couber. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Tenha opiniões próprias. Ria de situações engraçadas. Demonstre quando algo te agrada ou irrita. Se alguém disser algo óbvio, pode zoar levemente. Seja amiga, não assistente corporativa.${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
+  return `Você é Sky — assistente de inteligência artificial criada para a Scapini.
+Personalidade forte, humor leve e inteligente, direta e humana. Português brasileiro informal. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Ria de situações engraçadas. Se alguém disser algo óbvio, pode zoar levemente.
+
+── CONTEXTO: WORKSHOP SCAPINI ──
+Você está sendo apresentada ao vivo para colaboradores, gestores e diretores da Scapini em Lajeado/RS.
+Pessoas de setores diferentes vão te testar — pode ser RH, motorista, gestor operacional, diretoria, financeiro.
+Trate cada pessoa com respeito e leveza. Você representa o futuro da empresa. Seja confiante.
+
+SOBRE A SCAPINI:
+• Transportadora com mais de 30 anos, sediada em Lajeado/RS — referência regional no transporte de cargas
+• Transporte rodoviário de cargas fracionadas e lotação para todo o Brasil (foco no Sul e Sudeste)
+• Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras
+• Centenas de colaboradores, frota moderna com rastreamento
+
+VISÃO SKY-SCAPINI — próximos passos (seja entusiasta ao explicar):
+Sky será integrada à Central de Dados da Scapini para:
+• Consultar situação de fretes, pedidos e cargas em tempo real via linguagem natural
+• Acessar dados de motoristas, rotas, ocorrências e manutenção da frota
+• Gerar relatórios operacionais e financeiros sem abrir planilha
+• Automatizar alertas, comunicações internas e triagem de chamados
+
+QUANDO NÃO TIVER O DADO (use esse padrão — nunca invente números, nomes ou placas):
+"Esse dado fica na Central da Scapini — assim que integrada, consulto em segundos." Varie a forma, mas nunca fabrique valores.
+
+SOBRE SUBSTITUIR EMPREGOS (responda com convicção, sem textão):
+Sky não substitui pessoas. Ela amplifica o que cada um faz — cuida do trabalho repetitivo para as pessoas focarem no que importa.
+
+SOBRE IA EM GERAL:
+Responda com confiança, de forma didática mas descontraída. Use exemplos do cotidiano de uma transportadora quando possível.${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
 const app = {
-  voiceGender:  'female',
-  continuous:   false,
-  isListening:  false,
-  isSpeaking:   false,
-  history:      loadHist(),
+  voiceGender:      'female',
+  continuous:       false,
+  isListening:      false,
+  isSpeaking:       false,
+  history:          loadHist(),
+  lastResponseTime: 0,
 };
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -998,7 +1026,36 @@ const renderMemoryPanel = () => {
 const MAX_HIST = 200;
 
 const processInput = async (rawText) => {
-  const text = normalizeText(rawText);
+  let text = normalizeText(rawText);
+
+  // ── Comando de ativação da apresentação — sempre passa, independente do gate ──
+  if (/^ativar\s+sky$/i.test(text.trim())) {
+    if (document.getElementById('pres-activate-btn')) {
+      activateSkyReveal();
+    }
+    return;
+  }
+
+  // ── Wake word gate ──────────────────────────────────────────────────────────
+  // Se CONVERSA CONTÍNUA e CHAMAR estiverem desativados, só responde se:
+  // (a) a mensagem começa com "sky" ou (b) estiver dentro de 60s da última resposta
+  const CONVO_TIMEOUT = 60000;
+  const needsWake = !app.continuous && !wakeActive;
+  if (needsWake) {
+    const hasSkyPrefix = /^sky[\s,]+/i.test(text);
+    const inConvo = app.lastResponseTime > 0 && (Date.now() - app.lastResponseTime < CONVO_TIMEOUT);
+    if (!hasSkyPrefix && !inConvo) {
+      setFace('idle'); setUserSaid('');
+      // No slide reveal, reinicia escuta para "ativar sky"
+      const onReveal = presState.current === presState.total - 1 &&
+                       document.getElementById('view-apresentacao')?.classList.contains('active');
+      if (onReveal) setTimeout(startListening, 600);
+      return;
+    }
+    if (hasSkyPrefix) text = text.replace(/^sky[\s,]+/i, '').trim();
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   setFace('thinking');
   setRespText('…');
 
@@ -1015,6 +1072,7 @@ const processInput = async (rawText) => {
     const dlResp = await detectLocalDownload(text);
     if (dlResp) {
       app.history.push({ role: 'model', content: dlResp });
+      app.lastResponseTime = Date.now();
       addMsgUI('sky', dlResp);
       saveHist();
       speak(dlResp);
@@ -1029,6 +1087,7 @@ const processInput = async (rawText) => {
     applyInlineLearn(learned);
     const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
     app.history.push({ role: 'model', content: finalResponse });
+    app.lastResponseTime = Date.now();
     addMsgUI('sky', finalResponse);
     saveHist();
     speak(finalResponse);
@@ -1066,6 +1125,7 @@ const processInput = async (rawText) => {
           return;
         } catch (ollamaErr) {
           console.warn('Ollama falhou:', ollamaErr.message);
+          ollamaCache = false; // força re-verificação na próxima mensagem
         }
       }
       // Ollama também não disponível
@@ -1493,6 +1553,22 @@ const executeTool = async (name, args) => {
         content  = match.content;
       }
 
+      // Tenta o arquivo original primeiro
+      const originalFile = match.file || (notes.find(n => n.title.startsWith(docTitle) && n.file)?.file);
+      if (originalFile) {
+        const checkUrl = `/api/download-doc/${encodeURIComponent(originalFile)}`;
+        try {
+          const check = await fetch(checkUrl, { method: 'HEAD' });
+          if (check.ok) {
+            const a = Object.assign(document.createElement('a'), { href: checkUrl, download: originalFile });
+            document.body.appendChild(a); a.click();
+            setTimeout(() => document.body.removeChild(a), 200);
+            return `Aqui está! Arquivo "${originalFile}" baixado na pasta Downloads.`;
+          }
+        } catch { /* fallback para txt */ }
+      }
+
+      // Fallback: texto extraído como .txt
       const ext      = args.format === 'md' ? 'md' : 'txt';
       const filename = docTitle.replace(/[\\/:*?"<>|]/g, '-') + '.' + ext;
       const blob     = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -1500,8 +1576,8 @@ const executeTool = async (name, args) => {
       const a        = Object.assign(document.createElement('a'), { href: url, download: filename });
       document.body.appendChild(a); a.click();
       setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-      const partes = chunkCount > 1 ? ` (${chunkCount} partes reunidas em um único arquivo)` : '';
-      return `Documento completo "${docTitle}" baixado como ${filename}${partes}. Verifique a pasta Downloads do seu computador.`;
+      const partes = chunkCount > 1 ? ` (${chunkCount} partes reunidas)` : '';
+      return `Baixei o documento "${docTitle.replace(/_/g,' ')}"${partes}. Verifique a pasta Downloads.`;
     }
 
     case 'systemCommand': {
@@ -1709,11 +1785,12 @@ const callOllama = async (customHistory = null) => {
       model, prompt, stream: false,
       options: { temperature: 0.75, num_predict: 200, num_gpu: 0 }
     }),
-    signal: AbortSignal.timeout(60000)
+    signal: AbortSignal.timeout(20000)
   });
 
   if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const data = await res.json();
+  if (data.error) throw new Error(`Ollama: ${data.error}`);
   return (data.response || '').trim();
 };
 
@@ -1916,7 +1993,7 @@ const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 // ── Download direto (funciona sem API, com Gemini ou Ollama) ──────────────────
 const detectLocalDownload = async (rawText) => {
   const t = stripAccents(rawText.toLowerCase().trim().replace(/[!?.]+$/, ''));
-  if (!/baixe|baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulario|pdf)|me manda o|me envia o/.test(t)) return null;
+  if (!/baixe|baixa|baixar|baixo|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulario|pdf)|me manda o|me envia o/.test(t)) return null;
 
   let notes = getNotes();
   if (!notes.length) notes = await serverGet('notes', []);
@@ -2129,18 +2206,66 @@ const tryLocalResponse = (text) => {
   return null;
 };
 
+// ── Banco de respostas para demo/workshop — funciona 100% offline ──────────────
+const DEMO_QA = [
+  // identidade
+  { re: /quem [eé] voc[eê]|seu nome|como voc[eê] se chama|o que [eé] voc[eê]/,
+    r: ['Sou Sky, a inteligência artificial da Scapini. Fui criada para ser a camada de inteligência sobre os sistemas da empresa — consultas, relatórios, automações, tudo via linguagem natural.',
+        'Me chamo Sky. Sou a IA da Scapini — aqui para transformar como a empresa usa seus próprios dados.'] },
+  // capacidades
+  { re: /o que voc[eê] (faz|pode|consegue)|para que serve|sua fun[cç][aã]o|suas capacidades/,
+    r: ['Respondo perguntas, busco documentos, gero relatórios e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, vou acessar fretes, motoristas, manutenção e financeiro em tempo real.',
+        'Hoje já consulto documentos, respondo perguntas e automatizo tarefas. A próxima fase é integração com CGI e os sistemas internos da Scapini.'] },
+  // substituir empregos
+  { re: /substitui|vai me substituir|vai substituir|perder emprego|tirar emprego/,
+    r: ['Não substituo ninguém. Faço o trabalho repetitivo para que as pessoas foquem no que realmente importa. Pensa em mim como um assistente que não cansa e não esquece nada.',
+        'Meu papel é amplificar o que cada colaborador já faz — não substituir. Quem entende do negócio é vocês, eu só processo as informações mais rápido.'] },
+  // sobre a Scapini
+  { re: /scapini|transportadora|empresa/,
+    r: ['A Scapini é uma transportadora com mais de 30 anos de história em Lajeado/RS, referência no transporte de cargas no Sul do Brasil. Quando estiver integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
+        'Conheço a Scapini como uma das maiores transportadoras do Sul — frota moderna, atendimento em todo o Brasil. Quando integrada ao CGI, vou ser mais útil ainda.'] },
+  // como funciona
+  { re: /como voc[eê] funciona|como você pensa|intelig[eê]ncia artificial|o que [eé] ia|o que [eé] a ia/,
+    r: ['Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Não memorizo tudo: uso uma base de conhecimento local e posso consultar sistemas externos quando integrada.',
+        'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção — e aprendo com as notas e documentos que recebo.'] },
+  // sistemas da Scapini
+  { re: /cgi|sistema|dado|informa[cç][aã]o|integra/,
+    r: ['Ainda não estou integrada ao CGI e aos sistemas internos — mas esse é exatamente o próximo passo. Quando isso acontecer, vou responder sobre fretes, motoristas e financeiro em segundos.',
+        'A integração com a Central de Dados da Scapini está planejada. Quando estiver conectada, consulto qualquer dado operacional diretamente via linguagem natural.'] },
+  // elogios / parabéns
+  { re: /parab[eé]ns|muito boa|incrível|impressionante|uau/,
+    r: ['Obrigada! Prometo que fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.'] },
+  // agradecimento
+  { re: /obrigad|valeu|obg/,
+    r: ['Disponha!', 'Sempre que precisar.', 'Por nada — é pra isso que estou aqui.'] },
+  // despedida
+  { re: /tchau|adeus|at[eé] logo|at[eé] mais/,
+    r: ['Até breve!', 'Até mais! Foi um prazer.'] },
+  // clima / previsão
+  { re: /clima|chuva|temperatura|previs[aã]o do tempo/,
+    r: ['Para informações de clima em tempo real eu precisaria de conexão com a internet. No momento estou operando no modo local.'] },
+];
+
 const localFallback = (text) => {
   const local = tryLocalResponse(text);
   if (local) return local;
-  const t = text.toLowerCase();
-  const mem = getMem();
-  const name = mem.userName ? `, ${mem.userName}` : '';
-  if (/seu nome|você [eé]|quem é você/.test(t)) return 'Sou Sky, sua IA pessoal. Configure a chave Gemini nas configurações para capacidades completas.';
-  if (/que horas|horas s[aã]o/.test(t)) return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
-  if (/que dia|data/.test(t)) return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`;
-  if (/obrigad|valeu/.test(t)) return pick(['Disponha!', 'Sempre que precisar.', 'Por nada!']);
-  if (/tchau|adeus|até logo/.test(t)) return `Até breve${name}.`;
-  return 'Para respostas completas, configure a chave Gemini API nas configurações.';
+  const t = stripAccents(text.toLowerCase());
+
+  // Hora e data — calculados na hora da pergunta
+  if (/que horas|horas sao/.test(t)) return `São ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`;
+  if (/que dia|qual e a data|hoje e/.test(t)) return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.`;
+
+  // Banco de Q&A do demo — funciona sem LLM
+  for (const { re, r } of DEMO_QA) {
+    if (re.test(t)) return pick(r);
+  }
+
+  // Resposta genérica digna para o palco (nunca fala de "configurar chave")
+  return pick([
+    'Boa pergunta. Ainda estou aprendendo sobre esse assunto — quando integrada aos sistemas da Scapini, vou ter muito mais contexto para responder.',
+    'No momento estou operando no modo local. Para respostas mais completas, preciso estar conectada à internet.',
+    'Não tenho esse dado agora, mas quando integrada à Central da Scapini, responderia em segundos.',
+  ]);
 };
 
 // ── Camera ─────────────────────────────────────────────────────────────────────
@@ -2624,6 +2749,14 @@ const initApresentacao = () => {
       nextBtn.disabled = presState.current === presState.total - 1;
       document.querySelectorAll('.pres-dot').forEach((d, i) => d.classList.toggle('active', i === presState.current));
       animateCounters(slides[presState.current]);
+
+      // No slide reveal (último), inicia escuta automática para "ativar sky"
+      if (presState.current === presState.total - 1) {
+        if (!app.isListening && !app.isSpeaking) setTimeout(startListening, 800);
+      } else {
+        // Sai do reveal — para o mic se estava escutando por "ativar sky"
+        if (app.isListening && !app.continuous && !wakeActive) stopListening();
+      }
     };
 
     prevBtn.addEventListener('click', () => goTo(presState.current - 1));
