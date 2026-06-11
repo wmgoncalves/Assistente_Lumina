@@ -1916,14 +1916,14 @@ const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 // ── Download direto (funciona sem API, com Gemini ou Ollama) ──────────────────
 const detectLocalDownload = async (rawText) => {
   const t = stripAccents(rawText.toLowerCase().trim().replace(/[!?.]+$/, ''));
-  if (!/baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulario|pdf)/.test(t)) return null;
+  if (!/baixe|baixa|baixar|download|exporta|exportar|salva o arquivo|gera o (termo|documento|formulario|pdf)|me manda o|me envia o/.test(t)) return null;
 
   let notes = getNotes();
   if (!notes.length) notes = await serverGet('notes', []);
   if (!notes.length) return null;
 
   // Palavras da frase (min 3 chars), removendo stopwords genéricas
-  const STOP = new Set(['baixa','baixar','para','mim','arquivo','documento','pdf','termo','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar','sky','entao','então','isso','esse','esta','este']);
+  const STOP = new Set(['baixa','baixar','baixe','para','mim','arquivo','documento','pdf','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar','sky','entao','então','isso','esse','esta','este','manda','envia']);
   const words = t.split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
   if (!words.length) return null;
 
