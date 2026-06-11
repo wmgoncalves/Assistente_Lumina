@@ -462,6 +462,7 @@ const flashLearnBadge = () => {
 
 // ── Stop all speech (ElevenLabs or browser TTS) ───────────────────────────────
 let currentAudio = null;
+let ttsAbort     = null; // AbortController do fetch TTS em voo
 
 const setStopBtn = (visible) => {
   const btn   = document.getElementById('btn-stop');
@@ -472,9 +473,10 @@ const setStopBtn = (visible) => {
 };
 
 const stopSpeaking = () => {
+  if (ttsAbort) { try { ttsAbort.abort(); } catch {} ttsAbort = null; }
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
   try { window.speechSynthesis.cancel(); } catch {}
-  clearInterval(speakTimer); speakTimer = null;
+  clearTimeout(speakTimer); speakTimer = null;   // era clearInterval — bug
   app.isSpeaking = false;
   setFace('idle');
   setStopBtn(false);
@@ -658,12 +660,16 @@ const speakEdge = async (text, onEnd) => {
   setFace('speaking');
   setStopBtn(true);
   setRespText(text);
+  ttsAbort = new AbortController();
   try {
     const res = await fetch('/api/tts-edge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: clean, voice })
+      body: JSON.stringify({ text: clean, voice }),
+      signal: ttsAbort.signal,
     });
+    ttsAbort = null;
+    if (!app.isSpeaking) { onEnd?.(); return; } // clicou parar durante o fetch
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
@@ -677,6 +683,8 @@ const speakEdge = async (text, onEnd) => {
     audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
     audio.play();
   } catch (e) {
+    ttsAbort = null;
+    if (e.name === 'AbortError') { app.isSpeaking = false; setFace('idle'); setStopBtn(false); return; }
     app.isSpeaking = false;
     speakBrowser(text, onEnd);
   }
@@ -1804,13 +1812,19 @@ const executeTool = async (name, args) => {
 const OLLAMA_URL = 'http://localhost:11434';
 
 // Cache de disponibilidade: evita checar toda vez
-let ollamaCache = null; // null=desconhecido, true/false
+let ollamaCache    = null;  // null=desconhecido, true=online, false=offline
+let ollamaCacheTtl = 0;    // timestamp até quando respeitar cache false
 const ollamaAvailable = async () => {
-  if (ollamaCache === true) return true; // só usa cache positivo — false pode ser startup precoce
+  if (ollamaCache === true)  return true;
+  if (ollamaCache === false && Date.now() < ollamaCacheTtl) return false; // dentro do TTL
   try {
     const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(4000) });
     ollamaCache = r.ok;
-  } catch { ollamaCache = false; }
+    if (!r.ok) ollamaCacheTtl = Date.now() + 30_000;
+  } catch {
+    ollamaCache    = false;
+    ollamaCacheTtl = Date.now() + 30_000; // não tenta de novo por 30s
+  }
   return ollamaCache;
 };
 
