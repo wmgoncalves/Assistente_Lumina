@@ -1,19 +1,17 @@
 'use strict';
 const xlsx = require('xlsx');
 
-// ── Letra de coluna Excel (0-based index → 'A', 'B', … 'AA' …) ──────────────
+// ── Utilitários ───────────────────────────────────────────────────────────────
 function colLetter(idx) {
   let s = ''; let n = idx + 1;
   while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
   return s;
 }
 
-// ── Remove acentos ────────────────────────────────────────────────────────────
 function norm(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 }
 
-// ── Detecta índice de coluna pelo cabeçalho ───────────────────────────────────
 function detectCol(headers, keywords) {
   const nh = headers.map(norm);
   for (const kw of keywords) {
@@ -23,32 +21,34 @@ function detectCol(headers, keywords) {
   return -1;
 }
 
-// ── Normaliza data para { dd, mm, yyyy, iso } ─────────────────────────────────
+function parseValue(val) {
+  if (val == null || val === '') return null;
+  if (typeof val === 'number') return isFinite(val) ? val : null;
+  const s = String(val).replace(/R\$\s*/gi, '').replace(/\s/g, '').trim();
+  if (/^\d{1,3}(\.\d{3})*(,\d+)?%?$/.test(s)) {
+    return parseFloat(s.replace(/\./g, '').replace(',', '.').replace('%', ''));
+  }
+  const n = parseFloat(s.replace(',', '.'));
+  return isFinite(n) ? n : null;
+}
+
 function parseDate(val) {
   if (val == null || val === '') return null;
-
-  // Número serial do Excel
   if (typeof val === 'number') {
     try {
       const d = xlsx.SSF.parse_date_code(val);
       if (d && d.y > 1900) return fmtDate(d.d, d.m, d.y);
     } catch { /* ignora */ }
   }
-
   const s = String(val).trim();
-
-  // DD/MM/YYYY ou DD-MM-YYYY
   const m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
   if (m1) {
     const [, d, mo, y] = m1;
     const year = y.length === 2 ? (parseInt(y) > 50 ? 1900 : 2000) + parseInt(y) : parseInt(y);
     return fmtDate(+d, +mo, year);
   }
-
-  // YYYY-MM-DD (ISO)
   const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m2) return fmtDate(+m2[3], +m2[2], +m2[1]);
-
   return null;
 }
 
@@ -61,89 +61,202 @@ function fmtDate(d, m, y) {
   };
 }
 
-// ── Normaliza valor financeiro brasileiro ─────────────────────────────────────
-function parseValue(val) {
-  if (val == null || val === '') return null;
-  if (typeof val === 'number') return isFinite(val) ? val : null;
-  const s = String(val)
-    .replace(/R\$\s*/gi, '')
-    .replace(/\s/g, '')
-    .trim();
-  // Formato BR: 1.234,56
-  if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) {
-    return parseFloat(s.replace(/\./g, '').replace(',', '.'));
-  }
-  // Formato US: 1234.56
-  const n = parseFloat(s.replace(',', '.'));
-  return isFinite(n) ? n : null;
-}
-
-// ── Normaliza status ──────────────────────────────────────────────────────────
-const STATUS_ABERTO = /aber|pend|venc|atraso|nao pago|n.pago|nao liquid|a vencer/;
-const STATUS_PAGO   = /^pago$|liquid|baixa|cancel|quit|receb/;
-
 function normalizeStatus(val) {
   if (val == null) return '';
   const s = norm(val);
-  if (STATUS_ABERTO.test(s)) return 'ABERTO';
-  if (STATUS_PAGO.test(s))   return 'PAGO';
+  if (/aber|pend|venc|atraso|nao pago|n.pago|nao liquid|a vencer/.test(s)) return 'ABERTO';
+  if (/^pago$|liquid|baixa|cancel|quit|receb/.test(s)) return 'PAGO';
   return String(val).trim().toUpperCase();
 }
 
-// ── Formata moeda BR ──────────────────────────────────────────────────────────
 function brl(n) {
+  if (n == null || !isFinite(n)) return 'R$ 0,00';
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// ── Analisa uma aba da planilha ───────────────────────────────────────────────
-function analyzeSheet(ws, sheetName) {
+function pct(n) {
+  if (n == null || !isFinite(n)) return '0,0%';
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+}
+
+// ── Detecção de coluna de MÊS (Jan, Fev, Jan/26, 01/2026, etc.) ──────────────
+const MONTH_NAMES_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MONTH_NAMES_FULL = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function detectMonthCol(header) {
+  const h = norm(header);
+  for (let i = 0; i < MONTH_NAMES_PT.length; i++) {
+    if (h.startsWith(MONTH_NAMES_PT[i]) || h.startsWith(MONTH_NAMES_FULL[i])) {
+      return { idx: i + 1, label: header.toString().trim() };
+    }
+  }
+  // MM/YYYY ou YYYY-MM
+  const m1 = h.match(/^(\d{1,2})[\/\-](\d{2,4})$/);
+  if (m1) {
+    const mo = parseInt(m1[1]);
+    if (mo >= 1 && mo <= 12) return { idx: mo, label: header.toString().trim() };
+  }
+  const m2 = h.match(/^(\d{4})[\/\-](\d{2})$/);
+  if (m2) {
+    const mo = parseInt(m2[2]);
+    if (mo >= 1 && mo <= 12) return { idx: mo, label: header.toString().trim() };
+  }
+  return null;
+}
+
+// ── Categorias de conta DRE ───────────────────────────────────────────────────
+const DRE_CATS = {
+  receita_bruta:      /receita bruta|faturamento bruto|receita total|receita operacional bruta/,
+  deducoes:           /deducao|deducoes|imp.*receita|pis|cofins|iss|icms.*receita|(-)\s*deducao/,
+  receita_liquida:    /receita liquida|receita liq\b|receita oper.*liq/,
+  cmv:                /^cmv$|custo.*mercad|custo.*prod|custo.*servic|cpv|cogs/,
+  lucro_bruto:        /lucro bruto|resultado bruto|margem bruta/,
+  despesas_op:        /despesa.*oper|despesa.*adm|despesa.*comerci|despesa.*vendas|desp\. oper/,
+  ebitda:             /^ebitda$|lajida|lucro.*antes.*juro.*imp.*amort/,
+  ebit:               /^ebit$|laji\b|lucro.*antes.*juro.*imp(?!.*amort)/,
+  resultado_fin:      /resultado financ|receita financ|despesa financ|juros|variacao cambial/,
+  lucro_antes_ir:     /lair|lucro.*antes.*ir|resultado.*antes.*ir/,
+  ir_csll:            /^ir$|^csll$|ir.*csll|imposto.*renda|contrib.*social/,
+  lucro_liquido:      /lucro liquido|resultado liquido|lucro liq\b|resultado final/,
+};
+
+function classifyDRERow(label) {
+  const n = norm(label);
+  for (const [cat, re] of Object.entries(DRE_CATS)) {
+    if (re.test(n)) return cat;
+  }
+  return null;
+}
+
+// ── Análise DRE (estrutura: conta × mês) ─────────────────────────────────────
+function analyzeDRESheet(ws, sheetName) {
+  const raw = xlsx.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+  if (raw.length < 3) return null;
+
+  // Encontra linha de cabeçalho — procura linha com ao menos 2 colunas de mês
+  let headerRow = -1;
+  let monthCols = [];
+  for (let i = 0; i < Math.min(20, raw.length); i++) {
+    const cols = [];
+    for (let j = 1; j < raw[i].length; j++) {
+      const mc = detectMonthCol(raw[i][j]);
+      if (mc) cols.push({ colIdx: j, ...mc });
+    }
+    if (cols.length >= 2) { headerRow = i; monthCols = cols; break; }
+  }
+  if (headerRow < 0 || monthCols.length === 0) return null;
+
+  // Lê linhas de contas (abaixo do cabeçalho, coluna 0 = nome da conta)
+  const accounts = [];
+  for (let i = headerRow + 1; i < raw.length; i++) {
+    const row = raw[i];
+    const label = String(row[0] || '').trim();
+    if (!label) continue;
+
+    const monthValues = {};
+    let hasValue = false;
+    for (const mc of monthCols) {
+      const v = parseValue(row[mc.colIdx]);
+      if (v !== null) { monthValues[mc.label] = v; hasValue = true; }
+    }
+    if (!hasValue) continue;
+
+    const category = classifyDRERow(label);
+    const total = Object.values(monthValues).reduce((s, v) => s + v, 0);
+    accounts.push({ label, category, monthValues, total, totalBrl: brl(total) });
+  }
+
+  if (accounts.length < 2) return null;
+
+  // Extrai contas-chave por categoria
+  const byCategory = {};
+  for (const acc of accounts) {
+    if (acc.category && !byCategory[acc.category]) byCategory[acc.category] = acc;
+  }
+
+  // Calcula variações mês a mês para a primeira conta de receita encontrada
+  const mainRevenue = byCategory['receita_bruta'] || byCategory['receita_liquida'];
+  const monthTrends = [];
+  if (mainRevenue && monthCols.length >= 2) {
+    const labels = monthCols.map(m => m.label);
+    for (let i = 1; i < labels.length; i++) {
+      const prev = mainRevenue.monthValues[labels[i - 1]];
+      const curr = mainRevenue.monthValues[labels[i]];
+      if (prev != null && curr != null && prev !== 0) {
+        const var_ = ((curr - prev) / Math.abs(prev)) * 100;
+        monthTrends.push({ from: labels[i-1], to: labels[i], varPct: var_, direction: var_ >= 0 ? '↑' : '↓' });
+      }
+    }
+  }
+
+  // Calcula margens se tiver receita líquida
+  const margins = {};
+  const recLiq = byCategory['receita_liquida'];
+  if (recLiq) {
+    const lb = byCategory['lucro_bruto'];
+    const ebitda = byCategory['ebitda'];
+    const ll = byCategory['lucro_liquido'];
+    for (const mc of monthCols) {
+      const rl = recLiq.monthValues[mc.label];
+      if (!rl || rl === 0) continue;
+      if (!margins[mc.label]) margins[mc.label] = {};
+      if (lb?.monthValues[mc.label] != null) margins[mc.label].margem_bruta = (lb.monthValues[mc.label] / rl) * 100;
+      if (ebitda?.monthValues[mc.label] != null) margins[mc.label].ebitda_pct = (ebitda.monthValues[mc.label] / rl) * 100;
+      if (ll?.monthValues[mc.label] != null) margins[mc.label].margem_liquida = (ll.monthValues[mc.label] / rl) * 100;
+    }
+  }
+
+  return {
+    type: 'dre',
+    sheet: sheetName,
+    months: monthCols.map(m => m.label),
+    accounts,
+    byCategory,
+    monthTrends,
+    margins,
+    totalAccounts: accounts.length,
+  };
+}
+
+// ── Análise de contas a receber/pagar (estrutura original) ────────────────────
+function analyzeARSheet(ws, sheetName) {
   const raw = xlsx.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
   if (raw.length < 2) return null;
 
-  // Encontra a linha de cabeçalho (primeira com mais de 2 células preenchidas)
   let headerRow = 0;
   for (let i = 0; i < Math.min(15, raw.length); i++) {
     if (raw[i].filter(c => c !== '').length >= 2) { headerRow = i; break; }
   }
   const headers = raw[headerRow].map(h => String(h || ''));
 
-  // Detecta colunas
   const dateIdx   = detectCol(headers, ['vencimento','dt venc','data venc','venc','dt_venc','data','dt','vencto','vcto']);
   const valueIdx  = detectCol(headers, ['valor','vl ','vl_','total','montante','vlr','r$','saldo','duplic','v.','val ']);
   const statusIdx = detectCol(headers, ['status','situacao','sit.','sit ','baixado','liquidado','pago','aberto','situac']);
 
   if (dateIdx < 0 && valueIdx < 0) return null;
 
-  // Processa linhas de dados
   const rows = [];
   for (let i = headerRow + 1; i < raw.length; i++) {
     const row = raw[i];
-    if (row.every(c => c === '')) continue; // linha vazia
-
+    if (row.every(c => c === '')) continue;
     const date  = dateIdx  >= 0 ? parseDate(row[dateIdx])   : null;
     const value = valueIdx >= 0 ? parseValue(row[valueIdx])  : null;
     if (value === null || value === 0) continue;
-
     const rawStatus = statusIdx >= 0 ? row[statusIdx] : null;
     const status    = normalizeStatus(rawStatus);
-
     rows.push({ rowNum: i + 1, date, value, status, rawStatus: String(rawStatus ?? '') });
   }
 
   if (rows.length === 0) return null;
 
-  // ── Agrega por data + status ──────────────────────────────────────────────
   const byDateStatus = {};
   for (const r of rows) {
     const key = `${r.date?.str ?? 'sem_data'}|${r.status}`;
-    if (!byDateStatus[key]) {
-      byDateStatus[key] = { date: r.date?.str ?? null, dateIso: r.date?.iso ?? null, status: r.status, total: 0, count: 0 };
-    }
+    if (!byDateStatus[key]) byDateStatus[key] = { date: r.date?.str ?? null, dateIso: r.date?.iso ?? null, status: r.status, total: 0, count: 0 };
     byDateStatus[key].total += r.value;
     byDateStatus[key].count++;
   }
 
-  // ── Agrega por status ─────────────────────────────────────────────────────
   const byStatus = {};
   for (const r of rows) {
     if (!byStatus[r.status]) byStatus[r.status] = { total: 0, count: 0 };
@@ -152,8 +265,6 @@ function analyzeSheet(ws, sheetName) {
   }
 
   const grandTotal = rows.reduce((s, r) => s + r.value, 0);
-
-  // ── Monta fórmula SOMASES ─────────────────────────────────────────────────
   let formula = '';
   if (valueIdx >= 0) {
     const vC = colLetter(valueIdx);
@@ -164,6 +275,7 @@ function analyzeSheet(ws, sheetName) {
   }
 
   return {
+    type: 'ar',
     sheet: sheetName,
     totalRows: rows.length,
     columns: {
@@ -182,10 +294,18 @@ function analyzeSheet(ws, sheetName) {
   };
 }
 
-// ── Ponto de entrada principal ────────────────────────────────────────────────
+// ── Detecta tipo e analisa uma aba ───────────────────────────────────────────
+function analyzeSheet(ws, sheetName) {
+  // Tenta DRE primeiro (mais específico)
+  const dre = analyzeDRESheet(ws, sheetName);
+  if (dre) return dre;
+  // Fallback: contas a receber/pagar
+  return analyzeARSheet(ws, sheetName);
+}
+
+// ── Ponto de entrada ──────────────────────────────────────────────────────────
 function analyzeSpreadsheet(buffer, filename) {
   const ext = (filename.split('.').pop() || '').toLowerCase();
-
   let workbook;
   if (ext === 'csv') {
     workbook = xlsx.read(buffer.toString('utf8'), { type: 'string' });
@@ -195,6 +315,9 @@ function analyzeSpreadsheet(buffer, filename) {
 
   const sheets = [];
   for (const name of workbook.SheetNames) {
+    // Pula abas de prompt/checklist (texto puro, não dados)
+    const nn = norm(name);
+    if (/prompt|checklist|instrucao|leia|readme|orientacao/.test(nn)) continue;
     const result = analyzeSheet(workbook.Sheets[name], name);
     if (result) sheets.push(result);
   }
@@ -202,30 +325,80 @@ function analyzeSpreadsheet(buffer, filename) {
   return { filename, sheets, analyzedAt: new Date().toISOString() };
 }
 
-// ── Texto de contexto compacto para injetar no prompt da IA ──────────────────
+// ── Contexto compacto para injetar no prompt da IA ────────────────────────────
 function buildSheetContext(analysis) {
   if (!analysis || !analysis.sheets.length) return '';
   let ctx = `\n\n── PLANILHA CARREGADA: ${analysis.filename} ──`;
+
   for (const s of analysis.sheets) {
-    ctx += `\nAba "${s.sheet}" — ${s.totalRows} linhas`;
-    if (s.columns.date)   ctx += ` | Vencimento=${s.columns.date.letter}`;
-    if (s.columns.value)  ctx += ` | Valor=${s.columns.value.letter}`;
-    if (s.columns.status) ctx += ` | Status=${s.columns.status.letter}`;
-    ctx += `\n  Total geral: ${s.grandTotalBrl}`;
-    for (const [st, ag] of Object.entries(s.byStatus)) {
-      ctx += `\n  ${st}: ${brl(ag.total)} (${ag.count} títulos)`;
-    }
-    // Top 30 datas para responder perguntas específicas
-    const top = s.byDateStatus.slice(0, 30);
-    if (top.length) {
-      ctx += `\n  Por data (top ${top.length}):`;
-      for (const d of top) {
-        if (d.date) ctx += `\n    ${d.date} ${d.status}: ${brl(d.total)} (${d.count})`;
+    ctx += `\nAba "${s.sheet}"`;
+
+    if (s.type === 'dre') {
+      ctx += ` [DRE] — ${s.totalAccounts} contas | Meses: ${s.months.join(', ')}`;
+
+      // Contas-chave
+      const KEY_ORDER = ['receita_bruta','deducoes','receita_liquida','cmv','lucro_bruto','despesas_op','ebitda','ebit','resultado_fin','lucro_antes_ir','ir_csll','lucro_liquido'];
+      for (const cat of KEY_ORDER) {
+        const acc = s.byCategory[cat];
+        if (!acc) continue;
+        ctx += `\n  ${acc.label}:`;
+        for (const [mes, val] of Object.entries(acc.monthValues)) {
+          ctx += ` ${mes}=${brl(val)}`;
+        }
       }
+
+      // Margens
+      if (Object.keys(s.margins).length) {
+        ctx += `\n  Margens:`;
+        for (const [mes, m] of Object.entries(s.margins)) {
+          const parts = [];
+          if (m.margem_bruta   != null) parts.push(`MB=${pct(m.margem_bruta)}`);
+          if (m.ebitda_pct     != null) parts.push(`EBITDA=${pct(m.ebitda_pct)}`);
+          if (m.margem_liquida != null) parts.push(`ML=${pct(m.margem_liquida)}`);
+          if (parts.length) ctx += ` | ${mes}: ${parts.join(', ')}`;
+        }
+      }
+
+      // Variações de receita mês a mês
+      if (s.monthTrends.length) {
+        ctx += `\n  Variação receita mês a mês:`;
+        for (const t of s.monthTrends) {
+          ctx += ` ${t.from}→${t.to}: ${t.direction}${pct(Math.abs(t.varPct))}`;
+        }
+      }
+
+      // Demais contas (não classificadas)
+      const classified = new Set(Object.values(s.byCategory).map(a => a.label));
+      const others = s.accounts.filter(a => !classified.has(a.label));
+      if (others.length) {
+        ctx += `\n  Outras contas (${others.length}):`;
+        for (const acc of others.slice(0, 15)) {
+          ctx += `\n    ${acc.label}: total=${acc.totalBrl}`;
+        }
+      }
+
+    } else {
+      // AR/AP padrão
+      ctx += ` — ${s.totalRows} linhas`;
+      if (s.columns?.date)   ctx += ` | Vencimento=${s.columns.date.letter}`;
+      if (s.columns?.value)  ctx += ` | Valor=${s.columns.value.letter}`;
+      if (s.columns?.status) ctx += ` | Status=${s.columns.status.letter}`;
+      ctx += `\n  Total geral: ${s.grandTotalBrl}`;
+      for (const [st, ag] of Object.entries(s.byStatus)) {
+        ctx += `\n  ${st}: ${brl(ag.total)} (${ag.count} títulos)`;
+      }
+      const top = s.byDateStatus.slice(0, 30);
+      if (top.length) {
+        ctx += `\n  Por data (top ${top.length}):`;
+        for (const d of top) {
+          if (d.date) ctx += `\n    ${d.date} ${d.status}: ${brl(d.total)} (${d.count})`;
+        }
+      }
+      if (s.formula) ctx += `\n  Fórmula: ${s.formula}`;
     }
-    if (s.formula) ctx += `\n  Fórmula: ${s.formula}`;
   }
-  ctx += `\n\nREGRA: use APENAS os valores acima para responder — nunca invente números.`;
+
+  ctx += `\n\nREGRA: use APENAS os valores acima — nunca invente números. Para DRE, calcule variações e margens com base nos dados fornecidos.`;
   return ctx;
 }
 

@@ -2506,26 +2506,63 @@ const buildSheetSummary = (analysis) => {
   const { filename, sheets } = analysis;
   let msg = `Planilha carregada: **${filename}**\n`;
   for (const s of sheets) {
-    msg += `\nAba **${s.sheet}** — ${s.totalRows} títulos analisados`;
-    const cols = [];
-    if (s.columns.date)   cols.push(`Vencimento = coluna ${s.columns.date.letter}`);
-    if (s.columns.value)  cols.push(`Valor = coluna ${s.columns.value.letter}`);
-    if (s.columns.status) cols.push(`Status = coluna ${s.columns.status.letter}`);
-    if (cols.length) msg += `\n${cols.join(' | ')}`;
-    for (const [st, ag] of Object.entries(s.byStatus)) {
-      msg += `\n• ${st}: ${brl(ag.total)} (${ag.count} título${ag.count !== 1 ? 's' : ''})`;
+    if (s.type === 'dre') {
+      msg += `\nAba **${s.sheet}** — DRE com ${s.totalAccounts} contas | Meses: ${s.months.join(', ')}`;
+      const KEY_LABELS = {
+        receita_bruta: 'Receita Bruta', receita_liquida: 'Receita Líquida',
+        lucro_bruto: 'Lucro Bruto', ebitda: 'EBITDA', lucro_liquido: 'Lucro Líquido',
+      };
+      for (const [cat, label] of Object.entries(KEY_LABELS)) {
+        const acc = s.byCategory[cat];
+        if (!acc) continue;
+        const vals = Object.entries(acc.monthValues).map(([m, v]) => `${m}: ${brl(v)}`).join(' | ');
+        msg += `\n• ${label}: ${vals}`;
+      }
+      if (Object.keys(s.margins).length) {
+        msg += '\n• Margens:';
+        for (const [mes, m] of Object.entries(s.margins)) {
+          const parts = [];
+          if (m.margem_bruta   != null) parts.push(`MB ${m.margem_bruta.toFixed(1)}%`);
+          if (m.ebitda_pct     != null) parts.push(`EBITDA ${m.ebitda_pct.toFixed(1)}%`);
+          if (m.margem_liquida != null) parts.push(`ML ${m.margem_liquida.toFixed(1)}%`);
+          if (parts.length) msg += ` ${mes}(${parts.join(', ')})`;
+        }
+      }
+    } else {
+      msg += `\nAba **${s.sheet}** — ${s.totalRows} títulos analisados`;
+      const cols = [];
+      if (s.columns?.date)   cols.push(`Vencimento = coluna ${s.columns.date.letter}`);
+      if (s.columns?.value)  cols.push(`Valor = coluna ${s.columns.value.letter}`);
+      if (s.columns?.status) cols.push(`Status = coluna ${s.columns.status.letter}`);
+      if (cols.length) msg += `\n${cols.join(' | ')}`;
+      for (const [st, ag] of Object.entries(s.byStatus)) {
+        msg += `\n• ${st}: ${brl(ag.total)} (${ag.count} título${ag.count !== 1 ? 's' : ''})`;
+      }
+      if (s.formula) msg += `\n\nFórmula sugerida:\n${s.formula}`;
     }
-    if (s.formula) msg += `\n\nFórmula sugerida:\n${s.formula}`;
   }
-  msg += `\n\nMe pergunte sobre qualquer data, aba ou status.`;
+  msg += `\n\nMe pergunte sobre qualquer conta, mês, margem ou variação.`;
   return msg;
 };
 
 const buildSheetSpeech = (analysis) => {
   const { sheets } = analysis;
-  if (!sheets.length) return 'Planilha carregada, mas não encontrei colunas de valor ou vencimento.';
+  if (!sheets.length) return 'Planilha carregada, mas não encontrei dados reconhecíveis.';
   const s = sheets[0];
-  const aberto = s.byStatus['ABERTO'];
+  if (s.type === 'dre') {
+    const ll = s.byCategory['lucro_liquido'];
+    const rb = s.byCategory['receita_bruta'];
+    if (ll && rb) {
+      const lastMes = s.months[s.months.length - 1];
+      const llVal = ll.monthValues[lastMes];
+      const rbVal = rb.monthValues[lastMes];
+      if (llVal != null && rbVal != null) {
+        return `DRE carregada com ${s.months.length} meses. No último período, receita bruta de ${brl(rbVal)} e lucro líquido de ${brl(llVal)}. Me pergunte sobre qualquer conta ou margem.`;
+      }
+    }
+    return `DRE carregada com ${s.totalAccounts} contas em ${s.months.length} meses. Me pergunte o que quiser.`;
+  }
+  const aberto = s.byStatus?.['ABERTO'];
   if (aberto) return `Planilha carregada. Encontrei ${brl(aberto.total)} em aberto na aba ${s.sheet}. Me pergunte sobre qualquer data ou período.`;
   return `Planilha carregada com ${s.totalRows} títulos na aba ${s.sheet}. Total: ${s.grandTotalBrl}. Me pergunte o que quiser.`;
 };
