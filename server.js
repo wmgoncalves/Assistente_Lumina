@@ -13,6 +13,7 @@ const mammoth   = require('mammoth');
 const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
 const puppeteer  = require('puppeteer');
+const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
 
 // Node 18+ required (built-in fetch)
 if (!globalThis.fetch) {
@@ -390,6 +391,26 @@ app.get('/api/download-doc/:filename', (req, res) => {
   const filePath = path.join(UPLOADS_DIR, safeName);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado.' });
   res.download(filePath, req.params.filename);
+});
+
+// ── Análise de planilha ────────────────────────────────────────────────────────
+app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  const { originalname, buffer } = req.file;
+  const ext = (originalname.split('.').pop() || '').toLowerCase();
+  if (!['xlsx', 'xls', 'csv'].includes(ext)) {
+    return res.status(422).json({ error: `Formato não suportado: .${ext}. Use .xlsx, .xls ou .csv.` });
+  }
+  try {
+    const result = analyzeSpreadsheet(buffer, originalname);
+    if (!result.sheets.length) {
+      return res.status(422).json({ error: 'Nenhuma aba com dados de valor/data foi detectada.' });
+    }
+    res.json({ ok: true, analysis: result, context: buildSheetContext(result) });
+  } catch (err) {
+    console.error('[analyze-spreadsheet]', err);
+    res.status(500).json({ error: 'Erro ao processar planilha: ' + err.message });
+  }
 });
 
 // ── Dados persistentes (tarefas, hábitos, finanças, notas) ───────────────────

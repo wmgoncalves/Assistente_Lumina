@@ -293,6 +293,9 @@ const buildContextBlock = async (lastUserMsg = '') => {
     notes.forEach(n => { ctx += `\n📄 "${n.title}":\n${n.content.substring(0, 1500)}${n.content.length > 1500 ? '…' : ''}`; });
   }
 
+  // Planilha carregada na sessão — injeta valores calculados para Sky responder com precisão
+  if (app.lastSheet) ctx += app.lastSheet.context;
+
   return ctx;
 };
 
@@ -379,6 +382,7 @@ const app = {
   isSpeaking:       false,
   history:          loadHist(),
   lastResponseTime: 0,
+  lastSheet:        null,  // { analysis, context } — última planilha analisada
 };
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -2430,6 +2434,68 @@ const captureAndAnalyze = async () => {
   } catch { speak('Não consegui analisar a imagem, Senhor. Tente novamente.'); }
 };
 
+// ── Spreadsheet Analysis ───────────────────────────────────────────────────────
+const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const buildSheetSummary = (analysis) => {
+  const { filename, sheets } = analysis;
+  let msg = `Planilha carregada: **${filename}**\n`;
+  for (const s of sheets) {
+    msg += `\nAba **${s.sheet}** — ${s.totalRows} títulos analisados`;
+    const cols = [];
+    if (s.columns.date)   cols.push(`Vencimento = coluna ${s.columns.date.letter}`);
+    if (s.columns.value)  cols.push(`Valor = coluna ${s.columns.value.letter}`);
+    if (s.columns.status) cols.push(`Status = coluna ${s.columns.status.letter}`);
+    if (cols.length) msg += `\n${cols.join(' | ')}`;
+    for (const [st, ag] of Object.entries(s.byStatus)) {
+      msg += `\n• ${st}: ${brl(ag.total)} (${ag.count} título${ag.count !== 1 ? 's' : ''})`;
+    }
+    if (s.formula) msg += `\n\nFórmula sugerida:\n${s.formula}`;
+  }
+  msg += `\n\nMe pergunte sobre qualquer data, aba ou status.`;
+  return msg;
+};
+
+const buildSheetSpeech = (analysis) => {
+  const { sheets } = analysis;
+  if (!sheets.length) return 'Planilha carregada, mas não encontrei colunas de valor ou vencimento.';
+  const s = sheets[0];
+  const aberto = s.byStatus['ABERTO'];
+  if (aberto) return `Planilha carregada. Encontrei ${brl(aberto.total)} em aberto na aba ${s.sheet}. Me pergunte sobre qualquer data ou período.`;
+  return `Planilha carregada com ${s.totalRows} títulos na aba ${s.sheet}. Total: ${s.grandTotalBrl}. Me pergunte o que quiser.`;
+};
+
+const analyzeSpreadsheetFile = async (file) => {
+  if (!file) return;
+  setFace('thinking'); setRespText('Lendo planilha…');
+  const fd = new FormData();
+  fd.append('file', file, file.name);
+  try {
+    const res = await fetch('/api/analyze-spreadsheet', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      speak(data.error || 'Não consegui ler essa planilha.');
+      setFace('idle');
+      return;
+    }
+    app.lastSheet = { analysis: data.analysis, context: data.context };
+    const summary  = buildSheetSummary(data.analysis);
+    const speech   = buildSheetSpeech(data.analysis);
+    addMsgUI('user', `📊 ${file.name}`);
+    addMsgUI('sky', summary);
+    app.history.push({ role: 'user',  content: `[Planilha enviada: ${file.name}]` });
+    app.history.push({ role: 'model', content: summary });
+    app.lastResponseTime = Date.now();
+    saveHist();
+    speak(speech);
+    setFace('idle');
+  } catch (err) {
+    console.error('[sheet upload]', err);
+    speak('Não consegui processar a planilha. Verifique o formato e tente novamente.');
+    setFace('idle');
+  }
+};
+
 // ── File Analysis ──────────────────────────────────────────────────────────────
 const analyzeFile = async (file) => {
   if (!cfg.geminiKey) { toast('Configure a chave Gemini API para analisar arquivos.', 'error'); return; }
@@ -2664,10 +2730,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!files.length) return;
     const imgs = files.filter(f => f.type.startsWith('image/'));
     const others = files.filter(f => !f.type.startsWith('image/'));
-    // Imagens: adiciona ao preview (envia junto com a próxima mensagem)
     for (const f of imgs) { const { b64, mime } = await fileToB64(f); addPendingImage(b64, mime); }
-    // Outros (txt, pdf): analisa direto
     for (const f of others) analyzeFile(f);
+  });
+
+  // ── Botão de planilha ────────────────────────────────────────────────────────
+  document.getElementById('btn-sheet').addEventListener('click', () => {
+    document.getElementById('sheet-input').click();
+  });
+  document.getElementById('sheet-input').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (f) analyzeSpreadsheetFile(f);
   });
 
   // ── Panels ──
