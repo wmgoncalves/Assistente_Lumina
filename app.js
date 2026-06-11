@@ -6,7 +6,7 @@ const saveCfg = () => {
   // Persiste no servidor (config.json) quando rodando via Electron/localhost
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: cfg.username, geminiKey: cfg.geminiKey, elevenLabsKey: cfg.elevenLabsKey, elevenVoiceFemaleId: cfg.elevenVoiceFemaleId, elevenVoiceMaleId: cfg.elevenVoiceMaleId })
+      body: JSON.stringify({ username: cfg.username, geminiKey: cfg.geminiKey, elevenLabsKey: cfg.elevenLabsKey, elevenVoiceFemaleId: cfg.elevenVoiceFemaleId, elevenVoiceMaleId: cfg.elevenVoiceMaleId, ollamaModel: cfg.ollamaModel, elevenVoiceId: cfg.elevenVoiceId })
     }).catch(() => {});
   }
 };
@@ -20,6 +20,7 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     if (d.elevenLabsKey && !cfg.elevenLabsKey) { cfg.elevenLabsKey = d.elevenLabsKey; }
     if (d.elevenVoiceId !== undefined)         { cfg.elevenVoiceId = d.elevenVoiceId; }
     if (d.username      && !cfg.username)      { cfg.username      = d.username;      }
+    if (d.ollamaModel   && !cfg.ollamaModel)   { cfg.ollamaModel   = d.ollamaModel;   }
     localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
   }).catch(() => {});
 }
@@ -1094,19 +1095,19 @@ const processInput = async (rawText) => {
   } catch (err) {
     console.error('[Sky Error]', err);
     const msg = err?.message || String(err);
-    const isExpired = msg.includes('expired') || msg.includes('401') || msg.includes('API_KEY_INVALID');
+    const isExpired = msg.includes('expired') || msg.includes('401') || msg.includes('API_KEY_INVALID')
+      || msg.includes('not valid') || msg.includes('INVALID_ARGUMENT') || msg.includes('400');
     const isQuota   = msg.includes('429');
     const isTimeout = msg.includes('timed out') || msg.includes('timeout') || msg.includes('AbortError') || msg.includes('fetch');
-    const geminiDown = !cfg.geminiKey || isExpired || isQuota || isTimeout
-      || msg.includes('403') || msg.includes('400');
+    const geminiDown = !cfg.geminiKey || isExpired || isQuota || isTimeout || msg.includes('403');
 
     if (!cfg.geminiKey) {
       speak('Chave Gemini não configurada. Vá em Configurações e insira sua chave.');
     } else if (geminiDown) {
-      // Chave expirada/inválida → bloqueia pelo resto da sessão para não tentar de novo
+      // Chave inválida/expirada → bloqueia para não tentar de novo
       if (isExpired) blockGeminiForever();
       else if (isQuota) blockGemini();
-      else if (isTimeout) blockGemini(2 * 60 * 1000); // timeout → bloqueia 2min e tenta Ollama
+      else if (isTimeout) blockGemini(2 * 60 * 1000);
 
       setFace('thinking');
       setRespText('Usando IA local…');
@@ -1760,7 +1761,7 @@ let ollamaCache = null; // null=desconhecido, true/false
 const ollamaAvailable = async () => {
   if (ollamaCache === true) return true; // só usa cache positivo — false pode ser startup precoce
   try {
-    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(1000) });
+    const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(4000) });
     ollamaCache = r.ok;
   } catch { ollamaCache = false; }
   return ollamaCache;

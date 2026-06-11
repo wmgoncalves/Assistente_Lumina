@@ -57,6 +57,7 @@ app.get('/api/config', (req, res) => {
     geminiKey:     isLocal ? (c.geminiKey     || '') : '',
     elevenLabsKey: isLocal ? (c.elevenLabsKey || '') : '',
     elevenVoiceId: isLocal ? (c.elevenVoiceId || '') : '',
+    ollamaModel:   c.ollamaModel   || 'gemma3:1b',
     hasGemini:     !!c.geminiKey,
     hasElevenLabs: !!c.elevenLabsKey,
   });
@@ -64,11 +65,12 @@ app.get('/api/config', (req, res) => {
 
 app.post('/api/config', (req, res) => {
   const c = getCfg();
-  const { username, geminiKey, elevenLabsKey, elevenVoiceId } = req.body;
+  const { username, geminiKey, elevenLabsKey, elevenVoiceId, ollamaModel } = req.body;
   if (username      !== undefined)             c.username      = username;
   if (geminiKey     && geminiKey.trim())       c.geminiKey     = geminiKey.trim();
   if (elevenLabsKey && elevenLabsKey.trim())   c.elevenLabsKey = elevenLabsKey.trim();
-  if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId.trim();
+  if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId;
+  if (ollamaModel   && ollamaModel.trim())     c.ollamaModel   = ollamaModel.trim();
   writeJSON(CONFIG_FILE, c);
   res.json({ ok: true, hasGemini: !!c.geminiKey, hasElevenLabs: !!c.elevenLabsKey });
 });
