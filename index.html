@@ -185,9 +185,9 @@
           </button>
         </div>
         <span class="mic-label" id="mic-label">C L I Q U E &nbsp; E &nbsp; F A L E</span>
-        <div id="img-preview-wrap" style="display:none;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:0.4rem;">
-          <img id="img-preview" style="height:56px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.12);">
-          <button id="img-cancel" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.1rem;line-height:1;" title="Remover imagem">✕</button>
+        <div id="img-preview-wrap" style="display:none;flex-wrap:wrap;align-items:center;gap:0.4rem;padding:0.4rem 0.6rem;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:0.4rem;">
+          <div id="img-thumbs" style="display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center;"></div>
+          <button id="img-cancel-all" style="background:none;border:1px solid rgba(255,255,255,0.18);border-radius:4px;color:rgba(255,255,255,0.45);cursor:pointer;font-size:0.68rem;padding:2px 7px;line-height:1.5;white-space:nowrap;" title="Remover todas">Limpar</button>
         </div>
         <div class="text-input-row" id="text-input-row">
           <input type="text" id="text-input" class="text-fld" placeholder="Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)" autocomplete="off">
@@ -769,7 +769,7 @@
   </div>
 </div>
 
-<input type="file" id="file-input" accept="image/*,.txt" style="display:none">
+<input type="file" id="file-input" accept="image/*,.txt" multiple style="display:none">
 
 <!-- Legacy settings modal (kept for JS compat — hidden) -->
 <div id="set-modal" style="display:none">

@@ -1128,15 +1128,18 @@ const processInput = async (rawText) => {
           ollamaCache = false; // força re-verificação na próxima mensagem
         }
       }
-      // Ollama também não disponível
-      setFace('error');
-      const hint = isExpired
-        ? 'Gemini expirado e Ollama offline. Renove a chave em aistudio.google.com ou instale o Ollama.'
-        : isQuota
-          ? 'Cota Gemini atingida. Instale o Ollama para continuar offline.'
-          : `Gemini indisponível. Instale o Ollama para usar a Sky offline.`;
-      speak(hint);
-      toast(hint, 'error');
+      // Ollama também não disponível — responde com banco local para não travar na demo
+      {
+        const fb = localFallback(text || '');
+        app.history.push({ role: 'model', content: fb });
+        app.lastResponseTime = Date.now();
+        addMsgUI('sky', fb);
+        saveHist();
+        speak(fb);
+        const tip = isExpired ? 'Gemini expirado — modo offline ativo.' : 'Offline — usando respostas locais.';
+        toast(tip, 'info');
+        setFace('idle');
+      }
     } else {
       speak(`Erro: ${msg.substring(0, 80)}`);
       toast(msg.substring(0, 120), 'error');
@@ -1868,14 +1871,17 @@ const callGemini = async (customHistory = null) => {
   return 'Ação concluída.';
 };
 
-const callGeminiVision = async (base64, mime, prompt) => {
+const callGeminiVision = async (images, prompt) => {
+  // images: [{b64, mime}] or legacy (b64, mime) — normalised below
+  if (typeof images === 'string') images = [{ b64: images, mime: prompt }], prompt = arguments[2];
+  const imgParts = images.map(({ b64, mime }) => ({ inline_data: { mime_type: mime, data: b64 } }));
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: await buildSystem() }] },
-      contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mime, data: base64 } }, { text: prompt }] }],
-      generationConfig: { maxOutputTokens: 450, temperature: 0.75 }
+      contents: [{ role: 'user', parts: [...imgParts, { text: prompt }] }],
+      generationConfig: { maxOutputTokens: 600, temperature: 0.75 }
     })
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -2437,29 +2443,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── Text input + imagem (paste / drag-drop) ──
-  const textInput    = document.getElementById('text-input');
+  const textInput      = document.getElementById('text-input');
   const imgPreviewWrap = document.getElementById('img-preview-wrap');
-  const imgPreview   = document.getElementById('img-preview');
-  const imgCancel    = document.getElementById('img-cancel');
-  let pendingImageB64  = null;
-  let pendingImageMime = null;
+  const imgThumbs      = document.getElementById('img-thumbs');
+  const imgCancelAll   = document.getElementById('img-cancel-all');
+  let pendingImages    = []; // [{b64, mime}]
 
-  const setPendingImage = (b64, mime) => {
-    pendingImageB64  = b64;
-    pendingImageMime = mime;
-    imgPreview.src = `data:${mime};base64,${b64}`;
+  const addPendingImage = (b64, mime) => {
+    const idx = pendingImages.length;
+    pendingImages.push({ b64, mime });
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-flex;';
+    const img = document.createElement('img');
+    img.src = `data:${mime};base64,${b64}`;
+    img.style.cssText = 'height:52px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,0.12);';
+    const btn = document.createElement('button');
+    btn.textContent = '✕';
+    btn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:rgba(0,0,0,0.7);border:none;color:#fff;border-radius:50%;width:16px;height:16px;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;';
+    btn.title = 'Remover';
+    btn.addEventListener('click', () => {
+      pendingImages.splice(pendingImages.indexOf(pendingImages.find((_, i) => i === idx)), 1);
+      wrap.remove();
+      if (pendingImages.length === 0) clearPendingImage();
+    });
+    wrap.appendChild(img); wrap.appendChild(btn);
+    imgThumbs.appendChild(wrap);
     imgPreviewWrap.style.display = 'flex';
-    textInput.placeholder = 'Descreva o que quer saber sobre a imagem (opcional)…';
+    textInput.placeholder = `${pendingImages.length} imagem${pendingImages.length > 1 ? 'ns' : ''} — descreva o que quer saber (opcional)…`;
   };
 
   const clearPendingImage = () => {
-    pendingImageB64 = null; pendingImageMime = null;
+    pendingImages = [];
+    imgThumbs.innerHTML = '';
     imgPreviewWrap.style.display = 'none';
-    imgPreview.src = '';
     textInput.placeholder = 'Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)';
   };
 
-  imgCancel.addEventListener('click', clearPendingImage);
+  imgCancelAll.addEventListener('click', clearPendingImage);
 
   const fileToB64 = (file) => new Promise((resolve) => {
     const r = new FileReader();
@@ -2467,26 +2487,30 @@ document.addEventListener('DOMContentLoaded', () => {
     r.readAsDataURL(file);
   });
 
-  // Colar imagem com Ctrl+V
+  // Colar imagem com Ctrl+V (suporta múltiplos itens de imagem no clipboard)
   textInput.addEventListener('paste', async (e) => {
     const items = Array.from(e.clipboardData?.items || []);
-    const imgItem = items.find(i => i.type.startsWith('image/'));
-    if (!imgItem) return;
+    const imgItems = items.filter(i => i.type.startsWith('image/'));
+    if (!imgItems.length) return;
     e.preventDefault();
-    const { b64, mime } = await fileToB64(imgItem.getAsFile());
-    setPendingImage(b64, mime);
+    for (const item of imgItems) {
+      const { b64, mime } = await fileToB64(item.getAsFile());
+      addPendingImage(b64, mime);
+    }
   });
 
-  // Drag & drop na área do chat
+  // Drag & drop na área do chat — suporta múltiplos arquivos
   const chatView = document.getElementById('view-chat-voz');
   chatView.addEventListener('dragover', (e) => { e.preventDefault(); chatView.style.outline = '2px dashed var(--accent)'; });
   chatView.addEventListener('dragleave', () => { chatView.style.outline = ''; });
   chatView.addEventListener('drop', async (e) => {
     e.preventDefault(); chatView.style.outline = '';
-    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
-    if (!file) return;
-    const { b64, mime } = await fileToB64(file);
-    setPendingImage(b64, mime);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    for (const file of files) {
+      const { b64, mime } = await fileToB64(file);
+      addPendingImage(b64, mime);
+    }
   });
 
   const sendText = async () => {
@@ -2494,16 +2518,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!val && !pendingImageB64) return;
     textInput.value = '';
 
-    if (pendingImageB64) {
-      const b64  = pendingImageB64;
-      const mime = pendingImageMime;
-      const prompt = val || 'Descreva o que você vê nesta imagem de forma natural em português.';
+    if (pendingImages.length > 0) {
+      const imgs   = pendingImages.slice();
+      const prompt = val || (imgs.length > 1 ? 'Analise estas imagens e explique o que você vê em português.' : 'Descreva o que você vê nesta imagem de forma natural em português.');
       clearPendingImage();
-      if (val) setUserSaid(`"${val}" 🖼️`);
-      else setUserSaid('🖼️ Imagem enviada');
-      setFace('thinking'); setRespText('Analisando imagem…');
+      if (val) setUserSaid(`"${val}" 🖼️×${imgs.length}`);
+      else     setUserSaid(`🖼️ ${imgs.length} imagem${imgs.length > 1 ? 'ns' : ''} enviada${imgs.length > 1 ? 's' : ''}`);
+      setFace('thinking'); setRespText(imgs.length > 1 ? 'Analisando imagens…' : 'Analisando imagem…');
       try {
-        const response = await callGeminiVision(b64, mime, prompt);
+        const response = await callGeminiVision(imgs, prompt);
         app.history.push({ role: 'model', content: response });
         addMsgUI('sky', response);
         saveHist();
@@ -2558,7 +2581,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── File ──
   document.getElementById('btn-file').addEventListener('click', () => { if (!cfg.geminiKey) { toast('Configure a chave Gemini API.', 'error'); return; } document.getElementById('file-input').click(); });
-  document.getElementById('file-input').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) { analyzeFile(f); e.target.value = ''; } });
+  document.getElementById('file-input').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+    if (!files.length) return;
+    const imgs = files.filter(f => f.type.startsWith('image/'));
+    const others = files.filter(f => !f.type.startsWith('image/'));
+    // Imagens: adiciona ao preview (envia junto com a próxima mensagem)
+    for (const f of imgs) { const { b64, mime } = await fileToB64(f); addPendingImage(b64, mime); }
+    // Outros (txt, pdf): analisa direto
+    for (const f of others) analyzeFile(f);
+  });
 
   // ── Panels ──
   document.getElementById('btn-history').addEventListener('click', () => document.getElementById('history-panel').classList.toggle('open'));
