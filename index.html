@@ -464,6 +464,10 @@
     <!-- ── VIEW: Apresentação ── -->
     <section class="view" id="view-apresentacao">
       <div class="pres-container">
+        <canvas id="pres-canvas" class="pres-canvas"></canvas>
+        <div class="pres-hud-tl"></div><div class="pres-hud-tr"></div>
+        <div class="pres-hud-bl"></div><div class="pres-hud-br"></div>
+        <div class="pres-scan" id="pres-scan"></div>
         <div class="pres-slides" id="pres-slides">
 
           <!-- SLIDE 1: CAPA -->
@@ -523,10 +527,10 @@
             <h2 class="pres-title">O mundo não está<br>falando sobre IA.</h2>
             <h2 class="pres-title pres-accent" style="margin-top:-1rem">O mundo está usando IA.</h2>
             <div class="pres-stats">
-              <div class="pres-stat"><span class="pres-num">77%</span><span class="pres-label">das empresas globais já usam ou testam IA</span></div>
-              <div class="pres-stat"><span class="pres-num">R$ 12bi</span><span class="pres-label">investidos em IA no Brasil em 2024</span></div>
-              <div class="pres-stat"><span class="pres-num">3x</span><span class="pres-label">mais produtividade em tarefas automatizadas</span></div>
-              <div class="pres-stat"><span class="pres-num">90%</span><span class="pres-label">redução de erros em documentação com IA</span></div>
+              <div class="pres-stat"><span class="pres-num pres-count" data-target="77" data-suffix="%">0%</span><span class="pres-label">das empresas globais já usam ou testam IA</span></div>
+              <div class="pres-stat"><span class="pres-num pres-count" data-target="12" data-prefix="R$ " data-suffix="bi">R$ 0bi</span><span class="pres-label">investidos em IA no Brasil em 2024</span></div>
+              <div class="pres-stat"><span class="pres-num pres-count" data-target="3" data-suffix="x">0x</span><span class="pres-label">mais produtividade em tarefas automatizadas</span></div>
+              <div class="pres-stat"><span class="pres-num pres-count" data-target="90" data-suffix="%">0%</span><span class="pres-label">redução de erros em documentação com IA</span></div>
             </div>
           </div>
 
@@ -678,6 +682,7 @@
             <p class="pres-reveal-sub">A inteligência da Scapini</p>
             <button class="pres-activate-btn" id="pres-activate-btn">&#9654; Ativar Sky</button>
             <div class="pres-reveal-ring"></div>
+            <div class="pres-reveal-ring2"></div>
           </div>
 
         </div>

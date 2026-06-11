@@ -2502,6 +2502,80 @@ const switchView = (id) => {
 
 let presState = { current: 0, total: 13, initialized: false };
 
+// Canvas background — grade + partículas
+const startPresCanvas = () => {
+  const canvas = document.getElementById('pres-canvas');
+  if (!canvas || canvas._running) return;
+  canvas._running = true;
+  const ctx = canvas.getContext('2d');
+  const pts = Array.from({length: 40}, () => ({
+    x: Math.random(), y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.0003,
+    vy: (Math.random() - 0.5) * 0.0003,
+    r: Math.random() * 1.5 + 0.5
+  }));
+
+  const draw = () => {
+    if (!document.getElementById('view-apresentacao')?.classList.contains('active')) {
+      canvas._running = false; return;
+    }
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // grade
+    ctx.strokeStyle = 'rgba(239,68,68,0.04)';
+    ctx.lineWidth = 1;
+    const gs = 60;
+    for (let x = 0; x < W; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y = 0; y < H; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // partículas + conexões
+    pts.forEach(p => {
+      p.x = (p.x + p.vx + 1) % 1;
+      p.y = (p.y + p.vy + 1) % 1;
+      const px = p.x * W, py = p.y * H;
+      ctx.beginPath();
+      ctx.arc(px, py, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(239,68,68,0.35)';
+      ctx.fill();
+      pts.forEach(q => {
+        const dx = (q.x - p.x) * W, dy = (q.y - p.y) * H;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(q.x*W, q.y*H);
+          ctx.strokeStyle = `rgba(239,68,68,${0.06 * (1 - d/120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  };
+  draw();
+};
+
+// Contador animado de números
+const animateCounters = (slide) => {
+  slide.querySelectorAll('.pres-count').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    let current = 0;
+    const step = Math.ceil(target / 40);
+    const tick = () => {
+      current = Math.min(current + step, target);
+      el.textContent = prefix + current + suffix;
+      if (current < target) requestAnimationFrame(tick);
+    };
+    el.textContent = prefix + '0' + suffix;
+    setTimeout(tick, 300);
+  });
+};
+
 const initApresentacao = () => {
   const slides = document.querySelectorAll('.pres-slide');
   const dotsEl = document.getElementById('pres-dots');
@@ -2512,6 +2586,7 @@ const initApresentacao = () => {
   if (!slides.length) return;
 
   presState.total = slides.length;
+  startPresCanvas();
 
   if (!presState.initialized) {
     presState.initialized = true;
@@ -2526,17 +2601,29 @@ const initApresentacao = () => {
       });
     };
 
+    const scanEl = document.getElementById('pres-scan');
+    const triggerScan = () => {
+      if (!scanEl) return;
+      scanEl.classList.remove('active');
+      void scanEl.offsetWidth;
+      scanEl.classList.add('active');
+      setTimeout(() => scanEl.classList.remove('active'), 450);
+    };
+
     const goTo = (n) => {
       const prev = presState.current;
       presState.current = Math.max(0, Math.min(n, presState.total - 1));
+      if (prev === presState.current) return;
+      triggerScan();
       slides[prev].classList.remove('active');
       slides[prev].classList.add('exit');
-      setTimeout(() => slides[prev].classList.remove('exit'), 500);
+      setTimeout(() => slides[prev].classList.remove('exit'), 550);
       slides[presState.current].classList.add('active');
       counter.textContent = `${presState.current + 1} / ${presState.total}`;
       prevBtn.disabled = presState.current === 0;
       nextBtn.disabled = presState.current === presState.total - 1;
       document.querySelectorAll('.pres-dot').forEach((d, i) => d.classList.toggle('active', i === presState.current));
+      animateCounters(slides[presState.current]);
     };
 
     prevBtn.addEventListener('click', () => goTo(presState.current - 1));
