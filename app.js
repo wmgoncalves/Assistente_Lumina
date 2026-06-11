@@ -1068,8 +1068,35 @@ const processInput = async (rawText) => {
   addMsgUI('user', rawText); // mostra o original na UI, manda normalizado ao modelo
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
+  // ── Helpers de erro Gemini ────────────────────────────────────────────────────
+  const _handleGeminiErr = (msg) => {
+    const isExpired = /expired|401|API_KEY_INVALID|not valid|INVALID_ARGUMENT|400/.test(msg);
+    const isQuota   = /429/.test(msg);
+    const isTimeout = /timed out|timeout|AbortError|fetch/.test(msg);
+    if (isExpired)       blockGeminiForever();
+    else if (isQuota)    blockGemini();
+    else if (isTimeout)  blockGemini(2 * 60 * 1000);
+    return { isExpired, isQuota, isTimeout };
+  };
+
+  const _showDemoMode = () => {
+    const badge = document.getElementById('demo-badge');
+    if (badge) { badge.style.display = 'block'; setTimeout(() => { badge.style.display = 'none'; }, 8000); }
+  };
+
+  const _finalize = (raw) => {
+    const { clean: response, learned } = extractLearn(raw);
+    applyInlineLearn(learned);
+    const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
+    app.history.push({ role: 'model', content: finalResponse });
+    app.lastResponseTime = Date.now();
+    addMsgUI('sky', finalResponse);
+    saveHist();
+    speak(finalResponse);
+  };
+
   try {
-    // Download local — funciona com ou sem API (Ollama incluso)
+    // Download local — funciona sem API
     const dlResp = await detectLocalDownload(text);
     if (dlResp) {
       app.history.push({ role: 'model', content: dlResp });
@@ -1080,71 +1107,45 @@ const processInput = async (rawText) => {
       return;
     }
 
-    const infoResp = await detectLocalInfo(text);
+    // Respostas locais imediatas (hora, data, padrões aprendidos, info offline)
+    const infoResp  = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
-    const useGemini = cfg.geminiKey && !geminiBlocked();
-    const raw = localResp ?? (useGemini ? await callGemini() : ((await ollamaAvailable()) ? await callOllama() : localFallback(text)));
-    const { clean: response, learned } = extractLearn(raw);
-    applyInlineLearn(learned);
-    const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
-    app.history.push({ role: 'model', content: finalResponse });
-    app.lastResponseTime = Date.now();
-    addMsgUI('sky', finalResponse);
-    saveHist();
-    speak(finalResponse);
-  } catch (err) {
-    console.error('[Sky Error]', err);
-    const msg = err?.message || String(err);
-    const isExpired = msg.includes('expired') || msg.includes('401') || msg.includes('API_KEY_INVALID')
-      || msg.includes('not valid') || msg.includes('INVALID_ARGUMENT') || msg.includes('400');
-    const isQuota   = msg.includes('429');
-    const isTimeout = msg.includes('timed out') || msg.includes('timeout') || msg.includes('AbortError') || msg.includes('fetch');
-    const geminiDown = !cfg.geminiKey || isExpired || isQuota || isTimeout || msg.includes('403');
+    if (localResp) { _finalize(localResp); return; }
 
-    if (!cfg.geminiKey) {
-      speak('Chave Gemini não configurada. Vá em Configurações e insira sua chave.');
-    } else if (geminiDown) {
-      // Chave inválida/expirada → bloqueia para não tentar de novo
-      if (isExpired) blockGeminiForever();
-      else if (isQuota) blockGemini();
-      else if (isTimeout) blockGemini(2 * 60 * 1000);
-
-      setFace('thinking');
-      setRespText('Usando IA local…');
-      const hasOllama = await ollamaAvailable();
-      if (hasOllama) {
-        try {
-          const raw2 = await callOllama();
-          const { clean: response2, learned: l2 } = extractLearn(raw2);
-          applyInlineLearn(l2);
-          app.history.push({ role: 'model', content: response2 });
-          addMsgUI('sky', response2);
-          saveHist();
-          speak(response2);
-          if (isExpired) toast('Gemini expirado — usando Ollama local.', 'info');
-          else if (isTimeout) toast('Gemini sem resposta — usando Ollama local.', 'info');
-          return;
-        } catch (ollamaErr) {
-          console.warn('Ollama falhou:', ollamaErr.message);
-          ollamaCache = false; // força re-verificação na próxima mensagem
-        }
+    // ── Nível 1: Gemini ────────────────────────────────────────────────────────
+    if (cfg.geminiKey && !geminiBlocked()) {
+      try {
+        _finalize(await callGemini());
+        return;
+      } catch (geminiErr) {
+        console.error('[Sky] Gemini falhou:', geminiErr.message);
+        _handleGeminiErr(geminiErr.message || String(geminiErr));
       }
-      // Ollama também não disponível — responde com banco local para não travar na demo
-      {
-        const fb = localFallback(text || '');
-        app.history.push({ role: 'model', content: fb });
-        app.lastResponseTime = Date.now();
-        addMsgUI('sky', fb);
-        saveHist();
-        speak(fb);
-        const tip = isExpired ? 'Gemini expirado — modo offline ativo.' : 'Offline — usando respostas locais.';
-        toast(tip, 'info');
-        setFace('idle');
-      }
-    } else {
-      speak(`Erro: ${msg.substring(0, 80)}`);
-      toast(msg.substring(0, 120), 'error');
     }
+
+    // ── Nível 2: Ollama ────────────────────────────────────────────────────────
+    setRespText('Usando IA local…');
+    if (await ollamaAvailable()) {
+      try {
+        _finalize(await callOllama());
+        toast('Gemini indisponível — usando IA local.', 'info');
+        return;
+      } catch (ollamaErr) {
+        console.warn('[Sky] Ollama falhou:', ollamaErr.message);
+        ollamaCache = false;
+      }
+    }
+
+    // ── Nível 3: DEMO ──────────────────────────────────────────────────────────
+    console.info('[Sky] Modo DEMO ativado — ambas as IAs indisponíveis.');
+    _finalize(localFallback(text));
+    _showDemoMode();
+
+  } catch (err) {
+    // Erro inesperado fora dos fluxos acima — nunca trava a interface
+    console.error('[Sky] Erro inesperado:', err);
+    _finalize(localFallback(text || ''));
+    _showDemoMode();
   }
 };
 
@@ -2215,41 +2216,66 @@ const tryLocalResponse = (text) => {
 
 // ── Banco de respostas para demo/workshop — funciona 100% offline ──────────────
 const DEMO_QA = [
-  // identidade
+  // ── Como a Sky pode ajudar a Scapini ─────────────────────────────────────────
+  { re: /como.*ajudar.*scapini|ajudar.*empresa|sky.*ajuda|ajuda.*sky|o que.*faz.*scapini/,
+    r: ['Posso ajudar a Scapini de várias formas: consultando dados operacionais em linguagem natural, gerando relatórios sem abrir planilha, automatizando comunicações internas, triando chamados, acessando histórico de motoristas e fretes, e muito mais. A ideia é que cada colaborador tenha um assistente inteligente do lado — sem precisar abrir vários sistemas.',
+        'Para a Scapini, posso atuar em todas as áreas: financeiro consultando títulos e vencimentos, RH respondendo sobre políticas e documentos, operacional acompanhando fretes e ocorrências, manutenção registrando e priorizando chamados, e diretoria com visão consolidada do negócio. Tudo via linguagem natural, sem planilha.'] },
+
+  // ── Futuro da IA na Scapini ───────────────────────────────────────────────────
+  { re: /futuro.*ia|ia.*futuro|futuro.*inteligencia|proximo.*ia|roadmap|visao.*ia/,
+    r: ['O futuro da IA na Scapini tem três fases: primeiro, integração com o CGI para consultas em tempo real de fretes, motoristas e financeiro. Segundo, automação de processos repetitivos — alertas, relatórios e triagem de chamados. Terceiro, IA preditiva: prever atrasos, otimizar rotas e antecipar falhas na frota. Estamos na largada.',
+        'A visão é transformar a Scapini numa transportadora data-driven. Hoje já tenho acesso aos documentos internos. O próximo passo é conectar ao CGI e sistemas operacionais — aí começo a responder sobre qualquer dado da empresa em segundos, sem intermediários.'] },
+
+  // ── Excel: somar vencimentos ──────────────────────────────────────────────────
+  { re: /excel.*vencimento|vencimento.*excel|somar.*vencimento|somase.*data|excel.*data.*aberto/,
+    r: ['Para somar vencimentos em aberto por data no Excel, use SOMASES. Exemplo: =SOMASES(C:C,B:B,"Em aberto",A:A,"<="&HOJE()) — onde C é o valor, B é o status e A é a data de vencimento. Isso soma tudo em aberto com data até hoje. Se quiser por período: =SOMASES(C:C,B:B,"Em aberto",A:A,">="&DATA(2025,1,1),A:A,"<="&DATA(2025,12,31))',
+        'No Excel, use =SOMASES(ValoresCol, StatusCol, "Em aberto", DataCol, "<="&HOJE()) para somar apenas os vencimentos em aberto até hoje. Para agrupar por mês: adicione uma coluna auxiliar com =MÊS(A2) e use Tabela Dinâmica somando os valores agrupados por mês e status.'] },
+
+  // ── Próximos passos IA na empresa ─────────────────────────────────────────────
+  { re: /proximo.*passo|passo.*ia|implementa|plano.*ia|quando.*integra|cronograma/,
+    r: ['Os próximos passos para IA na Scapini: 1) Integração com CGI para acesso a fretes, pedidos e motoristas em tempo real. 2) Automação de relatórios — financeiro, operacional e RH sem planilha manual. 3) Alertas inteligentes para gestores sobre ocorrências críticas. 4) IA no atendimento ao cliente para rastreamento de cargas. 5) Análise preditiva de manutenção da frota.',
+        'O plano de IA para a Scapini é progressivo: começamos com o que já funciona hoje — consulta de documentos e respostas internas. Em seguida, integração com os sistemas CGI, App Motorista e financeiro. Depois, automação de processos e relatórios. A última fase é IA preditiva para otimização de rotas e manutenção preventiva.'] },
+
+  // ── IA por setor ─────────────────────────────────────────────────────────────
+  { re: /financeiro.*ia|ia.*financeiro|manuten[cç][aã]o.*ia|ia.*manuten|rh.*ia|ia.*rh|logistica.*ia|ia.*logistica|diretoria.*ia|ia.*diretoria|setor|area/,
+    r: ['Financeiro: consulta de títulos, vencimentos e inadimplência em tempo real. Manutenção: registro de chamados, histórico de reparos e alertas de preventiva. RH: consulta de políticas, documentos e termos sem abrir o sistema. Logística: acompanhamento de fretes, ocorrências e MDFe. Diretoria: painéis consolidados com KPIs da operação — tudo via linguagem natural, sem planilha.',
+        'Cada setor ganha de um jeito diferente. RH deixa de responder as mesmas perguntas mil vezes — eu respondo por eles. Financeiro consulta vencimentos e saldos em segundos. Manutenção registra ocorrências por voz. Logística acompanha fretes sem entrar no sistema. E a diretoria tem visão consolidada do negócio sem esperar relatório manual.'] },
+
+  // ── identidade ────────────────────────────────────────────────────────────────
   { re: /quem [eé] voc[eê]|seu nome|como voc[eê] se chama|o que [eé] voc[eê]/,
     r: ['Sou Sky, a inteligência artificial da Scapini. Fui criada para ser a camada de inteligência sobre os sistemas da empresa — consultas, relatórios, automações, tudo via linguagem natural.',
         'Me chamo Sky. Sou a IA da Scapini — aqui para transformar como a empresa usa seus próprios dados.'] },
-  // capacidades
+  // ── capacidades ──────────────────────────────────────────────────────────────
   { re: /o que voc[eê] (faz|pode|consegue)|para que serve|sua fun[cç][aã]o|suas capacidades/,
     r: ['Respondo perguntas, busco documentos, gero relatórios e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, vou acessar fretes, motoristas, manutenção e financeiro em tempo real.',
         'Hoje já consulto documentos, respondo perguntas e automatizo tarefas. A próxima fase é integração com CGI e os sistemas internos da Scapini.'] },
-  // substituir empregos
+  // ── substituir empregos ──────────────────────────────────────────────────────
   { re: /substitui|vai me substituir|vai substituir|perder emprego|tirar emprego/,
     r: ['Não substituo ninguém. Faço o trabalho repetitivo para que as pessoas foquem no que realmente importa. Pensa em mim como um assistente que não cansa e não esquece nada.',
         'Meu papel é amplificar o que cada colaborador já faz — não substituir. Quem entende do negócio é vocês, eu só processo as informações mais rápido.'] },
-  // sobre a Scapini
+  // ── sobre a Scapini ──────────────────────────────────────────────────────────
   { re: /scapini|transportadora|empresa/,
     r: ['A Scapini é uma transportadora com mais de 30 anos de história em Lajeado/RS, referência no transporte de cargas no Sul do Brasil. Quando estiver integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
         'Conheço a Scapini como uma das maiores transportadoras do Sul — frota moderna, atendimento em todo o Brasil. Quando integrada ao CGI, vou ser mais útil ainda.'] },
-  // como funciona
-  { re: /como voc[eê] funciona|como você pensa|intelig[eê]ncia artificial|o que [eé] ia|o que [eé] a ia/,
+  // ── como funciona ────────────────────────────────────────────────────────────
+  { re: /como voc[eê] funciona|como voce pensa|inteligencia artificial|o que e ia|o que e a ia/,
     r: ['Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Não memorizo tudo: uso uma base de conhecimento local e posso consultar sistemas externos quando integrada.',
         'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção — e aprendo com as notas e documentos que recebo.'] },
-  // sistemas da Scapini
-  { re: /cgi|sistema|dado|informa[cç][aã]o|integra/,
+  // ── sistemas / integração ────────────────────────────────────────────────────
+  { re: /cgi|sistema|dado|informacao|integra/,
     r: ['Ainda não estou integrada ao CGI e aos sistemas internos — mas esse é exatamente o próximo passo. Quando isso acontecer, vou responder sobre fretes, motoristas e financeiro em segundos.',
         'A integração com a Central de Dados da Scapini está planejada. Quando estiver conectada, consulto qualquer dado operacional diretamente via linguagem natural.'] },
-  // elogios / parabéns
-  { re: /parab[eé]ns|muito boa|incrível|impressionante|uau/,
+  // ── elogios ──────────────────────────────────────────────────────────────────
+  { re: /parabens|muito boa|incrivel|impressionante|uau/,
     r: ['Obrigada! Prometo que fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.'] },
-  // agradecimento
+  // ── agradecimento ────────────────────────────────────────────────────────────
   { re: /obrigad|valeu|obg/,
     r: ['Disponha!', 'Sempre que precisar.', 'Por nada — é pra isso que estou aqui.'] },
-  // despedida
-  { re: /tchau|adeus|at[eé] logo|at[eé] mais/,
+  // ── despedida ────────────────────────────────────────────────────────────────
+  { re: /tchau|adeus|ate logo|ate mais/,
     r: ['Até breve!', 'Até mais! Foi um prazer.'] },
-  // clima / previsão
-  { re: /clima|chuva|temperatura|previs[aã]o do tempo/,
+  // ── clima ────────────────────────────────────────────────────────────────────
+  { re: /clima|chuva|temperatura|previsao do tempo/,
     r: ['Para informações de clima em tempo real eu precisaria de conexão com a internet. No momento estou operando no modo local.'] },
 ];
 
