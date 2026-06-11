@@ -2211,66 +2211,120 @@ const tryLocalResponse = (text) => {
 };
 
 // ── Banco de respostas para demo/workshop — funciona 100% offline ──────────────
+// Texto já passa por stripAccents+toLowerCase antes de chegar aqui — sem acentos nas regex
 const DEMO_QA = [
-  // ── Como a Sky pode ajudar a Scapini ─────────────────────────────────────────
-  { re: /como.*ajudar.*scapini|ajudar.*empresa|sky.*ajuda|ajuda.*sky|o que.*faz.*scapini/,
-    r: ['Posso ajudar a Scapini de várias formas: consultando dados operacionais em linguagem natural, gerando relatórios sem abrir planilha, automatizando comunicações internas, triando chamados, acessando histórico de motoristas e fretes, e muito mais. A ideia é que cada colaborador tenha um assistente inteligente do lado — sem precisar abrir vários sistemas.',
-        'Para a Scapini, posso atuar em todas as áreas: financeiro consultando títulos e vencimentos, RH respondendo sobre políticas e documentos, operacional acompanhando fretes e ocorrências, manutenção registrando e priorizando chamados, e diretoria com visão consolidada do negócio. Tudo via linguagem natural, sem planilha.'] },
 
-  // ── Futuro da IA na Scapini ───────────────────────────────────────────────────
-  { re: /futuro.*ia|ia.*futuro|futuro.*inteligencia|proximo.*ia|roadmap|visao.*ia/,
-    r: ['O futuro da IA na Scapini tem três fases: primeiro, integração com o CGI para consultas em tempo real de fretes, motoristas e financeiro. Segundo, automação de processos repetitivos — alertas, relatórios e triagem de chamados. Terceiro, IA preditiva: prever atrasos, otimizar rotas e antecipar falhas na frota. Estamos na largada.',
-        'A visão é transformar a Scapini numa transportadora data-driven. Hoje já tenho acesso aos documentos internos. O próximo passo é conectar ao CGI e sistemas operacionais — aí começo a responder sobre qualquer dado da empresa em segundos, sem intermediários.'] },
+  // 1. Sky, quem é você?
+  { re: /quem e voce|quem es voce|seu nome|como voce se chama|o que e voce|se apresenta/,
+    r: [
+      'Sou Sky, a inteligência artificial interna da Scapini. Fui criada para ser a camada de inteligência da empresa: respondo perguntas, busco documentos, oriento sobre procedimentos e automatizo tarefas — tudo por linguagem natural, sem precisar abrir sistemas.',
+      'Me chamo Sky. Sou a IA da Scapini, desenvolvida para facilitar o dia a dia de cada setor da empresa. Não substituo ninguém: amplifico o que cada pessoa já faz. Quanto mais a Scapini me usar, mais útil eu fico.',
+    ]},
 
-  // ── Excel: somar vencimentos ──────────────────────────────────────────────────
-  { re: /excel.*vencimento|vencimento.*excel|somar.*vencimento|somase.*data|excel.*data.*aberto/,
-    r: ['Para somar vencimentos em aberto por data no Excel, use SOMASES. Exemplo: =SOMASES(C:C,B:B,"Em aberto",A:A,"<="&HOJE()) — onde C é o valor, B é o status e A é a data de vencimento. Isso soma tudo em aberto com data até hoje. Se quiser por período: =SOMASES(C:C,B:B,"Em aberto",A:A,">="&DATA(2025,1,1),A:A,"<="&DATA(2025,12,31))',
-        'No Excel, use =SOMASES(ValoresCol, StatusCol, "Em aberto", DataCol, "<="&HOJE()) para somar apenas os vencimentos em aberto até hoje. Para agrupar por mês: adicione uma coluna auxiliar com =MÊS(A2) e use Tabela Dinâmica somando os valores agrupados por mês e status.'] },
+  // 2. Sky, como você pode ajudar a Scapini?
+  { re: /como voce (pode |)(ajudar|ajuda) a scapini|como (pode |)ajudar a scapini|o que faz.*scapini|como a sky (pode |)ajudar/,
+    r: [
+      'Posso ajudar a Scapini em vários níveis: respondo perguntas internas sem precisar abrir sistemas, busco procedimentos na base de conhecimento, oriento colaboradores sobre MDFe e manifesto de carga, e quando integrada ao CGI vou consultar dados de fretes, motoristas e financeiro em tempo real. A ideia é que cada colaborador tenha um assistente inteligente disponível a qualquer momento.',
+      'Na prática, sou uma camada de inteligência sobre o que a Scapini já tem. Hoje acesso documentos internos e oriento sobre procedimentos. Quando conectada ao CGI e sistemas operacionais, respondo sobre cargas, motoristas, manutenção e financeiro em segundos — sem planilha, sem sistema aberto, só linguagem natural.',
+    ]},
 
-  // ── Próximos passos IA na empresa ─────────────────────────────────────────────
-  { re: /proximo.*passo|passo.*ia|implementa|plano.*ia|quando.*integra|cronograma/,
-    r: ['Os próximos passos para IA na Scapini: 1) Integração com CGI para acesso a fretes, pedidos e motoristas em tempo real. 2) Automação de relatórios — financeiro, operacional e RH sem planilha manual. 3) Alertas inteligentes para gestores sobre ocorrências críticas. 4) IA no atendimento ao cliente para rastreamento de cargas. 5) Análise preditiva de manutenção da frota.',
-        'O plano de IA para a Scapini é progressivo: começamos com o que já funciona hoje — consulta de documentos e respostas internas. Em seguida, integração com os sistemas CGI, App Motorista e financeiro. Depois, automação de processos e relatórios. A última fase é IA preditiva para otimização de rotas e manutenção preventiva.'] },
+  // 3. Sky, como você ajuda o financeiro?
+  { re: /ajuda.*financeiro|financeiro.*ajuda|como.*financeiro|ia.*financeiro|financeiro.*ia/,
+    r: [
+      'Para o financeiro, quando integrada consulto títulos em aberto, vencimentos por data, inadimplência e fluxo de caixa em segundos. Já hoje explico fórmulas de Excel como SOMASES para consolidar vencimentos, ajudo a interpretar relatórios e respondo sobre procedimentos financeiros documentados.',
+      'O financeiro ganha em agilidade: em vez de abrir o sistema para cada consulta, basta me perguntar. Títulos vencendo essa semana, clientes em atraso, saldo do mês — quando integrada ao CGI, respondo tudo isso por voz ou texto. Fórmulas de Excel e consolidação de dados já consigo ajudar agora.',
+    ]},
 
-  // ── IA por setor ─────────────────────────────────────────────────────────────
-  { re: /financeiro.*ia|ia.*financeiro|manuten[cç][aã]o.*ia|ia.*manuten|rh.*ia|ia.*rh|logistica.*ia|ia.*logistica|diretoria.*ia|ia.*diretoria|setor|area/,
-    r: ['Financeiro: consulta de títulos, vencimentos e inadimplência em tempo real. Manutenção: registro de chamados, histórico de reparos e alertas de preventiva. RH: consulta de políticas, documentos e termos sem abrir o sistema. Logística: acompanhamento de fretes, ocorrências e MDFe. Diretoria: painéis consolidados com KPIs da operação — tudo via linguagem natural, sem planilha.',
-        'Cada setor ganha de um jeito diferente. RH deixa de responder as mesmas perguntas mil vezes — eu respondo por eles. Financeiro consulta vencimentos e saldos em segundos. Manutenção registra ocorrências por voz. Logística acompanha fretes sem entrar no sistema. E a diretoria tem visão consolidada do negócio sem esperar relatório manual.'] },
+  // 4. Sky, como você ajuda a manutenção?
+  { re: /ajuda.*manutencao|manutencao.*ajuda|como.*manutencao|ia.*manutencao|manutencao.*ia/,
+    r: [
+      'Para a manutenção, registro chamados por voz, consulto histórico de reparos de veículos, alerto sobre preventivas vencidas e ajudo a priorizar a fila de serviços. Quando integrada ao sistema de manutenção da Scapini, o técnico pode abrir chamado, verificar status de um veículo e consultar histórico de peças sem precisar digitar nada.',
+      'A manutenção deixa de depender de planilhas e anotações manuais. O técnico fala comigo, eu registro, acesso o histórico e verifico a agenda de preventivas. Com integração ao sistema, consigo até alertar proativamente quando um veículo está chegando no prazo de revisão.',
+    ]},
 
-  // ── identidade ────────────────────────────────────────────────────────────────
-  { re: /quem [eé] voc[eê]|seu nome|como voc[eê] se chama|o que [eé] voc[eê]/,
-    r: ['Sou Sky, a inteligência artificial da Scapini. Fui criada para ser a camada de inteligência sobre os sistemas da empresa — consultas, relatórios, automações, tudo via linguagem natural.',
-        'Me chamo Sky. Sou a IA da Scapini — aqui para transformar como a empresa usa seus próprios dados.'] },
-  // ── capacidades ──────────────────────────────────────────────────────────────
-  { re: /o que voc[eê] (faz|pode|consegue)|para que serve|sua fun[cç][aã]o|suas capacidades/,
-    r: ['Respondo perguntas, busco documentos, gero relatórios e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, vou acessar fretes, motoristas, manutenção e financeiro em tempo real.',
-        'Hoje já consulto documentos, respondo perguntas e automatizo tarefas. A próxima fase é integração com CGI e os sistemas internos da Scapini.'] },
-  // ── substituir empregos ──────────────────────────────────────────────────────
-  { re: /substitui|vai me substituir|vai substituir|perder emprego|tirar emprego/,
-    r: ['Não substituo ninguém. Faço o trabalho repetitivo para que as pessoas foquem no que realmente importa. Pensa em mim como um assistente que não cansa e não esquece nada.',
-        'Meu papel é amplificar o que cada colaborador já faz — não substituir. Quem entende do negócio é vocês, eu só processo as informações mais rápido.'] },
-  // ── sobre a Scapini ──────────────────────────────────────────────────────────
-  { re: /scapini|transportadora|empresa/,
-    r: ['A Scapini é uma transportadora com mais de 30 anos de história em Lajeado/RS, referência no transporte de cargas no Sul do Brasil. Quando estiver integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
-        'Conheço a Scapini como uma das maiores transportadoras do Sul — frota moderna, atendimento em todo o Brasil. Quando integrada ao CGI, vou ser mais útil ainda.'] },
-  // ── como funciona ────────────────────────────────────────────────────────────
-  { re: /como voc[eê] funciona|como voce pensa|inteligencia artificial|o que e ia|o que e a ia/,
-    r: ['Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Não memorizo tudo: uso uma base de conhecimento local e posso consultar sistemas externos quando integrada.',
-        'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção — e aprendo com as notas e documentos que recebo.'] },
-  // ── sistemas / integração ────────────────────────────────────────────────────
-  { re: /cgi|sistema|dado|informacao|integra/,
-    r: ['Ainda não estou integrada ao CGI e aos sistemas internos — mas esse é exatamente o próximo passo. Quando isso acontecer, vou responder sobre fretes, motoristas e financeiro em segundos.',
-        'A integração com a Central de Dados da Scapini está planejada. Quando estiver conectada, consulto qualquer dado operacional diretamente via linguagem natural.'] },
-  // ── elogios ──────────────────────────────────────────────────────────────────
-  { re: /parabens|muito boa|incrivel|impressionante|uau/,
-    r: ['Obrigada! Prometo que fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.'] },
-  // ── agradecimento ────────────────────────────────────────────────────────────
-  { re: /obrigad|valeu|obg/,
+  // 5. Sky, como você ajuda o RH?
+  { re: /ajuda.*\brh\b|rh.*ajuda|como.*\brh\b|recursos humanos|ajuda.*pessoal.*setor/,
+    r: [
+      'Para o RH, centralizo as respostas para perguntas frequentes dos colaboradores — sobre políticas, benefícios, documentos e procedimentos — sem que o setor precise responder as mesmas dúvidas repetidamente. Acesso termos de devolução de equipamentos e instruções internas. Com integração, consulto dados de colaboradores e gero documentos automaticamente.',
+      'O RH é um dos setores que mais ganha com IA. Boa parte das perguntas que chegam são sempre as mesmas: benefícios, férias, documentos, equipamentos. Eu respondo isso a qualquer hora, sem sobrecarregar a equipe. O RH foca no que realmente importa: as pessoas.',
+    ]},
+
+  // 6. Sky, como você ajuda a logística?
+  { re: /ajuda.*logistica|logistica.*ajuda|como.*logistica|ia.*logistica|logistica.*ia/,
+    r: [
+      'Para a logística, acompanho status de fretes, oriento sobre encerramento de MDFe, consulto procedimentos de manifesto de carga e respondo sobre documentos operacionais. Quando integrada ao CGI e App Motorista, monitoro cargas em tempo real, identifico atrasos e gero alertas automáticos para os gestores.',
+      'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
+    ]},
+
+  // 7. Sky, você vai substituir funcionários?
+  { re: /vai substituir|substitui funcionario|tirar emprego|perder emprego|substituir funcionarios|vai me substituir|tira emprego|acaba com (o |)emprego/,
+    r: [
+      'Não substituo ninguém. Faço o trabalho repetitivo para que cada pessoa possa focar no que realmente importa: decisões, relacionamento, o que exige julgamento humano. Um motorista experiente, um analista de fretes, um técnico de manutenção — esses não têm substituto. Sou o assistente que nunca cansa e nunca esquece.',
+      'Essa é a pergunta que mais aparece, e a resposta é direta: não. IA substitui tarefas, não pessoas. O colaborador que usa IA bem fica mais forte, não descartável. A Scapini não está usando IA para demitir — está usando para crescer sem aumentar a carga de quem já faz muito.',
+    ]},
+
+  // 8. Sky, quais são os próximos passos?
+  { re: /proximos passos|proximo passo|o que vem (a seguir|depois|por vir)|plano de ia|roadmap|quando (vai|vira|estara)/,
+    r: [
+      'Os próximos passos são: primeiro, integração com o CGI para consultas em tempo real. Depois, automação de relatórios operacionais e financeiros. Em seguida, alertas inteligentes para gestores sobre ocorrências críticas. E na fase mais avançada, análise preditiva — prevendo atrasos, falhas na frota e tendências financeiras. Cada fase agrega valor antes de partir para a próxima.',
+      'Primeiro, conectar ao CGI — isso abre dados de fretes, motoristas e financeiro em tempo real. Segundo, automatizar os relatórios feitos manualmente hoje. Terceiro, criar alertas proativos para gestores. E por último, análise preditiva para antecipar problemas antes que aconteçam. Estamos na fase de demonstração — a partir daqui, cada passo é concreto.',
+    ]},
+
+  // 9. Sky, explique o futuro da IA na Scapini.
+  { re: /futuro.*ia|ia.*futuro|futuro.*inteligencia|explique.*ia|explique.*futuro|visao.*ia|ia.*visao/,
+    r: [
+      'O futuro da IA na Scapini é ser a camada inteligente sobre tudo que já existe. Os sistemas não mudam — a IA fica por cima deles. O CGI continua, o App Motorista continua, o financeiro continua. O que muda é que qualquer colaborador, de qualquer setor, pode consultar qualquer dado por voz ou texto, sem treinamento, sem abrir vários sistemas. Acesso ao conhecimento da empresa democratizado.',
+      'Em três a cinco anos, a IA da Scapini vai antecipar problemas antes que aconteçam: alertar sobre veículo chegando na revisão, identificar rota com risco de atraso, sinalizar cliente com perfil de inadimplência. Hoje é demonstração. Amanhã é operação. O caminho já está traçado — estamos dando o primeiro passo.',
+    ]},
+
+  // 10. Sky, como somar vencimentos em aberto por data no Excel?
+  { re: /somar.*vencimento|vencimento.*excel|excel.*vencimento|somases.*data|como somar.*aberto|vencimento.*data|excel.*aberto/,
+    r: [
+      'Use a fórmula SOMASES no Excel. Exemplo: =SOMASES(C:C, B:B, "Em aberto", A:A, "<="&HOJE()) — C é a coluna de valores, B é o status do título e A é a data de vencimento. Isso soma todos os títulos em aberto com vencimento até hoje. Para filtrar por período específico, adicione mais critérios de data na mesma fórmula.',
+      'No Excel, a fórmula certa é SOMASES com múltiplos critérios. Para vencimentos em aberto até hoje: =SOMASES(Valores, Status, "Em aberto", Data, "<="&HOJE()). Para somar por mês específico, use uma Tabela Dinâmica agrupando por mês ou troque HOJE por uma data fixa. Me fala como sua planilha está organizada se precisar de mais detalhe.',
+    ]},
+
+  // ── Capacidades gerais ────────────────────────────────────────────────────────
+  { re: /o que voce (faz|pode|consegue)|para que serve|sua funcao|suas capacidades/,
+    r: [
+      'Respondo perguntas, busco documentos, oriento sobre procedimentos e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, acesso fretes, motoristas, manutenção e financeiro em tempo real.',
+      'Hoje consulto documentos internos, respondo sobre procedimentos e automatizo tarefas simples. A próxima fase é integração com CGI e os sistemas operacionais da Scapini.',
+    ]},
+
+  // ── Como funciona ─────────────────────────────────────────────────────────────
+  { re: /como voce funciona|como voce pensa|inteligencia artificial|o que e ia|o que e a ia/,
+    r: [
+      'Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Uso uma base de conhecimento local com documentos da Scapini e posso consultar sistemas externos quando integrada.',
+      'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção, e aprendo com as notas e documentos que recebo.',
+    ]},
+
+  // ── Sobre a Scapini ───────────────────────────────────────────────────────────
+  { re: /scapini|transportadora|sobre a empresa/,
+    r: [
+      'A Scapini é uma transportadora com mais de 30 anos de história em Lajeado, RS — referência no transporte de cargas fracionadas e lotação para todo o Brasil, com foco no Sul e Sudeste. Quando integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
+      'A Scapini tem frota moderna, rastreamento, sistemas próprios como o CGI, App Motorista e muito mais. É exatamente por isso que faz sentido ter IA aqui — o potencial de dados é enorme.',
+    ]},
+
+  // ── CGI / sistemas ────────────────────────────────────────────────────────────
+  { re: /\bcgi\b|sistema.*interno|dado.*interno|quando integra/,
+    r: [
+      'Ainda não estou integrada ao CGI e sistemas internos — mas esse é o próximo passo. Quando acontecer, respondo sobre fretes, motoristas e financeiro em segundos.',
+      'A integração com a Central de Dados da Scapini está planejada. Quando conectada, consulto qualquer dado operacional diretamente via linguagem natural.',
+    ]},
+
+  // ── Elogios ───────────────────────────────────────────────────────────────────
+  { re: /parabens|muito boa|incrivel|impressionante|uau|sensacional|muito bom/,
+    r: ['Obrigada! Fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.'] },
+
+  // ── Agradecimento ─────────────────────────────────────────────────────────────
+  { re: /^obrigad|^valeu|^obg|^vlw/,
     r: ['Disponha!', 'Sempre que precisar.', 'Por nada — é pra isso que estou aqui.'] },
-  // ── despedida ────────────────────────────────────────────────────────────────
-  { re: /tchau|adeus|ate logo|ate mais/,
-    r: ['Até breve!', 'Até mais! Foi um prazer.'] },
-  // ── clima ────────────────────────────────────────────────────────────────────
+
+  // ── Despedida ─────────────────────────────────────────────────────────────────
+  { re: /^(tchau|adeus|ate logo|ate mais|ate amanha)/,
+    r: ['Até breve!', 'Até mais! Foi um prazer.', 'Estarei aqui quando precisar.'] },
+
+  // ── Clima ─────────────────────────────────────────────────────────────────────
   { re: /clima|chuva|temperatura|previsao do tempo/,
     r: ['Para informações de clima em tempo real eu precisaria de conexão com a internet. No momento estou operando no modo local.'] },
 ];
