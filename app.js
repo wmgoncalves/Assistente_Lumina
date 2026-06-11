@@ -2396,7 +2396,7 @@ const DEMO_QA = [
 
   // ── Clima ─────────────────────────────────────────────────────────────────────
   { re: /clima|chuva|temperatura|previsao do tempo/,
-    r: ['Para informações de clima em tempo real eu precisaria de conexão com a internet. No momento estou operando no modo local.'] },
+    r: ['Para clima em tempo real preciso de conexão com a internet. Me faz uma pergunta sobre a Scapini — aí estou em casa.'] },
 ];
 
 const localFallback = (text) => {
@@ -2413,11 +2413,12 @@ const localFallback = (text) => {
     if (re.test(t)) return pick(r);
   }
 
-  // Resposta genérica digna para o palco (nunca fala de "configurar chave")
+  // Resposta genérica digna para o palco
   return pick([
-    'Boa pergunta. Ainda estou aprendendo sobre esse assunto — quando integrada aos sistemas da Scapini, vou ter muito mais contexto para responder.',
-    'No momento estou operando no modo local. Para respostas mais completas, preciso estar conectada à internet.',
-    'Não tenho esse dado agora, mas quando integrada à Central da Scapini, responderia em segundos.',
+    'Boa pergunta. Esse dado fica na Central de Dados da Scapini — assim que integrada, consulto em segundos.',
+    'Ainda não tenho esse contexto disponível, mas posso ajudar com procedimentos internos, documentos e orientações sobre os sistemas da Scapini.',
+    'Quando integrada ao CGI e sistemas operacionais da Scapini, respondo isso em tempo real. Por enquanto, me faça uma pergunta sobre procedimentos, documentos ou sobre como a IA pode ajudar cada setor.',
+    'Essa informação vem da Central da Scapini. A integração já está planejada — esse é exatamente o próximo passo.',
   ]);
 };
 
