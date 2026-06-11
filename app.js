@@ -3026,7 +3026,12 @@ const initApresentacao = () => {
     });
 
     buildDots();
-    goTo(0);
+    // Inicializa estado visual (goTo retorna cedo se current==0)
+    counter.textContent = `1 / ${presState.total}`;
+    prevBtn.disabled = true;
+    nextBtn.disabled = presState.total <= 1;
+    animateCounters(slides[0]);
+    goTo(presState.current); // retoma slide onde estava se já inicializado antes
 
     const activateBtn = document.getElementById('pres-activate-btn');
     if (activateBtn) activateBtn.addEventListener('click', activateSkyReveal);
