@@ -996,6 +996,101 @@ app.get('/api/news', async (_, res) => {
   res.json({ headlines: headlines.slice(0, 8) });
 });
 
+// ── Esportes — ESPN API (sem key) ────────────────────────────────────────────
+const ESPN_LEAGUES = {
+  copa:    'fifa.world',
+  mundial: 'fifa.world',
+  libertadores: 'conmebol.libertadores',
+  brasileirao: 'bra.1',
+  champions: 'uefa.champions',
+  premier: 'eng.1',
+  laliga: 'esp.1',
+  nba: null, // tratado separado
+};
+
+const TEAM_PT = {
+  'Brazil':'Brasil','Argentina':'Argentina','France':'França','England':'Inglaterra',
+  'Germany':'Alemanha','Spain':'Espanha','Portugal':'Portugal','Italy':'Itália',
+  'Netherlands':'Holanda','Uruguay':'Uruguai','Colombia':'Colômbia','Chile':'Chile',
+  'Mexico':'México','United States':'Estados Unidos','Canada':'Canadá',
+  'Japan':'Japão','South Korea':'Coreia do Sul','Australia':'Austrália',
+  'Morocco':'Marrocos','Senegal':'Senegal','Nigeria':'Nigéria',
+  'South Africa':'África do Sul','Ivory Coast':'Costa do Marfim',
+  'Saudi Arabia':'Arábia Saudita','Iran':'Irã','Qatar':'Catar',
+  'Poland':'Polônia','Croatia':'Croácia','Serbia':'Sérvia','Switzerland':'Suíça',
+  'Belgium':'Bélgica','Denmark':'Dinamarca','Sweden':'Suécia','Norway':'Noruega',
+  'Austria':'Áustria','Czechia':'República Tcheca','Slovakia':'Eslováquia',
+  'Hungary':'Hungria','Romania':'Romênia','Ukraine':'Ucrânia','Turkey':'Turquia',
+  'Greece':'Grécia','Scotland':'Escócia','Wales':'País de Gales','Ireland':'Irlanda',
+  'Ecuador':'Equador','Peru':'Peru','Venezuela':'Venezuela','Bolivia':'Bolívia',
+  'Paraguay':'Paraguai','Costa Rica':'Costa Rica','Panama':'Panamá',
+  'Jamaica':'Jamaica','Honduras':'Honduras','El Salvador':'El Salvador',
+  'New Zealand':'Nova Zelândia','Cameroon':'Camarões','Ghana':'Gana',
+  'Tunisia':'Tunísia','Algeria':'Argélia','Egypt':'Egito',
+  'Flamengo':'Flamengo','Palmeiras':'Palmeiras','São Paulo':'São Paulo',
+};
+const teamPt = (name) => TEAM_PT[name] || name;
+
+const espnSoccer = async (league, dateStr) => {
+  const url = dateStr
+    ? `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard?dates=${dateStr}`
+    : `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(6000), headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+};
+
+const formatEvent = (ev) => {
+  const comp = ev.competitions?.[0];
+  const home = comp?.competitors?.find(c => c.homeAway === 'home');
+  const away = comp?.competitors?.find(c => c.homeAway === 'away');
+  if (!home || !away) return null;
+  const hn = teamPt(home.team.displayName);
+  const an = teamPt(away.team.displayName);
+  const status = ev.status?.type;
+  const score  = status?.completed
+    ? `${home.score} x ${away.score} (encerrado)`
+    : status?.inProgress
+      ? `${home.score} x ${away.score} 🔴 ao vivo (${ev.status?.displayClock || ''})`
+      : `${ev.date ? new Date(ev.date).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', timeZone:'America/Sao_Paulo' }) : 'horário a confirmar'}`;
+  return `${hn} ${score} ${an}`;
+};
+
+app.get('/api/sports', async (req, res) => {
+  try {
+    const { q = '', date = '' } = req.query;
+    const qt = q.toLowerCase();
+
+    // Determina a liga
+    let league = 'fifa.world'; // default: Copa do Mundo
+    for (const [key, val] of Object.entries(ESPN_LEAGUES)) {
+      if (qt.includes(key) && val) { league = val; break; }
+    }
+
+    // Determina a data: "hoje", "amanhã", data específica ou vazia (hoje)
+    let dateStr = '';
+    const today = new Date();
+    const toDateStr = (d) => d.toISOString().slice(0,10).replace(/-/g,'');
+    if (/amanhã|amanha/.test(qt)) {
+      const d = new Date(today); d.setDate(d.getDate() + 1); dateStr = toDateStr(d);
+    } else if (/ontem/.test(qt)) {
+      const d = new Date(today); d.setDate(d.getDate() - 1); dateStr = toDateStr(d);
+    } else if (date) {
+      dateStr = date.replace(/-/g,'');
+    } else {
+      dateStr = toDateStr(today);
+    }
+
+    const data   = await espnSoccer(league, dateStr);
+    const events = (data.events || []).map(formatEvent).filter(Boolean);
+
+    if (!events.length) return res.json({ events: [], message: 'Nenhum jogo encontrado para essa data.' });
+    res.json({ events, league, date: dateStr });
+  } catch (e) {
+    res.status(503).json({ error: e.message });
+  }
+});
+
 // ── Modo Proativo — SSE + Scheduler ──────────────────────────────────────────
 const sseClients = new Set();
 

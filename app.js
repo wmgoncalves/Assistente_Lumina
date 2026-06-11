@@ -1113,7 +1113,7 @@ const processInput = async (rawText) => {
   // ── Wake word gate ──────────────────────────────────────────────────────────
   // Se CONVERSA CONTÍNUA e CHAMAR estiverem desativados, só responde se:
   // (a) a mensagem começa com "sky" ou (b) estiver dentro de 60s da última resposta
-  const CONVO_TIMEOUT = 60000;
+  const CONVO_TIMEOUT = 5 * 60 * 1000; // 5 min — conveniente para demo com audiência
   const needsWake = !app.continuous && !wakeActive;
   if (needsWake) {
     const hasSkyPrefix = /^sky[\s,]+/i.test(text);
@@ -1441,16 +1441,72 @@ const webSearchGemini = async (query) => {
   const q = query.toLowerCase();
 
   // ── Câmbio / cotações (AwesomeAPI - tempo real) ──
-  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp/.test(q)) {
+  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|cad\b|dólar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
     try {
-      const map  = { dólar:'USD-BRL', dollar:'USD-BRL', usd:'USD-BRL', euro:'EUR-BRL', eur:'EUR-BRL', libra:'GBP-BRL', gbp:'GBP-BRL' };
+      const map = {
+        'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
+        'ethereum':'ETH-BRL', 'eth ':'ETH-BRL',
+        'dogecoin':'DOGE-BRL', 'doge':'DOGE-BRL',
+        'solana':'SOL-BRL',
+        'iene':'JPY-BRL', 'jpy':'JPY-BRL',
+        'franco':'CHF-BRL', 'chf':'CHF-BRL',
+        'peso argentin':'ARS-BRL', 'ars':'ARS-BRL',
+        'peso mexican':'MXN-BRL', 'mxn':'MXN-BRL',
+        'canadense':'CAD-BRL', 'cad':'CAD-BRL',
+        'australiano':'AUD-BRL', 'aud':'AUD-BRL',
+        'yuan':'CNY-BRL', 'cny':'CNY-BRL',
+        'rublo':'RUB-BRL', 'rub':'RUB-BRL',
+        'dólar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
+        'euro':'EUR-BRL', 'eur':'EUR-BRL',
+        'libra':'GBP-BRL', 'gbp':'GBP-BRL',
+      };
       const pair = Object.entries(map).find(([k]) => q.includes(k))?.[1] || 'USD-BRL';
       const res  = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
       if (!res.ok) throw new Error(res.status);
       const data = await res.json();
       const c    = Object.values(data)[0];
       const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} · venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} · variação ${c.pctChange}% (atualizado às ${hora})`;
+      const isCrypto = /BTC|ETH|DOGE|SOL/.test(pair);
+      const fmt  = (v) => isCrypto
+        ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
+        : `R$ ${parseFloat(v).toFixed(2).replace('.',',')}`;
+      return `${c.name}: ${fmt(c.bid)} · variação ${c.pctChange}% (atualizado às ${hora})`;
+    } catch { /* fallback */ }
+  }
+
+  // ── Ações da B3 (brapi.dev — sem key) ──
+  if (/ação|ações|acoes|acao|bolsa|b3|ibovespa|petr4|vale3|itub4|bbdc4|abev3|wege3|mglu3|lren3|rent3|suzb3|jbss3|radl3|csna3|embr3|bbas3|vivt3|ggbr4|usim5|csan3|pcar3|cmig4|beef3|brfs3|egie3|eztc3|movi3|tots3|vvar3|cyre3|mrve3|tend3|bpac11|b3sa3|xpbr31|hapv3|gndi3|rdor3|flry3|qual3|dasa3|prio3|rrrp3|recr3|smft3/.test(q)) {
+    try {
+      const ACOES_MAP = {
+        'petrobras':'PETR4', 'petr4':'PETR4', 'petr3':'PETR3',
+        'vale':'VALE3', 'vale3':'VALE3',
+        'itaú':'ITUB4', 'itau':'ITUB4', 'itub4':'ITUB4',
+        'bradesco':'BBDC4', 'bbdc4':'BBDC4',
+        'ambev':'ABEV3', 'abev3':'ABEV3',
+        'weg':'WEGE3', 'wege3':'WEGE3',
+        'magazine luiza':'MGLU3', 'magalu':'MGLU3', 'mglu3':'MGLU3',
+        'renner':'LREN3', 'lren3':'LREN3',
+        'localiza':'RENT3', 'rent3':'RENT3',
+        'suzano':'SUZB3', 'suzb3':'SUZB3',
+        'jbs':'JBSS3', 'jbss3':'JBSS3',
+        'embraer':'EMBR3', 'embr3':'EMBR3',
+        'banco do brasil':'BBAS3', 'bbas3':'BBAS3',
+        'ibovespa':'IBOV', 'ibov':'IBOV',
+        'b3sa3':'B3SA3',
+      };
+      const ticker = Object.entries(ACOES_MAP).find(([k]) => q.includes(k))?.[1];
+      if (ticker) {
+        const res = await fetch(`https://brapi.dev/api/quote/${ticker}?range=1d&interval=1d`);
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        const s = data.results?.[0];
+        if (s) {
+          const preco = s.regularMarketPrice?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const var_  = s.regularMarketChangePercent?.toFixed(2);
+          const sinal = var_ >= 0 ? '+' : '';
+          return `${s.longName || ticker}: R$ ${preco} · variação ${sinal}${var_}% hoje`;
+        }
+      }
     } catch { /* fallback */ }
   }
 
@@ -1960,16 +2016,71 @@ const detectLocalInfo = async (text) => {
   const q = text.toLowerCase();
 
   // Câmbio
-  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp/.test(q)) {
+  if (/dólar|dollar|usd|euro|eur|câmbio|cotação|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|cad\b|dólar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
     try {
-      const map  = { dólar:'USD-BRL', dollar:'USD-BRL', usd:'USD-BRL', euro:'EUR-BRL', eur:'EUR-BRL', libra:'GBP-BRL', gbp:'GBP-BRL' };
+      const map = {
+        'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
+        'ethereum':'ETH-BRL', 'eth ':'ETH-BRL',
+        'dogecoin':'DOGE-BRL', 'doge':'DOGE-BRL',
+        'solana':'SOL-BRL',
+        'iene':'JPY-BRL', 'jpy':'JPY-BRL',
+        'franco':'CHF-BRL', 'chf':'CHF-BRL',
+        'peso argentin':'ARS-BRL', 'ars':'ARS-BRL',
+        'peso mexican':'MXN-BRL', 'mxn':'MXN-BRL',
+        'canadense':'CAD-BRL', 'cad':'CAD-BRL',
+        'australiano':'AUD-BRL', 'aud':'AUD-BRL',
+        'yuan':'CNY-BRL', 'cny':'CNY-BRL',
+        'rublo':'RUB-BRL', 'rub':'RUB-BRL',
+        'dólar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
+        'euro':'EUR-BRL', 'eur':'EUR-BRL',
+        'libra':'GBP-BRL', 'gbp':'GBP-BRL',
+      };
       const pair = Object.entries(map).find(([k]) => q.includes(k))?.[1] || 'USD-BRL';
       const res  = await fetch(`https://economia.awesomeapi.com.br/last/${pair}`);
       if (!res.ok) throw new Error(res.status);
       const data = await res.json();
       const c    = Object.values(data)[0];
       const hora = new Date(c.create_date).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-      return `${c.name}: compra R$ ${parseFloat(c.bid).toFixed(2).replace('.',',')} · venda R$ ${parseFloat(c.ask).toFixed(2).replace('.',',')} · variação ${c.pctChange}% (atualizado às ${hora})`;
+      const isCrypto = /BTC|ETH|DOGE|SOL/.test(pair);
+      const fmt  = (v) => isCrypto
+        ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
+        : `R$ ${parseFloat(v).toFixed(2).replace('.',',')}`;
+      return `${c.name}: ${fmt(c.bid)} · variação ${c.pctChange}% (atualizado às ${hora})`;
+    } catch { return null; }
+  }
+
+  // ── Ações da B3 (brapi.dev — sem key) ──
+  if (/ação|ações|acoes|acao|bolsa|b3\b|ibovespa|petr[34]|vale3|itub4|bbdc[34]|abev3|wege3|mglu3|lren3|rent3|suzb3|jbss3|embr3|bbas3|petrobras|vale\b|itau|bradesco|ambev|weg\b|localiza|embraer|magalu|magazine luiza/.test(q)) {
+    try {
+      const ACOES_MAP = {
+        'petrobras':'PETR4', 'petr4':'PETR4', 'petr3':'PETR3',
+        'vale':'VALE3', 'vale3':'VALE3',
+        'itaú':'ITUB4', 'itau':'ITUB4', 'itub4':'ITUB4',
+        'bradesco':'BBDC4', 'bbdc4':'BBDC4',
+        'ambev':'ABEV3', 'abev3':'ABEV3',
+        'weg':'WEGE3', 'wege3':'WEGE3',
+        'magazine luiza':'MGLU3', 'magalu':'MGLU3', 'mglu3':'MGLU3',
+        'renner':'LREN3', 'lren3':'LREN3',
+        'localiza':'RENT3', 'rent3':'RENT3',
+        'suzano':'SUZB3', 'suzb3':'SUZB3',
+        'jbs':'JBSS3', 'jbss3':'JBSS3',
+        'embraer':'EMBR3', 'embr3':'EMBR3',
+        'banco do brasil':'BBAS3', 'bbas3':'BBAS3',
+        'ibovespa':'IBOV', 'ibov':'IBOV',
+      };
+      const ticker = Object.entries(ACOES_MAP).find(([k]) => q.includes(k))?.[1];
+      if (ticker) {
+        const res = await fetch(`https://brapi.dev/api/quote/${ticker}?range=1d&interval=1d`);
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        const s = data.results?.[0];
+        if (s) {
+          const preco = s.regularMarketPrice?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const var_  = s.regularMarketChangePercent?.toFixed(2);
+          const sinal = var_ >= 0 ? '+' : '';
+          return `${s.longName || ticker}: R$ ${preco} · variação ${sinal}${var_}% hoje`;
+        }
+      }
     } catch { return null; }
   }
 
@@ -2006,6 +2117,26 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Esportes (ESPN API via servidor) ──
+  if (/jogo|jogos|partida|placar|futebol|copa|mundial|libertadores|brasileirao|brasileirão|champions|premier|laliga|gol|resultado|escalacao|escalaç/.test(q)) {
+    try {
+      const params = new URLSearchParams({ q });
+      if (/amanhã|amanha/.test(q)) params.set('date', (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })());
+      else if (/ontem/.test(q)) params.set('date', (() => { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); })());
+      const r = await fetch(`/api/sports?${params}`);
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      if (data.events?.length) {
+        const titulo = data.league === 'fifa.world' ? 'Copa do Mundo 2026' :
+                       data.league === 'bra.1'      ? 'Brasileirão' :
+                       data.league === 'conmebol.libertadores' ? 'Libertadores' :
+                       data.league === 'uefa.champions' ? 'Champions League' : 'Futebol';
+        return `${titulo} — jogos:\n${data.events.join('\n')}`;
+      }
+      return data.message || 'Não encontrei jogos para essa consulta.';
+    } catch { return null; }
+  }
+
   return null;
 };
 
@@ -2031,10 +2162,34 @@ const SITE_MAP = {
   'tiktok':        'https://tiktok.com',
   'discord':       'https://discord.com',
   'telegram':      'https://web.telegram.org',
+  'scapini':       'https://scapini.com.br',
+  'google maps':   'https://maps.google.com',
+  'maps':          'https://maps.google.com',
+  'gmail':         'https://gmail.com',
+  'outlook':       'https://outlook.live.com',
+  'notion':        'https://notion.so',
+  'chatgpt':       'https://chat.openai.com',
 };
 
 const detectOpenSite = (rawText) => {
   const t = rawText.toLowerCase().trim().replace(/[!?.]+$/, '');
+
+  // Canal do YouTube (sem precisar de prefixo "abre"): "canal do X", "canal da X no youtube"
+  const canalM = t.match(/canal\s+(?:do|da|de|dos|das)?\s+(.+?)(?:\s+no\s+youtube|\s*$)/i);
+  if (canalM && canalM[1].trim().length > 1) {
+    const nome = canalM[1].trim().replace(/\s+/g, '+');
+    openWebPopup(`https://www.youtube.com/results?search_query=${nome}+canal`, `Canal ${canalM[1].trim()} — YouTube`);
+    return `Buscando o canal de ${canalM[1].trim()} no YouTube.`;
+  }
+
+  // Pesquisa no YouTube (sem prefixo): "pesquisa X no youtube"
+  const ytSearch = t.match(/(?:pesquisa|busca|procura)\s+(.+?)\s+no\s+youtube/i);
+  if (ytSearch) {
+    const q = ytSearch[1].trim().replace(/\s+/g, '+');
+    openWebPopup(`https://www.youtube.com/results?search_query=${q}`, `YouTube — ${ytSearch[1].trim()}`);
+    return `Pesquisando "${ytSearch[1].trim()}" no YouTube.`;
+  }
+
   const m = t.match(/^(?:abr[ae]|abrir|abre|vai pra|vá pra|entra?r?\s+(?:no?|na)|acessa?r?|navega?r?\s+(?:até|para)?)\s+(?:o\s+|a\s+|no\s+|na\s+|um\s+)?(.+)/);
   if (!m) return null;
 
@@ -2045,6 +2200,14 @@ const detectOpenSite = (rawText) => {
     const url = target.startsWith('http') ? target : `https://${target}`;
     openWebPopup(url, target);
     return `Abrindo ${target}.`;
+  }
+
+  // "abre o canal do X no youtube" (com prefixo de ação)
+  const canalM2 = target.match(/canal\s+(?:do|da|de|dos|das)?\s*(.+?)(?:\s+no\s+youtube)?$/i);
+  if (canalM2 && canalM2[1].trim().length > 1) {
+    const nome = canalM2[1].trim().replace(/\s+/g, '+');
+    openWebPopup(`https://www.youtube.com/results?search_query=${nome}+canal`, `Canal ${canalM2[1].trim()} — YouTube`);
+    return `Buscando o canal de ${canalM2[1].trim()} no YouTube.`;
   }
 
   // Site do mapa
