@@ -1026,6 +1026,30 @@ const renderMemoryPanel = () => {
 // ── AI Processing ──────────────────────────────────────────────────────────────
 const MAX_HIST = 200;
 
+// ── Fallback helpers (módulo) ──────────────────────────────────────────────────
+const _demoBadge = () => document.getElementById('demo-badge');
+const _showDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = 'block'; };
+const _hideDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = 'none'; };
+
+const _handleGeminiErr = (msg) => {
+  const s = String(msg);
+  if (/expired|401|API_KEY_INVALID|not valid|INVALID_ARGUMENT|400/.test(s)) blockGeminiForever();
+  else if (/429/.test(s))                                                     blockGemini();
+  else if (/timed out|timeout|AbortError|fetch/.test(s))                      blockGemini(2 * 60 * 1000);
+};
+
+const _finalize = (raw) => {
+  const { clean: response, learned } = extractLearn(raw);
+  applyInlineLearn(learned);
+  const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
+  app.history.push({ role: 'model', content: finalResponse });
+  app.lastResponseTime = Date.now();
+  addMsgUI('sky', finalResponse);
+  saveHist();
+  speak(finalResponse);
+  setFace('idle');
+};
+
 const processInput = async (rawText) => {
   let text = normalizeText(rawText);
 
@@ -1068,35 +1092,8 @@ const processInput = async (rawText) => {
   addMsgUI('user', rawText); // mostra o original na UI, manda normalizado ao modelo
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
-  // ── Helpers de erro Gemini ────────────────────────────────────────────────────
-  const _handleGeminiErr = (msg) => {
-    const isExpired = /expired|401|API_KEY_INVALID|not valid|INVALID_ARGUMENT|400/.test(msg);
-    const isQuota   = /429/.test(msg);
-    const isTimeout = /timed out|timeout|AbortError|fetch/.test(msg);
-    if (isExpired)       blockGeminiForever();
-    else if (isQuota)    blockGemini();
-    else if (isTimeout)  blockGemini(2 * 60 * 1000);
-    return { isExpired, isQuota, isTimeout };
-  };
-
-  const _showDemoMode = () => {
-    const badge = document.getElementById('demo-badge');
-    if (badge) { badge.style.display = 'block'; setTimeout(() => { badge.style.display = 'none'; }, 8000); }
-  };
-
-  const _finalize = (raw) => {
-    const { clean: response, learned } = extractLearn(raw);
-    applyInlineLearn(learned);
-    const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
-    app.history.push({ role: 'model', content: finalResponse });
-    app.lastResponseTime = Date.now();
-    addMsgUI('sky', finalResponse);
-    saveHist();
-    speak(finalResponse);
-  };
-
   try {
-    // Download local — funciona sem API
+    // ── Respostas locais imediatas — sem precisar de IA ────────────────────────
     const dlResp = await detectLocalDownload(text);
     if (dlResp) {
       app.history.push({ role: 'model', content: dlResp });
@@ -1104,18 +1101,18 @@ const processInput = async (rawText) => {
       addMsgUI('sky', dlResp);
       saveHist();
       speak(dlResp);
+      setFace('idle');
       return;
     }
-
-    // Respostas locais imediatas (hora, data, padrões aprendidos, info offline)
     const infoResp  = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
-    if (localResp) { _finalize(localResp); return; }
+    if (localResp) { _hideDemoMode(); _finalize(localResp); return; }
 
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
     if (cfg.geminiKey && !geminiBlocked()) {
       try {
         _finalize(await callGemini());
+        _hideDemoMode();
         return;
       } catch (geminiErr) {
         console.error('[Sky] Gemini falhou:', geminiErr.message);
@@ -1124,11 +1121,11 @@ const processInput = async (rawText) => {
     }
 
     // ── Nível 2: Ollama ────────────────────────────────────────────────────────
-    setRespText('Usando IA local…');
+    setRespText('Pensando…');
     if (await ollamaAvailable()) {
       try {
         _finalize(await callOllama());
-        toast('Gemini indisponível — usando IA local.', 'info');
+        _hideDemoMode();
         return;
       } catch (ollamaErr) {
         console.warn('[Sky] Ollama falhou:', ollamaErr.message);
@@ -1136,15 +1133,14 @@ const processInput = async (rawText) => {
       }
     }
 
-    // ── Nível 3: DEMO ──────────────────────────────────────────────────────────
-    console.info('[Sky] Modo DEMO ativado — ambas as IAs indisponíveis.');
+    // ── Nível 3: DEMO — nunca trava, nunca mostra erro técnico ────────────────
+    console.info('[Sky] Modo DEMO ativado.');
     _finalize(localFallback(text));
     _showDemoMode();
 
   } catch (err) {
-    // Erro inesperado fora dos fluxos acima — nunca trava a interface
     console.error('[Sky] Erro inesperado:', err);
-    _finalize(localFallback(text || ''));
+    try { _finalize(localFallback(text || '')); } catch { setFace('idle'); }
     _showDemoMode();
   }
 };
