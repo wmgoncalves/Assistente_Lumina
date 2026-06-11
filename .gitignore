@@ -10,3 +10,4 @@ server.log
 uploads/
 sky.code-workspace
 *.log
+*.jsonl
