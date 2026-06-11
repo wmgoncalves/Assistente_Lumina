@@ -2355,7 +2355,7 @@ const DEMO_QA = [
     ]},
 
   // ── Capacidades gerais ────────────────────────────────────────────────────────
-  { re: /o que voce (faz|pode|consegue)|para que serve|sua funcao|suas capacidades/,
+  { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
       'Respondo perguntas, busco documentos, oriento sobre procedimentos e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, acesso fretes, motoristas, manutenção e financeiro em tempo real.',
       'Hoje consulto documentos internos, respondo sobre procedimentos e automatizo tarefas simples. A próxima fase é integração com CGI e os sistemas operacionais da Scapini.',
