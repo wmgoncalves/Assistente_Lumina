@@ -512,6 +512,17 @@ body {
   border-radius: 2px 12px 12px 12px;
 }
 
+/* Source citation chip */
+.source-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  margin-top: 0.3rem; padding: 0.18rem 0.55rem;
+  background: rgba(90,180,255,0.08); border: 1px solid rgba(90,180,255,0.22);
+  border-radius: 5px; font-size: 0.7rem; color: rgba(90,180,255,0.85);
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+a.source-chip { text-decoration: none; cursor: pointer; }
+a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
+
 /* Memory fact items */
 .mem-fact {
   font-size: 0.78rem;

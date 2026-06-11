@@ -290,7 +290,11 @@ const buildContextBlock = async (lastUserMsg = '') => {
 
   if (notes.length) {
     ctx += `\n\n── BASE DE CONHECIMENTO (notas relevantes) ──`;
-    notes.forEach(n => { ctx += `\n📄 "${n.title}":\n${n.content.substring(0, 1500)}${n.content.length > 1500 ? '…' : ''}`; });
+    notes.forEach(n => {
+      const cat  = n.category ? ` [setor:${n.category}]` : '';
+      const file = n.file     ? ` [arquivo:${n.file}]`   : '';
+      ctx += `\n📄 "${n.title}"${cat}${file}:\n${n.content.substring(0, 1500)}${n.content.length > 1500 ? '…' : ''}`;
+    });
   }
 
   // Planilha carregada na sessão — injeta valores calculados para Sky responder com precisão
@@ -337,6 +341,11 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • scheduleReminder  → USE PROATIVAMENTE: sempre que detectar menção a horário ("reunião às 15h", "ligo às 10h", "prazo amanhã", "me lembra em X minutos"). Calcule os minutos até o horário e agende sem perguntar.
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
+
+CITAÇÃO DE FONTES: Quando sua resposta for baseada em uma nota da Base de Conhecimento, adicione ao final uma linha no formato:
+📄 Fonte: [título exato da nota]
+Se a nota tiver um arquivo associado indicado como [arquivo:X], inclua: 📄 Fonte: [título] [arquivo:X]
+Só cite se realmente usou a nota. Não cite para perguntas genéricas ou de memória.
 
 APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe ao final:
 <!--SKY_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
@@ -985,6 +994,22 @@ const applyInlineLearn = (learned) => {
 const setRespText = (t) => { document.getElementById('resp-text').textContent = t; };
 const setUserSaid = (t) => { document.getElementById('user-said').textContent = t; };
 
+const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const _renderSkyText = (text) => {
+  const notes = getNotes();
+  return text.split('\n').map(line => {
+    const m = line.match(/^📄\s*Fonte:\s*(.+?)(?:\s*\[arquivo:([^\]]+)\])?$/);
+    if (!m) return _escHtml(line);
+    const title = m[1].replace(/\s*\[arquivo:[^\]]*\]/g, '').trim();
+    const file  = m[2]?.trim() || notes.find(n => n.title === title)?.file;
+    if (file) {
+      return `<a class="source-chip" href="/api/download-doc/${encodeURIComponent(file)}" target="_blank">📄 ${_escHtml(title)} ⬇</a>`;
+    }
+    return `<span class="source-chip">📄 ${_escHtml(title)}</span>`;
+  }).join('\n');
+};
+
 const addMsgUI = (role, text) => {
   const list = document.getElementById('history-msgs');
   const el   = document.createElement('div');
@@ -996,7 +1021,11 @@ const addMsgUI = (role, text) => {
   roleSpan.textContent = label;
   const bubble = document.createElement('div');
   bubble.className = 'hmsg-bubble';
-  bubble.textContent = text;
+  if (role === 'sky') {
+    bubble.innerHTML = _renderSkyText(text);
+  } else {
+    bubble.textContent = text;
+  }
   el.appendChild(roleSpan);
   el.appendChild(bubble);
   list.appendChild(el);
@@ -1042,7 +1071,15 @@ const _handleGeminiErr = (msg) => {
   else if (/timed out|timeout|AbortError|fetch/.test(s))                      blockGemini(2 * 60 * 1000);
 };
 
-const _finalize = (raw) => {
+const logInteraction = (question, response, source, tool, ms, error) => {
+  fetch('/api/log', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ question, response, source, tool: tool || null, ms: ms || 0, error: error || null }),
+  }).catch(() => {});
+};
+
+const _finalize = (raw, source = 'unknown') => {
   const { clean: response, learned } = extractLearn(raw);
   applyInlineLearn(learned);
   const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
@@ -1052,6 +1089,8 @@ const _finalize = (raw) => {
   saveHist();
   speak(finalResponse);
   setFace('idle');
+  const ms = app._reqStart ? Date.now() - app._reqStart : 0;
+  logInteraction(app._lastQuestion || '', finalResponse, source, null, ms);
 };
 
 const processInput = async (rawText) => {
@@ -1088,6 +1127,9 @@ const processInput = async (rawText) => {
   setFace('thinking');
   setRespText('…');
 
+  app._reqStart     = Date.now();
+  app._lastQuestion = text;
+
   learnRegex(text);
   trackInteraction(text);
   app.currentEmotion = detectEmotion(text);
@@ -1106,20 +1148,22 @@ const processInput = async (rawText) => {
       saveHist();
       speak(dlResp);
       setFace('idle');
+      logInteraction(text, dlResp, 'local', 'download', Date.now() - app._reqStart);
       return;
     }
     const infoResp  = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
-    if (localResp) { _hideDemoMode(); _finalize(localResp); return; }
+    if (localResp) { _hideDemoMode(); _finalize(localResp, 'local'); return; }
 
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
     if (cfg.geminiKey && !geminiBlocked()) {
       try {
-        _finalize(await callGemini());
+        _finalize(await callGemini(), 'gemini');
         _hideDemoMode();
         return;
       } catch (geminiErr) {
         console.error('[Sky] Gemini falhou:', geminiErr.message);
+        logInteraction(text, '', 'error', null, Date.now() - app._reqStart, geminiErr.message);
         _handleGeminiErr(geminiErr.message || String(geminiErr));
       }
     }
@@ -1128,23 +1172,25 @@ const processInput = async (rawText) => {
     setRespText('Pensando…');
     if (await ollamaAvailable()) {
       try {
-        _finalize(await callOllama());
+        _finalize(await callOllama(), 'ollama');
         _hideDemoMode();
         return;
       } catch (ollamaErr) {
         console.warn('[Sky] Ollama falhou:', ollamaErr.message);
+        logInteraction(text, '', 'error', null, Date.now() - app._reqStart, ollamaErr.message);
         ollamaCache = false;
       }
     }
 
     // ── Nível 3: DEMO — nunca trava, nunca mostra erro técnico ────────────────
     console.info('[Sky] Modo DEMO ativado.');
-    _finalize(localFallback(text));
+    _finalize(localFallback(text), 'demo');
     _showDemoMode();
 
   } catch (err) {
     console.error('[Sky] Erro inesperado:', err);
-    try { _finalize(localFallback(text || '')); } catch { setFace('idle'); }
+    logInteraction(text || '', '', 'error', null, app._reqStart ? Date.now() - app._reqStart : 0, err.message);
+    try { _finalize(localFallback(text || ''), 'demo'); } catch { setFace('idle'); }
     _showDemoMode();
   }
 };

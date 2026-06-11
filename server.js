@@ -14,6 +14,7 @@ const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
 const puppeteer  = require('puppeteer');
 const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
+const { writeLog, readLogs, clearLogs, countBySource } = require('./services/logger');
 
 // Node 18+ required (built-in fetch)
 if (!globalThis.fetch) {
@@ -46,6 +47,7 @@ const noCache = (res) => res.set('Cache-Control', 'no-store, no-cache, must-reva
 app.get('/',          (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/style.css', (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'style.css')); });
 app.get('/app.js',    (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'app.js')); });
+app.get('/admin',     (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'admin.html')); });
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -410,6 +412,68 @@ app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
   } catch (err) {
     console.error('[analyze-spreadsheet]', err);
     res.status(500).json({ error: 'Erro ao processar planilha: ' + err.message });
+  }
+});
+
+// ── Audit Log ─────────────────────────────────────────────────────────────────
+app.post('/api/log', (req, res) => {
+  const { question, response, source, tool, error, ms } = req.body || {};
+  writeLog({
+    question: String(question || '').substring(0, 500),
+    response: String(response || '').substring(0, 1000),
+    source:   source || 'unknown',
+    tool:     tool   || null,
+    error:    error  || null,
+    ms:       ms     || 0,
+  });
+  res.json({ ok: true });
+});
+
+app.get('/api/logs', (req, res) => {
+  const limit  = Math.min(Number(req.query.limit) || 500, 2000);
+  const source = req.query.source || '';
+  const q      = req.query.q      || '';
+  res.json({ logs: readLogs({ limit, source, q }), stats: countBySource() });
+});
+
+app.delete('/api/logs', (req, res) => {
+  clearLogs();
+  res.json({ ok: true });
+});
+
+// ── KB: auto-categorizar notas ───────────────────────────────────────────────
+const KB_CATEGORIES = {
+  'TI':         ['cgi','sistema','instalação','configurar','software','servidor','fre','mdfe','sefaz','xml','schema','atslog','enterprise','rastreamento','apollo','it.ti','network','windows','suporte'],
+  'Operação':   ['manifesto','embarque','cte','carga','rota','it.ope','atf','entrega','coleta','romaneio','motorista','frota','viagem','ocorrencia'],
+  'Financeiro': ['nota fiscal','financeiro','pagamento','conta','fatura','boleto','remessa','cobrança','duplic','vencimento','titulo','contas','nf ','nfe'],
+  'Manutenção': ['veículo','manutenção','pneu','motor','oficina','preventiva','caminhão','semirreboque','mecânico','lubrif','correti'],
+  'RH':         ['colaborador','contrato','recursos humanos','admissão','demissão','folha','funcionário','férias','ponto','\brh\b','treinamento','beneficio'],
+  'Diretoria':  ['estratégia','diretoria','gestão','meta','kpi','indicador','gerencial','diretor','reunião diretoria'],
+};
+
+function detectCategory(note) {
+  const hay = ((note.title || '') + ' ' + (note.content || '') + ' ' + (note.tags || []).join(' ')).toLowerCase();
+  let best = { cat: 'Geral', score: 0 };
+  for (const [cat, kws] of Object.entries(KB_CATEGORIES)) {
+    const score = kws.reduce((s, kw) => s + (hay.includes(kw) ? 1 : 0), 0);
+    if (score > best.score) best = { cat, score };
+  }
+  return best.cat;
+}
+
+app.post('/api/notes/categorize', (req, res) => {
+  try {
+    const notesFile = path.join(__dirname, 'notes.json');
+    const notes     = readJSON(notesFile, []);
+    let   updated   = 0;
+    for (const n of notes) {
+      const cat = detectCategory(n);
+      if (n.category !== cat) { n.category = cat; updated++; }
+    }
+    writeJSON(notesFile, notes);
+    res.json({ ok: true, total: notes.length, updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

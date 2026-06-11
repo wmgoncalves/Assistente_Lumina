@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sky Admin</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0e0e10; color: #c8c8d0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  header { background: #16161a; border-bottom: 1px solid #2a2a35; padding: 0.8rem 1.4rem; display: flex; align-items: center; gap: 1rem; }
+  header h1 { font-size: 1rem; font-weight: 600; color: #e0e0eb; letter-spacing: 0.04em; }
+  header .badge { font-size: 0.65rem; background: #1e3a5f; color: #5ab4ff; border-radius: 4px; padding: 0.15rem 0.5rem; letter-spacing: 0.05em; }
+
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #2a2a35; background: #13131a; padding: 0 1rem; }
+  .tab-btn { background: none; border: none; color: #666; padding: 0.65rem 1.1rem; cursor: pointer; font-size: 0.85rem; letter-spacing: 0.03em; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .tab-btn:hover { color: #aaa; }
+  .tab-btn.active { color: #5ab4ff; border-bottom-color: #5ab4ff; }
+
+  .panel { display: none; padding: 1rem 1.2rem; }
+  .panel.active { display: block; }
+
+  .stats-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .stat { background: #16161a; border: 1px solid #2a2a35; border-radius: 6px; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+  .stat span { color: #e0e0eb; font-weight: 600; }
+
+  .filter-row { display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  .filter-row input, .filter-row select {
+    background: #16161a; border: 1px solid #2a2a35; color: #c8c8d0; padding: 0.4rem 0.6rem;
+    border-radius: 5px; font-size: 0.8rem; outline: none;
+  }
+  .filter-row input { flex: 1; min-width: 160px; }
+  .filter-row input:focus, .filter-row select:focus { border-color: #4a7fa8; }
+
+  .btn { background: #1e3a5f; color: #5ab4ff; border: 1px solid #2a4f7a; padding: 0.35rem 0.9rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; transition: background 0.15s; }
+  .btn:hover { background: #25486f; }
+  .btn.danger { background: #3a1e1e; color: #e07070; border-color: #5a2a2a; }
+  .btn.danger:hover { background: #4a2020; }
+  .btn.success { background: #1e3a2a; color: #5ae08a; border-color: #2a5a3a; }
+  .btn.success:hover { background: #254a32; }
+
+  .log-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  th { background: #16161a; color: #888; font-weight: 500; text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #2a2a35; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+  td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #1e1e28; vertical-align: top; }
+  tr:hover td { background: #14141c; }
+
+  .src { display: inline-block; font-size: 0.7rem; border-radius: 4px; padding: 0.1rem 0.4rem; font-weight: 600; letter-spacing: 0.04em; white-space: nowrap; }
+  .src-gemini     { background: #1a2e4a; color: #5ab4ff; }
+  .src-ollama     { background: #2a1a3a; color: #b07aff; }
+  .src-demo       { background: #3a2800; color: #ffaa40; }
+  .src-local      { background: #1a3a22; color: #5ae08a; }
+  .src-integration{ background: #2a2a1a; color: #d4c44a; }
+  .src-error      { background: #3a1e1e; color: #e07070; }
+  .src-unknown    { background: #222; color: #888; }
+
+  .cell-q  { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ddd; }
+  .cell-r  { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa; }
+  .cell-ts { color: #666; white-space: nowrap; }
+  .cell-ms { color: #666; text-align: right; white-space: nowrap; }
+  .cell-tool{ color: #b07aff; white-space: nowrap; }
+
+  /* KB tab */
+  .kb-actions { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .cat-section { margin-bottom: 1.4rem; }
+  .cat-title { font-size: 0.75rem; font-weight: 700; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid #2a2a35; }
+  .note-row { background: #13131a; border: 1px solid #1e1e28; border-radius: 5px; padding: 0.5rem 0.8rem; margin-bottom: 0.35rem; display: flex; align-items: flex-start; gap: 0.6rem; }
+  .note-title { color: #d0d0e0; font-size: 0.82rem; flex: 1; }
+  .note-meta  { color: #555; font-size: 0.72rem; white-space: nowrap; }
+  .note-tags  { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.2rem; }
+  .tag { background: #1a1a28; color: #666; border-radius: 3px; padding: 0.05rem 0.35rem; font-size: 0.68rem; }
+  .has-file { color: #5ab4ff; text-decoration: none; font-size: 0.72rem; white-space: nowrap; }
+  .has-file:hover { text-decoration: underline; }
+  .empty { color: #444; font-style: italic; padding: 2rem; text-align: center; }
+
+  #status-msg { font-size: 0.78rem; color: #5ae08a; padding: 0.2rem 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sky — Painel Admin</h1>
+  <div class="badge">AUDITORIA</div>
+  <span id="status-msg"></span>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showTab('logs')">📋 Logs de Auditoria</button>
+  <button class="tab-btn"        onclick="showTab('kb')">📚 Base de Conhecimento</button>
+</nav>
+
+<!-- ── LOGS ────────────────────────────────────────────────────────────────── -->
+<div id="tab-logs" class="panel active">
+  <div class="stats-row" id="stats-row">
+    <div class="stat">Total <span id="st-total">–</span></div>
+    <div class="stat">Gemini <span id="st-gemini">–</span></div>
+    <div class="stat">Ollama <span id="st-ollama">–</span></div>
+    <div class="stat">DEMO <span id="st-demo">–</span></div>
+    <div class="stat">Local <span id="st-local">–</span></div>
+    <div class="stat">Erros <span id="st-error">–</span></div>
+  </div>
+
+  <div class="filter-row">
+    <input type="search" id="search-q" placeholder="Buscar pergunta ou resposta…" oninput="loadLogs()">
+    <select id="src-filter" onchange="loadLogs()">
+      <option value="">Todas as fontes</option>
+      <option value="gemini">Gemini</option>
+      <option value="ollama">Ollama</option>
+      <option value="demo">DEMO</option>
+      <option value="local">Local</option>
+      <option value="integration">Integração</option>
+      <option value="error">Erro</option>
+    </select>
+    <button class="btn" onclick="loadLogs()">↻ Atualizar</button>
+    <button class="btn danger" onclick="confirmClear()">🗑 Limpar logs</button>
+  </div>
+
+  <div class="log-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Fonte</th>
+          <th>Pergunta</th>
+          <th>Resposta</th>
+          <th>Ferramenta</th>
+          <th>ms</th>
+        </tr>
+      </thead>
+      <tbody id="log-body">
+        <tr><td colspan="6" class="empty">Carregando…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── KB ─────────────────────────────────────────────────────────────────── -->
+<div id="tab-kb" class="panel">
+  <div class="kb-actions">
+    <button class="btn" onclick="reindex()">⚡ Reindexar embeddings</button>
+    <button class="btn success" onclick="categorize()">🏷 Auto-categorizar notas</button>
+    <span id="kb-msg" style="font-size:0.78rem;color:#5ae08a;"></span>
+  </div>
+  <div id="kb-content"><div class="empty">Carregando base de conhecimento…</div></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  $(`tab-${name}`).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'logs') loadLogs();
+  if (name === 'kb')   loadKB();
+}
+
+function fmtTs(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function srcBadge(s) {
+  const cls = `src src-${s || 'unknown'}`;
+  return `<span class="${cls}">${(s || '?').toUpperCase()}</span>`;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadLogs() {
+  const q   = $('search-q').value.trim();
+  const src = $('src-filter').value;
+  const params = new URLSearchParams({ limit: 1000 });
+  if (q)   params.set('q', q);
+  if (src) params.set('source', src);
+
+  try {
+    const r    = await fetch('/api/logs?' + params);
+    const data = await r.json();
+
+    // stats
+    const s = data.stats || {};
+    $('st-total').textContent  = s.total   || 0;
+    $('st-gemini').textContent = s.gemini  || 0;
+    $('st-ollama').textContent = s.ollama  || 0;
+    $('st-demo').textContent   = s.demo    || 0;
+    $('st-local').textContent  = s.local   || 0;
+    $('st-error').textContent  = s.error   || 0;
+
+    const logs = data.logs || [];
+    if (!logs.length) {
+      $('log-body').innerHTML = `<tr><td colspan="6" class="empty">Nenhum log encontrado.</td></tr>`;
+      return;
+    }
+
+    $('log-body').innerHTML = logs.map(e => `
+      <tr>
+        <td class="cell-ts">${fmtTs(e.ts)}</td>
+        <td>${srcBadge(e.source)}</td>
+        <td class="cell-q" title="${esc(e.question)}">${esc(e.question)}</td>
+        <td class="cell-r" title="${esc(e.response)}">${esc(e.response)}</td>
+        <td class="cell-tool">${e.tool ? esc(e.tool) : ''}</td>
+        <td class="cell-ms">${e.ms ? e.ms + 'ms' : ''}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    $('log-body').innerHTML = `<tr><td colspan="6" class="empty">Erro ao carregar: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+async function confirmClear() {
+  if (!confirm('Apagar todos os logs? Essa ação não pode ser desfeita.')) return;
+  await fetch('/api/logs', { method: 'DELETE' });
+  $('status-msg').textContent = 'Logs apagados.';
+  setTimeout(() => { $('status-msg').textContent = ''; }, 3000);
+  loadLogs();
+}
+
+// ── KB ────────────────────────────────────────────────────────────────────────
+const CAT_COLORS = {
+  'TI':         '#1a2e4a',
+  'Operação':   '#1a3220',
+  'Financeiro': '#2a1a3a',
+  'Manutenção': '#3a2800',
+  'RH':         '#2a1a1a',
+  'Diretoria':  '#1a1a3a',
+  'Geral':      '#1a1a1a',
+};
+
+async function loadKB() {
+  try {
+    const r     = await fetch('/api/data/notes');
+    const notes = await r.json();
+    if (!notes.length) {
+      $('kb-content').innerHTML = '<div class="empty">Base de conhecimento vazia.</div>';
+      return;
+    }
+
+    const byCategory = {};
+    for (const n of notes) {
+      const cat = n.category || 'Geral';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(n);
+    }
+
+    const catOrder = ['TI','Operação','Financeiro','Manutenção','RH','Diretoria','Geral'];
+    const cats = [...new Set([...catOrder, ...Object.keys(byCategory)])].filter(c => byCategory[c]);
+
+    $('kb-content').innerHTML = cats.map(cat => `
+      <div class="cat-section">
+        <div class="cat-title" style="color:${CAT_COLORS[cat] ? '#aaa' : '#888'}">${cat} (${byCategory[cat].length})</div>
+        ${byCategory[cat].map(n => `
+          <div class="note-row">
+            <div style="flex:1">
+              <div class="note-title">${esc(n.title)}</div>
+              ${n.tags?.length ? `<div class="note-tags">${n.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+            </div>
+            ${n.file ? `<a class="has-file" href="/api/download-doc/${encodeURIComponent(n.file)}" target="_blank">⬇ arquivo</a>` : ''}
+            <div class="note-meta">${n.date ? new Date(n.date).toLocaleDateString('pt-BR') : ''}</div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  } catch (err) {
+    $('kb-content').innerHTML = `<div class="empty">Erro: ${esc(err.message)}</div>`;
+  }
+}
+
+async function reindex() {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Indexando…';
+  try {
+    const r    = await fetch('/api/index-notes', { method: 'POST' });
+    const data = await r.json();
+    $('kb-msg').textContent = `✓ ${data.indexed || 0} notas indexadas.`;
+  } catch (err) {
+    $('kb-msg').textContent = 'Erro: ' + err.message;
+  }
+  btn.disabled = false; btn.textContent = '⚡ Reindexar embeddings';
+  setTimeout(() => { $('kb-msg').textContent = ''; }, 4000);
+}
+
+async function categorize() {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Categorizando…';
+  try {
+    const r    = await fetch('/api/notes/categorize', { method: 'POST' });
+    const data = await r.json();
+    $('kb-msg').textContent = `✓ ${data.updated || 0} notas categorizadas.`;
+    loadKB();
+  } catch (err) {
+    $('kb-msg').textContent = 'Erro: ' + err.message;
+  }
+  btn.disabled = false; btn.textContent = '🏷 Auto-categorizar notas';
+  setTimeout(() => { $('kb-msg').textContent = ''; }, 4000);
+}
+
+// Carrega logs ao abrir
+loadLogs();
+setInterval(loadLogs, 30000); // auto-refresh 30s
+</script>
+</body>
+</html>
