@@ -1106,9 +1106,7 @@ const processInput = async (rawText) => {
 
   // ── Comando de ativação da apresentação — sempre passa, independente do gate ──
   if (/^ativar\s+sky$/i.test(text.trim())) {
-    if (document.getElementById('pres-activate-btn')) {
-      activateSkyReveal();
-    }
+    activateSkyReveal();
     return;
   }
 
@@ -1890,7 +1888,7 @@ const callGemini = async (customHistory = null) => {
 
   for (let iter = 0; iter < 3; iter++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
     let res;
     try {
       res = await fetch(
@@ -2725,7 +2723,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sendText = async () => {
     const val = textInput.value.trim();
-    if (!val && !pendingImageB64) return;
+    if (!val && !pendingImages.length) return;
     textInput.value = '';
 
     if (pendingImages.length > 0) {
@@ -3229,8 +3227,10 @@ const processChatTexto = async () => {
     el.classList.remove('typing');
     const msgs = document.getElementById('chat-texto-msgs');
     msgs.scrollTop = msgs.scrollHeight;
-  } catch {
-    el.textContent = 'Desculpe, houve um erro. Verifique a chave API.';
+  } catch (err) {
+    el.textContent = err?.message?.includes('abort') || err?.name === 'AbortError'
+      ? 'Resposta demorou demais. Tente novamente.'
+      : 'Desculpe, houve um erro. Tente novamente.';
     el.classList.remove('typing');
   }
 };
