@@ -596,7 +596,11 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
   text-align: center;
   max-width: 480px;
   min-height: 22px;
+  max-height: 36vh;
+  overflow-y: auto;
 }
+.resp-text::-webkit-scrollbar { width: 3px; }
+.resp-text::-webkit-scrollbar-thumb { background: rgba(239,68,68,0.25); border-radius: 2px; }
 
 .user-said {
   font-size: 0.78rem;
