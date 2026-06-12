@@ -385,13 +385,14 @@ Responda com confiança, de forma didática mas descontraída. Use exemplos do c
 
 // ── App State ──────────────────────────────────────────────────────────────────
 const app = {
-  voiceGender:      'female',
-  continuous:       false,
-  isListening:      false,
-  isSpeaking:       false,
-  history:          loadHist(),
-  lastResponseTime: 0,
-  lastSheet:        null,  // { analysis, context } — última planilha analisada
+  voiceGender:        'female',
+  continuous:         false,
+  presentationMode:   false, // ativado pelo reveal: mic sempre on, mas ainda exige "sky"
+  isListening:        false,
+  isSpeaking:         false,
+  history:            loadHist(),
+  lastResponseTime:   0,
+  lastSheet:          null,
 };
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -1111,19 +1112,21 @@ const processInput = async (rawText) => {
   }
 
   // ── Wake word gate ──────────────────────────────────────────────────────────
-  // Se CONVERSA CONTÍNUA e CHAMAR estiverem desativados, só responde se:
-  // (a) a mensagem começa com "sky" ou (b) estiver dentro de 60s da última resposta
-  const CONVO_TIMEOUT = 5 * 60 * 1000; // 5 min — conveniente para demo com audiência
-  const needsWake = !app.continuous && !wakeActive;
+  // presentationMode: mic sempre on (como contínua), mas ainda exige "sky" na frente
+  // continuous normal: sem wake word
+  // padrão: exige "sky" ou estar dentro da janela de 5 min
+  const CONVO_TIMEOUT = 5 * 60 * 1000;
+  const needsWake = app.presentationMode || (!app.continuous && !wakeActive);
   if (needsWake) {
     const hasSkyPrefix = /^sky[\s,]+/i.test(text);
-    const inConvo = app.lastResponseTime > 0 && (Date.now() - app.lastResponseTime < CONVO_TIMEOUT);
+    // Em presentationMode sempre exige sky — sem janela de tempo
+    const inConvo = !app.presentationMode &&
+                    app.lastResponseTime > 0 &&
+                    (Date.now() - app.lastResponseTime < CONVO_TIMEOUT);
     if (!hasSkyPrefix && !inConvo) {
       setFace('idle'); setUserSaid('');
-      // No slide reveal, reinicia escuta para "ativar sky"
-      const onReveal = presState.current === presState.total - 1 &&
-                       document.getElementById('view-apresentacao')?.classList.contains('active');
-      if (onReveal) setTimeout(startListening, 600);
+      if (app.presentationMode && !app.isListening && !app.isSpeaking)
+        setTimeout(startListening, 400); // reinicia mic para próxima pergunta
       return;
     }
     if (hasSkyPrefix) text = text.replace(/^sky[\s,]+/i, '').trim();
@@ -3257,7 +3260,18 @@ const activateSkyReveal = () => {
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   setTimeout(() => {
     switchView('chat-voz');
-    setTimeout(() => speak('Olá. Estou pronta. Pode começar.'), 800);
+
+    // Ativa modo apresentação: mic sempre on, mas ainda exige "sky" na frente
+    app.presentationMode = true;
+    app.continuous = true; // mantém mic ligado após cada resposta
+    document.getElementById('btn-continuous')?.classList.add('on');
+    const contLabel = document.getElementById('cont-label');
+    if (contLabel) contLabel.textContent = 'CONVERSA CONTÍNUA: ON';
+
+    setTimeout(() => {
+      speak('Olá. Estou pronta. Pode começar.');
+      setTimeout(startListening, 1200); // inicia mic logo após a fala
+    }, 800);
   }, 600);
 };
 
