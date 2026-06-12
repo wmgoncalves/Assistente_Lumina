@@ -367,13 +367,16 @@ function buildSheetContext(analysis) {
         }
       }
 
-      // Demais contas (não classificadas)
+      // Demais contas (não classificadas) — breakdown mensal para permitir consulta por mês
       const classified = new Set(Object.values(s.byCategory).map(a => a.label));
       const others = s.accounts.filter(a => !classified.has(a.label));
       if (others.length) {
         ctx += `\n  Outras contas (${others.length}):`;
         for (const acc of others.slice(0, 15)) {
-          ctx += `\n    ${acc.label}: total=${acc.totalBrl}`;
+          ctx += `\n    ${acc.label}:`;
+          for (const [mes, val] of Object.entries(acc.monthValues)) {
+            ctx += ` ${mes}=${brl(val)}`;
+          }
         }
       }
 
@@ -398,7 +401,8 @@ function buildSheetContext(analysis) {
     }
   }
 
-  ctx += `\n\nREGRA: use APENAS os valores acima — nunca invente números. Para DRE, calcule variações e margens com base nos dados fornecidos.`;
+  ctx += `\n\nREGRA GERAL: use APENAS os valores acima — nunca invente números.`;
+  ctx += `\nREGRA DRE — OBRIGATÓRIA: Se a pergunta mencionar um mês específico (ex: "janeiro", "fevereiro"), responda SOMENTE com os dados desse mês — nunca liste todos os meses juntos. Formato: lista de contas com valor, depois as margens. Ex: "Em Janeiro: Receita Bruta: R$ X | Lucro Líquido: R$ Y | Margem Líquida: Z%".`;
   return ctx;
 }
 

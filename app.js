@@ -290,15 +290,21 @@ const buildContextBlock = async (lastUserMsg = '') => {
 
   if (notes.length) {
     ctx += `\n\n── BASE DE CONHECIMENTO (notas relevantes) ──`;
-    notes.forEach(n => {
+    // Limita: 2 notas máx quando planilha carregada, senão 3; 600 chars cada
+    const noteLimit    = app.lastSheet ? 2 : 3;
+    const noteCharCap  = 600;
+    notes.slice(0, noteLimit).forEach(n => {
       const cat  = n.category ? ` [setor:${n.category}]` : '';
       const file = n.file     ? ` [arquivo:${n.file}]`   : '';
-      ctx += `\n📄 "${n.title}"${cat}${file}:\n${n.content.substring(0, 1500)}${n.content.length > 1500 ? '…' : ''}`;
+      ctx += `\n📄 "${n.title}"${cat}${file}:\n${n.content.substring(0, noteCharCap)}${n.content.length > noteCharCap ? '…' : ''}`;
     });
   }
 
-  // Planilha carregada na sessão — injeta valores calculados para Sky responder com precisão
-  if (app.lastSheet) ctx += app.lastSheet.context;
+  // Planilha — injeta contexto com limite de 3000 chars para não estourar o prompt do Gemini
+  if (app.lastSheet) {
+    const sheetCtx = app.lastSheet.context || '';
+    ctx += sheetCtx.length > 3000 ? sheetCtx.substring(0, 3000) + '\n…[contexto truncado]' : sheetCtx;
+  }
 
   return ctx;
 };
@@ -342,6 +348,12 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
 
+PLANILHA / DRE — REGRAS OBRIGATÓRIAS:
+• Se perguntarem sobre um mês específico (ex: "janeiro", "março", "dados de fev"), responda SOMENTE com os dados desse mês. Nunca liste todos os meses juntos.
+• Formato obrigatório para resposta mensal: lista de contas com valor (• NomeConta: R$ X) seguida das margens (📈 Margens: MB X% | EBITDA X% | ML X%).
+• Se não especificarem mês, apresente um resumo do período mais recente e ofereça detalhar por mês.
+• Nunca reproduza o bloco de contexto cru — transforme em linguagem natural.
+
 CITAÇÃO DE FONTES: Quando sua resposta for baseada em uma nota da Base de Conhecimento, adicione ao final uma linha no formato:
 📄 Fonte: [título exato da nota]
 Se a nota tiver um arquivo associado indicado como [arquivo:X], inclua: 📄 Fonte: [título] [arquivo:X]
@@ -384,6 +396,8 @@ Responda com confiança, de forma didática mas descontraída. Use exemplos do c
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
+const _loadLastSheet = () => { try { const s = localStorage.getItem('sky_lastSheet'); return s ? JSON.parse(s) : null; } catch { return null; } };
+
 const app = {
   voiceGender:        'female',
   continuous:         false,
@@ -392,7 +406,8 @@ const app = {
   isSpeaking:         false,
   history:            loadHist(),
   lastResponseTime:   0,
-  lastSheet:          null,
+  lastSheet:          _loadLastSheet(),
+  _afterSpeak:        null,
 };
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -541,6 +556,9 @@ const cleanForSpeech = (text) => text
   .replace(/\*/g, '')
   // Títulos markdown
   .replace(/#{1,6}\s*/g, '')
+  // Moeda — nunca ler "R$" (dupla proteção além de cleanForTTS)
+  .replace(/-R\$\s*/g, 'menos ')
+  .replace(/R\$\s*/g, '')
   // Código inline
   .replace(/`[^`]*`/g, '')
   // Links markdown → só o texto
@@ -698,7 +716,40 @@ const speakLocal = async (text, onEnd) => {
   return speakEdge(text, onEnd);
 };
 
-const speak = (text, onEnd) => cfg.elevenLabsKey ? speakElevenLabs(text, onEnd) : speakLocal(text, onEnd);
+// Remove markdown e formata texto para ser falado naturalmente
+const cleanForTTS = (raw) => {
+  let t = raw
+    .replace(/\*\*([^*]+)\*\*/g, '$1')           // **negrito** → texto puro
+    .replace(/\*([^*]+)\*/g,     '$1')            // *itálico* → texto puro
+    .replace(/#{1,6}\s*/g,       '')              // # títulos
+    .replace(/^[•\-]\s*/gm,      '')              // bullets
+    .replace(/[📊📈💬⚠️✅❌🎵🔊]/gu, '')          // emojis
+    .replace(/-R\$\s*/g,         'menos ')        // -R$ → "menos "
+    .replace(/R\$\s*/g,          '')              // R$ → remove (valor já fala)
+    .replace(/(\d{1,3})\.(\d{3}),\d{2}/g, (_, a, b) => {
+      // 452.400,00 → "452 mil e 400" | 1.200.000,00 → "1 milhão e 200 mil"
+      const total = parseInt(a.replace(/\./g, '')) * 1000 + parseInt(b);
+      if (total >= 1_000_000) {
+        const m = Math.floor(total / 1_000_000);
+        const k = Math.floor((total % 1_000_000) / 1000);
+        return k ? `${m} milhão e ${k} mil` : `${m} milhão`;
+      }
+      const k = Math.floor(total / 1000);
+      const r = total % 1000;
+      return r ? `${k} mil e ${r}` : `${k} mil`;
+    })
+    .replace(/,(\d{2})\b/g, '')                   // centavos residuais
+    .replace(/\n{2,}/g, '. ')
+    .replace(/\n/g, ', ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return t;
+};
+
+const speak = (text, onEnd) => {
+  const clean = cleanForTTS(text);
+  return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
+};
 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
 let recog = null;
@@ -1075,9 +1126,10 @@ const _hideDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = '
 
 const _handleGeminiErr = (msg) => {
   const s = String(msg);
-  if (/expired|401|API_KEY_INVALID|not valid|INVALID_ARGUMENT|400/.test(s)) blockGeminiForever();
-  else if (/429/.test(s))                                                     blockGemini();
-  else if (/timed out|timeout|AbortError|fetch/.test(s))                      blockGemini(30 * 1000); // 30s no timeout
+  if (/expired|401|API_KEY_INVALID|not valid/.test(s)) blockGeminiForever(); // chave inválida → bloqueia para sempre
+  else if (/INVALID_ARGUMENT|400/.test(s))             blockGemini(3 * 60 * 1000); // prompt grande → 3 min e tenta de novo
+  else if (/429/.test(s))                              blockGemini(2 * 60 * 1000); // cota → 2 min
+  else if (/timed out|timeout|AbortError|fetch/.test(s)) blockGemini(30 * 1000);   // timeout → 30s
 };
 
 const logInteraction = (question, response, source, tool, ms, error) => {
@@ -1096,13 +1148,17 @@ const _finalize = (raw, source = 'unknown') => {
   app.lastResponseTime = Date.now();
   addMsgUI('sky', finalResponse);
   saveHist();
+  const afterSpeak = app._afterSpeak || null;
+  app._afterSpeak = null;
+  // Mostra gráfico 1.5s após resposta aparecer — não espera TTS terminar
+  if (afterSpeak) setTimeout(afterSpeak, 1500);
   speak(finalResponse);
   setFace('idle');
   const ms = app._reqStart ? Date.now() - app._reqStart : 0;
   logInteraction(app._lastQuestion || '', finalResponse, source, null, ms);
 };
 
-const processInput = async (rawText) => {
+const processInput = async (rawText, opts = {}) => {
   let text = normalizeText(rawText);
 
   // ── Comando de ativação da apresentação — sempre passa, independente do gate ──
@@ -1111,25 +1167,17 @@ const processInput = async (rawText) => {
     return;
   }
 
-  // ── Wake word gate ──────────────────────────────────────────────────────────
-  // presentationMode: mic sempre on (como contínua), mas ainda exige "sky" na frente
-  // continuous normal: sem wake word
-  // padrão: exige "sky" ou estar dentro da janela de 5 min
-  const CONVO_TIMEOUT = 5 * 60 * 1000;
-  const needsWake = app.presentationMode || (!app.continuous && !wakeActive);
-  if (needsWake) {
+  // ── Wake word gate — só para voz; texto digitado passa direto ──────────────
+  if (!opts.typed) {
     const hasSkyPrefix = /^sky[\s,]+/i.test(text);
-    // Em presentationMode sempre exige sky — sem janela de tempo
-    const inConvo = !app.presentationMode &&
-                    app.lastResponseTime > 0 &&
-                    (Date.now() - app.lastResponseTime < CONVO_TIMEOUT);
-    if (!hasSkyPrefix && !inConvo) {
+    if (!hasSkyPrefix) {
       setFace('idle'); setUserSaid('');
-      if (app.presentationMode && !app.isListening && !app.isSpeaking)
-        setTimeout(startListening, 400); // reinicia mic para próxima pergunta
       return;
     }
-    if (hasSkyPrefix) text = text.replace(/^sky[\s,]+/i, '').trim();
+    text = text.replace(/^sky[\s,]+/i, '').trim();
+  } else if (/^sky[\s,]+/i.test(text)) {
+    // Digitou "sky " na frente por hábito — remove normalmente
+    text = text.replace(/^sky[\s,]+/i, '').trim();
   }
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -1170,6 +1218,26 @@ const processInput = async (rawText) => {
       if (re.test(stripped)) { _hideDemoMode(); _finalize(pick(r), 'local'); return; }
     }
 
+    // ── Auto-chart: agenda exibição de gráfico DRE após resposta de mês ────────
+    if (app.lastSheet?.analysis && !app._afterSpeak) {
+      for (const { re, label } of MONTH_DETECT_MAP) {
+        if (re.test(stripped)) {
+          const s = (app.lastSheet.analysis.sheets || []).find(sh => sh.type === 'dre');
+          const monthKey = s ? findMonthKey(s.months, label) : null;
+          if (monthKey && s) {
+            app._afterSpeak = () => {
+              showDREChart(monthKey, s.accounts, s.margins);
+              setTimeout(() => {
+                const q = 'Posso tirar os gráficos?';
+                addMsgUI('sky', q); speak(q);
+              }, 600);
+            };
+          }
+          break;
+        }
+      }
+    }
+
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
     if (cfg.geminiKey && !geminiBlocked()) {
       try {
@@ -1193,7 +1261,8 @@ const processInput = async (rawText) => {
       } catch (ollamaErr) {
         console.warn('[Sky] Ollama falhou:', ollamaErr.message);
         logInteraction(text, '', 'error', null, Date.now() - app._reqStart, ollamaErr.message);
-        ollamaCache = false;
+        ollamaCache    = false;
+        ollamaCacheTtl = Date.now() + 10_000; // retry em 10s
       }
     }
 
@@ -1893,33 +1962,43 @@ const ollamaAvailable = async () => {
 
 const callOllama = async (customHistory = null) => {
   const history = customHistory || app.history;
-  const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
-  const model   = cfg.ollamaModel || 'gemma3:4b';
-  const system  = await buildSystem(lastMsg, app.currentEmotion || 'neutral');
+  const model   = cfg.ollamaModel || 'gemma3:1b';
 
-  // Monta prompt conversacional para /api/generate
+  // System prompt enxuto — gemma3:1b tem contexto limitado, não suporta o prompt completo
+  let sysPrompt = `Você é Sky, assistente IA da Scapini Transportes. Responda sempre em português brasileiro, de forma direta e objetiva. Nome do usuário: ${cfg.userName || 'usuário'}.`;
+
+  // Adiciona resumo da planilha se existir (só contas principais, não tudo)
+  if (app.lastSheet?.analysis) {
+    const dre = (app.lastSheet.analysis.sheets || []).find(s => s.type === 'dre');
+    if (dre) {
+      sysPrompt += `\n\nPlanilha DRE carregada: "${dre.sheet}". Meses: ${dre.months.join(', ')}.`;
+      sysPrompt += `\nUse os dados do contexto da conversa para responder sobre a planilha.`;
+    }
+  }
+
+  // Apenas últimas 4 trocas para não estourar contexto
   const recent = history.slice(-8);
-  let prompt = `<start_of_turn>system\n${system}<end_of_turn>\n`;
-  recent.forEach(h => {
-    const role = h.role === 'user' ? 'user' : 'model';
-    prompt += `<start_of_turn>${role}\n${h.content}<end_of_turn>\n`;
-  });
-  prompt += '<start_of_turn>model\n';
+  const messages = [
+    { role: 'system', content: sysPrompt },
+    ...recent.map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.content }))
+  ];
 
-  const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+  const res = await fetch(`${OLLAMA_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model, prompt, stream: false,
-      options: { temperature: 0.75, num_predict: 200, num_gpu: 0 }
+      model,
+      messages,
+      stream: false,
+      options: { temperature: 0.7, num_predict: 300, num_ctx: 2048 }
     }),
-    signal: AbortSignal.timeout(20000)
+    signal: AbortSignal.timeout(30000)
   });
 
   if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const data = await res.json();
   if (data.error) throw new Error(`Ollama: ${data.error}`);
-  return (data.response || '').trim();
+  return (data.message?.content || data.response || '').trim();
 };
 
 // ── Controle de cota Gemini ────────────────────────────────────────────────────
@@ -1937,8 +2016,9 @@ const callGemini = async (customHistory = null) => {
   // Constrói system prompt UMA vez — reutilizado em todas as iterações do loop
   const systemText = await buildSystem(lastMsg, app.currentEmotion || 'neutral');
 
-  // Envia só as últimas 40 mensagens para economizar tokens (contexto suficiente)
-  let contents = history.slice(-40).map(h => ({
+  // Com planilha carregada o system prompt já é grande — usa menos histórico
+  const histLimit = app.lastSheet ? 16 : 40;
+  let contents = history.slice(-histLimit).map(h => ({
     role: h.role === 'user' ? 'user' : 'model',
     parts: [{ text: h.content }]
   }));
@@ -2121,7 +2201,10 @@ const detectLocalInfo = async (text) => {
   }
 
   // ── Esportes (ESPN API via servidor) ──
-  if (/jogo|jogos|partida|placar|futebol|copa|mundial|libertadores|brasileirao|brasileirão|champions|premier|laliga|gol|resultado|escalacao|escalaç/.test(q)) {
+  // Pula se planilha carregada + query financeira/mensal — evita confundir "resultados de janeiro" com esportes
+  const _hasSheet = !!app.lastSheet?.analysis;
+  const _isFinancialQuery = _hasSheet && /janeiro|fevereiro|mar[cç]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|faturamento|receita|lucro|ebitda|margem|despesa|custo|dre|planilha/.test(q);
+  if (!_isFinancialQuery && /jogo|jogos|partida|placar|futebol|copa|mundial|libertadores|brasileirao|brasileirão|champions|premier|laliga|gol|resultado|escalacao|escalaç/.test(q)) {
     try {
       const params = new URLSearchParams({ q });
       if (/amanhã|amanha/.test(q)) params.set('date', (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); })());
@@ -2329,6 +2412,30 @@ const tryLocalResponse = (text) => {
   const mem = getMem();
   const name = mem.userName ? `, ${mem.userName}` : '';
 
+  // ── Reset Gemini + Ollama (desbloqueia modo demo) ──
+  if (/deslig|reset|reativ|reconect|volta.*gemini|gemini.*volta|modo.*demo.*off|sair.*demo|deslig.*demo|reconect.*ia/.test(t)) {
+    geminiBlockedUntil = 0;
+    ollamaCache    = null;
+    ollamaCacheTtl = 0;
+    _hideDemoMode();
+    return pick([
+      'Reconectando — pode perguntar!',
+      'Desbloqueado. Vou tentar na próxima mensagem.',
+      'Pronto, modo demonstração desligado. Testa aí.',
+    ]);
+  }
+
+  // ── Remover gráficos por voz ──
+  if (typeof _chartPending !== 'undefined' && _chartPending) {
+    if (/^(sim|pode|pode remover|remove|remova|ja terminei|já terminei|pode tirar|fechar|fecha|ok|blz|beleza)\b/.test(t)) {
+      hideDREChart();
+      return pick(['Removido!', 'Pronto, fechei os gráficos.', 'Ok, sumiu.']);
+    }
+    if (/^(nao|não|espera|aguarda|fica|deixa|ainda nao|ainda não)\b/.test(t)) {
+      return pick(['Ok, deixo aqui.', 'Tudo bem, fica aberto.', 'Pode olhar com calma.']);
+    }
+  }
+
   // ── Abrir sites (funciona sem API, com Gemini ou Ollama) ──
   const siteResp = detectOpenSite(text);
   if (siteResp !== null) return siteResp;
@@ -2492,8 +2599,8 @@ const DEMO_QA = [
       'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
     ]},
 
-  // 7. Sky, você vai substituir funcionários?
-  { re: /vai substituir|substitui funcionario|tirar emprego|perder emprego|substituir funcionarios|vai me substituir|tira emprego|acaba com (o |)emprego/,
+  // 7. Sky, você vai substituir funcionários / humanos?
+  { re: /vai substituir|substitui funcionario|tirar emprego|perder emprego|substituir funcionarios|substituir (os |)humanos|humanos.*substitui|vai me substituir|tira emprego|acaba com (o |)emprego|ira substituir|ira.*substitui|vai.*substitui.*hum/,
     r: [
       'Não substituo ninguém. Faço o trabalho repetitivo para que cada pessoa possa focar no que realmente importa: decisões, relacionamento, o que exige julgamento humano. Um motorista experiente, um analista de fretes, um técnico de manutenção — esses não têm substituto. Sou o assistente que nunca cansa e nunca esquece.',
       'Essa é a pergunta que mais aparece, e a resposta é direta: não. IA substitui tarefas, não pessoas. O colaborador que usa IA bem fica mais forte, não descartável. A Scapini não está usando IA para demitir — está usando para crescer sem aumentar a carga de quem já faz muito.',
@@ -2587,20 +2694,51 @@ const localFallback = (text) => {
     if (re.test(t)) return pick(r);
   }
 
-  // Resposta genérica — tenta ser útil sem inventar nada
+  // DRE carregada — responde sobre mês específico com dados reais + gráfico
   const t2 = stripAccents(text.toLowerCase());
+  if (app.lastSheet?.analysis) {
+    for (const { re, label } of MONTH_DETECT_MAP) {
+      if (re.test(t2)) {
+        const s = app.lastSheet.analysis.sheets?.find(s => s.type === 'dre');
+        const monthKey = s ? findMonthKey(s.months, label) : null;
+        const resp = buildDREMonthResponse(app.lastSheet.analysis, label);
+        if (resp) {
+          if (monthKey && s) {
+            app._afterSpeak = () => {
+              showDREChart(monthKey, s.accounts, s.margins);
+              setTimeout(() => {
+                const q = 'Posso tirar os gráficos agora?';
+                addMsgUI('sky', q);
+                speak(q);
+              }, 500);
+            };
+          }
+          return resp;
+        }
+      }
+    }
+    // Pergunta genérica sobre a planilha carregada
+    if (/faturamento|receita|lucro|ebitda|margem|resultado|despesa|custo|cmv|planilha|dre/.test(t2)) {
+      const s = app.lastSheet.analysis.sheets.find(s => s.type === 'dre');
+      if (s) {
+        const rb = s.byCategory['receita_bruta'];
+        const ll = s.byCategory['lucro_liquido'];
+        const lastMes = s.months[s.months.length - 1];
+        if (rb && ll && rb.monthValues[lastMes] != null && ll.monthValues[lastMes] != null) {
+          return `DRE carregada — ${s.months.length} meses (${s.months.join(', ')}). Em ${lastMes}: Receita Bruta ${brl(rb.monthValues[lastMes])}, Lucro Líquido ${brl(ll.monthValues[lastMes])}. Me pergunte sobre um mês específico!`;
+        }
+        return `Tenho a DRE carregada com ${s.months.length} meses (${s.months.join(', ')}). Me pergunte sobre um mês — por exemplo: "me fale os dados de Janeiro".`;
+      }
+    }
+  }
+
+  // Sem planilha — orienta o usuário
   if (/planilha|excel|csv|dre|financ|receita|despesa|lucro/.test(t2))
     return 'Para análise financeira, arraste a planilha aqui. Aceito Excel, CSV e DRE formatada.';
   if (/document|pdf|arquivo|relator|procedimento|manual|norma/.test(t2))
     return 'Pode enviar o documento pelo botão "Analisar Arquivo". Assim respondo com base no conteúdo real.';
   if (/quanto|valor|preco|custo|total|soma/.test(t2) && /scapini|frete|carga|motorista|empresa|filial/.test(t2))
     return 'Para consultar valores reais da Scapini, preciso da planilha ou integração com o CGI. Arraste um arquivo aqui ou me faça uma pergunta sobre procedimentos.';
-
-  // DRE carregada — tenta responder do contexto da planilha
-  if (app.lastSheet?.context && /janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez|faturamento|receita|lucro|ebitda|margem|resultado/.test(t2)) {
-    const ctx = app.lastSheet.context;
-    return `Com base na planilha carregada: ${ctx.slice(0, 400)}… Me pergunte algo mais específico e com o Gemini ativo respondo com precisão total.`;
-  }
 
   // Perguntas gerais de conhecimento — não inventar dados internos
   if (/present|gift|idea|sugest|dica|como fazer|como funciona|o que e|quem e|onde fica|historia|significado|conceito/.test(t2))
@@ -2698,6 +2836,152 @@ const captureAndAnalyze = async () => {
 // ── Spreadsheet Analysis ───────────────────────────────────────────────────────
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+const MONTH_DETECT_MAP = [
+  { re: /\bjaneiro\b|\bjan\b/,           label: 'Jan' },
+  { re: /\bfevereiro\b|\bfev\b/,         label: 'Fev' },
+  { re: /\bmar[cç]o\b|\bmar\b/,          label: 'Mar' },
+  { re: /\babril\b|\babr\b/,             label: 'Abr' },
+  { re: /\bmaio\b|\bmai\b/,              label: 'Mai' },
+  { re: /\bjunho\b|\bjun\b/,             label: 'Jun' },
+  { re: /\bjulho\b|\bjul\b/,             label: 'Jul' },
+  { re: /\bagosto\b|\bago\b/,            label: 'Ago' },
+  { re: /\bsetembro\b|\bset\b/,          label: 'Set' },
+  { re: /\boutubro\b|\bout\b/,           label: 'Out' },
+  { re: /\bnovembro\b|\bnov\b/,          label: 'Nov' },
+  { re: /\bdezembro\b|\bdez\b/,          label: 'Dez' },
+];
+
+const findMonthKey = (months, label) => {
+  const ln = stripAccents(label.toLowerCase());
+  return months.find(m => {
+    const mn = stripAccents(m.toLowerCase());
+    return mn.startsWith(ln) || ln.startsWith(mn.substring(0, 3));
+  }) || null;
+};
+
+const DRE_KEY_LABELS = {
+  receita_bruta:   'Faturamento Bruto',
+  deducoes:        'Deduções',
+  receita_liquida: 'Receita Líquida',
+  cmv:             'CMV / Custo',
+  lucro_bruto:     'Lucro Bruto',
+  despesas_op:     'Despesas Operacionais',
+  ebitda:          'EBITDA',
+  ebit:            'EBIT',
+  resultado_fin:   'Resultado Financeiro',
+  lucro_antes_ir:  'Lucro Antes do IR',
+  ir_csll:         'IR / CSLL',
+  lucro_liquido:   'Lucro Líquido',
+};
+
+const buildDREMonthResponse = (analysis, label) => {
+  const s = (analysis.sheets || []).find(s => s.type === 'dre');
+  if (!s) return null;
+  const monthKey = findMonthKey(s.months, label);
+  if (!monthKey) return null;
+
+  const lines = [`📊 **${s.sheet} — ${monthKey}**\n`];
+  for (const [cat, catLabel] of Object.entries(DRE_KEY_LABELS)) {
+    const acc = s.byCategory[cat];
+    if (!acc) continue;
+    const val = acc.monthValues[monthKey];
+    if (val == null) continue;
+    lines.push(`• ${catLabel}: ${brl(val)}`);
+  }
+  // Fallback: contas numeradas / não classificadas — mostra todas do mês
+  if (lines.length <= 1) {
+    s.accounts
+      .filter(a => a.monthValues[monthKey] != null)
+      .slice(0, 20)
+      .forEach(a => lines.push(`• ${a.label}: ${brl(a.monthValues[monthKey])}`));
+  }
+
+  const mg = s.margins?.[monthKey];
+  if (mg) {
+    const parts = [];
+    if (mg.margem_bruta   != null) parts.push(`MB: ${mg.margem_bruta.toFixed(1)}%`);
+    if (mg.ebitda_pct     != null) parts.push(`EBITDA: ${mg.ebitda_pct.toFixed(1)}%`);
+    if (mg.margem_liquida != null) parts.push(`ML: ${mg.margem_liquida.toFixed(1)}%`);
+    if (parts.length) lines.push(`\n📈 Margens: ${parts.join(' | ')}`);
+  }
+  return lines.length > 1 ? lines.join('\n') : null;
+};
+
+// ── DRE Charts ─────────────────────────────────────────────────────────────────
+let _chartInstance = null;
+let _chartPending  = false;
+
+const showDREChart = (monthKey, accounts, margins) => {
+  const overlay = document.getElementById('chart-overlay');
+  if (!overlay || typeof Chart === 'undefined') return;
+
+  document.getElementById('chart-title').textContent = `📊 DRE — ${monthKey}`;
+
+  const data = (accounts || [])
+    .filter(a => a.monthValues?.[monthKey] != null && a.monthValues[monthKey] !== 0)
+    .slice(0, 16)
+    .map(a => ({ label: a.label, value: a.monthValues[monthKey] }));
+
+  if (!data.length) return;
+
+  overlay.style.display = 'flex';
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+
+  const canvas = document.getElementById('dre-chart');
+  const colors = data.map(d => d.value >= 0 ? 'rgba(239,68,68,0.75)' : 'rgba(120,120,120,0.6)');
+  const borders = data.map(d => d.value >= 0 ? 'rgba(239,68,68,1)' : 'rgba(160,160,160,0.9)');
+
+  _chartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.label.length > 22 ? d.label.substring(0, 22) + '…' : d.label),
+      datasets: [{
+        label: monthKey,
+        data: data.map(d => Math.abs(d.value)),
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const orig = data[ctx.dataIndex].value;
+              return ` ${brl(orig)}`;
+            }
+          },
+          backgroundColor: 'rgba(10,0,0,0.92)',
+          borderColor: 'rgba(239,68,68,0.3)',
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 },
+            callback: v => `R$ ${v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'k' : v}` },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        y: { ticks: { color: 'rgba(255,255,255,0.75)', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+  _chartPending = true;
+};
+
+const hideDREChart = () => {
+  const overlay = document.getElementById('chart-overlay');
+  if (overlay) overlay.style.display = 'none';
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+  _chartPending = false;
+};
+
 const buildSheetSummary = (analysis) => {
   const { filename, sheets } = analysis;
   let msg = `Planilha carregada: **${filename}**\n`;
@@ -2777,6 +3061,7 @@ const analyzeSpreadsheetFile = async (file) => {
       return;
     }
     app.lastSheet = { analysis: data.analysis, context: data.context };
+    try { localStorage.setItem('sky_lastSheet', JSON.stringify(app.lastSheet)); } catch {}
     const summary  = buildSheetSummary(data.analysis);
     const speech   = buildSheetSpeech(data.analysis);
     addMsgUI('user', `📊 ${file.name}`);
@@ -2978,7 +3263,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) { speak('Não consegui analisar a imagem. Tente novamente.'); }
     } else {
       setUserSaid(`"${val}"`);
-      processInput(val);
+      processInput(val, { typed: true });
     }
   };
 
@@ -3056,6 +3341,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Sincroniza dados e pré-aquece Ollama em paralelo ──
   syncFromServer();
   ollamaAvailable(); // popula ollamaCache em background, sem bloquear
+
+  // ── Botão fechar gráfico ──
+  document.getElementById('chart-close')?.addEventListener('click', () => {
+    hideDREChart();
+    const r = pick(['Fechado!', 'Pronto, sumiu.', 'Ok.']);
+    addMsgUI('sky', r); speak(r);
+  });
+
+  // ── Informa planilha restaurada do localStorage ──
+  if (app.lastSheet?.analysis) {
+    const s = app.lastSheet.analysis.sheets?.find(s => s.type === 'dre');
+    const nome = app.lastSheet.analysis.filename || 'planilha anterior';
+    const info = s
+      ? `📊 Planilha "${nome}" ainda carregada (${s.months?.length || '?'} meses). Pode perguntar sobre qualquer mês.`
+      : `📊 Planilha "${nome}" ainda carregada da sessão anterior.`;
+    setTimeout(() => addMsgUI('sky', info), 800);
+  }
 
   // ── Init modules ──
   initSidebar();

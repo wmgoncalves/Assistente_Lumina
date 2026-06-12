@@ -6,6 +6,7 @@
   <title>Sky | Assistente de IA</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="/chart.min.js"></script>
 </head>
 <body>
 <div class="app-layout">
@@ -174,6 +175,20 @@
           </div>
           <div id="demo-badge" style="display:none;font-size:0.63rem;color:rgba(255,255,255,0.25);letter-spacing:0.06em;text-align:center;margin-top:-0.6rem;pointer-events:none;">MODO DEMONSTRAÇÃO ATIVO</div>
         </section>
+
+      <!-- ── GRÁFICO DRE OVERLAY ──────────────────────────────────────────── -->
+      <div id="chart-overlay" class="chart-overlay" style="display:none">
+        <div class="chart-panel">
+          <div class="chart-header">
+            <span id="chart-title">DRE</span>
+            <button class="chart-close" id="chart-close" title="Fechar gráfico">✕</button>
+          </div>
+          <div class="chart-body">
+            <canvas id="dre-chart"></canvas>
+          </div>
+          <p class="chart-hint">💬 Diga "Sky, pode remover" para fechar</p>
+        </div>
+      </div>
       </main>
 
       <footer class="bottombar">
