@@ -1150,9 +1150,15 @@ const _finalize = (raw, source = 'unknown') => {
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
-  // Mostra gráfico 1.5s após resposta aparecer — não espera TTS terminar
+  // Mostra gráfico 1.5s após resposta aparecer (enquanto Sky ainda fala)
+  // Pergunta "Posso tirar?" só depois que TTS terminar
   if (afterSpeak) setTimeout(afterSpeak, 1500);
-  speak(finalResponse);
+  speak(finalResponse, afterSpeak ? () => {
+    setTimeout(() => {
+      const q = 'Posso tirar os gráficos?';
+      addMsgUI('sky', q); speak(q);
+    }, 800);
+  } : null);
   setFace('idle');
   const ms = app._reqStart ? Date.now() - app._reqStart : 0;
   logInteraction(app._lastQuestion || '', finalResponse, source, null, ms);
@@ -1227,10 +1233,6 @@ const processInput = async (rawText, opts = {}) => {
           if (monthKey && s) {
             app._afterSpeak = () => {
               showDREChart(monthKey, s.accounts, s.margins, s.byCategory);
-              setTimeout(() => {
-                const q = 'Posso tirar os gráficos?';
-                addMsgUI('sky', q); speak(q);
-              }, 600);
             };
           }
           break;
@@ -2706,11 +2708,6 @@ const localFallback = (text) => {
           if (monthKey && s) {
             app._afterSpeak = () => {
               showDREChart(monthKey, s.accounts, s.margins, s.byCategory);
-              setTimeout(() => {
-                const q = 'Posso tirar os gráficos agora?';
-                addMsgUI('sky', q);
-                speak(q);
-              }, 500);
             };
           }
           return resp;
