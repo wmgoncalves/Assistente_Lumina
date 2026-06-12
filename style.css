@@ -846,6 +846,9 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
 .toast.success { border-left: 3px solid var(--accent); }
 .toast.info    { border-left: 3px solid #3b82f6; }
 
+/* ── Quando gráfico aberto: Sky recua para a esquerda ── */
+.main-area.chart-open .center { margin-right: 48%; transition: margin 0.28s cubic-bezier(.4,0,.2,1); }
+
 /* ── GRÁFICO DRE — PAINEL LATERAL ── */
 .chart-overlay {
   position: fixed;

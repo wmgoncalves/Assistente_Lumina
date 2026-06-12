@@ -2940,6 +2940,7 @@ const showDREChart = (monthKey, accounts, margins, byCategory) => {
   if (!data.length) return;
 
   overlay.style.display = 'flex';
+  document.querySelector('.main-area')?.classList.add('chart-open');
   if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
 
   const canvas = document.getElementById('dre-chart');
@@ -2993,6 +2994,7 @@ const showDREChart = (monthKey, accounts, margins, byCategory) => {
 const hideDREChart = () => {
   const overlay = document.getElementById('chart-overlay');
   if (overlay) overlay.style.display = 'none';
+  document.querySelector('.main-area')?.classList.remove('chart-open');
   if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
   _chartPending = false;
 };

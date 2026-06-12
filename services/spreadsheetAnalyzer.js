@@ -150,8 +150,12 @@ function analyzeDRESheet(ws, sheetName) {
   const accounts = [];
   for (let i = headerRow + 1; i < raw.length; i++) {
     const row = raw[i];
-    const label = String(row[0] || '').trim();
-    if (!label) continue;
+    const code = String(row[0] || '').trim();
+    if (!code) continue;
+    // col[1] costuma ter o nome descritivo da conta (ex: "Receita Bruta")
+    const desc = String(row[1] || '').trim();
+    const isDescText = desc && !/^\d/.test(desc) && isNaN(parseFloat(desc));
+    const label = isDescText ? desc : code;
 
     const monthValues = {};
     let hasValue = false;
@@ -161,9 +165,9 @@ function analyzeDRESheet(ws, sheetName) {
     }
     if (!hasValue) continue;
 
-    const category = classifyDRERow(label);
+    const category = classifyDRERow(isDescText ? desc : code);
     const total = Object.values(monthValues).reduce((s, v) => s + v, 0);
-    accounts.push({ label, category, monthValues, total, totalBrl: brl(total) });
+    accounts.push({ label, code, category, monthValues, total, totalBrl: brl(total) });
   }
 
   if (accounts.length < 2) return null;
