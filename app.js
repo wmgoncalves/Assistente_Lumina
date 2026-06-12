@@ -2593,12 +2593,26 @@ const localFallback = (text) => {
     return 'Para análise financeira, arraste a planilha aqui. Aceito Excel, CSV e DRE formatada.';
   if (/document|pdf|arquivo|relator|procedimento|manual|norma/.test(t2))
     return 'Pode enviar o documento pelo botão "Analisar Arquivo". Assim respondo com base no conteúdo real.';
-  if (/quanto|valor|preco|custo|total|soma/.test(t2))
+  if (/quanto|valor|preco|custo|total|soma/.test(t2) && /scapini|frete|carga|motorista|empresa|filial/.test(t2))
     return 'Para consultar valores reais da Scapini, preciso da planilha ou integração com o CGI. Arraste um arquivo aqui ou me faça uma pergunta sobre procedimentos.';
+
+  // DRE carregada — tenta responder do contexto da planilha
+  if (app.lastSheet?.context && /janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez|faturamento|receita|lucro|ebitda|margem|resultado/.test(t2)) {
+    const ctx = app.lastSheet.context;
+    return `Com base na planilha carregada: ${ctx.slice(0, 400)}… Me pergunte algo mais específico e com o Gemini ativo respondo com precisão total.`;
+  }
+
+  // Perguntas gerais de conhecimento — não inventar dados internos
+  if (/present|gift|idea|sugest|dica|como fazer|como funciona|o que e|quem e|onde fica|historia|significado|conceito/.test(t2))
+    return pick([
+      'Boa pergunta! Com o Gemini ativo respondo isso direto. Por agora estou em modo demonstração.',
+      'Isso eu saberia responder com a IA completa. No momento estou em modo offline — tente novamente em instantes.',
+    ]);
+
   return pick([
     'Boa pergunta. Quando integrada ao CGI da Scapini, consulto isso em segundos.',
     'Ainda não tenho esse dado disponível. Me pergunte sobre procedimentos, documentos ou como a IA pode ajudar cada setor.',
-    'Essa informação vem dos sistemas internos. Com a integração ativa, respondo em tempo real.',
+    'No momento estou em modo demonstração. Com a conexão ativa, respondo isso em segundos.',
   ]);
 };
 
@@ -2809,6 +2823,9 @@ const analyzeFile = async (file) => {
 document.addEventListener('DOMContentLoaded', () => {
   scheduleBlink();
   renderMemoryPanel();
+  // Garante que VOZ FEMININA está ativa visualmente no load
+  document.getElementById('btn-voice-female')?.classList.add('active');
+  document.getElementById('btn-voice-male')?.classList.remove('active');
   // Pré-aquece cache do Ollama para fallback ser instantâneo
   ollamaAvailable().catch(() => {});
 
@@ -3269,8 +3286,8 @@ const activateSkyReveal = () => {
     if (contLabel) contLabel.textContent = 'CONVERSA CONTÍNUA: ON';
 
     setTimeout(() => {
+      // app.continuous=true faz o mic reiniciar automaticamente após a fala via finish()
       speak('Olá. Estou pronta. Pode começar.');
-      setTimeout(startListening, 1200); // inicia mic logo após a fala
     }, 800);
   }, 600);
 };
