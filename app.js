@@ -1226,7 +1226,7 @@ const processInput = async (rawText, opts = {}) => {
           const monthKey = s ? findMonthKey(s.months, label) : null;
           if (monthKey && s) {
             app._afterSpeak = () => {
-              showDREChart(monthKey, s.accounts, s.margins);
+              showDREChart(monthKey, s.accounts, s.margins, s.byCategory);
               setTimeout(() => {
                 const q = 'Posso tirar os gráficos?';
                 addMsgUI('sky', q); speak(q);
@@ -2705,7 +2705,7 @@ const localFallback = (text) => {
         if (resp) {
           if (monthKey && s) {
             app._afterSpeak = () => {
-              showDREChart(monthKey, s.accounts, s.margins);
+              showDREChart(monthKey, s.accounts, s.margins, s.byCategory);
               setTimeout(() => {
                 const q = 'Posso tirar os gráficos agora?';
                 addMsgUI('sky', q);
@@ -2911,16 +2911,31 @@ const buildDREMonthResponse = (analysis, label) => {
 let _chartInstance = null;
 let _chartPending  = false;
 
-const showDREChart = (monthKey, accounts, margins) => {
+const showDREChart = (monthKey, accounts, margins, byCategory) => {
   const overlay = document.getElementById('chart-overlay');
   if (!overlay || typeof Chart === 'undefined') return;
 
-  document.getElementById('chart-title').textContent = `📊 DRE — ${monthKey}`;
+  document.getElementById('chart-title').textContent = `DRE — ${monthKey}`;
 
-  const data = (accounts || [])
-    .filter(a => a.monthValues?.[monthKey] != null && a.monthValues[monthKey] !== 0)
-    .slice(0, 16)
-    .map(a => ({ label: a.label, value: a.monthValues[monthKey] }));
+  // 1ª opção: usar categorias com nomes legíveis (Receita Líquida, Lucro Bruto…)
+  let data = [];
+  if (byCategory) {
+    for (const [cat, catLabel] of Object.entries(DRE_KEY_LABELS)) {
+      const acc = byCategory[cat];
+      if (!acc) continue;
+      const val = acc.monthValues?.[monthKey];
+      if (val == null || val === 0) continue;
+      data.push({ label: catLabel, value: val });
+    }
+  }
+  // 2ª opção: contas brutas ordenadas por valor absoluto
+  if (!data.length) {
+    data = (accounts || [])
+      .filter(a => a.monthValues?.[monthKey] != null && a.monthValues[monthKey] !== 0)
+      .sort((a, b) => Math.abs(b.monthValues[monthKey]) - Math.abs(a.monthValues[monthKey]))
+      .slice(0, 12)
+      .map(a => ({ label: a.label, value: a.monthValues[monthKey] }));
+  }
 
   if (!data.length) return;
 
