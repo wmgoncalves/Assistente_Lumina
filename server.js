@@ -960,7 +960,7 @@ app.post('/api/prospect', async (req, res) => {
   const c = getCfg();
   if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
 
-  const { segmento = '', regiao = 'Brasil', quantidade = 5, para = 'DV Digital' } = req.body;
+  const { segmento = '', regiao = 'Brasil', quantidade = 5, para = 'Scapini Transportes' } = req.body;
   if (!segmento) return res.status(400).json({ error: 'segmento required' });
 
   const qtd = Math.min(Math.max(1, Number(quantidade) || 5), 15);
@@ -993,9 +993,9 @@ app.post('/api/prospect', async (req, res) => {
   }
 
   // Phase 2: Prompt adaptado ao contexto
-  const isDVDigital = /dv.?digital/i.test(para);
-  const paraInfo = isDVDigital
-    ? `A empresa que está prospectando é a **DV Digital** — agência de marketing digital e desenvolvimento de sistemas em Lajeado/RS. Serviços: sites, lojas virtuais, sistemas web, dashboards, IA, CRM, tráfego pago (Google/Meta Ads), identidade visual.`
+  const isScapini = /scapini/i.test(para);
+  const paraInfo = isScapini
+    ? `A empresa que está prospectando é a **Scapini Transportes** — transportadora com sede em Lajeado/RS, especializada em transporte rodoviário de cargas, logística e distribuição no sul do Brasil.`
     : `A empresa que está prospectando é **${para}**, localizada em Lajeado/RS, buscando novos clientes no segmento "${segmento}".`;
 
   const scrapedSection = scrapedText.length > 100

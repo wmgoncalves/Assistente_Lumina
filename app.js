@@ -1392,7 +1392,7 @@ const TOOL_DECLARATIONS = {
           segmento:   { type: 'string', description: 'Setor ou nicho das empresas (ex: clínicas, escritórios de advocacia, indústrias de alimentos, academias, transportadoras)' },
           regiao:     { type: 'string', description: 'Cidade, região ou estado (ex: Lajeado/RS, Vale do Taquari, Porto Alegre, Rio Grande do Sul)' },
           quantidade: { type: 'number', description: 'Quantas empresas buscar (padrão: 5, máximo: 15)' },
-          para:       { type: 'string', description: 'Nome da empresa que está prospectando. Ex: "DV Digital", "Scapini Transportes". Padrão: "DV Digital".' }
+          para:       { type: 'string', description: 'Nome da empresa que está prospectando. Ex: "Scapini Transportes", "Translíquidos". Padrão: "Scapini Transportes".' }
         },
         required: ['segmento']
       }
@@ -1404,7 +1404,7 @@ const TOOL_DECLARATIONS = {
         type: 'object',
         properties: {
           formato:   { type: 'string', enum: ['xlsx', 'docx', 'pptx', 'pdf'], description: 'Formato do arquivo: xlsx (Excel), docx (Word), pptx (PowerPoint), pdf (PDF)' },
-          titulo:    { type: 'string', description: 'Título do arquivo (ex: "Relatório de Clientes Junho 2026", "Proposta Comercial DV Digital")' },
+          titulo:    { type: 'string', description: 'Título do arquivo (ex: "Relatório de Clientes Junho 2026", "Proposta Comercial Scapini")' },
           instrucao: { type: 'string', description: 'Descrição detalhada do conteúdo que o arquivo deve ter. Inclua contexto relevante da conversa, dados que devem estar no arquivo, estrutura desejada.' }
         },
         required: ['formato', 'titulo', 'instrucao']
@@ -1692,7 +1692,7 @@ const executeTool = async (name, args) => {
           segmento:   args.segmento   || '',
           regiao:     args.regiao     || 'Vale do Taquari/RS',
           quantidade: args.quantidade || 5,
-          para:       args.para       || 'DV Digital',
+          para:       args.para       || 'Scapini Transportes',
         }),
       });
       if (!r.ok) return `Não consegui buscar clientes: ${(await r.json().catch(() => ({}))).error || r.status}`;
