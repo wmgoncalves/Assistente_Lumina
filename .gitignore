@@ -11,3 +11,7 @@ uploads/
 sky.code-workspace
 *.log
 *.jsonl
+# Banco SQLite — dados reais, não vai pro git
+sky.db
+sky.db-shm
+sky.db-wal
