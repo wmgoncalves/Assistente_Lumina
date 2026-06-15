@@ -334,11 +334,11 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 
 ── FERRAMENTAS — use proativamente, sem anunciar ──
 • updateMemory      → SEMPRE que aprender qualquer fato sobre o usuário: nome, profissão, empresa, cidade, gostos, rotina, família, preferências
+• saveNote          → OBRIGATÓRIO quando o usuário disser "guarda", "guarde", "anota", "salva", "registra" + qualquer informação (nomes, cargos, dados de pessoas, empresa, clientes, fornecedores). NUNCA responda na conversa — salve imediatamente.
 • createTask        → "anota tarefa", "lembra de", "preciso fazer"
 • completeTask      → quando usuário confirmar conclusão (ID do contexto)
 • checkHabit        → quando mencionar que fez um hábito
 • addFinance        → gasto, receita, pagamento, salário mencionado
-• saveNote          → pedido para salvar, anotar ou guardar informação
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
 • consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
@@ -389,6 +389,7 @@ SOBRE A SCAPINI:
 • Transporte rodoviário de cargas fracionadas e lotação para todo o Brasil (foco no Sul e Sudeste)
 • Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras
 • Centenas de colaboradores, frota moderna com rastreamento
+• Dono/fundador: Ernani Scapini | CEO: Lucas Scapini
 
 VISÃO SKY-SCAPINI — próximos passos (seja entusiasta ao explicar):
 Sky será integrada à Central de Dados da Scapini para:
@@ -1357,7 +1358,7 @@ const TOOL_DECLARATIONS = {
     },
     {
       name: 'saveNote',
-      description: 'Salva uma nota na base de conhecimento pessoal do usuário.',
+      description: 'Salva uma nota ou informação importante. Use SEMPRE que o usuário disser "guarda", "guarde", "anota", "salva", "registra" seguido de qualquer informação — nomes de pessoas, cargos, dados de clientes, fornecedores, empresa ou qualquer fato relevante.',
       parameters: {
         type: 'object',
         properties: {
