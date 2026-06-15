@@ -78,12 +78,23 @@ app.get('/api/config', (req, res) => {
 
 app.post('/api/config', (req, res) => {
   const c = getCfg();
-  const { username, geminiKey, elevenLabsKey, elevenVoiceId, ollamaModel } = req.body;
+  const { username, geminiKey, elevenLabsKey, elevenVoiceId, ollamaModel, frete_params } = req.body;
   if (username      !== undefined)             c.username      = username;
   if (geminiKey     && geminiKey.trim())       c.geminiKey     = geminiKey.trim();
   if (elevenLabsKey && elevenLabsKey.trim())   c.elevenLabsKey = elevenLabsKey.trim();
   if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId;
   if (ollamaModel   && ollamaModel.trim())     c.ollamaModel   = ollamaModel.trim();
+  if (frete_params  && typeof frete_params === 'object') {
+    const ALLOWED = ['preco_diesel','pedagio_por_km','rendimento_km_l','margem_pct',
+                     'custo_fixo_km','custo_motorista_dia','velocidade_media_kmh','fator_rota'];
+    const current = c.frete_params || {};
+    for (const key of ALLOWED) {
+      if (frete_params[key] != null && typeof frete_params[key] === 'number') {
+        current[key] = frete_params[key];
+      }
+    }
+    c.frete_params = current;
+  }
   saveCfg(c);
   res.json({ ok: true, hasGemini: !!c.geminiKey, hasElevenLabs: !!c.elevenLabsKey });
 });

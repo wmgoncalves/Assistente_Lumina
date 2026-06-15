@@ -342,6 +342,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
 • consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
+• configurarFrete   → quando disser "atualiza o diesel", "muda a margem", "pedágio está X", "rendimento é X km/l", "diária do motorista é X". Salva os novos parâmetros e confirma.
 • estimarFrete      → OBRIGATÓRIO quando pedir cotação, estimativa, valor ou preço de frete entre cidades. Extrai origem e destino da fala (ex: "Lajeado pra Uberlândia" → origem:"Lajeado/RS" destino:"Uberlândia/MG"). NUNCA invente valores — use sempre esta tool.
 • prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
@@ -1408,6 +1409,21 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'configurarFrete',
+      description: 'Atualiza os parâmetros de custo usados no cálculo de frete: preço do diesel, pedágio/km, rendimento km/L, margem %, custo fixo/km, diária do motorista. Use quando o usuário disser "atualiza o diesel", "muda a margem para X%", "o pedágio está X por km", "rendimento do caminhão é X km/l".',
+      parameters: {
+        type: 'object',
+        properties: {
+          preco_diesel:         { type: 'number', description: 'Preço do diesel em R$/litro (ex: 6.80)' },
+          pedagio_por_km:       { type: 'number', description: 'Custo médio de pedágio em R$/km (ex: 0.25)' },
+          rendimento_km_l:      { type: 'number', description: 'Consumo do caminhão em km/litro carregado (ex: 2.8)' },
+          margem_pct:           { type: 'number', description: 'Margem de lucro em % sobre custo (ex: 30)' },
+          custo_fixo_km:        { type: 'number', description: 'Custo fixo por km em R$ — depreciação, seguro, manutenção (ex: 0.90)' },
+          custo_motorista_dia:  { type: 'number', description: 'Diária do motorista em R$ incluindo encargos (ex: 400)' },
+        }
+      }
+    },
+    {
       name: 'estimarFrete',
       description: 'Calcula estimativa de frete rodoviário com base na rota real (distância via OSRM), custos de combustível, pedágio, motorista e margem. Use quando pedir cotação, estimativa, valor ou preço de frete entre duas cidades/estados.',
       parameters: {
@@ -1621,6 +1637,7 @@ const TOOL_LABELS = {
   systemCommand:    'Executando comando…',
   downloadDocument: 'Preparando download…',
   webSearch:        'Pesquisando na web…',
+  configurarFrete:  'Atualizando parâmetros de frete…',
   consultarBanco:   'Consultando banco de dados…',
   estimarFrete:     'Calculando estimativa de frete…',
   prospectClients:  'Buscando empresas para prospectar…',
@@ -1841,6 +1858,48 @@ const executeTool = async (name, args) => {
       }
 
       return out;
+    }
+
+    case 'configurarFrete': {
+      const PARAM_LABELS = {
+        preco_diesel:        'Preço do diesel',
+        pedagio_por_km:      'Pedágio por km',
+        rendimento_km_l:     'Rendimento km/L',
+        margem_pct:          'Margem',
+        custo_fixo_km:       'Custo fixo por km',
+        custo_motorista_dia: 'Diária do motorista',
+      };
+      const PARAM_UNITS = {
+        preco_diesel: 'R$/L', pedagio_por_km: 'R$/km', rendimento_km_l: 'km/L',
+        margem_pct: '%', custo_fixo_km: 'R$/km', custo_motorista_dia: 'R$/dia',
+      };
+
+      // Busca config atual do servidor
+      const cfgR = await fetch('/api/config');
+      const cfgAtual = cfgR.ok ? await cfgR.json() : {};
+      const paramsAtuais = cfgAtual.frete_params || {};
+
+      // Aplica apenas os campos passados (não nulos)
+      const novosParams = { ...paramsAtuais };
+      const alterados = [];
+      for (const [key, val] of Object.entries(args)) {
+        if (val != null && PARAM_LABELS[key]) {
+          novosParams[key] = val;
+          alterados.push(`**${PARAM_LABELS[key]}:** ${val} ${PARAM_UNITS[key]}`);
+        }
+      }
+
+      if (!alterados.length) return 'Nenhum parâmetro foi alterado.';
+
+      // Salva no servidor
+      const saveR = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...cfgAtual, frete_params: novosParams }),
+      });
+      if (!saveR.ok) return 'Não consegui salvar os parâmetros. Tente novamente.';
+
+      return `✅ Parâmetros de frete atualizados:\n${alterados.join('\n')}\n\nAs próximas cotações já usam esses valores.`;
     }
 
     case 'estimarFrete': {
