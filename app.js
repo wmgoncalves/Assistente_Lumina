@@ -341,6 +341,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • saveNote          → pedido para salvar, anotar ou guardar informação
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• estimarFrete      → OBRIGATÓRIO quando pedir cotação, estimativa, valor ou preço de frete entre cidades. Extrai origem e destino da fala (ex: "Lajeado pra Uberlândia" → origem:"Lajeado/RS" destino:"Uberlândia/MG"). NUNCA invente valores — use sempre esta tool.
 • prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
 
@@ -1392,6 +1393,20 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'estimarFrete',
+      description: 'Calcula estimativa de frete rodoviário com base na rota real (distância via OSRM), custos de combustível, pedágio, motorista e margem. Use quando pedir cotação, estimativa, valor ou preço de frete entre duas cidades/estados.',
+      parameters: {
+        type: 'object',
+        properties: {
+          origem:     { type: 'string', description: 'Cidade e estado de origem (ex: "Lajeado/RS", "Porto Alegre RS")' },
+          destino:    { type: 'string', description: 'Cidade e estado de destino (ex: "Uberlândia/MG", "São Paulo SP")' },
+          peso_kg:    { type: 'number', description: 'Peso da carga em kg (opcional, padrão 0 = sem considerar peso)' },
+          tipo_carga: { type: 'string', description: 'Tipo de carga: "seco", "refrigerado", "granéis", "perigoso" etc. (padrão: seco)' },
+        },
+        required: ['origem', 'destino']
+      }
+    },
+    {
       name: 'prospectClients',
       description: 'Pesquisa empresas reais com contato (telefone, email, site) que podem ser clientes, e gera email frio + mensagem WhatsApp personalizada para cada uma. Use quando o usuário pedir para buscar clientes, prospectar empresas, encontrar leads ou oportunidades de negócio.',
       parameters: {
@@ -1591,6 +1606,7 @@ const TOOL_LABELS = {
   systemCommand:    'Executando comando…',
   downloadDocument: 'Preparando download…',
   webSearch:        'Pesquisando na web…',
+  estimarFrete:     'Calculando estimativa de frete…',
   prospectClients:  'Buscando empresas para prospectar…',
   generateFile:     'Gerando arquivo…',
   readFile:         'Lendo arquivo…',
@@ -1757,6 +1773,40 @@ const executeTool = async (name, args) => {
 
     case 'webSearch':
       return await webSearchGemini(args.query);
+
+    case 'estimarFrete': {
+      const r = await fetch('/api/frete-estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origem:     args.origem     || '',
+          destino:    args.destino    || '',
+          peso_kg:    args.peso_kg    || 0,
+          tipo_carga: args.tipo_carga || 'seco',
+        }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        return `Não consegui calcular o frete: ${e.error || r.status}`;
+      }
+      const d = await r.json();
+      const dias = d.dias_viagem === 1 ? '1 dia' : `${d.dias_viagem} dias`;
+      const peso = d.peso_kg > 0 ? ` | Carga: ${(d.peso_kg/1000).toFixed(1)}t` : '';
+      const ton  = d.custo_por_ton ? ` | **R$/ton:** ${d.custo_por_ton}` : '';
+
+      return `🚛 **Estimativa de Frete — Scapini Transportes**\n\n` +
+        `📍 **${d.origem}** → **${d.destino}**\n` +
+        `📏 Distância: **${d.distancia_km} km** | Duração estimada: **${d.duracao_estimada_h}h** (${dias} de viagem)${peso}\n\n` +
+        `**Composição do custo:**\n` +
+        `• Combustível: ${d.breakdown.combustivel}\n` +
+        `• Pedágio: ${d.breakdown.pedagio}\n` +
+        `• Motorista: ${d.breakdown.motorista}\n` +
+        `• Custos fixos (dep./manut./seg.): ${d.breakdown.custos_fixos}\n` +
+        `• Custo operacional total: ${d.breakdown.custo_total}\n` +
+        `• Margem Scapini (${d.breakdown.margem}): incluída\n\n` +
+        `💰 **Preço estimado: ${d.preco_final}**${ton}\n\n` +
+        `⚠️ *Estimativa — pedágio e combustível variam por rota. Consultar equipe comercial para proposta formal.*`;
+    }
 
     case 'prospectClients': {
       const r = await fetch('/api/prospect', {

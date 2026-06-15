@@ -955,6 +955,119 @@ app.post('/api/browser', async (req, res) => {
   }
 });
 
+// ── Estimativa de Frete ───────────────────────────────────────────────────────
+const FRETE_DEFAULTS = {
+  rendimento_km_l:      3.0,   // km por litro (caminhão carregado)
+  preco_diesel:         6.50,  // R$/litro
+  pedagio_por_km:       0.22,  // R$/km (média Brasil rodovias federais)
+  custo_fixo_km:        0.85,  // R$/km (depreciação, seguro, manutenção)
+  custo_motorista_dia:  350,   // R$/dia (diária + encargos)
+  velocidade_media_kmh: 70,    // km/h (média com paradas)
+  margem_pct:           28,    // % de margem sobre custo
+  fator_rota:           1.12,  // correção OSRM vs distância real BR (~12%)
+};
+
+const ESTADOS_BR = {
+  AC:'Acre', AL:'Alagoas', AP:'Amapá', AM:'Amazonas', BA:'Bahia', CE:'Ceará',
+  DF:'Distrito Federal', ES:'Espírito Santo', GO:'Goiás', MA:'Maranhão',
+  MT:'Mato Grosso', MS:'Mato Grosso do Sul', MG:'Minas Gerais', PA:'Pará',
+  PB:'Paraíba', PR:'Paraná', PE:'Pernambuco', PI:'Piauí', RJ:'Rio de Janeiro',
+  RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia', RR:'Roraima',
+  SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins',
+};
+
+async function geocode(local) {
+  // "Lajeado/RS" ou "Lajeado RS" → "Lajeado, Rio Grande do Sul"
+  const normalized = local.replace(/\//g, ' ').trim()
+    .replace(/\b([A-Z]{2})\b/, (_, uf) => ESTADOS_BR[uf] ? ', ' + ESTADOS_BR[uf] : '');
+
+  const queries = [normalized, local.replace(/\//g, ' ').trim() + ', Brasil'];
+  for (const query of queries) {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'SkyScapini/1.0' }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) continue;
+    const d = await r.json();
+    if (!d.length) continue;
+    // Prefere relation/boundary (município) depois administrative, depois qualquer
+    const best = d.find(x => x.osm_type === 'R' && x.class === 'boundary')
+               || d.find(x => x.class === 'boundary' || x.type === 'administrative')
+               || d[0];
+    const nome = best.display_name.split(',').slice(0, 2).join(',').trim();
+    return { lat: parseFloat(best.lat), lon: parseFloat(best.lon), nome };
+  }
+  throw new Error(`Local não encontrado: ${local}`);
+}
+
+async function calcRoute(lat1, lon1, lat2, lon2) {
+  const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+  const r = await fetch(url, { headers: { 'User-Agent': 'SkyScapini/1.0' }, signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`OSRM HTTP ${r.status}`);
+  const d = await r.json();
+  if (d.code !== 'Ok' || !d.routes.length) throw new Error('Rota não encontrada');
+  return {
+    distancia_km: Math.round(d.routes[0].distance / 1000),
+    duracao_h:    Math.round(d.routes[0].duration / 3600 * 10) / 10,
+  };
+}
+
+app.post('/api/frete-estimate', async (req, res) => {
+  const { origem, destino, peso_kg = 0, tipo_carga = 'seco' } = req.body;
+  if (!origem || !destino) return res.status(400).json({ error: 'origem e destino são obrigatórios' });
+
+  const c = getCfg();
+  const p = { ...FRETE_DEFAULTS, ...(c.frete_params || {}) };
+
+  try {
+    // Geocoding + rota
+    const [geo1, geo2] = await Promise.all([geocode(origem), geocode(destino)]);
+    const rota = await calcRoute(geo1.lat, geo1.lon, geo2.lat, geo2.lon);
+    const km = Math.round(rota.distancia_km * p.fator_rota);
+
+    // Fator de peso (>20t aumenta consumo em até 15%)
+    const fatorPeso = peso_kg > 20000 ? 1.15 : peso_kg > 10000 ? 1.07 : 1.0;
+    // Fator tipo de carga (refrigerado +20%)
+    const fatorTipo = /refrig|frigor|temp.*contro/i.test(tipo_carga) ? 1.20 : 1.0;
+
+    const consumo_l      = (km / p.rendimento_km_l) * fatorPeso * fatorTipo;
+    const custo_combust  = consumo_l * p.preco_diesel;
+    const custo_pedagio  = km * p.pedagio_por_km;
+    const dias_viagem    = Math.ceil(km / (p.velocidade_media_kmh * 10)); // ~10h dirigindo/dia
+    const custo_motorist = dias_viagem * p.custo_motorista_dia;
+    const custo_fixo     = km * p.custo_fixo_km;
+    const custo_total    = custo_combust + custo_pedagio + custo_motorist + custo_fixo;
+    const preco_final    = custo_total * (1 + p.margem_pct / 100);
+    const custo_ton      = peso_kg > 0 ? preco_final / (peso_kg / 1000) : null;
+
+    const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    res.json({
+      ok: true,
+      origem: geo1.nome.split(',').slice(0, 2).join(',').trim(),
+      destino: geo2.nome.split(',').slice(0, 2).join(',').trim(),
+      distancia_km: km,
+      duracao_estimada_h: rota.duracao_h,
+      dias_viagem,
+      peso_kg,
+      tipo_carga,
+      breakdown: {
+        combustivel:  brl(custo_combust),
+        pedagio:      brl(custo_pedagio),
+        motorista:    brl(custo_motorist),
+        custos_fixos: brl(custo_fixo),
+        custo_total:  brl(custo_total),
+        margem:       `${p.margem_pct}%`,
+      },
+      preco_final:     brl(preco_final),
+      preco_final_num: Math.round(preco_final),
+      custo_por_ton:   custo_ton ? brl(custo_ton) : null,
+      params_usados:   p,
+    });
+  } catch (e) {
+    console.error('[frete-estimate]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Prospecção de Clientes ────────────────────────────────────────────────────
 app.post('/api/prospect', async (req, res) => {
   const c = getCfg();
