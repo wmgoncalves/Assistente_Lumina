@@ -42,7 +42,13 @@ let _memCache  = null;
 let _embedCache = null;
 
 const getCfg  = () => _cfgCache  || (_cfgCache  = readJSON(CONFIG_FILE,  { geminiKey: '', elevenLabsKey: '', username: '' }));
-const getMem  = () => _memCache  || (_memCache  = readJSON(MEMORY_FILE,  { userName: null, facts: [], sessions: 0, lastSeen: null, history: [] }));
+const getMem  = () => {
+  if (!_memCache) {
+    _memCache = readJSON(MEMORY_FILE, { userName: null, facts: [], sessions: 0, lastSeen: null, history: [] });
+    if (!Array.isArray(_memCache.facts)) _memCache.facts = [];
+  }
+  return _memCache;
+};
 const readEmbed = () => _embedCache || (_embedCache = readJSON(EMBED_FILE, {}));
 
 const saveCfg  = (data) => { _cfgCache  = data; writeJSON(CONFIG_FILE,  data); };
@@ -794,7 +800,11 @@ updated: ${now()}
 
 app.post('/api/memory', (req, res) => {
   const m = getMem();
-  const updated = { ...m, ...req.body };
+  const body = { ...req.body };
+  // Garante que facts seja sempre array
+  if ('facts' in body && !Array.isArray(body.facts)) delete body.facts;
+  const updated = { ...m, ...body };
+  if (!Array.isArray(updated.facts)) updated.facts = [];
   saveMem(updated);
   syncMemoryToObsidian(updated);
   res.json({ ok: true });

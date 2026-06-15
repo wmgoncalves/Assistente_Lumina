@@ -1272,6 +1272,24 @@ const processInput = async (rawText, opts = {}) => {
       return;
     }
 
+    // ── Intercept: salvar — Gemini ignora a tool quando o dado já está no contexto
+    const SAVE_CMD = /^\s*(salve?|guarde?|anote?|registra(?:r)?|salva|memoriza(?:r)?|memorize|grava(?:r)?|grave)\b/i;
+    if (SAVE_CMD.test(text)) {
+      try {
+        const conteudo = text.replace(SAVE_CMD, '').replace(/^[\s,.:]+/, '').trim();
+        if (conteudo.length > 2) {
+          const titulo = conteudo.length > 60 ? conteudo.substring(0, 60) + '…' : conteudo;
+          await executeTool('saveNote', { title: titulo, content: conteudo });
+          _finalize(pick([
+            `Anotado! Salvei na base de conhecimento.`,
+            `Registrado! Já tá salvo aqui.`,
+            `Guardei isso. Pode perguntar quando quiser.`,
+          ]), 'local');
+          return;
+        }
+      } catch(e) { /* fallthrough para Gemini */ }
+    }
+
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
     if (cfg.geminiKey && !geminiBlocked()) {
       try {
