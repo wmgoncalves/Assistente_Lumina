@@ -300,10 +300,10 @@ const buildContextBlock = async (lastUserMsg = '') => {
     });
   }
 
-  // Planilha — injeta contexto com limite de 3000 chars para não estourar o prompt do Gemini
+  // Planilha — injeta contexto com limite de 8000 chars
   if (app.lastSheet) {
     const sheetCtx = app.lastSheet.context || '';
-    ctx += sheetCtx.length > 3000 ? sheetCtx.substring(0, 3000) + '\n…[contexto truncado]' : sheetCtx;
+    ctx += sheetCtx.length > 8000 ? sheetCtx.substring(0, 8000) + '\n…[contexto truncado]' : sheetCtx;
   }
 
   return ctx;
@@ -2924,6 +2924,17 @@ const localFallback = (text) => {
           }
           return resp;
         }
+        // Mês detectado mas sem dados — orienta o usuário
+        if (s) {
+          const mesesComDados = s.months.filter(m => {
+            const rb = s.byCategory['receita_bruta'];
+            return rb ? rb.monthValues[m] != null : s.accounts.some(a => a.monthValues[m] != null);
+          });
+          if (mesesComDados.length) {
+            return `Não encontrei dados de ${label} na planilha. Os meses disponíveis são: ${mesesComDados.join(', ')}. Me pergunte sobre um desses!`;
+          }
+        }
+        break;
       }
     }
     // Pergunta genérica sobre a planilha carregada
@@ -3070,13 +3081,13 @@ const findMonthKey = (months, label) => {
 
 const DRE_KEY_LABELS = {
   receita_bruta:   'Faturamento Bruto',
-  deducoes:        'Deduções',
+  deducoes:        'Deduções / Impostos',
   receita_liquida: 'Receita Líquida',
-  cmv:             'CMV / Custo',
+  cmv:             'Custos Operacionais',
   lucro_bruto:     'Lucro Bruto',
-  despesas_op:     'Despesas Operacionais',
+  despesas_op:     'Despesas Administrativas',
   ebitda:          'EBITDA',
-  ebit:            'EBIT',
+  ebit:            'EBIT / Resultado Operacional',
   resultado_fin:   'Resultado Financeiro',
   lucro_antes_ir:  'Lucro Antes do IR',
   ir_csll:         'IR / CSLL',

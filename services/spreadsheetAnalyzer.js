@@ -107,14 +107,16 @@ function detectMonthCol(header) {
 // ── Categorias de conta DRE ───────────────────────────────────────────────────
 const DRE_CATS = {
   receita_bruta:      /receita bruta|faturamento bruto|receita total|receita operacional bruta/,
-  deducoes:           /deducao|deducoes|imp.*receita|pis|cofins|iss|icms.*receita|(-)\s*deducao/,
+  deducoes:           /deducao|deducoes|imp.*receita|pis|cofins|iss|icms.*receita|(-)\s*deducao|imposto.*venda|total.*deducao|total.*imposto/,
   receita_liquida:    /receita liquida|receita liq\b|receita oper.*liq/,
-  cmv:                /^cmv$|custo.*mercad|custo.*prod|custo.*servic|cpv|cogs/,
-  lucro_bruto:        /lucro bruto|resultado bruto|margem bruta/,
-  despesas_op:        /despesa.*oper|despesa.*adm|despesa.*comerci|despesa.*vendas|desp\. oper/,
+  // só totais de custo — itens individuais ficam em accounts mas não em byCategory
+  cmv:                /^cmv$|custo.*mercad|custo.*prod|custo.*servic|cpv|cogs|total.*custo.*oper|total.*custo/,
+  lucro_bruto:        /lucro bruto|resultado bruto/,
+  // só totais de despesa
+  despesas_op:        /total.*despesa.*adm|total.*despesa.*comerci|total.*despesa.*vendas|total.*despesa.*oper|^despesa.*adm$|^despesa.*comerci$/,
   ebitda:             /^ebitda$|lajida|lucro.*antes.*juro.*imp.*amort/,
-  ebit:               /^ebit$|laji\b|lucro.*antes.*juro.*imp(?!.*amort)/,
-  resultado_fin:      /resultado financ|receita financ|despesa financ|juros|variacao cambial/,
+  ebit:               /^ebit$|laji\b|resultado.*operacional\b|lucro.*antes.*juro.*imp(?!.*amort)/,
+  resultado_fin:      /resultado financ|receita financ|despesa financ/,
   lucro_antes_ir:     /lair|lucro.*antes.*ir|resultado.*antes.*ir/,
   ir_csll:            /^ir$|^csll$|ir.*csll|imposto.*renda|contrib.*social/,
   lucro_liquido:      /lucro liquido|resultado liquido|lucro liq\b|resultado final/,
