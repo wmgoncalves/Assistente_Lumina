@@ -487,6 +487,31 @@ app.patch('/api/db/leads/:id', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/leads/export', (req, res) => {
+  try {
+    const { status, prioridade, segmento } = req.query;
+    const leads = db.listarLeads({ status, prioridade, segmento, limit: 500 });
+    if (!leads.length) return res.status(404).json({ error: 'Nenhum lead encontrado com esses filtros.' });
+
+    const XLSX = require('xlsx');
+    const headers = ['Empresa', 'Segmento', 'Cidade', 'Telefone', 'Email', 'Site', 'WhatsApp', 'Prioridade', 'Status', 'Serviço', 'Observações', 'Criado em'];
+    const rows = leads.map(l => [
+      l.nome, l.segmento || '', l.cidade || '', l.telefone || '', l.email || '',
+      l.site || '', l.whatsapp || '', l.prioridade || '', l.status || '',
+      l.servico || '', l.observacoes || '',
+      l.criado_em ? l.criado_em.substring(0, 10) : '',
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [30,20,20,18,30,30,30,12,14,20,30,12].map(w => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="leads_scapini_${new Date().toISOString().slice(0,10)}.xlsx"`);
+    res.send(buf);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── KB: auto-categorizar notas ───────────────────────────────────────────────
 const KB_CATEGORIES = {
   'TI':         ['cgi','sistema','instalação','configurar','software','servidor','fre','mdfe','sefaz','xml','schema','atslog','enterprise','rastreamento','apollo','it.ti','network','windows','suporte'],

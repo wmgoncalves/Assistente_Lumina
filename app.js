@@ -341,6 +341,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • addFinance        → gasto, receita, pagamento, salário mencionado
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• exportarLeads     → quando pedir "exporta os leads", "gera planilha de clientes", "baixa os leads em Excel". Pode filtrar por status, prioridade ou segmento.
 • consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
 • configurarFrete   → quando disser "atualiza o diesel", "muda a margem", "pedágio está X", "rendimento é X km/l", "diária do motorista é X". Salva os novos parâmetros e confirma.
 • estimarFrete      → OBRIGATÓRIO quando pedir cotação, estimativa, valor ou preço de frete entre cidades. Extrai origem e destino da fala (ex: "Lajeado pra Uberlândia" → origem:"Lajeado/RS" destino:"Uberlândia/MG"). NUNCA invente valores — use sempre esta tool.
@@ -1418,6 +1419,18 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'exportarLeads',
+      description: 'Exporta os leads salvos no banco para um arquivo Excel (.xlsx) e faz o download automaticamente. Use quando pedir "exporta os leads", "gera planilha de clientes", "baixa os leads", "manda os leads em Excel".',
+      parameters: {
+        type: 'object',
+        properties: {
+          status:     { type: 'string', description: 'Filtrar por status: novo, contatado, proposta, fechado, perdido (opcional)' },
+          prioridade: { type: 'string', description: 'Filtrar por prioridade: alta, media, baixa (opcional)' },
+          segmento:   { type: 'string', description: 'Filtrar por segmento/setor (opcional)' },
+        }
+      }
+    },
+    {
       name: 'consultarBanco',
       description: 'Consulta o banco de dados da Sky: leads (empresas prospectadas), cotações de frete, contatos, lembretes. Use quando perguntar "quantos leads temos?", "mostra as cotações", "qual o status dos prospectos", "histórico de fretes".',
       parameters: {
@@ -1660,6 +1673,7 @@ const TOOL_LABELS = {
   downloadDocument: 'Preparando download…',
   webSearch:        'Pesquisando na web…',
   configurarFrete:  'Atualizando parâmetros de frete…',
+  exportarLeads:    'Exportando leads para Excel…',
   consultarBanco:   'Consultando banco de dados…',
   estimarFrete:     'Calculando estimativa de frete…',
   prospectClients:  'Buscando empresas para prospectar…',
@@ -1828,6 +1842,23 @@ const executeTool = async (name, args) => {
 
     case 'webSearch':
       return await webSearchGemini(args.query);
+
+    case 'exportarLeads': {
+      const params = new URLSearchParams();
+      if (args.status)     params.set('status',     args.status);
+      if (args.prioridade) params.set('prioridade', args.prioridade);
+      if (args.segmento)   params.set('segmento',   args.segmento);
+      const url = `/api/leads/export?${params.toString()}`;
+      // Força download no browser
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads_scapini_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      const filtrosStr = [args.status, args.prioridade, args.segmento].filter(Boolean).join(', ');
+      return `Planilha de leads exportada${filtrosStr ? ` (filtros: ${filtrosStr})` : ''}! Verifique os downloads.`;
+    }
 
     case 'consultarBanco': {
       const tabela  = args.tabela  || 'leads';
