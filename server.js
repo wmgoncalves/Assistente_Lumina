@@ -1006,21 +1006,27 @@ app.post('/api/prospect', async (req, res) => {
 
 ${paraInfo}${scrapedSection}
 
-Gere uma lista de **${qtd} empresas** do segmento **"${segmento}"** na região **"${regiao}"** que poderiam ser clientes.
+REGRAS IMPORTANTES:
+- Retorne APENAS EMPRESAS com CNPJ (pessoas jurídicas), NUNCA pessoas físicas ou perfis de consumidores
+- Os clientes devem ser empresas que realmente precisariam dos serviços de ${para}
+- Use nomes de empresas reais e conhecidas quando possível (ex: redes de supermercados, indústrias, distribuidoras, construtoras, cooperativas, frigoríficos, transportadoras concorrentes menores, atacadistas, etc.)
+- Se tiver dados do Google Maps acima, priorize as empresas encontradas lá
+
+Gere uma lista de **${qtd} empresas** do segmento **"${segmento}"** na região **"${regiao}"** que poderiam ser clientes de ${para}.
 
 Para cada empresa, retorne um objeto JSON com exatamente estes campos:
-- "nome": nome da empresa (real se encontrado nos dados, senão realista para a região)
-- "segmento": nicho específico
-- "cidade": cidade
-- "telefone": telefone se encontrado nos dados, senão ""
+- "nome": nome da empresa (real e conhecida se possível, senão realista para o setor)
+- "segmento": nicho específico (ex: "Supermercado", "Frigorífico", "Distribuidora de bebidas")
+- "cidade": cidade onde provavelmente está localizada
+- "telefone": telefone se encontrado nos dados do Google Maps, senão ""
 - "site": site se encontrado nos dados, senão ""
 - "email": email de contato se encontrado, senão ""
-- "dor": principal problema que provavelmente tem (específico e realista)
-- "servico": qual serviço de ${para} seria ideal
-- "prioridade": "alta", "media" ou "baixa"
-- "email_assunto": linha de assunto para email frio (curto, personalizado, sem clickbait)
-- "email_corpo": email de prospecção (3 parágrafos: contexto da dor → solução → CTA. Tom consultivo, direto. Assine como ${para}.)
-- "whatsapp": mensagem curta para WhatsApp (2-3 linhas, informal mas profissional, com CTA)
+- "dor": principal dor logística/operacional que provavelmente tem (específica e realista para o setor)
+- "servico": qual serviço específico de ${para} seria ideal para essa empresa
+- "prioridade": "alta", "media" ou "baixa" (baseado no volume estimado de carga/demanda)
+- "email_assunto": assunto para email frio (curto, direto, personalizado para a empresa)
+- "email_corpo": email completo de prospecção (3 parágrafos: dor específica do setor → como ${para} resolve → CTA com contato. Tom profissional, sem jargões. Assine como ${para}.)
+- "whatsapp": mensagem curta para WhatsApp (2-3 linhas, direta, com CTA)
 
 Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\`.`;
 

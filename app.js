@@ -341,7 +341,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • saveNote          → pedido para salvar, anotar ou guardar informação
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
-• prospectClients   → quando pedir para buscar clientes, prospectar empresas, encontrar leads ou oportunidades de negócio. Use o parâmetro "para" para indicar PARA QUAL empresa está prospectando (ex: "para Scapini" → para: "Scapini Transportes")
+• prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
 
