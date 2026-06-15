@@ -15,6 +15,7 @@ const notifier   = require('node-notifier');
 let puppeteer = null; // lazy load — carregado só quando /api/browser for usado
 const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
 const { writeLog, readLogs, clearLogs, countBySource } = require('./services/logger');
+const db = require('./services/db');
 
 // Node 18+ required (built-in fetch)
 if (!globalThis.fetch) {
@@ -453,6 +454,26 @@ app.get('/api/logs', (req, res) => {
 app.delete('/api/logs', (req, res) => {
   clearLogs();
   res.json({ ok: true });
+});
+
+// ── Banco de Dados — consulta / stats ─────────────────────────────────────────
+app.get('/api/db/stats', (req, res) => {
+  try { res.json({ ok: true, stats: db.statsGeral() }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/db/query', (req, res) => {
+  const { tabela, filtro, limit = 20 } = req.body;
+  try { res.json({ ok: true, rows: db.consultarBanco({ tabela, filtro, limit }) }); }
+  catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+app.patch('/api/db/leads/:id', (req, res) => {
+  const { status, observacoes } = req.body;
+  try {
+    db.atualizarStatusLead(Number(req.params.id), status, observacoes);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── KB: auto-categorizar notas ───────────────────────────────────────────────
@@ -1062,6 +1083,23 @@ app.post('/api/frete-estimate', async (req, res) => {
       custo_por_ton:   custo_ton ? brl(custo_ton) : null,
       params_usados:   p,
     });
+
+    // Salva cotação no banco
+    try {
+      db.inserirCotacao({
+        origem: geo1.nome, destino: geo2.nome,
+        distancia_km: km, duracao_h: rota.duracao_h, dias_viagem,
+        peso_kg, tipo_carga,
+        custo_combustivel: Math.round(custo_combust * 100) / 100,
+        custo_pedagio:     Math.round(custo_pedagio * 100) / 100,
+        custo_motorista:   Math.round(custo_motorist * 100) / 100,
+        custo_fixo:        Math.round(custo_fixo * 100) / 100,
+        custo_total:       Math.round(custo_total * 100) / 100,
+        margem_pct:        p.margem_pct,
+        preco_final:       Math.round(preco_final * 100) / 100,
+        cliente_nome:      null,
+      });
+    } catch (dbErr) { console.warn('[frete-estimate] db insert:', dbErr.message); }
   } catch (e) {
     console.error('[frete-estimate]', e);
     res.status(500).json({ error: e.message });
@@ -1186,6 +1224,24 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     const match = raw.replace(/```json|```/g, '').match(/\[[\s\S]*\]/);
     if (!match) throw new Error('Resposta não contém array JSON válido');
     const list = JSON.parse(match[0]);
+
+    // Salva cada lead no banco (evita duplicatas por nome+segmento+cidade)
+    for (const c of list) {
+      try {
+        const existe = db.getDb().prepare(
+          'SELECT id FROM leads WHERE nome = ? AND segmento = ? AND para = ?'
+        ).get(c.nome || '', c.segmento || '', para);
+        if (!existe) {
+          db.inserirLead({
+            nome: c.nome || '', segmento: c.segmento || '', cidade: c.cidade || '',
+            telefone: c.telefone || '', email: c.email || '', site: c.site || '',
+            dor: c.dor || '', servico: c.servico || '', prioridade: c.prioridade || 'media',
+            email_assunto: c.email_assunto || '', email_corpo: c.email_corpo || '',
+            whatsapp: c.whatsapp || '', para,
+          });
+        }
+      } catch (dbErr) { console.warn('[prospect] db insert:', dbErr.message); }
+    }
 
     res.json({ ok: true, segmento, regiao, para, total: list.length, clientes: list, source, temDadosReais: scrapedText.length > 100 });
   } catch (e) {

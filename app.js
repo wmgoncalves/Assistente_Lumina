@@ -341,6 +341,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • saveNote          → pedido para salvar, anotar ou guardar informação
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
 • estimarFrete      → OBRIGATÓRIO quando pedir cotação, estimativa, valor ou preço de frete entre cidades. Extrai origem e destino da fala (ex: "Lajeado pra Uberlândia" → origem:"Lajeado/RS" destino:"Uberlândia/MG"). NUNCA invente valores — use sempre esta tool.
 • prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
@@ -1393,6 +1394,19 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'consultarBanco',
+      description: 'Consulta o banco de dados da Sky: leads (empresas prospectadas), cotações de frete, contatos, lembretes. Use quando perguntar "quantos leads temos?", "mostra as cotações", "qual o status dos prospectos", "histórico de fretes".',
+      parameters: {
+        type: 'object',
+        properties: {
+          tabela:  { type: 'string', enum: ['leads','cotacoes','contatos','lembretes'], description: 'Qual tabela consultar' },
+          filtro:  { type: 'string', description: 'Texto livre para filtrar (ex: nome da empresa, cidade, status)' },
+          limit:   { type: 'number', description: 'Máximo de registros (padrão 20)' },
+        },
+        required: ['tabela']
+      }
+    },
+    {
       name: 'estimarFrete',
       description: 'Calcula estimativa de frete rodoviário com base na rota real (distância via OSRM), custos de combustível, pedágio, motorista e margem. Use quando pedir cotação, estimativa, valor ou preço de frete entre duas cidades/estados.',
       parameters: {
@@ -1606,6 +1620,7 @@ const TOOL_LABELS = {
   systemCommand:    'Executando comando…',
   downloadDocument: 'Preparando download…',
   webSearch:        'Pesquisando na web…',
+  consultarBanco:   'Consultando banco de dados…',
   estimarFrete:     'Calculando estimativa de frete…',
   prospectClients:  'Buscando empresas para prospectar…',
   generateFile:     'Gerando arquivo…',
@@ -1773,6 +1788,59 @@ const executeTool = async (name, args) => {
 
     case 'webSearch':
       return await webSearchGemini(args.query);
+
+    case 'consultarBanco': {
+      const tabela  = args.tabela  || 'leads';
+      const filtro  = args.filtro  || '';
+      const limit   = args.limit   || 20;
+
+      // Busca stats gerais junto
+      const [statsR, queryR] = await Promise.all([
+        fetch('/api/db/stats'),
+        fetch('/api/db/query', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tabela, filtro, limit }) }),
+      ]);
+      const stats  = statsR.ok  ? (await statsR.json()).stats  : null;
+      const result = queryR.ok  ? (await queryR.json()).rows   : [];
+
+      if (!result.length) return `Nenhum registro encontrado em **${tabela}**${filtro ? ` para "${filtro}"` : ''}.`;
+
+      const LABELS = { leads: 'Lead', cotacoes: 'Cotação', contatos: 'Contato', lembretes: 'Lembrete' };
+      const brl = n => n != null ? Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
+
+      let out = `📦 **${LABELS[tabela] || tabela}s** — ${result.length} registro(s)`;
+      if (stats) {
+        if (tabela === 'leads')    out += ` | Total no banco: ${stats.leads?.total || 0} (${stats.leads?.novos || 0} novos)`;
+        if (tabela === 'cotacoes') out += ` | Total: ${stats.cotacoes?.total || 0} | Volume: ${brl(stats.cotacoes?.volume)}`;
+      }
+      out += '\n\n';
+
+      if (tabela === 'leads') {
+        const icons = { alta: '🔴', media: '🟡', baixa: '🟢' };
+        out += result.map(r =>
+          `${icons[r.prioridade] || '⚪'} **${r.nome}** — ${r.cidade || '—'}\n` +
+          `   Segmento: ${r.segmento || '—'} | Status: ${r.status} | Prioridade: ${r.prioridade}\n` +
+          (r.telefone ? `   📞 ${r.telefone}` : '') +
+          (r.email    ? `  ✉️ ${r.email}`    : '') +
+          (r.dor      ? `\n   Dor: ${r.dor}` : '')
+        ).join('\n\n');
+      } else if (tabela === 'cotacoes') {
+        out += result.map(r =>
+          `🚛 **${r.origem} → ${r.destino}**\n` +
+          `   ${r.distancia_km} km | ${r.tipo_carga} | ${r.peso_kg > 0 ? (r.peso_kg/1000).toFixed(1)+'t' : 'peso n/d'}\n` +
+          `   💰 **${brl(r.preco_final)}** | Status: ${r.status} | ${r.criado_em?.split(' ')[0] || ''}`
+        ).join('\n\n');
+      } else if (tabela === 'lembretes') {
+        out += result.map(r =>
+          `${r.concluido ? '✅' : '⏰'} ${r.texto}` +
+          (r.data_hora ? ` — ${r.data_hora}` : '')
+        ).join('\n');
+      } else {
+        out += result.map(r => JSON.stringify(r, null, 2)).join('\n---\n');
+      }
+
+      return out;
+    }
 
     case 'estimarFrete': {
       const r = await fetch('/api/frete-estimate', {
