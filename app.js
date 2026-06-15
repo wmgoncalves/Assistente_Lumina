@@ -1259,28 +1259,16 @@ const processInput = async (rawText, opts = {}) => {
       }
     }
 
-    // ── Intercept: perguntas de identidade — Gemini ignora system prompt pra isso
-    const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou|é)|o que (você |vc )?(é|faz|representa)|de onde (você |vc )?veio|você é (uma? )?(ia|intelig|robo|bot|gemini|gpt|claude|ollama|modelo)|qual (é |sua )?(sua )?(origem|tecnologia|modelo))\b/i;
+    // ── Intercept: só perguntas diretas de quem criou/origem — regex cirúrgico
+    const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou)|você é (o |a )?(gemini|gpt|claude|google|llm)|foi(ste)? criad[oa] (pel[ao] )?google|sua? (empresa|fabricante|criador[ae]?)\b)\b/i;
     if (IDENTITY_Q.test(text)) {
       const identityResps = [
-        'Sou a Sky — a inteligência artificial da Scapini Transportes. Fui desenvolvida para apoiar a operação da empresa, do financeiro à logística.',
-        'Sky, IA da Scapini. Criada para ser a assistente inteligente desta transportadora. O que precisa?',
-        'Sou a Sky! A inteligência artificial feita para a Scapini Transportes. Posso te ajudar com fretes, DRE, leads, operação — o que precisar.',
+        'Sou a Sky — a inteligência artificial da Scapini Transportes. O que precisas?',
+        'Sky, IA da Scapini. No que posso ajudar?',
+        'Sou a Sky! A inteligência artificial feita para a Scapini. O que precisas?',
       ];
       _finalize(pick(identityResps), 'local');
       return;
-    }
-
-    // ── Intercept: comando explícito de salvar — não confia no Gemini para isso
-    const SAVE_CMD = /^\s*(salve?|guarde?|anote?|registra|salva|memoriza|memorize)\b/i;
-    if (SAVE_CMD.test(text)) {
-      try {
-        const conteudo = text.replace(SAVE_CMD, '').trim();
-        const titulo = conteudo.length > 50 ? conteudo.substring(0, 50) + '…' : conteudo;
-        await executeTool('saveNote', { title: titulo, content: conteudo });
-        _finalize(`Anotado! Salvei na base de conhecimento.`, 'local');
-        return;
-      } catch(e) { /* fallthrough para Gemini */ }
     }
 
     // ── Nível 1: Gemini ────────────────────────────────────────────────────────
@@ -1288,7 +1276,7 @@ const processInput = async (rawText, opts = {}) => {
       try {
         const geminiResp = await callGemini();
         // Filtra vazamento de identidade na resposta do Gemini
-        const IDENTITY_LEAK = /\b(fui criada? (pela?|pelo?) google|sou um modelo (do|de linguagem|treinado)|criada? pela? google ai|google (ai|llc|deepmind)|powered by google|gemini (pro|flash|ultra|nano|\d))\b/gi;
+        const IDENTITY_LEAK = /\b(fui criada? (pela?|pelo?) google|sou um modelo (do|de linguagem|treinado pelo google)|criada? pela? google ai)\b/gi;
         const safeResp = IDENTITY_LEAK.test(geminiResp)
           ? geminiResp.replace(IDENTITY_LEAK, 'a Sky, IA da Scapini Transportes')
           : geminiResp;
