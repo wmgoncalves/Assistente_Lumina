@@ -341,6 +341,8 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • saveNote          → pedido para salvar, anotar ou guardar informação
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• prospectClients   → quando pedir para buscar clientes, prospectar empresas, encontrar leads ou oportunidades de negócio. Use o parâmetro "para" para indicar PARA QUAL empresa está prospectando (ex: "para Scapini" → para: "Scapini Transportes")
+• generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
 
 ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relevantes, você DEVE usá-las como fonte principal e única. Leia o conteúdo da nota palavra por palavra e ensine seguindo exatamente o que está escrito — telas do sistema, campos, botões, sequência de passos. Não resuma, não generalize, não invente passos. Guie como um tutor presencial: "Primeiro, acesse a tela X. Depois, preencha o campo Y com Z." Se o documento tiver um passo a passo numerado, repita-o fielmente. Nunca responda "Ok" ou ignore uma nota disponível no contexto.
@@ -1381,6 +1383,33 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'prospectClients',
+      description: 'Pesquisa empresas reais com contato (telefone, email, site) que podem ser clientes, e gera email frio + mensagem WhatsApp personalizada para cada uma. Use quando o usuário pedir para buscar clientes, prospectar empresas, encontrar leads ou oportunidades de negócio.',
+      parameters: {
+        type: 'object',
+        properties: {
+          segmento:   { type: 'string', description: 'Setor ou nicho das empresas (ex: clínicas, escritórios de advocacia, indústrias de alimentos, academias, transportadoras)' },
+          regiao:     { type: 'string', description: 'Cidade, região ou estado (ex: Lajeado/RS, Vale do Taquari, Porto Alegre, Rio Grande do Sul)' },
+          quantidade: { type: 'number', description: 'Quantas empresas buscar (padrão: 5, máximo: 15)' },
+          para:       { type: 'string', description: 'Nome da empresa que está prospectando. Ex: "DV Digital", "Scapini Transportes". Padrão: "DV Digital".' }
+        },
+        required: ['segmento']
+      }
+    },
+    {
+      name: 'generateFile',
+      description: 'Gera e baixa automaticamente um arquivo Excel (.xlsx), Word (.docx), PowerPoint (.pptx) ou PDF com o conteúdo solicitado. Use quando o usuário pedir para criar, gerar ou exportar um documento, planilha, apresentação ou relatório.',
+      parameters: {
+        type: 'object',
+        properties: {
+          formato:   { type: 'string', enum: ['xlsx', 'docx', 'pptx', 'pdf'], description: 'Formato do arquivo: xlsx (Excel), docx (Word), pptx (PowerPoint), pdf (PDF)' },
+          titulo:    { type: 'string', description: 'Título do arquivo (ex: "Relatório de Clientes Junho 2026", "Proposta Comercial DV Digital")' },
+          instrucao: { type: 'string', description: 'Descrição detalhada do conteúdo que o arquivo deve ter. Inclua contexto relevante da conversa, dados que devem estar no arquivo, estrutura desejada.' }
+        },
+        required: ['formato', 'titulo', 'instrucao']
+      }
+    },
+    {
       name: 'openPage',
       description: 'Abre uma página web em nova aba do navegador. Use para previsão do tempo, notícias, mapas, sites úteis, resultados de busca.',
       parameters: {
@@ -1491,7 +1520,9 @@ const TOOL_LABELS = {
   saveNote:         'Salvando nota…',
   systemCommand:    'Executando comando…',
   downloadDocument: 'Preparando download…',
-  webSearch:    'Pesquisando na web…',
+  webSearch:        'Pesquisando na web…',
+  prospectClients:  'Buscando empresas para prospectar…',
+  generateFile:     'Gerando arquivo…',
   openPage:             'Abrindo página…',
   listCalendarEvents:   'Consultando agenda…',
   createCalendarEvent:  'Criando evento…',
@@ -1651,6 +1682,69 @@ const executeTool = async (name, args) => {
 
     case 'webSearch':
       return await webSearchGemini(args.query);
+
+    case 'prospectClients': {
+      const r = await fetch('/api/prospect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          segmento:   args.segmento   || '',
+          regiao:     args.regiao     || 'Vale do Taquari/RS',
+          quantidade: args.quantidade || 5,
+          para:       args.para       || 'DV Digital',
+        }),
+      });
+      if (!r.ok) return `Não consegui buscar clientes: ${(await r.json().catch(() => ({}))).error || r.status}`;
+      const d = await r.json();
+      if (!d.clientes?.length) return 'Nenhuma empresa encontrada para esse segmento.';
+
+      const prioIcon = { alta: '🔴', media: '🟡', baixa: '🟢' };
+      const fonte = d.source === 'ollama' ? ' *(via Ollama)*' : '';
+      const reais = d.temDadosReais ? ' *(dados reais do Google Maps)*' : '';
+
+      const linhas = d.clientes.map((c, i) => {
+        const icon = prioIcon[c.prioridade] || '⚪';
+        const contato = [
+          c.telefone && `📞 ${c.telefone}`,
+          c.email    && `✉️ ${c.email}`,
+          c.site     && `🌐 ${c.site}`,
+        ].filter(Boolean).join('  ');
+
+        return `${icon} **${i + 1}. ${c.nome}** — ${c.cidade}\n` +
+               `   Dor: ${c.dor}\n` +
+               `   Serviço ideal: ${c.servico}\n` +
+               (contato ? `   ${contato}\n` : '') +
+               `\n   📧 **Email** (assunto: *${c.email_assunto}*)\n${c.email_corpo}\n` +
+               `\n   💬 **WhatsApp:**\n${c.whatsapp}`;
+      }).join('\n\n---\n\n');
+
+      return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa`;
+    }
+
+    case 'generateFile': {
+      const gr = await fetch('/api/generate-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formato: args.formato, titulo: args.titulo, instrucao: args.instrucao }),
+      });
+      if (!gr.ok) {
+        const e = await gr.json().catch(() => ({}));
+        return `Não consegui gerar o arquivo: ${e.error || gr.status}`;
+      }
+      const fd = await gr.json();
+      // Trigger download via blob URL
+      const byteArray = Uint8Array.from(atob(fd.data), c => c.charCodeAt(0));
+      const blob = new Blob([byteArray], { type: fd.mime });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href     = url;
+      link.download = fd.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      return `✅ Arquivo **${fd.filename}** gerado e baixado com sucesso!`;
+    }
 
     case 'updateMemory':
       applyLearning(args);

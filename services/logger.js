@@ -5,12 +5,24 @@ const path = require('path');
 const LOG_FILE = path.join(__dirname, '..', 'sky-logs.jsonl');
 const MAX_KEEP = 10000;
 
+let _lineCount = -1; // -1 = não inicializado
+
+const _getLineCount = () => {
+  if (_lineCount >= 0) return _lineCount;
+  try {
+    const content = fs.readFileSync(LOG_FILE, 'utf8');
+    _lineCount = content.trim().split('\n').filter(Boolean).length;
+  } catch { _lineCount = 0; }
+  return _lineCount;
+};
+
 function writeLog(entry) {
   const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
-  try {
-    fs.appendFileSync(LOG_FILE, line, 'utf8');
-    _pruneIfNeeded();
-  } catch { /* disco cheio, sem permissão */ }
+  fs.appendFile(LOG_FILE, line, 'utf8', (err) => {
+    if (err) return;
+    _lineCount = _getLineCount() + 1;
+    if (_lineCount > MAX_KEEP) _pruneIfNeeded();
+  });
 }
 
 function _pruneIfNeeded() {
@@ -19,6 +31,7 @@ function _pruneIfNeeded() {
     const lines   = content.trim().split('\n').filter(Boolean);
     if (lines.length > MAX_KEEP) {
       fs.writeFileSync(LOG_FILE, lines.slice(-MAX_KEEP).join('\n') + '\n', 'utf8');
+      _lineCount = MAX_KEEP;
     }
   } catch { /* ignore */ }
 }
@@ -45,7 +58,7 @@ function readLogs({ limit = 500, source = '', q = '' } = {}) {
 }
 
 function clearLogs() {
-  try { fs.writeFileSync(LOG_FILE, '', 'utf8'); } catch { /* ignore */ }
+  try { fs.writeFileSync(LOG_FILE, '', 'utf8'); _lineCount = 0; } catch { /* ignore */ }
 }
 
 function countBySource() {
@@ -60,6 +73,7 @@ function countBySource() {
         counts.total = (counts.total || 0) + 1;
       } catch { /* skip malformed */ }
     }
+    _lineCount = counts.total;
     return counts;
   } catch { return { total: 0 }; }
 }

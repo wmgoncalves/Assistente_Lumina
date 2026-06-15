@@ -1,7 +1,7 @@
 const express    = require('express');
 const path       = require('path');
 const fs         = require('fs');
-const { exec }   = require('child_process');
+const { exec, spawn } = require('child_process');
 const os         = require('os');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
@@ -12,7 +12,7 @@ const multer    = require('multer');
 const mammoth   = require('mammoth');
 const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
-const puppeteer  = require('puppeteer');
+let puppeteer = null; // lazy load — carregado só quando /api/browser for usado
 const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
 const { writeLog, readLogs, clearLogs, countBySource } = require('./services/logger');
 
@@ -36,8 +36,17 @@ const writeJSON = (file, data) => {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 };
 
-const getCfg = () => readJSON(CONFIG_FILE, { geminiKey: '', elevenLabsKey: '', username: '' });
-const getMem = () => readJSON(MEMORY_FILE, { userName: null, facts: [], sessions: 0, lastSeen: null, history: [] });
+let _cfgCache  = null;
+let _memCache  = null;
+let _embedCache = null;
+
+const getCfg  = () => _cfgCache  || (_cfgCache  = readJSON(CONFIG_FILE,  { geminiKey: '', elevenLabsKey: '', username: '' }));
+const getMem  = () => _memCache  || (_memCache  = readJSON(MEMORY_FILE,  { userName: null, facts: [], sessions: 0, lastSeen: null, history: [] }));
+const readEmbed = () => _embedCache || (_embedCache = readJSON(EMBED_FILE, {}));
+
+const saveCfg  = (data) => { _cfgCache  = data; writeJSON(CONFIG_FILE,  data); };
+const saveMem  = (data) => { _memCache  = data; writeJSON(MEMORY_FILE,  data); };
+const saveEmbed = (data) => { _embedCache = data; writeJSON(EMBED_FILE, data); };
 
 // ── Express ───────────────────────────────────────────────────────────────────
 const app = express();
@@ -74,7 +83,7 @@ app.post('/api/config', (req, res) => {
   if (elevenLabsKey && elevenLabsKey.trim())   c.elevenLabsKey = elevenLabsKey.trim();
   if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId;
   if (ollamaModel   && ollamaModel.trim())     c.ollamaModel   = ollamaModel.trim();
-  writeJSON(CONFIG_FILE, c);
+  saveCfg(c);
   res.json({ ok: true, hasGemini: !!c.geminiKey, hasElevenLabs: !!c.elevenLabsKey });
 });
 
@@ -88,7 +97,7 @@ app.get('/api/memory', (req, res) => {
 
 app.delete('/api/memory', (req, res) => {
   const m = getMem();
-  writeJSON(MEMORY_FILE, { userName: null, facts: [], sessions: 0, lastSeen: null, history: m.history || [] });
+  saveMem({ userName: null, facts: [], sessions: 0, lastSeen: null, history: m.history || [] });
   res.json({ ok: true });
 });
 
@@ -100,7 +109,7 @@ app.get('/api/history', (req, res) => {
 app.post('/api/history', (req, res) => {
   const m = getMem();
   m.history = (req.body.history || []).slice(-200);
-  writeJSON(MEMORY_FILE, m);
+  saveMem(m);
   res.json({ ok: true });
 });
 
@@ -112,7 +121,7 @@ app.post('/api/memory/relate', (req, res) => {
   if (!m.relationships) m.relationships = [];
   const exists = m.relationships.find(r => (r.a === a && r.b === b) || (r.a === b && r.b === a));
   if (!exists) m.relationships.push({ a, b, type });
-  writeJSON(MEMORY_FILE, m);
+  saveMem(m);
   res.json({ ok: true });
 });
 
@@ -149,7 +158,7 @@ Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúd
     const enriched = JSON.parse(raw);
     m.facts         = enriched.facts?.length  ? enriched.facts  : m.facts;
     m.relationships = enriched.relationships?.length ? enriched.relationships : (m.relationships || []);
-    writeJSON(MEMORY_FILE, m);
+    saveMem(m);
     syncMemoryToObsidian(m);
     res.json({ ok: true, facts: m.facts.length, relationships: m.relationships.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -269,7 +278,7 @@ Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em 
         }
       }
     }
-    if (changed) writeJSON(MEMORY_FILE, m);
+    if (changed) saveMem(m);
     res.json({ updated: changed, memory: { userName: m.userName, facts: m.facts } });
   } catch { res.json({ updated: false }); }
 });
@@ -282,26 +291,31 @@ app.get('/api/piper-available', (_, res) => {
 app.post('/api/tts-piper', (req, res) => {
   const { text, voice = 'pt_BR-cadu-medium' } = req.body;
   if (!text) return res.status(400).json({ error: 'text required' });
-  if (!fs.existsSync(PIPER_EXE)) return res.status(503).json({ error: 'Piper não instalado em C:\\Sky\\piper\\piper.exe' });
+  if (!fs.existsSync(PIPER_EXE)) return res.status(503).json({ error: 'Piper não instalado' });
+  if (!/^[a-zA-Z0-9_\-]+$/.test(voice)) return res.status(400).json({ error: 'Voice inválido' });
 
   const modelPath = path.join(PIPER_VOICES, `${voice}.onnx`);
   if (!fs.existsSync(modelPath)) return res.status(503).json({ error: `Modelo não encontrado: ${voice}.onnx` });
 
   const tmpFile = path.join(os.tmpdir(), `sky_tts_${Date.now()}.wav`);
-  const clean   = text.replace(/"/g, "'").replace(/\n/g, ' ').substring(0, 1000);
-  const cmd     = `echo "${clean}" | "${PIPER_EXE}" --model "${modelPath}" --output_file "${tmpFile}"`;
+  const child   = spawn(PIPER_EXE, ['--model', modelPath, '--output_file', tmpFile], { stdio: ['pipe', 'pipe', 'pipe'] });
 
-  exec(cmd, (err) => {
-    if (err || !fs.existsSync(tmpFile)) {
-      if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-      return res.status(500).json({ error: err?.message || 'Piper falhou' });
+  child.stdin.write(text.substring(0, 1000), 'utf8');
+  child.stdin.end();
+
+  child.on('close', (code) => {
+    if (code !== 0 || !fs.existsSync(tmpFile)) {
+      try { fs.unlinkSync(tmpFile); } catch {}
+      return res.status(500).json({ error: 'Piper falhou' });
     }
     res.set('Content-Type', 'audio/wav');
     const stream = fs.createReadStream(tmpFile);
     stream.pipe(res);
     stream.on('end', () => { try { fs.unlinkSync(tmpFile); } catch {} });
-    stream.on('error', () => res.status(500).end());
+    stream.on('error', () => { if (!res.headersSent) res.status(500).end(); else res.destroy(); });
   });
+
+  child.on('error', () => { if (!res.headersSent) res.status(500).json({ error: 'Piper não encontrado' }); });
 });
 
 // ── Edge TTS (Microsoft Neural — gratuito, sem API key) ──────────────────────
@@ -312,10 +326,10 @@ app.post('/api/tts-edge', async (req, res) => {
     const tts    = new MsEdgeTTS();
     await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
     const chunks = [];
-    const stream = tts.toStream(text);
-    stream.on('data',  c => chunks.push(c));
-    stream.on('end',   () => { res.set('Content-Type', 'audio/mpeg'); res.send(Buffer.concat(chunks)); });
-    stream.on('error', e => { if (!res.headersSent) res.status(500).json({ error: e.message }); });
+    const { audioStream } = tts.toStream(text);
+    audioStream.on('data',  c => chunks.push(c));
+    audioStream.on('end',   () => { res.set('Content-Type', 'audio/mpeg'); res.send(Buffer.concat(chunks)); });
+    audioStream.on('error', e => { if (!res.headersSent) res.status(500).json({ error: e.message }); });
   } catch (e) {
     if (!res.headersSent) res.status(500).json({ error: e.message });
   }
@@ -483,11 +497,13 @@ const dataFile = (store) => path.join(__dirname, `${store}.json`);
 
 DATA_STORES.forEach(store => {
   app.get(`/api/data/${store}`, (_, res) => {
-    res.json(readJSON(dataFile(store), []));
+    const raw = readJSON(dataFile(store), []);
+    res.json(Array.isArray(raw) ? raw : []);
   });
   app.post(`/api/data/${store}`, (req, res) => {
-    writeJSON(dataFile(store), req.body);
-    syncStoreToObsidian(store, req.body).catch(() => {});
+    const data = Array.isArray(req.body) ? req.body : (req.body?.data ?? req.body);
+    writeJSON(dataFile(store), data);
+    syncStoreToObsidian(store, data).catch(() => {});
     if (store === 'notes') setTimeout(triggerReindex, 2000);
     res.json({ ok: true });
   });
@@ -722,7 +738,7 @@ updated: ${now()}
 app.post('/api/memory', (req, res) => {
   const m = getMem();
   const updated = { ...m, ...req.body };
-  writeJSON(MEMORY_FILE, updated);
+  saveMem(updated);
   syncMemoryToObsidian(updated);
   res.json({ ok: true });
 });
@@ -785,7 +801,6 @@ app.post('/api/import-vault', (req, res) => {
 
 // ── RAG: Embeddings Vetoriais ─────────────────────────────────────────────────
 const EMBED_FILE = path.join(__dirname, 'embeddings.json');
-const readEmbed  = () => readJSON(EMBED_FILE, {});
 
 const cosineSim = (a, b) => {
   let dot = 0, na = 0, nb = 0;
@@ -832,7 +847,7 @@ app.post('/api/index-notes', async (req, res) => {
       batch.forEach((n, j) => { embed[n.id] = vecs[j]; });
       indexed += batch.length;
     }
-    writeJSON(EMBED_FILE, embed);
+    saveEmbed(embed);
     res.json({ ok: true, indexed, cached: Object.keys(embed).length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -884,6 +899,7 @@ app.post('/api/remind', (req, res) => {
 let browserInstance = null;
 
 const getBrowser = async () => {
+  if (!puppeteer) puppeteer = require('puppeteer');
   if (!browserInstance || !browserInstance.connected) {
     browserInstance = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   }
@@ -936,6 +952,269 @@ app.post('/api/browser', async (req, res) => {
     res.status(500).json({ error: e.message });
   } finally {
     if (page) await page.close().catch(() => {});
+  }
+});
+
+// ── Prospecção de Clientes ────────────────────────────────────────────────────
+app.post('/api/prospect', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+
+  const { segmento = '', regiao = 'Brasil', quantidade = 5, para = 'DV Digital' } = req.body;
+  if (!segmento) return res.status(400).json({ error: 'segmento required' });
+
+  const qtd = Math.min(Math.max(1, Number(quantidade) || 5), 15);
+
+  // Phase 1: Puppeteer → Google Maps para dados reais de contato
+  let scrapedText = '';
+  let page;
+  try {
+    const browser = await getBrowser();
+    page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(15000);
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'pt-BR,pt;q=0.9' });
+
+    const q = encodeURIComponent(`${segmento} ${regiao}`);
+    await page.goto(`https://www.google.com/maps/search/${q}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await new Promise(r => setTimeout(r, 2500));
+
+    scrapedText = await page.evaluate(() => {
+      for (const sel of ['[role="feed"]', 'div[aria-label*="Resultados"]', 'div[aria-label*="Results"]', '#searchresultbox']) {
+        const el = document.querySelector(sel);
+        if (el && el.innerText.length > 100) return el.innerText.substring(0, 6000);
+      }
+      return document.body.innerText.substring(0, 6000);
+    });
+  } catch (e) {
+    console.warn('[prospect] Maps scrape failed:', e.message);
+  } finally {
+    if (page) await page.close().catch(() => {});
+  }
+
+  // Phase 2: Prompt adaptado ao contexto
+  const isDVDigital = /dv.?digital/i.test(para);
+  const paraInfo = isDVDigital
+    ? `A empresa que está prospectando é a **DV Digital** — agência de marketing digital e desenvolvimento de sistemas em Lajeado/RS. Serviços: sites, lojas virtuais, sistemas web, dashboards, IA, CRM, tráfego pago (Google/Meta Ads), identidade visual.`
+    : `A empresa que está prospectando é **${para}**, localizada em Lajeado/RS, buscando novos clientes no segmento "${segmento}".`;
+
+  const scrapedSection = scrapedText.length > 100
+    ? `\n\nDADOS REAIS COLETADOS (Google Maps — priorize nomes, telefones e sites encontrados aqui):\n---\n${scrapedText.substring(0, 5000)}\n---`
+    : '';
+
+  const prompt = `Você é especialista em prospecção B2B no Brasil.
+
+${paraInfo}${scrapedSection}
+
+Gere uma lista de **${qtd} empresas** do segmento **"${segmento}"** na região **"${regiao}"** que poderiam ser clientes.
+
+Para cada empresa, retorne um objeto JSON com exatamente estes campos:
+- "nome": nome da empresa (real se encontrado nos dados, senão realista para a região)
+- "segmento": nicho específico
+- "cidade": cidade
+- "telefone": telefone se encontrado nos dados, senão ""
+- "site": site se encontrado nos dados, senão ""
+- "email": email de contato se encontrado, senão ""
+- "dor": principal problema que provavelmente tem (específico e realista)
+- "servico": qual serviço de ${para} seria ideal
+- "prioridade": "alta", "media" ou "baixa"
+- "email_assunto": linha de assunto para email frio (curto, personalizado, sem clickbait)
+- "email_corpo": email de prospecção (3 parágrafos: contexto da dor → solução → CTA. Tom consultivo, direto. Assine como ${para}.)
+- "whatsapp": mensagem curta para WhatsApp (2-3 linhas, informal mas profissional, com CTA)
+
+Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\`.`;
+
+  // Phase 3: Gemini com fallback automático para Ollama
+  const callGemini = async () => {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.7 }
+        })
+      }
+    );
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
+    const d = await r.json();
+    return d.candidates[0].content.parts[0].text;
+  };
+
+  const callOllama = async () => {
+    const r = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: c.ollamaModel || 'llama3.2', prompt, stream: false }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (!r.ok) throw new Error(`Ollama HTTP ${r.status}`);
+    const d = await r.json();
+    return d.response || '';
+  };
+
+  try {
+    let raw, source = 'gemini';
+    try {
+      raw = await callGemini();
+    } catch (ge) {
+      console.warn('[prospect] Gemini falhou, usando Ollama:', ge.message);
+      source = 'ollama';
+      raw = await callOllama();
+    }
+
+    const match = raw.replace(/```json|```/g, '').match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Resposta não contém array JSON válido');
+    const list = JSON.parse(match[0]);
+
+    res.json({ ok: true, segmento, regiao, para, total: list.length, clientes: list, source, temDadosReais: scrapedText.length > 100 });
+  } catch (e) {
+    console.error('[prospect]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Geração de Arquivos (Excel / Word / PowerPoint / PDF) ────────────────────
+app.post('/api/generate-file', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+
+  const { formato, titulo, instrucao } = req.body;
+  if (!formato || !titulo || !instrucao) return res.status(400).json({ error: 'formato, titulo e instrucao são obrigatórios' });
+  if (!['xlsx', 'docx', 'pptx', 'pdf'].includes(formato)) return res.status(400).json({ error: 'formato inválido' });
+
+  // Step 1: Gemini gera o conteúdo estruturado
+  const schemaByFormat = {
+    xlsx: `{ "sheets": [ { "nome": "string", "headers": ["col1","col2",...], "rows": [["val1","val2",...], ...] } ] }`,
+    docx: `{ "secoes": [ { "tipo": "h1"|"h2"|"h3"|"paragrafo"|"lista"|"tabela", "conteudo": "string ou array de strings ou {headers,rows}" } ] }`,
+    pptx: `{ "slides": [ { "titulo": "string", "pontos": ["string",...], "nota": "string" } ] }`,
+    pdf:  `{ "secoes": [ { "tipo": "titulo"|"subtitulo"|"paragrafo"|"lista", "conteudo": "string ou array de strings" } ] }`,
+  };
+
+  const structPrompt = `Você é um assistente que gera conteúdo estruturado para arquivos de escritório.
+
+Título do arquivo: "${titulo}"
+Formato: ${formato.toUpperCase()}
+Instrução: ${instrucao}
+
+Gere o conteúdo completo em português, estruturado no seguinte formato JSON:
+${schemaByFormat[formato]}
+
+Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem explicações.`;
+
+  let estrutura;
+  try {
+    const gr = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: structPrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.4 } }) }
+    );
+    if (!gr.ok) { const e = await gr.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${gr.status}`); }
+    const gd   = await gr.json();
+    const raw  = gd.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Gemini não retornou JSON válido');
+    estrutura = JSON.parse(match[0]);
+  } catch (e) {
+    return res.status(500).json({ error: `Erro ao gerar conteúdo: ${e.message}` });
+  }
+
+  // Step 2: Gera o arquivo no formato solicitado
+  try {
+    let buffer, mime, ext;
+
+    if (formato === 'xlsx') {
+      const XLSX = require('xlsx');
+      const wb = XLSX.utils.book_new();
+      for (const sheet of (estrutura.sheets || [])) {
+        const rows = [sheet.headers || [], ...(sheet.rows || [])];
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, (sheet.nome || 'Dados').substring(0, 31));
+      }
+      buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      ext  = 'xlsx';
+
+    } else if (formato === 'docx') {
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, AlignmentType } = require('docx');
+      const children = [];
+      for (const s of (estrutura.secoes || [])) {
+        if (s.tipo === 'h1') {
+          children.push(new Paragraph({ text: s.conteudo, heading: HeadingLevel.HEADING_1 }));
+        } else if (s.tipo === 'h2') {
+          children.push(new Paragraph({ text: s.conteudo, heading: HeadingLevel.HEADING_2 }));
+        } else if (s.tipo === 'h3') {
+          children.push(new Paragraph({ text: s.conteudo, heading: HeadingLevel.HEADING_3 }));
+        } else if (s.tipo === 'paragrafo') {
+          children.push(new Paragraph({ children: [new TextRun(s.conteudo || '')] }));
+        } else if (s.tipo === 'lista') {
+          const items = Array.isArray(s.conteudo) ? s.conteudo : [s.conteudo];
+          for (const item of items) children.push(new Paragraph({ text: `• ${item}`, indent: { left: 400 } }));
+        } else if (s.tipo === 'tabela' && s.conteudo?.headers) {
+          const allRows = [s.conteudo.headers, ...(s.conteudo.rows || [])];
+          const tableRows = allRows.map((row, ri) =>
+            new TableRow({ children: row.map(cell => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(cell || ''), bold: ri === 0 })] })] })) })
+          );
+          children.push(new Table({ rows: tableRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+          children.push(new Paragraph(''));
+        }
+      }
+      const doc = new Document({ sections: [{ children }] });
+      buffer = await Packer.toBuffer(doc);
+      mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      ext  = 'docx';
+
+    } else if (formato === 'pptx') {
+      const PptxGenJS = require('pptxgenjs');
+      const pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_WIDE';
+      for (const slide of (estrutura.slides || [])) {
+        const s = pptx.addSlide();
+        s.addText(slide.titulo || '', { x: 0.5, y: 0.3, w: 9, h: 1.2, fontSize: 28, bold: true, color: '363636' });
+        const pontos = (slide.pontos || []).map(p => ({ text: `• ${p}`, options: { fontSize: 16, bullet: false } }));
+        if (pontos.length) s.addText(pontos, { x: 0.5, y: 1.7, w: 9, h: 4.5, fontSize: 16, color: '444444', valign: 'top' });
+      }
+      buffer = await pptx.write({ outputType: 'nodebuffer' });
+      mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      ext  = 'pptx';
+
+    } else if (formato === 'pdf') {
+      const PDFDocument = require('pdfkit');
+      buffer = await new Promise((resolve, reject) => {
+        const doc = new PDFDocument({ margin: 50 });
+        const chunks = [];
+        doc.on('data', c => chunks.push(c));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+        doc.registerFont('Helvetica', 'Helvetica');
+        for (const s of (estrutura.secoes || [])) {
+          if (s.tipo === 'titulo') {
+            doc.fontSize(22).font('Helvetica-Bold').text(s.conteudo || '', { align: 'center' }).moveDown(0.5);
+          } else if (s.tipo === 'subtitulo') {
+            doc.fontSize(16).font('Helvetica-Bold').text(s.conteudo || '').moveDown(0.3);
+          } else if (s.tipo === 'paragrafo') {
+            doc.fontSize(12).font('Helvetica').text(s.conteudo || '').moveDown(0.5);
+          } else if (s.tipo === 'lista') {
+            const items = Array.isArray(s.conteudo) ? s.conteudo : [s.conteudo];
+            doc.fontSize(12).font('Helvetica');
+            for (const item of items) doc.text(`• ${item}`, { indent: 20 });
+            doc.moveDown(0.3);
+          }
+        }
+        doc.end();
+      });
+      mime = 'application/pdf';
+      ext  = 'pdf';
+    }
+
+    const safeTitle = titulo.replace(/[^a-zA-Z0-9_\- ]/g, '').trim().replace(/\s+/g, '_').substring(0, 50) || 'arquivo';
+    const filename  = `${safeTitle}.${ext}`;
+
+    res.json({ ok: true, filename, data: buffer.toString('base64'), mime });
+  } catch (e) {
+    console.error('[generate-file]', e);
+    res.status(500).json({ error: e.message });
   }
 });
 
@@ -1104,6 +1383,7 @@ app.get('/api/events', (req, res) => {
   sseClients.add(res);
 
   req.on('close', () => { clearInterval(heartbeat); sseClients.delete(res); });
+  res.on('error', () => { clearInterval(heartbeat); sseClients.delete(res); });
 });
 
 const pushEvent = (type, message, action = null) => {
