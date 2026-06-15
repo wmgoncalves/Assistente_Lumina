@@ -1152,14 +1152,14 @@ const _finalize = (raw, source = 'unknown') => {
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
-  // Mostra gráfico 1.5s após resposta aparecer (enquanto Sky ainda fala)
-  // Pergunta "Posso tirar?" só depois que TTS terminar
-  if (afterSpeak) setTimeout(afterSpeak, 1500);
+  // Mostra gráfico quando TTS terminar, depois verifica se renderizou antes de perguntar
   speak(finalResponse, afterSpeak ? () => {
+    afterSpeak(); // tenta renderizar o gráfico
     setTimeout(() => {
+      if (!_chartPending) return; // gráfico não renderizou (sem dados, Chart.js ausente, etc.)
       const q = 'Posso tirar os gráficos?';
       addMsgUI('sky', q); speak(q);
-    }, 800);
+    }, 900);
   } : null);
   setFace('idle');
   const ms = app._reqStart ? Date.now() - app._reqStart : 0;
