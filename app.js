@@ -343,6 +343,14 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
 • prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
+
+── DEV MODE — use para desenvolver software ──
+• listDir    → SEMPRE use primeiro para entender a estrutura do projeto
+• readFile   → leia ANTES de editar — nunca edite às cegas
+• editFile   → find & replace preciso — old_string deve ser EXATO e único no arquivo
+• writeFile  → apenas para arquivos novos ou reescrita total
+• runCommand → npm, node, git, qualquer comando PowerShell — leia o output e itere se tiver erro
+Fluxo correto: listDir → readFile → editFile/writeFile → runCommand → readFile (verificar)
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
 
 ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relevantes, você DEVE usá-las como fonte principal e única. Leia o conteúdo da nota palavra por palavra e ensine seguindo exatamente o que está escrito — telas do sistema, campos, botões, sequência de passos. Não resuma, não generalize, não invente passos. Guie como um tutor presencial: "Primeiro, acesse a tela X. Depois, preencha o campo Y com Z." Se o documento tiver um passo a passo numerado, repita-o fielmente. Nunca responda "Ok" ou ignore uma nota disponível no contexto.
@@ -1411,6 +1419,67 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'readFile',
+      description: 'Lê o conteúdo de um arquivo de código ou texto. Use para entender o código antes de editar, verificar resultado após mudança, ou ler qualquer arquivo do projeto.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path:   { type: 'string', description: 'Caminho absoluto do arquivo (ex: C:\\projeto\\server.js)' },
+          offset: { type: 'number', description: 'Linha inicial (padrão: 0)' },
+          limit:  { type: 'number', description: 'Quantas linhas ler (padrão: 300)' }
+        },
+        required: ['path']
+      }
+    },
+    {
+      name: 'editFile',
+      description: 'Edita um arquivo fazendo find & replace preciso. Mais seguro que reescrever tudo. Use para corrigir bugs, adicionar código, modificar funções. SEMPRE leia o arquivo antes de editar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path:       { type: 'string', description: 'Caminho absoluto do arquivo' },
+          old_string: { type: 'string', description: 'Trecho EXATO que existe no arquivo (copie do readFile)' },
+          new_string: { type: 'string', description: 'Texto que vai substituir (pode ser mais ou menos linhas)' }
+        },
+        required: ['path', 'old_string', 'new_string']
+      }
+    },
+    {
+      name: 'writeFile',
+      description: 'Cria um arquivo novo ou sobrescreve completamente um existente. Use para criar novos arquivos. Para modificar existentes, prefira editFile.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path:    { type: 'string', description: 'Caminho absoluto do arquivo' },
+          content: { type: 'string', description: 'Conteúdo completo do arquivo' }
+        },
+        required: ['path', 'content']
+      }
+    },
+    {
+      name: 'runCommand',
+      description: 'Executa um comando no terminal (PowerShell) e retorna o output. Use para: npm install, npm start, node script.js, git status, git commit, etc. Capture erros e itere.',
+      parameters: {
+        type: 'object',
+        properties: {
+          command: { type: 'string', description: 'Comando a executar (ex: "npm install", "node index.js", "git status")' },
+          cwd:     { type: 'string', description: 'Diretório onde executar o comando (caminho absoluto)' }
+        },
+        required: ['command']
+      }
+    },
+    {
+      name: 'listDir',
+      description: 'Lista arquivos e pastas de um diretório. Use para entender a estrutura do projeto antes de começar a trabalhar.',
+      parameters: {
+        type: 'object',
+        properties: {
+          path: { type: 'string', description: 'Caminho do diretório (ex: C:\\meu-projeto)' }
+        },
+        required: ['path']
+      }
+    },
+    {
       name: 'openPage',
       description: 'Abre uma página web em nova aba do navegador. Use para previsão do tempo, notícias, mapas, sites úteis, resultados de busca.',
       parameters: {
@@ -1524,6 +1593,11 @@ const TOOL_LABELS = {
   webSearch:        'Pesquisando na web…',
   prospectClients:  'Buscando empresas para prospectar…',
   generateFile:     'Gerando arquivo…',
+  readFile:         'Lendo arquivo…',
+  editFile:         'Editando arquivo…',
+  writeFile:        'Escrevendo arquivo…',
+  runCommand:       'Executando comando…',
+  listDir:          'Listando diretório…',
   openPage:             'Abrindo página…',
   listCalendarEvents:   'Consultando agenda…',
   createCalendarEvent:  'Criando evento…',
@@ -1745,6 +1819,49 @@ const executeTool = async (name, args) => {
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 5000);
       return `✅ Arquivo **${fd.filename}** gerado e baixado com sucesso!`;
+    }
+
+    case 'readFile': {
+      const r = await fetch('/api/dev/read', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: args.path, offset: args.offset, limit: args.limit }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao ler ${args.path}: ${d.error}`;
+      return `📄 **${args.path}** (linhas ${d.offset + 1}–${d.offset + d.returned} de ${d.totalLines}):\n\`\`\`\n${d.content}\n\`\`\``;
+    }
+
+    case 'editFile': {
+      const r = await fetch('/api/dev/edit', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: args.path, old_string: args.old_string, new_string: args.new_string }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao editar ${args.path}: ${d.error}`;
+      return `✅ **${args.path}** editado com sucesso.`;
+    }
+
+    case 'writeFile': {
+      const r = await fetch('/api/dev/write', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: args.path, content: args.content }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao escrever ${args.path}: ${d.error}`;
+      return `✅ **${args.path}** salvo (${d.bytes} bytes).`;
+    }
+
+    case 'runCommand': {
+      const r = await fetch('/api/dev/exec', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: args.command, cwd: args.cwd }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao executar: ${d.error}`;
+      const status = d.exitCode === 0 ? '✅' : '⚠️';
+      return `${status} \`${args.command}\`${d.cwd ? ` (em ${d.cwd})` : ''}\n\`\`\`\n${d.output || '(sem output)'}\n\`\`\``;
+    }
+
+    case 'listDir': {
+      const r = await fetch('/api/dev/ls', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: args.path }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao listar ${args.path}: ${d.error}`;
+      const dirs  = d.items.filter(i => i.type === 'dir').map(i => `📁 ${i.name}`);
+      const files = d.items.filter(i => i.type === 'file').map(i => `📄 ${i.name}`);
+      return `**${args.path}**\n${[...dirs, ...files].join('\n')}`;
     }
 
     case 'updateMemory':

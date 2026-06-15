@@ -1081,6 +1081,72 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
   }
 });
 
+// ── Dev Mode — Agente de Desenvolvimento ─────────────────────────────────────
+const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]/i;
+
+app.post('/api/dev/read', (req, res) => {
+  const { path: filePath, offset = 0, limit = 300 } = req.body;
+  if (!filePath) return res.status(400).json({ error: 'path required' });
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines   = content.split('\n');
+    const slice   = lines.slice(offset, offset + limit);
+    res.json({ ok: true, path: filePath, content: slice.join('\n'), totalLines: lines.length, offset, returned: slice.length });
+  } catch (e) {
+    res.status(404).json({ error: e.message });
+  }
+});
+
+app.post('/api/dev/write', (req, res) => {
+  const { path: filePath, content = '' } = req.body;
+  if (!filePath) return res.status(400).json({ error: 'path required' });
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf8');
+    res.json({ ok: true, path: filePath, bytes: Buffer.byteLength(content, 'utf8') });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/dev/edit', (req, res) => {
+  const { path: filePath, old_string, new_string } = req.body;
+  if (!filePath || old_string == null || new_string == null) return res.status(400).json({ error: 'path, old_string e new_string são obrigatórios' });
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const count   = (content.split(old_string).length - 1);
+    if (!count) return res.status(400).json({ error: 'old_string não encontrado no arquivo' });
+    if (count > 1) return res.status(400).json({ error: `old_string encontrado ${count}x — seja mais específico` });
+    const updated = content.replace(old_string, new_string);
+    fs.writeFileSync(filePath, updated, 'utf8');
+    res.json({ ok: true, path: filePath });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/dev/ls', (req, res) => {
+  const { path: dirPath = '.' } = req.body;
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    const items   = entries.map(e => ({ name: e.name, type: e.isDirectory() ? 'dir' : 'file' }));
+    res.json({ ok: true, path: dirPath, items });
+  } catch (e) {
+    res.status(404).json({ error: e.message });
+  }
+});
+
+app.post('/api/dev/exec', (req, res) => {
+  const { command, cwd = process.cwd() } = req.body;
+  if (!command) return res.status(400).json({ error: 'command required' });
+  if (BLOCKED_CMDS.test(command)) return res.status(403).json({ error: 'Comando bloqueado por segurança' });
+
+  exec(command, { cwd, timeout: 30000, maxBuffer: 1024 * 512, shell: 'powershell.exe' }, (err, stdout, stderr) => {
+    const output = (stdout + (stderr ? '\n[stderr]\n' + stderr : '')).trim().substring(0, 6000);
+    res.json({ ok: !err || !!stdout, exitCode: err?.code ?? 0, output, error: err && !stdout ? err.message : null });
+  });
+});
+
 // ── Geração de Arquivos (Excel / Word / PowerPoint / PDF) ────────────────────
 app.post('/api/generate-file', async (req, res) => {
   const c = getCfg();
