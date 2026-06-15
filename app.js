@@ -1154,9 +1154,10 @@ const _finalize = (raw, source = 'unknown') => {
   app._afterSpeak = null;
   // Mostra gráfico quando TTS terminar, depois verifica se renderizou antes de perguntar
   speak(finalResponse, afterSpeak ? () => {
-    afterSpeak(); // tenta renderizar o gráfico
+    _chartPending = false;  // reset antes de tentar novo chart
+    afterSpeak();           // tenta renderizar
     setTimeout(() => {
-      if (!_chartPending) return; // gráfico não renderizou (sem dados, Chart.js ausente, etc.)
+      if (!_chartPending) return; // não renderizou — não pergunta
       const q = 'Posso tirar os gráficos?';
       addMsgUI('sky', q); speak(q);
     }, 900);
