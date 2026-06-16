@@ -746,19 +746,14 @@ const speakEdge = async (text, onEnd) => {
       if (app.continuous && !app.isListening) setTimeout(startListening, 250);
     };
     audio.onended = finish;
-    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
+    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; setFace('idle'); onEnd?.(); };
     audio.play();
   } catch (e) {
     clearTimeout(timeoutId);
     ttsAbort = null;
-    if (e.name === 'AbortError') {
-      // Timeout ou stop manual — cai pro browser TTS imediatamente
-      app.isSpeaking = false;
-      speakBrowser(text, onEnd);
-      return;
-    }
     app.isSpeaking = false;
-    speakBrowser(text, onEnd);
+    setFace('idle');
+    onEnd?.();
   }
 };
 
@@ -1104,7 +1099,17 @@ const applyInlineLearn = (learned) => {
     }
   });
 
-  if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
+  if (changed) {
+    saveMem(mem);
+    flashLearnBadge();
+    renderMemoryPanel();
+    const facts = mem.facts.map(f => typeof f === 'string' ? f : f.text).filter(Boolean);
+    fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: mem.userName || '', facts })
+    }).catch(() => {});
+  }
 };
 
 // ── UI Helpers ─────────────────────────────────────────────────────────────────
@@ -3720,6 +3725,23 @@ const analyzeFile = async (file) => {
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Carrega memória do servidor e mescla com localStorage (servidor = fonte de verdade)
+  fetch('/api/memory').then(r => r.json()).then(serverMem => {
+    if (!serverMem) return;
+    const local = getMem();
+    let changed = false;
+    if (!local.userName && serverMem.name) { local.userName = serverMem.name; changed = true; }
+    const localTexts = new Set(local.facts.map(f => typeof f === 'string' ? f : f.text));
+    (serverMem.facts || []).forEach(sf => {
+      const t = typeof sf === 'string' ? sf : sf;
+      if (t && !localTexts.has(t)) {
+        local.facts.push({ id: `fs${Date.now()}`, text: t, tags: [], weight: 1, date: new Date().toISOString().split('T')[0] });
+        changed = true;
+      }
+    });
+    if (changed) { saveMem(local); renderMemoryPanel(); }
+  }).catch(() => {});
+
   scheduleBlink();
   renderMemoryPanel();
   // Garante que VOZ FEMININA está ativa visualmente no load
