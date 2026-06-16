@@ -3081,6 +3081,13 @@ const DEMO_QA = [
       'Me chamo Sky. Sou a IA da Scapini, desenvolvida para facilitar o dia a dia de cada setor da empresa. Não substituo ninguém: amplifico o que cada pessoa já faz. Quanto mais a Scapini me usar, mais útil eu fico.',
     ]},
 
+  // 1b. Quem é Lucas / Ernani Scapini
+  { re: /quem (e|eh|é|sao|são) (o |a )?(lucas|ernani|ceo|dono|fundador|diretor|presidente|lideranca|liderança|familia scapini|familia)/,
+    r: [
+      'Lucas Scapini é o CEO da Scapini Transportes — ele lidera a operação e a estratégia da empresa. Ernani Scapini é o fundador e dono, com mais de 30 anos dedicados a construir o que a Scapini é hoje.',
+      'O fundador e dono é Ernani Scapini, que começou tudo isso. O CEO é Lucas Scapini, que conduz a empresa hoje. Uma família que construiu uma das transportadoras de referência do Sul do Brasil.',
+    ]},
+
   // 2. Sky, como você pode ajudar a Scapini?
   { re: /como voce (pode |)(ajudar|ajuda) a scapini|como (pode |)ajudar a scapini|o que faz.*scapini|como a sky (pode |)ajudar/,
     r: [
