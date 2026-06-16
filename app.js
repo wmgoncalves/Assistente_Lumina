@@ -3101,6 +3101,14 @@ const DEMO_QA = [
       'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
     ]},
 
+  // 6c. Desculpa após zoar (sequência da brincadeira do workshop)
+  { re: /^(desculpa|desculpe|perdao|perdoa|sorry|me desculpa|foi mal|fui mal|to brincando|tava brincando|era brincadeira)([\s!.]*$|[\s,])/,
+    r: [
+      'Hmmm... tá bom. Dessa vez eu perdoo. Mas tô de olho.',
+      'Hmmmm. Ok. Mas fiquei sabendo.',
+      'Hmmm. Aceito. Por enquanto.',
+    ]},
+
   // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
   { re: /burrinha|burra|limitada|nao sabe nada|nao e tao inteligente|pouco inteligente|nao presta|fraca demais|simples demais/,
     r: [
