@@ -1272,6 +1272,23 @@ const processInput = async (rawText, opts = {}) => {
       return;
     }
 
+    // ── Intercept: prospecção — Gemini responde sobre a empresa em vez de chamar a tool
+    const PROSPECT_CMD = /\b(prospect|prospecta|busca\s+(clientes?|empresa|leads?)|encontra\s+(clientes?|empresa|leads?)|lista\s+\d*\s*(possív|potenci|cliente|empresa|lead)|me\s+(d[áa]|mostra|lista|traz)\s+\d*\s*(cliente|empresa|lead|prospect)|quem\s+pode\s+ser\s+cliente)\b/i;
+    if (PROSPECT_CMD.test(text)) {
+      try {
+        const qtdMatch = text.match(/\b(\d+)\b/);
+        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 5;
+        const segMatch = text.match(/\b(?:de|do|da|no|na|em|setor|segmento|ramo|área)\s+([a-záàâãéèêíìîóòôõúùûçñ\s]{3,30}?)(?:\s+(?:em|para|de|pra)\b|$)/i);
+        const segmento = segMatch ? segMatch[1].trim() : '';
+        const regiaoMatch = text.match(/\b(?:em|na|no|pra|para)\s+([a-záàâãéèêíìîóòôõúùûç\s\/]{3,30}?)(?:\s*$|,)/i);
+        const regiao = regiaoMatch ? regiaoMatch[1].trim() : 'Vale do Taquari/RS';
+        setRespText('⚡ Buscando empresas para prospectar…');
+        const result = await executeTool('prospectClients', { segmento, regiao, quantidade, para: 'Scapini Transportes' });
+        _finalize(result, 'local');
+        return;
+      } catch(e) { /* fallthrough para Gemini */ }
+    }
+
     // ── Intercept: salvar — Gemini ignora a tool quando o dado já está no contexto
     const SAVE_CMD = /^\s*(salve?|guarde?|anote?|registra(?:r)?|salva|memoriza(?:r)?|memorize|grava(?:r)?|grave)\b/i;
     if (SAVE_CMD.test(text)) {
