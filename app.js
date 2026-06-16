@@ -3571,9 +3571,31 @@ const analyzeFile = async (file) => {
   setFace('thinking'); setRespText(`Analisando ${file.name}…`);
   try {
     let response;
+    const isPDF  = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+    const isDOCX = file.type.includes('wordprocessingml') || file.name.endsWith('.docx');
+
     if (file.type.startsWith('image/')) {
       const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
       response = await callGeminiVision(b64, file.type, `Analise este arquivo "${file.name}" detalhadamente em português.`);
+
+    } else if (isPDF || isDOCX) {
+      // Extrai texto no servidor (pdf-parse / mammoth já instalados)
+      const fd = new FormData();
+      fd.append('file', file);
+      const extractRes = await fetch('/api/extract-doc', { method: 'POST', body: fd });
+      if (!extractRes.ok) { speak('Não consegui ler o conteúdo do documento.'); return; }
+      const { text, pages } = await extractRes.json();
+      const trecho = text.substring(0, 12000); // Gemini aguenta fácil
+      const pageInfo = pages ? ` (${pages} páginas)` : '';
+      app.history.push({ role: 'user', content:
+        `Recebi o documento "${file.name}"${pageInfo}. Conteúdo:\n\n${trecho}\n\n` +
+        `Explique o passo a passo deste processo de forma clara e didática, como se fosse ensinar um colaborador que nunca viu isso antes. Use passos numerados e linguagem simples.`
+      });
+      response = await callGemini();
+      app.history.push({ role: 'model', content: response });
+      addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('sky', response);
+      saveHist(); speak(response); return;
+
     } else if (file.type === 'text/plain') {
       const txt = await file.text();
       app.history.push({ role: 'user', content: `Analise o conteúdo deste arquivo "${file.name}": ${txt.substring(0, 4000)}` });
@@ -3581,13 +3603,16 @@ const analyzeFile = async (file) => {
       app.history.push({ role: 'model', content: response });
       addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('sky', response);
       saveHist(); speak(response); return;
-    } else { speak(`Formato não suportado diretamente. Posso analisar imagens e arquivos de texto, Senhor.`); return; }
+
+    } else {
+      speak(`Esse formato não consigo ler diretamente. Tenta PDF, Word ou imagem.`); return;
+    }
 
     app.history.push({ role: 'user', content: `[Arquivo: ${file.name}]` });
     app.history.push({ role: 'model', content: response });
     addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('sky', response);
     saveHist(); speak(response);
-  } catch { speak('Não consegui analisar o arquivo, Senhor.'); }
+  } catch (e) { console.error(e); speak('Não consegui analisar o arquivo.'); }
 };
 
 // ── Init ───────────────────────────────────────────────────────────────────────

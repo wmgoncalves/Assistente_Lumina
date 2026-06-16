@@ -368,6 +368,30 @@ const chunkText = (text, size = 800, overlap = 100) => {
   return chunks.filter(c => c.trim().length > 60);
 };
 
+// Extrai texto de PDF/DOCX sem indexar na base de conhecimento (para análise on-the-fly)
+app.post('/api/extract-doc', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  const { originalname, mimetype, buffer } = req.file;
+  try {
+    let text = '', pages = null;
+    if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
+      const data = await pdfParse(buffer);
+      text  = data.text;
+      pages = data.numpages;
+    } else if (mimetype.includes('wordprocessingml') || originalname.endsWith('.docx')) {
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+    } else if (mimetype === 'text/plain') {
+      text = buffer.toString('utf8');
+    } else {
+      return res.status(422).json({ error: 'Formato não suportado. Use PDF, DOCX ou TXT.' });
+    }
+    res.json({ ok: true, text: text.trim(), pages, chars: text.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   const { originalname, mimetype, buffer } = req.file;
