@@ -361,10 +361,11 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 ── DEV MODE — use para desenvolver software ──
 • listDir    → SEMPRE use primeiro para entender a estrutura do projeto
 • readFile   → leia ANTES de editar — nunca edite às cegas
+• searchCode → busca padrão em todos os arquivos do projeto (como grep) — use para encontrar funções, variáveis, imports
 • editFile   → find & replace preciso — old_string deve ser EXATO e único no arquivo
-• writeFile  → apenas para arquivos novos ou reescrita total
-• runCommand → npm, node, git, qualquer comando PowerShell — leia o output e itere se tiver erro
-Fluxo correto: listDir → readFile → editFile/writeFile → runCommand → readFile (verificar)
+• writeFile  → apenas para arquivos novos ou reescrita total (pede confirmação)
+• runCommand → npm, node, git, qualquer comando PowerShell — leia o output e itere se tiver erro (pede confirmação)
+Fluxo correto: listDir → readFile/searchCode → editFile/writeFile → runCommand → readFile (verificar)
 • openPage          → apenas quando usuário pede explicitamente para ABRIR um site
 
 ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relevantes, você DEVE usá-las como fonte principal e única. Leia o conteúdo da nota palavra por palavra e ensine seguindo exatamente o que está escrito — telas do sistema, campos, botões, sequência de passos. Não resuma, não generalize, não invente passos. Guie como um tutor presencial: "Primeiro, acesse a tela X. Depois, preencha o campo Y com Z." Se o documento tiver um passo a passo numerado, repita-o fielmente. Nunca responda "Ok" ou ignore uma nota disponível no contexto.
@@ -1670,6 +1671,20 @@ const TOOL_DECLARATIONS = {
       }
     },
     {
+      name: 'searchCode',
+      description: 'Busca um padrão de texto em todos os arquivos de um diretório (como grep). Use para encontrar onde uma função é definida, onde uma variável é usada, ou qualquer padrão no código.',
+      parameters: {
+        type: 'object',
+        properties: {
+          pattern:       { type: 'string', description: 'Texto ou regex a buscar (ex: "function processInput", "api/memory")' },
+          dir:           { type: 'string', description: 'Diretório onde buscar (caminho absoluto)' },
+          glob:          { type: 'string', description: 'Filtro de arquivo (ex: "*.js", "*.ts", "**/*"). Padrão: todos os arquivos' },
+          caseSensitive: { type: 'boolean', description: 'Se true, diferencia maiúsculas/minúsculas. Padrão: false' }
+        },
+        required: ['pattern', 'dir']
+      }
+    },
+    {
       name: 'openPage',
       description: 'Abre uma página web em nova aba do navegador. Use para previsão do tempo, notícias, mapas, sites úteis, resultados de busca.',
       parameters: {
@@ -1792,6 +1807,7 @@ const TOOL_LABELS = {
   writeFile:        'Escrevendo arquivo…',
   runCommand:       'Executando comando…',
   listDir:          'Listando diretório…',
+  searchCode:       'Buscando no código…',
   openPage:             'Abrindo página…',
   listCalendarEvents:   'Consultando agenda…',
   createCalendarEvent:  'Criando evento…',
@@ -1940,6 +1956,22 @@ const webSearchGemini = async (query) => {
     return `Não consegui buscar: ${e.message}`;
   }
 };
+
+const skyConfirm = (msg) => new Promise(resolve => {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#1a1a2e;border:1px solid #4a9eff;border-radius:12px;padding:24px 28px;max-width:420px;font-family:inherit">
+    <div style="color:#4a9eff;font-weight:bold;margin-bottom:10px">⚠️ Confirmar ação</div>
+    <div style="color:#ccc;font-size:.95em;margin-bottom:20px;white-space:pre-wrap">${msg}</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="sky-confirm-no"  style="padding:8px 20px;background:#333;color:#ccc;border:none;border-radius:8px;cursor:pointer">Cancelar</button>
+      <button id="sky-confirm-yes" style="padding:8px 20px;background:#4a9eff;color:#fff;border:none;border-radius:8px;cursor:pointer">Confirmar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#sky-confirm-yes').onclick = () => { document.body.removeChild(overlay); resolve(true); };
+  overlay.querySelector('#sky-confirm-no').onclick  = () => { document.body.removeChild(overlay); resolve(false); };
+});
 
 const executeTool = async (name, args) => {
   switch (name) {
@@ -2178,6 +2210,8 @@ const executeTool = async (name, args) => {
     }
 
     case 'writeFile': {
+      const ok = await skyConfirm(`Gravar arquivo:\n${args.path}\n\n${args.content.length} caracteres`);
+      if (!ok) return 'Operação cancelada pelo usuário.';
       const r = await fetch('/api/dev/write', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: args.path, content: args.content }) });
       const d = await r.json();
@@ -2186,6 +2220,8 @@ const executeTool = async (name, args) => {
     }
 
     case 'runCommand': {
+      const ok = await skyConfirm(`Executar comando:\n\`${args.command}\`${args.cwd ? `\n\nDiretório: ${args.cwd}` : ''}`);
+      if (!ok) return 'Operação cancelada pelo usuário.';
       const r = await fetch('/api/dev/exec', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command: args.command, cwd: args.cwd }) });
       const d = await r.json();
@@ -2202,6 +2238,15 @@ const executeTool = async (name, args) => {
       const dirs  = d.items.filter(i => i.type === 'dir').map(i => `📁 ${i.name}`);
       const files = d.items.filter(i => i.type === 'file').map(i => `📄 ${i.name}`);
       return `**${args.path}**\n${[...dirs, ...files].join('\n')}`;
+    }
+
+    case 'searchCode': {
+      const r = await fetch('/api/dev/grep', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pattern: args.pattern, dir: args.dir, glob: args.glob, caseSensitive: args.caseSensitive }) });
+      const d = await r.json();
+      if (!r.ok) return `Erro ao buscar "${args.pattern}": ${d.error}`;
+      if (!d.count) return `Nenhum resultado para \`${args.pattern}\` em ${args.dir}`;
+      return `🔍 **${d.count} resultado(s)** para \`${args.pattern}\`:\n\`\`\`\n${d.matches.join('\n')}\n\`\`\``;
     }
 
     case 'updateMemory':

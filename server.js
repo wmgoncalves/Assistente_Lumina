@@ -1329,6 +1329,21 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
 // ── Dev Mode — Agente de Desenvolvimento ─────────────────────────────────────
 const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]/i;
 
+app.post('/api/dev/grep', (req, res) => {
+  const { pattern, dir = '.', glob: fileGlob = '**/*', caseSensitive = false } = req.body;
+  if (!pattern) return res.status(400).json({ error: 'pattern required' });
+  try {
+    const flags = caseSensitive ? '' : '/i';
+    const cmd   = `Get-ChildItem -Path "${dir}" -Recurse -Include "${fileGlob.replace('**/', '')}" -File | Select-String -Pattern "${pattern.replace(/"/g, '`"')}" ${caseSensitive ? '' : '-CaseSensitive:$false'} | Select-Object -First 200 | ForEach-Object { "$($_.Filename):$($_.LineNumber): $($_.Line.Trim())" }`;
+    exec(cmd, { timeout: 15000, maxBuffer: 1024 * 512, shell: 'powershell.exe' }, (err, stdout) => {
+      const lines = stdout.trim().split('\n').filter(Boolean);
+      res.json({ ok: true, pattern, matches: lines, count: lines.length });
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/dev/read', (req, res) => {
   const { path: filePath, offset = 0, limit = 300 } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path required' });
