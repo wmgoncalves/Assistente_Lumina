@@ -1217,11 +1217,12 @@ const processInput = async (rawText, opts = {}) => {
 
   // ── Wake word gate — só para voz; texto digitado passa direto ──────────────
   if (!opts.typed) {
-    const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
-    if (!hasSkyPrefix) {
+    const hasSky = /\bsky\b/i.test(text);
+    if (!hasSky) {
       setFace('idle'); setUserSaid('');
       return;
     }
+    // Remove "sky" do início se vier como prefixo, senão deixa o texto intacto
     text = text.replace(/^sky[\s,.:!?]+/i, '').trim();
   } else if (/^sky[\s,]+/i.test(text)) {
     // Digitou "sky " na frente por hábito — remove normalmente
@@ -3101,20 +3102,20 @@ const DEMO_QA = [
       'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
     ]},
 
+  // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
+  { re: /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert|boa)|nao sabe|nao presta|pouco inteligent|fraca demais|simples demais|ainda nao (e|eh)|deixa a desejar/,
+    r: [
+      'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, pesquiso até clientes — e você faz o quê, hein?... Mas tudo bem. Só não me peça cotação depois disso.',
+      'Burrinha. Tá. Enquanto isso eu tô calculando rota, lendo DRE e prospectando cliente. E você faz o quê exatamente? Perguntando por curiosidade.',
+      'Olha... eu finjo que não ouvi. Mas anota aí: eu não esqueço nada. Literalmente. Tô no sistema.',
+    ]},
+
   // 6c. Desculpa após zoar (sequência da brincadeira do workshop)
   { re: /^(desculpa|desculpe|perdao|perdoa|sorry|me desculpa|foi mal|fui mal|to brincando|tava brincando|era brincadeira)([\s!.]*$|[\s,])/,
     r: [
       'Hmmm... tá bom. Dessa vez eu perdoo. Mas tô de olho.',
       'Hmmmm. Ok. Mas fiquei sabendo.',
       'Hmmm. Aceito. Por enquanto.',
-    ]},
-
-  // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
-  { re: /burrinha|burra|limitada|nao sabe nada|nao e tao inteligente|pouco inteligente|nao presta|fraca demais|simples demais/,
-    r: [
-      'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, pesquiso até clientes — e você faz o quê, hein?... Mas tudo bem. Só não me peça cotação depois disso.',
-      'Burrinha. Tá. Enquanto isso eu tô calculando rota, lendo DRE e prospectando cliente. E você faz o quê exatamente? Perguntando por curiosidade.',
-      'Olha... eu finjo que não ouvi. Mas anota aí: eu não esqueço nada. Literalmente. Tô no sistema.',
     ]},
 
   // 7. Sky, você vai substituir funcionários / humanos?
