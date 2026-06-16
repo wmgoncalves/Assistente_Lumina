@@ -23,14 +23,9 @@ if (!globalThis.fetch) {
   process.exit(1);
 }
 
-const PORT     = process.env.PORT || 8080;
-// Quando rodando como app instalado (Electron), dados ficam em AppData
-// Em dev (npm start), ficam na pasta do projeto
-const DATA_DIR = process.env.SKY_DATA_DIR || __dirname;
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-
-const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
-const MEMORY_FILE = path.join(DATA_DIR, 'memory.json');
+const PORT        = process.env.PORT || 8080;
+const CONFIG_FILE = path.join(__dirname, 'config.json');
+const MEMORY_FILE = path.join(__dirname, 'memory.json');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const readJSON = (file, def) => {
@@ -359,7 +354,7 @@ app.post('/api/tts-edge', async (req, res) => {
 });
 
 // ── Ingestão de Documentos (PDF / DOCX / TXT) ────────────────────────────────
-const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -569,7 +564,7 @@ function detectCategory(note) {
 
 app.post('/api/notes/categorize', (req, res) => {
   try {
-    const notesFile = path.join(DATA_DIR, 'notes.json');
+    const notesFile = path.join(__dirname, 'notes.json');
     const notes     = readJSON(notesFile, []);
     let   updated   = 0;
     for (const n of notes) {
@@ -585,7 +580,7 @@ app.post('/api/notes/categorize', (req, res) => {
 
 // ── Dados persistentes (tarefas, hábitos, finanças, notas) ───────────────────
 const DATA_STORES = ['tasks', 'habits', 'finances', 'notes'];
-const dataFile = (store) => path.join(DATA_DIR, `${store}.json`);
+const dataFile = (store) => path.join(__dirname, `${store}.json`);
 
 DATA_STORES.forEach(store => {
   app.get(`/api/data/${store}`, (_, res) => {
@@ -896,7 +891,7 @@ app.post('/api/import-vault', (req, res) => {
 });
 
 // ── RAG: Embeddings Vetoriais ─────────────────────────────────────────────────
-const EMBED_FILE = path.join(DATA_DIR, 'embeddings.json');
+const EMBED_FILE = path.join(__dirname, 'embeddings.json');
 
 const cosineSim = (a, b) => {
   let dot = 0, na = 0, nb = 0;
@@ -1721,7 +1716,7 @@ const checkProactive = () => {
 
   // Hábitos não feitos — notifica 1x após as 21h
   if (hour >= 21 && proactiveLastSent.habits !== todayKey) {
-    const habits  = readJSON(path.join(DATA_DIR, 'habits.json'), []);
+    const habits  = readJSON(path.join(__dirname, 'habits.json'), []);
     const pending = habits.filter(h => !(h.dates || []).includes(todayKey));
     if (pending.length > 0 && sseClients.size > 0) {
       proactiveLastSent.habits = todayKey;
@@ -1732,7 +1727,7 @@ const checkProactive = () => {
 
   // Tarefas pendentes — notifica 1x às 9h
   if (hour === 9 && proactiveLastSent.tasks !== todayKey) {
-    const tasks   = readJSON(path.join(DATA_DIR, 'tasks.json'), []);
+    const tasks   = readJSON(path.join(__dirname, 'tasks.json'), []);
     const pending = tasks.filter(t => !t.done);
     if (pending.length > 0 && sseClients.size > 0) {
       proactiveLastSent.tasks = todayKey;

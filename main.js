@@ -1,7 +1,6 @@
 const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const { fork, exec } = require('child_process');
 const path = require('path');
-const fs   = require('fs');
 
 // ── Comandos do sistema (lista branca segura) ─────────────────────────────────
 const SYS_COMMANDS = {
@@ -22,11 +21,7 @@ let tray   = null;
 
 function startServer() {
   return new Promise((resolve) => {
-    const userData = app.getPath('userData');
-    server = fork(path.join(__dirname, 'server.js'), [], {
-      silent: true,
-      env: { ...process.env, SKY_DATA_DIR: userData }
-    });
+    server = fork(path.join(__dirname, 'server.js'), [], { silent: true });
     server.stdout.on('data', (d) => { if (d.toString().includes('localhost')) resolve(); });
     server.stderr.on('data', () => {});
     setTimeout(resolve, 2000);
@@ -122,19 +117,7 @@ ipcMain.handle('sky-cmd', (_, action) => {
   catch (e) { return { ok: false, error: e.message }; }
 });
 
-function ensureConfig() {
-  const userData   = app.getPath('userData');
-  const configPath = path.join(userData, 'config.json');
-  if (fs.existsSync(configPath)) return;
-  // Create empty config so server starts; user configures via /admin
-  if (!fs.existsSync(userData)) fs.mkdirSync(userData, { recursive: true });
-  const cfg = { geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '',
-    username: '', ollamaModel: 'gemma3:1b', piperVoiceFemale: '', piperVoiceMale: 'pt_BR-cadu-medium' };
-  fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
-}
-
 app.whenReady().then(async () => {
-  ensureConfig();
   await startServer();
   createWindow();
   createTray();

@@ -1,13 +1,11 @@
 {
-  "name": "sky-scapini",
+  "name": "emerald",
   "version": "2.0.0",
-  "description": "Sky — Assistente de IA da Scapini Transportes",
+  "description": "Emerald - Assistente de IA pessoal estilo JARVIS",
   "main": "main.js",
   "scripts": {
     "start": "node server.js",
-    "sky": "electron .",
-    "build": "electron-builder --win --x64",
-    "postinstall": "electron-builder install-app-deps"
+    "sky": "electron ."
   },
   "dependencies": {
     "better-sqlite3": "^12.10.1",
@@ -25,55 +23,6 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3"
-  },
-  "build": {
-    "appId": "com.scapini.sky",
-    "productName": "Sky",
-    "copyright": "Scapini Transportes",
-    "win": {
-      "target": "zip",
-      "icon": "build/icon.ico",
-      "artifactName": "Sky-${version}-${arch}.${ext}",
-      "signingHashAlgorithms": null,
-      "sign": null
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Sky"
-    },
-    "files": [
-      "**/*",
-      "!node_modules/.cache",
-      "!**/*.md",
-      "!config.json",
-      "!memory.json",
-      "!notes.json",
-      "!embeddings.json",
-      "!sky.db",
-      "!habits.json",
-      "!tasks.json",
-      "!uploads/**",
-      "!instalar.bat"
-    ],
-    "directories": {
-      "output": "dist"
-    },
-    "extraResources": [
-      {
-        "from": "piper",
-        "to": "piper",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "nodeGypRebuild": false,
-    "buildDependenciesFromSource": false,
-    "npmRebuild": true
+    "electron": "^31.7.7"
   }
 }
