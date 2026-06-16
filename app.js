@@ -788,7 +788,10 @@ const cleanForTTS = (raw) => {
 };
 
 const speak = (text, onEnd) => {
-  stopSpeaking(); // garante que áudio anterior não bloqueia o novo
+  // Para áudio anterior mas sem cancelar o ttsAbort — Edge TTS em voo pode ainda estar ok
+  if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+  try { window.speechSynthesis.cancel(); } catch {}
+  app.isSpeaking = false;
   const clean = cleanForTTS(text);
   return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
 };
