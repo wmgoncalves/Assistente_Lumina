@@ -387,7 +387,7 @@ function analyzeBalanceteSheet(ws, sheetName) {
     });
   }
 
-  if (accounts.length < 3) return null;
+  if (accounts.length < 2) return null;
 
   // Extrai grupos principais (ATIVO, PASSIVO, PL, RECEITA, DESPESA)
   const grupos = {};

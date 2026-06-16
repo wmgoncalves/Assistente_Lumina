@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "node server.js",
-    "sky": "electron ."
+    "sky": "node -e \"delete process.env.ELECTRON_RUN_AS_NODE;require('child_process').spawn(require('electron'),['.'],{stdio:'inherit',env:process.env}).on('exit',c=>process.exit(c))\""
   },
   "dependencies": {
     "better-sqlite3": "^12.10.1",
@@ -19,7 +19,6 @@
     "pdfkit": "^0.19.1",
     "pptxgenjs": "^4.0.1",
     "puppeteer": "^25.1.0",
-    "sky": "^0.5.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
