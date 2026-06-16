@@ -721,6 +721,8 @@ const speakEdge = async (text, onEnd) => {
   setStopBtn(true);
   setRespText(text);
   ttsAbort = new AbortController();
+  // Timeout de 5s — se Edge não responder, vai direto pro browser TTS
+  const timeoutId = setTimeout(() => { if (ttsAbort) { ttsAbort.abort(); ttsAbort = null; } }, 5000);
   try {
     const res = await fetch('/api/tts-edge', {
       method: 'POST',
@@ -728,8 +730,9 @@ const speakEdge = async (text, onEnd) => {
       body: JSON.stringify({ text: clean, voice }),
       signal: ttsAbort.signal,
     });
+    clearTimeout(timeoutId);
     ttsAbort = null;
-    if (!app.isSpeaking) { onEnd?.(); return; } // clicou parar durante o fetch
+    if (!app.isSpeaking) { onEnd?.(); return; }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const url   = URL.createObjectURL(await res.blob());
     const audio = new Audio(url);
@@ -743,8 +746,14 @@ const speakEdge = async (text, onEnd) => {
     audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
     audio.play();
   } catch (e) {
+    clearTimeout(timeoutId);
     ttsAbort = null;
-    if (e.name === 'AbortError') { app.isSpeaking = false; setFace('idle'); setStopBtn(false); return; }
+    if (e.name === 'AbortError') {
+      // Timeout ou stop manual — cai pro browser TTS imediatamente
+      app.isSpeaking = false;
+      speakBrowser(text, onEnd);
+      return;
+    }
     app.isSpeaking = false;
     speakBrowser(text, onEnd);
   }
