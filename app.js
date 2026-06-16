@@ -788,6 +788,7 @@ const cleanForTTS = (raw) => {
 };
 
 const speak = (text, onEnd) => {
+  stopSpeaking(); // garante que áudio anterior não bloqueia o novo
   const clean = cleanForTTS(text);
   return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
 };
