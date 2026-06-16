@@ -15,3 +15,6 @@ sky.code-workspace
 sky.db
 sky.db-shm
 sky.db-wal
+# Build artifacts
+dist/
+build/
