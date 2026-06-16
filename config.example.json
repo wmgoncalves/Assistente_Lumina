@@ -1,0 +1,10 @@
+{
+  "geminiKey": "COLE_SUA_CHAVE_GEMINI_AQUI",
+  "elevenLabsKey": "",
+  "elevenVoiceFemaleId": "",
+  "elevenVoiceMaleId": "",
+  "username": "",
+  "ollamaModel": "gemma3:1b",
+  "piperVoiceFemale": "",
+  "piperVoiceMale": "pt_BR-cadu-medium"
+}
