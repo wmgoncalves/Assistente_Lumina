@@ -1217,12 +1217,13 @@ const processInput = async (rawText, opts = {}) => {
 
   // ── Wake word gate — só para voz; texto digitado passa direto ──────────────
   if (!opts.typed) {
-    const hasSky = /\bsky\b/i.test(text);
-    if (!hasSky) {
+    const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
+    // Exceção: frases sobre a Sky (gag do workshop) passam mesmo sem prefixo
+    const isGagAboutSky = /\bsky\b/i.test(text) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(stripAccents(text.toLowerCase()));
+    if (!hasSkyPrefix && !isGagAboutSky) {
       setFace('idle'); setUserSaid('');
       return;
     }
-    // Remove "sky" do início se vier como prefixo, senão deixa o texto intacto
     text = text.replace(/^sky[\s,.:!?]+/i, '').trim();
   } else if (/^sky[\s,]+/i.test(text)) {
     // Digitou "sky " na frente por hábito — remove normalmente
