@@ -1258,15 +1258,15 @@ const processInput = async (rawText, opts = {}) => {
       logInteraction(text, dlResp, 'local', 'download', Date.now() - app._reqStart);
       return;
     }
-    const infoResp  = await detectLocalInfo(text);
-    const localResp = infoResp ?? tryLocalResponse(text);
-    if (localResp) { _hideDemoMode(); _finalize(localResp, 'local'); return; }
-
-    // ── DEMO_QA — respostas preparadas para o workshop (sempre instantâneas) ───
+    // ── DEMO_QA — respostas preparadas para o workshop (PRIMEIRO — sem async) ───
     const stripped = stripAccents(text.toLowerCase());
     for (const { re, r } of DEMO_QA) {
       if (re.test(stripped)) { _hideDemoMode(); _finalize(pick(r), 'local'); return; }
     }
+
+    const infoResp  = await detectLocalInfo(text);
+    const localResp = infoResp ?? tryLocalResponse(text);
+    if (localResp) { _hideDemoMode(); _finalize(localResp, 'local'); return; }
 
     // ── Auto-chart: agenda exibição de gráfico DRE após resposta de mês ────────
     if (app.lastSheet?.analysis && !app._afterSpeak) {
