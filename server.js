@@ -13,6 +13,12 @@ const mammoth   = require('mammoth');
 const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
 let puppeteer = null; // lazy load — carregado só quando /api/browser for usado
+
+const SKY_PRINTS_DIR    = path.join(os.homedir(), 'Pictures', 'Sky Prints');
+const SKY_GRAVACOES_DIR = path.join(os.homedir(), 'Pictures', 'Sky Gravacoes');
+[SKY_PRINTS_DIR, SKY_GRAVACOES_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
+
+let activeRecording = { page: null, recorder: null, filePath: null };
 const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
 const { writeLog, readLogs, clearLogs, countBySource } = require('./services/logger');
 const db = require('./services/db');
@@ -1036,8 +1042,37 @@ app.post('/api/browser', async (req, res) => {
       const text = await pageText(page);
       res.json({ ok: true, title: await page.title(), text });
 
+    } else if (action === 'screenshot') {
+      const domain    = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
+      const stamp     = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+      const fileName  = `sky_${stamp}_${domain}.png`;
+      const filePath  = path.join(SKY_PRINTS_DIR, fileName);
+      await page.setViewport({ width: 1280, height: 800 });
+      await page.screenshot({ path: filePath, fullPage: false });
+      res.json({ ok: true, title, filePath, fileName });
+
+    } else if (action === 'recordStart') {
+      if (activeRecording.recorder) return res.status(409).json({ error: 'Gravação já em andamento. Diga "Sky, para de gravar" primeiro.' });
+      const domain   = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
+      const stamp    = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
+      const fileName = `sky_${stamp}_${domain}.webm`;
+      const filePath = path.join(SKY_GRAVACOES_DIR, fileName);
+      await page.setViewport({ width: 1280, height: 800 });
+      const recorder = await page.screencast({ path: filePath });
+      activeRecording = { page, recorder, filePath };
+      page = null; // impede fechamento no finally
+      res.json({ ok: true, title, filePath, fileName });
+
+    } else if (action === 'recordStop') {
+      if (!activeRecording.recorder) return res.status(409).json({ error: 'Nenhuma gravação em andamento.' });
+      await activeRecording.recorder.stop();
+      const { filePath } = activeRecording;
+      await activeRecording.page.close().catch(() => {});
+      activeRecording = { page: null, recorder: null, filePath: null };
+      res.json({ ok: true, filePath });
+
     } else {
-      res.status(400).json({ error: 'action must be navigate, extract or fill' });
+      res.status(400).json({ error: 'action deve ser navigate, extract, fill, screenshot, recordStart ou recordStop' });
     }
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -1323,6 +1358,66 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         ? 'A busca demorou demais. Tente com menos empresas ou um segmento mais específico.'
         : e.message
     });
+  }
+});
+
+// ── Auditoria Contábil ────────────────────────────────────────────────────────
+app.post('/api/auditoria-contabil', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const { context } = req.body;
+  if (!context) return res.status(400).json({ error: 'context obrigatório' });
+
+  const prompt = `Você é um auditor contábil sênior especializado em empresas de transporte rodoviário de cargas. Analise criticamente os dados financeiros abaixo e faça uma auditoria detalhada.
+
+DADOS DA PLANILHA:
+${context.substring(0, 12000)}
+
+Estruture sua resposta EXATAMENTE assim:
+
+## 📊 CONSOLIDADO REAL
+Liste os totais reais encontrados na planilha: receitas, despesas por categoria, impostos, resultado líquido. Use R$ com formatação brasileira.
+
+## ⚠️ PONTOS DE ATENÇÃO
+Para cada inconsistência ou suspeita, use o formato:
+🔴 [CRÍTICO] — descrição do problema, onde está e por que é suspeito
+🟡 [ATENÇÃO] — descrição do ponto que merece verificação
+🟢 [OK] — confirmações positivas (se houver)
+
+Verifique especialmente:
+- Valores redondos excessivos (ex: R$ 10.000,00 exatos) podem indicar estimativa em vez de lançamento real
+- Duplicidade de lançamentos (mesma data, mesmo valor)
+- Categorias vagas com valores altos ("diversos", "outros", "serviços gerais")
+- Variações mensais acima de 30% sem justificativa óbvia
+- Impostos com percentual atípico para o setor (transporte: Simples ~6%, Lucro Presumido ~11-13%)
+- Despesas sem descrição ou com descrição genérica
+- Receita declarada muito abaixo do volume operacional esperado
+
+## ❓ PERGUNTAS PARA O CONTADOR
+Liste de 5 a 10 perguntas diretas e objetivas para questionar o contador. Numere cada uma. Seja específico — cite valores e datas encontrados na planilha.
+
+## ✅ RESUMO EXECUTIVO
+Em 3 linhas: situação geral da contabilidade, nível de confiança nos dados (baixo/médio/alto) e recomendação principal.
+
+Se os dados forem insuficientes para alguma análise, aponte o que está faltando na planilha.`;
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 3500, temperature: 0.25 }
+        })
+      }
+    );
+    if (!r.ok) throw new Error(`Gemini ${r.status}`);
+    const d = await r.json();
+    res.json({ ok: true, audit: d.candidates[0].content.parts[0].text.trim() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

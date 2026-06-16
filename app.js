@@ -372,6 +372,7 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • scheduleReminder  → USE PROATIVAMENTE: sempre que detectar menção a horário ("reunião às 15h", "ligo às 10h", "prazo amanhã", "me lembra em X minutos"). Calcule os minutos até o horário e agende sem perguntar.
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
+• auditarContabilidade → USE quando pedir para conferir/questionar/auditar lançamentos, suspeitar do contador, verificar inconsistências contábeis, revisar planilha financeira criticamente
 
 PLANILHA / DRE — REGRAS OBRIGATÓRIAS:
 • Se perguntarem sobre um mês específico (ex: "janeiro", "março", "dados de fev"), responda SOMENTE com os dados desse mês. Nunca liste todos os meses juntos.
@@ -1698,12 +1699,12 @@ const TOOL_DECLARATIONS = {
     },
     {
       name: 'browserAction',
-      description: 'Controla o navegador: navega em sites, extrai conteúdo ou preenche formulários. Use para pesquisar informação em sites específicos, preencher formulários, extrair dados de páginas.',
+      description: 'Controla o navegador: navega, extrai conteúdo, preenche formulários, tira print ou grava a tela do navegador. Use screenshot para "printe a tela", "tire um print de X". Use recordStart para "grave a tela", "começa a gravar". Use recordStop para "para de gravar", "encerra gravação".',
       parameters: {
         type: 'object',
         properties: {
-          action:    { type: 'string', enum: ['navigate', 'extract', 'fill'], description: 'navigate=abre e lê, extract=extrai elementos específicos, fill=preenche formulário' },
-          url:       { type: 'string', description: 'URL completa com https://' },
+          action:    { type: 'string', enum: ['navigate', 'extract', 'fill', 'screenshot', 'recordStart', 'recordStop'], description: 'navigate=abre e lê, extract=extrai elementos, fill=preenche formulário, screenshot=tira print e salva em Sky Prints, recordStart=inicia gravação e salva em Sky Gravacoes, recordStop=encerra gravação (url opcional)' },
+          url:       { type: 'string', description: 'URL completa com https:// (obrigatória exceto para recordStop)' },
           selectors: {
             type: 'array',
             description: 'Para extract: seletores CSS dos elementos. Para fill: array de {css, value}.',
@@ -1711,7 +1712,7 @@ const TOOL_DECLARATIONS = {
           },
           submit:    { type: 'boolean', description: 'Se true, submete o formulário após preencher (fill)' }
         },
-        required: ['action', 'url']
+        required: ['action']
       }
     },
     {
@@ -1782,6 +1783,14 @@ const TOOL_DECLARATIONS = {
           period: { type: 'string', description: 'Período desejado: "mes_atual", "mes_anterior" ou "tudo"', enum: ['mes_atual', 'mes_anterior', 'tudo'] }
         }
       }
+    },
+    {
+      name: 'auditarContabilidade',
+      description: 'Faz auditoria contábil crítica da planilha financeira carregada. Consolida valores reais, identifica lançamentos suspeitos, inconsistências e gera perguntas diretas para questionar o contador. Use quando pedir para conferir lançamentos, questionar o contador, auditar a planilha, verificar se há algo errado, revisar a contabilidade ou detectar fraudes/erros contábeis.',
+      parameters: {
+        type: 'object',
+        properties: {}
+      }
     }
   ]
 };
@@ -1813,12 +1822,13 @@ const TOOL_LABELS = {
   createCalendarEvent:  'Criando evento…',
   listEmails:           'Verificando emails…',
   readEmail:            'Lendo email…',
-  browserAction:        'Abrindo navegador…',
+  browserAction:        'Controlando navegador…',
   sendNotification:     'Enviando notificação…',
   openVSCode:           'Abrindo VS Code…',
   scheduleReminder:     'Agendando lembrete…',
   summarizeDocument:    'Buscando documento…',
-  financialReport:      'Gerando relatório…'
+  financialReport:      'Gerando relatório…',
+  auditarContabilidade: 'Auditando planilha…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
@@ -2432,9 +2442,12 @@ const executeTool = async (name, args) => {
     case 'browserAction': {
       try {
         const r = await fetch('/api/browser', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: args.action, url: args.url, selectors: args.selectors || [], submit: args.submit }) });
+          body: JSON.stringify({ action: args.action, url: args.url || '', selectors: args.selectors || [], submit: args.submit }) });
         const d = await r.json();
         if (!r.ok) return `Erro no browser: ${d.error}`;
+        if (args.action === 'screenshot') return `Print salvo em Sky Prints:\n📸 ${d.fileName}\nCaminho: ${d.filePath}`;
+        if (args.action === 'recordStart') return `Gravação iniciada!\n🎥 Arquivo: ${d.fileName}\nDiga "Sky, para de gravar" quando quiser encerrar.`;
+        if (args.action === 'recordStop') return `Gravação encerrada!\n🎥 Salvo em Sky Gravacoes:\n${d.filePath}`;
         return `Página: ${d.title}\n\n${d.text}`;
       } catch (e) { return `Erro ao controlar browser: ${e.message}`; }
     }
@@ -2532,6 +2545,20 @@ const executeTool = async (name, args) => {
         }
         return report;
       } catch (e) { return `Erro ao gerar relatório: ${e.message}`; }
+    }
+
+    case 'auditarContabilidade': {
+      try {
+        if (!app.lastSheet?.context) return 'Nenhuma planilha carregada. Envie a planilha financeira primeiro para eu poder auditar.';
+        const r = await fetch('/api/auditoria-contabil', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context: app.lastSheet.context })
+        });
+        const d = await r.json();
+        if (!r.ok) return `Erro na auditoria: ${d.error}`;
+        return d.audit;
+      } catch (e) { return `Erro ao auditar contabilidade: ${e.message}`; }
     }
 
     default:
