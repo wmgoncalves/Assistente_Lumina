@@ -723,8 +723,9 @@ const speakEdge = async (text, onEnd) => {
   setStopBtn(true);
   setRespText(text);
   ttsAbort = new AbortController();
-  // Timeout de 5s — se Edge não responder, vai direto pro browser TTS
-  const timeoutId = setTimeout(() => { if (ttsAbort) { ttsAbort.abort(); ttsAbort = null; } }, 5000);
+  // Timeout proporcional ao texto: mínimo 8s, +1s por 40 caracteres, máximo 30s
+  const edgeTimeout = Math.min(30000, Math.max(8000, Math.ceil(clean.length / 40) * 1000));
+  const timeoutId = setTimeout(() => { if (ttsAbort) { ttsAbort.abort(); ttsAbort = null; } }, edgeTimeout);
   try {
     const res = await fetch('/api/tts-edge', {
       method: 'POST',
