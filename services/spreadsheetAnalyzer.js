@@ -300,9 +300,129 @@ function analyzeARSheet(ws, sheetName) {
   };
 }
 
+// ── Análise de Balancete (Nível | Conta | Desc | Saldo Ant | Débito | Crédito | Saldo Atual) ──
+function analyzeBalanceteSheet(ws, sheetName) {
+  const raw = xlsx.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+  if (raw.length < 5) return null;
+
+  // Detecção por padrão de dados (encoding pode corromper headers):
+  // Balancete tem: col0=nível(número), col1=conta(código), col2=descrição(texto), cols3-6=valores numéricos
+  // Verifica nas primeiras 10 linhas de dados se o padrão bate
+  let headerRow = -1;
+  let colDesc = 2, colConta = 1, colSaldoAnt = 3, colDebito = 4, colCredito = 5, colSaldoAtual = 6;
+
+  // Primeira tentativa: cabeçalho com "Saldo" (leitura sem encoding)
+  for (let i = 0; i < Math.min(5, raw.length); i++) {
+    const row = raw[i].map(c => String(c));
+    const saldoCount = row.filter(c => c.toLowerCase().includes('saldo')).length;
+    if (saldoCount >= 2) { headerRow = i; break; }
+  }
+
+  // Segunda tentativa: detecção por dados — linha 0 tem nível numérico + código contábil + grandes valores
+  if (headerRow < 0) {
+    for (let i = 0; i < Math.min(5, raw.length); i++) {
+      const row = raw[i];
+      const nivel = String(row[0] || '').trim();
+      const conta = String(row[1] || '').trim();
+      const desc  = String(row[2] || '').trim();
+      const v3 = parseValue(row[3]), v4 = parseValue(row[4]), v5 = parseValue(row[5]);
+      // Nível é número 1-9, conta é código contábil, e temos 3 valores numéricos grandes
+      if (/^[1-9]$/.test(nivel) && /^\d[\d\.]*$/.test(conta) && desc && v3 != null && v4 != null && v5 != null) {
+        headerRow = -1; // sem header — dados começam em i
+        colDesc = 2; colConta = 1; colSaldoAnt = 3; colDebito = 4; colCredito = 5; colSaldoAtual = 6;
+        // Usa como dataStart = i
+        break;
+      }
+    }
+  }
+
+  // Detecta onde os dados começam (pula linhas de header)
+  let dataStart = headerRow >= 0 ? headerRow + 1 : 0;
+  // Confirma que pelo menos 3 linhas têm padrão nível+conta+valores
+  let confirmedLines = 0;
+  for (let i = dataStart; i < Math.min(dataStart + 10, raw.length); i++) {
+    const row = raw[i];
+    const nivel = String(row[0] || '').trim();
+    const conta = String(row[1] || '').trim();
+    if (/^[1-9S A]$/.test(nivel) && /^\d[\d\.]*$/.test(conta) && parseValue(row[colDebito]) != null) confirmedLines++;
+  }
+  if (confirmedLines < 2) return null;
+
+  // Lê as contas de nível 1 e 2 (grupos principais)
+  const accounts = [];
+  let totalDebito = 0, totalCredito = 0;
+
+  for (let i = headerRow + 1; i < raw.length; i++) {
+    const row = raw[i];
+    const desc     = colDesc     >= 0 ? String(row[colDesc]     || '').trim() : '';
+    const conta    = colConta    >= 0 ? String(row[colConta]    || '').trim() : '';
+    const nivel    = String(row[0] || '').trim();
+    const debito   = parseValue(row[colDebito]);
+    const credito  = parseValue(row[colCredito]);
+    const saldoAnt = colSaldoAnt  >= 0 ? parseValue(row[colSaldoAnt])  : null;
+    const saldoAt  = colSaldoAtual >= 0 ? parseValue(row[colSaldoAtual]) : null;
+
+    if (!desc && !conta) continue;
+    if (debito === null && credito === null && saldoAt === null) continue;
+
+    // Só nível 1 e 2 para o resumo (grupos e subgrupos)
+    const isTopLevel = /^[1-9]$/.test(nivel) || (conta && /^\d+(\.\d+)?$/.test(conta) && (conta.split('.').length <= 2));
+
+    if (debito != null) totalDebito  += debito;
+    if (credito != null) totalCredito += credito;
+
+    accounts.push({
+      nivel, conta, desc: desc || conta,
+      saldoAnterior: saldoAnt,
+      debito, credito,
+      saldoAtual: saldoAt,
+      isTopLevel,
+    });
+  }
+
+  if (accounts.length < 3) return null;
+
+  // Extrai grupos principais (ATIVO, PASSIVO, PL, RECEITA, DESPESA)
+  const grupos = {};
+  const GRUPO_MAP = {
+    ativo:      /^ativo$/,
+    passivo:    /^passivo$/,
+    pl:         /patrimoni|patrimônio/,
+    receita:    /^receita|^faturamento/,
+    despesa:    /^despesa|^custo/,
+    resultado:  /resultado/,
+  };
+  for (const acc of accounts) {
+    const n = norm(acc.desc);
+    for (const [key, re] of Object.entries(GRUPO_MAP)) {
+      if (re.test(n) && !grupos[key]) { grupos[key] = acc; break; }
+    }
+  }
+
+  // Top contas de nível 2 (subgrupos com saldo relevante)
+  const subgrupos = accounts
+    .filter(a => a.isTopLevel && a.saldoAtual != null && Math.abs(a.saldoAtual) > 0)
+    .sort((a, b) => Math.abs(b.saldoAtual) - Math.abs(a.saldoAtual))
+    .slice(0, 20);
+
+  return {
+    type: 'balancete',
+    sheet: sheetName,
+    totalAccounts: accounts.length,
+    totalDebito,
+    totalCredito,
+    grupos,
+    subgrupos,
+    accounts,
+  };
+}
+
 // ── Detecta tipo e analisa uma aba ───────────────────────────────────────────
 function analyzeSheet(ws, sheetName) {
-  // Tenta DRE primeiro (mais específico)
+  // Tenta Balancete primeiro (formato mais específico com débito/crédito)
+  const bal = analyzeBalanceteSheet(ws, sheetName);
+  if (bal) return bal;
+  // Tenta DRE
   const dre = analyzeDRESheet(ws, sheetName);
   if (dre) return dre;
   // Fallback: contas a receber/pagar
@@ -339,7 +459,29 @@ function buildSheetContext(analysis) {
   for (const s of analysis.sheets) {
     ctx += `\nAba "${s.sheet}"`;
 
-    if (s.type === 'dre') {
+    if (s.type === 'balancete') {
+      ctx += ` [BALANCETE] — ${s.totalAccounts} contas`;
+      ctx += ` | Débitos: ${brl(s.totalDebito)} | Créditos: ${brl(s.totalCredito)}`;
+      const GRUPO_LABELS = { ativo: 'ATIVO', passivo: 'PASSIVO', pl: 'PATRIMÔNIO LÍQUIDO', receita: 'RECEITAS', despesa: 'DESPESAS', resultado: 'RESULTADO' };
+      for (const [key, label] of Object.entries(GRUPO_LABELS)) {
+        const g = s.grupos[key];
+        if (!g) continue;
+        ctx += `\n  ${label}:`;
+        if (g.saldoAnterior != null) ctx += ` Saldo Ant=${brl(g.saldoAnterior)}`;
+        if (g.debito   != null) ctx += ` Déb=${brl(g.debito)}`;
+        if (g.credito  != null) ctx += ` Cré=${brl(g.credito)}`;
+        if (g.saldoAtual != null) ctx += ` Saldo Atual=${brl(g.saldoAtual)}`;
+      }
+      if (s.subgrupos.length) {
+        ctx += `\n  Subgrupos com maior saldo:`;
+        for (const sg of s.subgrupos.slice(0, 12)) {
+          ctx += `\n    ${sg.desc}: Saldo=${brl(sg.saldoAtual)}`;
+          if (sg.debito  != null) ctx += ` Déb=${brl(sg.debito)}`;
+          if (sg.credito != null) ctx += ` Cré=${brl(sg.credito)}`;
+        }
+      }
+
+    } else if (s.type === 'dre') {
       ctx += ` [DRE] — ${s.totalAccounts} contas | Meses: ${s.months.join(', ')}`;
 
       // Contas-chave
