@@ -2553,7 +2553,7 @@ const executeTool = async (name, args) => {
         const r = await fetch('/api/auditoria-contabil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ context: app.lastSheet.context })
+          body: JSON.stringify({ context: app.lastSheet.context, rawText: app.lastSheet.rawText || '' })
         });
         const d = await r.json();
         if (!r.ok) return `Erro na auditoria: ${d.error}`;
@@ -3732,7 +3732,7 @@ const analyzeSpreadsheetFile = async (file) => {
       setFace('idle');
       return;
     }
-    app.lastSheet = { analysis: data.analysis, context: data.context };
+    app.lastSheet = { analysis: data.analysis, context: data.context, rawText: data.rawText || '' };
     try { localStorage.setItem('sky_lastSheet', JSON.stringify(app.lastSheet)); } catch {}
     const summary  = buildSheetSummary(data.analysis);
     const speech   = buildSheetSpeech(data.analysis);

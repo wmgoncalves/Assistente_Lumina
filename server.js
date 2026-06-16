@@ -458,6 +458,34 @@ app.get('/api/download-doc/:filename', (req, res) => {
 });
 
 // ── Análise de planilha ────────────────────────────────────────────────────────
+const buildRawSheetText = (buffer, filename) => {
+  const xlsx = require('xlsx');
+  const wb = xlsx.read(buffer, { type: 'buffer', cellDates: true });
+  let out = '';
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows = xlsx.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!rows.length) continue;
+    out += `\nAba: ${sheetName}\n`;
+    const maxCols = Math.max(...rows.map(r => r.length));
+    // header separator
+    const header = rows[0].map(c => String(c)).join(' | ');
+    out += header + '\n' + '-'.repeat(Math.min(header.length, 120)) + '\n';
+    for (let i = 1; i < Math.min(rows.length, 300); i++) {
+      const row = rows[i];
+      const cells = [];
+      for (let j = 0; j < maxCols; j++) {
+        let v = row[j] ?? '';
+        if (v instanceof Date) v = v.toLocaleDateString('pt-BR');
+        cells.push(String(v));
+      }
+      out += cells.join(' | ') + '\n';
+    }
+    if (rows.length > 300) out += `...(${rows.length - 300} linhas omitidas)\n`;
+  }
+  return out.substring(0, 14000);
+};
+
 app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   const { originalname, buffer } = req.file;
@@ -470,7 +498,8 @@ app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
     if (!result.sheets.length) {
       return res.status(422).json({ error: 'Nenhuma aba com dados de valor/data foi detectada.' });
     }
-    res.json({ ok: true, analysis: result, context: buildSheetContext(result) });
+    const rawText = buildRawSheetText(buffer, originalname);
+    res.json({ ok: true, analysis: result, context: buildSheetContext(result), rawText });
   } catch (err) {
     console.error('[analyze-spreadsheet]', err);
     res.status(500).json({ error: 'Erro ao processar planilha: ' + err.message });
@@ -1365,13 +1394,16 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
 app.post('/api/auditoria-contabil', async (req, res) => {
   const c = getCfg();
   if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
-  const { context } = req.body;
-  if (!context) return res.status(400).json({ error: 'context obrigatório' });
+  const { context, rawText } = req.body;
+  if (!context && !rawText) return res.status(400).json({ error: 'context obrigatório' });
+
+  const dadosPlanilha = rawText
+    ? `DADOS COMPLETOS DA PLANILHA (todas as colunas):\n${rawText.substring(0, 12000)}\n\nRESUMO ESTRUTURADO:\n${context.substring(0, 3000)}`
+    : `DADOS DA PLANILHA:\n${context.substring(0, 12000)}`;
 
   const prompt = `Você é um auditor contábil sênior especializado em empresas de transporte rodoviário de cargas. Analise criticamente os dados financeiros abaixo e faça uma auditoria detalhada.
 
-DADOS DA PLANILHA:
-${context.substring(0, 12000)}
+${dadosPlanilha}
 
 Estruture sua resposta EXATAMENTE assim:
 
@@ -1409,7 +1441,7 @@ Se os dados forem insuficientes para alguma análise, aponte o que está faltand
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 3500, temperature: 0.25 }
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.25 }
         })
       }
     );
