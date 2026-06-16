@@ -102,8 +102,10 @@ function createWindow() {
   win.on('close', (e) => { e.preventDefault(); win.hide(); });
 }
 
-app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
-app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
+try {
+  app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
+  app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
+} catch (_) {}
 
 ipcMain.on('sky-show', () => showWindow());
 ipcMain.on('sky-hide', () => win?.hide());
