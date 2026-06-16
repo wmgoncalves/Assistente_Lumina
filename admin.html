@@ -87,6 +87,7 @@
 <nav class="tabs">
   <button class="tab-btn active" onclick="showTab('logs')">📋 Logs de Auditoria</button>
   <button class="tab-btn"        onclick="showTab('kb')">📚 Base de Conhecimento</button>
+  <button class="tab-btn"        onclick="showTab('hist')">💬 Histórico de Conversa</button>
 </nav>
 
 <!-- ── LOGS ────────────────────────────────────────────────────────────────── -->
@@ -134,6 +135,16 @@
   </div>
 </div>
 
+<!-- ── HISTÓRICO ─────────────────────────────────────────────────────────── -->
+<div id="tab-hist" class="panel">
+  <div class="filter-row">
+    <button class="btn" onclick="loadHistory()">↻ Atualizar</button>
+    <button class="btn danger" onclick="clearHistory()">🗑 Limpar histórico</button>
+    <span id="hist-count" style="font-size:0.78rem;color:#888;margin-left:8px;"></span>
+  </div>
+  <div id="hist-content" style="padding:1rem 0;"></div>
+</div>
+
 <!-- ── KB ─────────────────────────────────────────────────────────────────── -->
 <div id="tab-kb" class="panel">
   <div class="kb-actions">
@@ -154,6 +165,36 @@ function showTab(name) {
   event.target.classList.add('active');
   if (name === 'logs') loadLogs();
   if (name === 'kb')   loadKB();
+  if (name === 'hist') loadHistory();
+}
+
+async function loadHistory() {
+  const el = $('hist-content');
+  el.innerHTML = '<div class="empty">Carregando…</div>';
+  try {
+    const r    = await fetch('/api/history');
+    const data = await r.json();
+    const hist = (data.history || []).slice().reverse();
+    $('hist-count').textContent = `${hist.length} mensagem(ns)`;
+    if (!hist.length) { el.innerHTML = '<div class="empty">Nenhuma conversa registrada.</div>'; return; }
+    el.innerHTML = hist.map(m => {
+      const isUser = m.role === 'user';
+      const label  = isUser ? '👤 Você' : '🤖 Sky';
+      const color  = isUser ? '#5ab4ff' : '#5ae08a';
+      return `<div style="margin-bottom:12px;padding:10px 14px;background:#13131a;border-radius:8px;border-left:3px solid ${color}">
+        <div style="font-size:0.7rem;color:${color};font-weight:600;margin-bottom:4px;">${label}</div>
+        <div style="font-size:0.82rem;color:#ccc;white-space:pre-wrap;line-height:1.5;">${esc(m.content)}</div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty">Erro: ${esc(err.message)}</div>`;
+  }
+}
+
+async function clearHistory() {
+  if (!confirm('Apagar todo o histórico de conversa?')) return;
+  await fetch('/api/history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ history: [] }) });
+  loadHistory();
 }
 
 function fmtTs(ts) {

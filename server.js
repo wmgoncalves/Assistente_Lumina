@@ -1261,7 +1261,8 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: 4000, temperature: 0.7 }
-        })
+        }),
+        signal: AbortSignal.timeout(45000)
       }
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
@@ -1316,7 +1317,12 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     res.json({ ok: true, segmento, regiao, para, total: list.length, clientes: list, source, temDadosReais: scrapedText.length > 100 });
   } catch (e) {
     console.error('[prospect]', e);
-    res.status(500).json({ error: e.message });
+    const isTimeout = /timeout|abort/i.test(e.message);
+    res.status(isTimeout ? 504 : 500).json({
+      error: isTimeout
+        ? 'A busca demorou demais. Tente com menos empresas ou um segmento mais específico.'
+        : e.message
+    });
   }
 });
 
@@ -1734,6 +1740,18 @@ const checkProactive = () => {
       pushEvent('reminder', `Bom dia! Você tem ${pending.length} tarefa(s) pendente(s).`, 'openTasks');
     }
   }
+
+  // Lembretes agendados do banco — dispara quando data_hora <= agora
+  try {
+    const agora = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    const vencidos = db.getDb().prepare(
+      `SELECT * FROM lembretes WHERE concluido = 0 AND data_hora IS NOT NULL AND data_hora <= ?`
+    ).all(agora);
+    for (const lembrete of vencidos) {
+      db.concluirLembrete(lembrete.id);
+      pushEvent('reminder', lembrete.texto, 'openReminders');
+    }
+  } catch (_) {}
 };
 
 // Roda a cada 60 segundos

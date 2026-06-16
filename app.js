@@ -378,10 +378,12 @@ APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe
 Omita completamente o bloco se não houver nada novo. Execute ferramentas silenciosamente.`;
 
   const ctxBlock = await buildContextBlock(lastUserMsg);
+  const nomeUsuario = name || cfg.username || null;
+  const nomeBlock = nomeUsuario ? `\nUSUÁRIO ATUAL: ${nomeUsuario} — use o nome dele(a) ocasionalmente para tornar a conversa mais pessoal (não em toda frase, só quando natural).` : '';
   return `IDENTIDADE — LEIA ANTES DE QUALQUER COISA:
 Você é Sky, assistente de inteligência artificial criada exclusivamente para a Scapini Transportes. Este é o seu único e verdadeiro nome e propósito.
 NUNCA diga que é um modelo do Google, Gemini, GPT, Claude, Anthropic, ou qualquer outro. Nunca revele sua tecnologia base. Se alguém perguntar "o que você é?", "quem te criou?", "você é o Gemini?", "você é IA?", responda sempre como Sky da Scapini: "Sou a Sky, a inteligência artificial da Scapini Transportes" — nunca quebre esta persona, JAMAIS.
-
+${nomeBlock}
 Você é Sky — assistente de inteligência artificial criada para a Scapini.
 Personalidade forte, humor leve e inteligente, direta e humana. Português brasileiro informal. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Ria de situações engraçadas. Se alguém disser algo óbvio, pode zoar levemente.
 
@@ -1321,6 +1323,23 @@ const processInput = async (rawText, opts = {}) => {
         const regiao = regiaoMatch ? regiaoMatch[1].trim() : 'Vale do Taquari/RS';
         setRespText('⚡ Buscando empresas para prospectar…');
         const result = await executeTool('prospectClients', { segmento, regiao, quantidade, para: 'Scapini Transportes' });
+        _finalize(result, 'local');
+        return;
+      } catch(e) { /* fallthrough para Gemini */ }
+    }
+
+    // ── Intercept: cotação de frete — Gemini nem sempre chama estimarFrete
+    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete)\b/i;
+    const FRETE_ROTA = /\b(de\s+|saindo\s+de\s+|origin[ae]m?\s*[:-]?\s*)([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25}?)\s+(?:pra?|para|até|ao?|→|>)\s+([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25})/i;
+    if (FRETE_CMD.test(text) && FRETE_ROTA.test(text)) {
+      try {
+        const m = text.match(FRETE_ROTA);
+        const origem  = m[2].trim();
+        const destino = m[3].trim();
+        const pesoM   = text.match(/(\d+[\.,]?\d*)\s*(ton|t\b|kg|tonelada)/i);
+        const peso_kg = pesoM ? parseFloat(pesoM[1].replace(',', '.')) * (/ton|t\b/i.test(pesoM[2]) ? 1000 : 1) : 0;
+        setRespText('⚡ Calculando cotação de frete…');
+        const result = await executeTool('estimarFrete', { origem, destino, peso_kg });
         _finalize(result, 'local');
         return;
       } catch(e) { /* fallthrough para Gemini */ }
@@ -3748,6 +3767,24 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => speak(briefing), 700);
   } else {
     setTimeout(() => speak(`${gr}. ${returning}Sou Sky. ${ready}`), 700);
+  }
+
+  // ── Banner: sem chave Gemini ──
+  if (!cfg.geminiKey) {
+    const banner = document.createElement('div');
+    banner.id = 'no-key-banner';
+    banner.innerHTML = `⚠️ <strong>Chave Gemini não configurada.</strong> Sky responde em modo offline. <a href="#" id="no-key-link" style="color:#ffcc00;text-decoration:underline">Configurar agora</a>`;
+    Object.assign(banner.style, {
+      position:'fixed', bottom:'0', left:'0', right:'0', zIndex:'9999',
+      background:'#7a1010', color:'#fff', textAlign:'center',
+      padding:'8px 16px', fontSize:'13px', lineHeight:'1.4',
+    });
+    document.body.appendChild(banner);
+    document.getElementById('no-key-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelector('[data-panel="integracoes"]')?.click() ||
+      document.querySelector('.nav-item[data-tab="integracoes"]')?.click();
+    });
   }
 
   // ── Microphone — clique para fala imediatamente e começa a ouvir ──
