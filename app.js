@@ -3602,8 +3602,14 @@ const analyzeFile = async (file) => {
       const extractRes = await fetch('/api/extract-doc', { method: 'POST', body: fd });
       if (!extractRes.ok) { speak('Não consegui ler o conteúdo do documento.'); return; }
       const { text, pages } = await extractRes.json();
-      const trecho = text.substring(0, 12000); // Gemini aguenta fácil
+      const trecho = text.substring(0, 12000);
       const pageInfo = pages ? ` (${pages} páginas)` : '';
+
+      // Salva automaticamente na Base de Conhecimento para consultas futuras
+      const fdIngest = new FormData();
+      fdIngest.append('file', file);
+      fetch('/api/ingest-doc', { method: 'POST', body: fdIngest }).catch(() => {});
+
       app.history.push({ role: 'user', content:
         `Recebi o documento "${file.name}"${pageInfo}. Conteúdo:\n\n${trecho}\n\n` +
         `Explique o passo a passo deste processo de forma clara e didática, como se fosse ensinar um colaborador que nunca viu isso antes. Use passos numerados e linguagem simples.`
