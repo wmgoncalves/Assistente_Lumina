@@ -3101,6 +3101,14 @@ const DEMO_QA = [
       'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
     ]},
 
+  // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
+  { re: /burrinha|burra|limitada|nao sabe nada|nao e tao inteligente|pouco inteligente|nao presta|fraca demais|simples demais/,
+    r: [
+      'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, indexo procedimentos internos e ainda lembro de tudo que você me conta... Mas tudo bem, pode me chamar de burrinha. Só não me peça cotação de frete depois disso.',
+      'Burrinha. Tá. Enquanto isso eu tô aqui calculando rota, lendo DRE e prospectando cliente. Mas pode continuar achando isso — a planilha não vai te julgar.',
+      'Olha... eu finjo que não ouvi. Mas anota aí: eu não esqueço nada. Literalmente. Tô no sistema.',
+    ]},
+
   // 7. Sky, você vai substituir funcionários / humanos?
   { re: /vai substituir|substitui funcionario|tirar emprego|perder emprego|substituir funcionarios|substituir (os |)humanos|humanos.*substitui|vai me substituir|tira emprego|acaba com (o |)emprego|ira substituir|ira.*substitui|vai.*substitui.*hum/,
     r: [
