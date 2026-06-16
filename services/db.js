@@ -2,7 +2,8 @@
 const Database = require('better-sqlite3');
 const path     = require('path');
 
-const DB_FILE = path.join(__dirname, '..', 'sky.db');
+const DATA_DIR = process.env.SKY_DATA_DIR || path.join(__dirname, '..');
+const DB_FILE  = path.join(DATA_DIR, 'sky.db');
 let _db = null;
 
 function getDb() {
