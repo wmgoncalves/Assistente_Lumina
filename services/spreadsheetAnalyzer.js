@@ -24,12 +24,19 @@ function detectCol(headers, keywords) {
 function parseValue(val) {
   if (val == null || val === '') return null;
   if (typeof val === 'number') return isFinite(val) ? val : null;
-  const s = String(val).replace(/R\$\s*/gi, '').replace(/\s/g, '').trim();
+  let s = String(val).replace(/R\$\s*/gi, '').replace(/\s/g, '').trim();
+  // Sufixo D/C de balancete (ex: "4.548.266,71D" ou "4.558.076,31C")
+  // C = credor (passivo/receita) → negativo na convenção contábil brasileira
+  let dcSign = 1;
+  if (/[DC]$/i.test(s)) {
+    if (s.slice(-1).toUpperCase() === 'C') dcSign = -1;
+    s = s.slice(0, -1);
+  }
   if (/^\d{1,3}(\.\d{3})*(,\d+)?%?$/.test(s)) {
-    return parseFloat(s.replace(/\./g, '').replace(',', '.').replace('%', ''));
+    return parseFloat(s.replace(/\./g, '').replace(',', '.').replace('%', '')) * dcSign;
   }
   const n = parseFloat(s.replace(',', '.'));
-  return isFinite(n) ? n : null;
+  return isFinite(n) ? n * dcSign : null;
 }
 
 function parseDate(val) {
