@@ -3112,8 +3112,8 @@ const DEMO_QA = [
   // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
   { re: /burrinha|burra|limitada|nao sabe nada|nao e tao inteligente|pouco inteligente|nao presta|fraca demais|simples demais/,
     r: [
-      'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, indexo procedimentos internos e ainda lembro de tudo que você me conta... Mas tudo bem, pode me chamar de burrinha. Só não me peça cotação de frete depois disso.',
-      'Burrinha. Tá. Enquanto isso eu tô aqui calculando rota, lendo DRE e prospectando cliente. Mas pode continuar achando isso — a planilha não vai te julgar.',
+      'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, pesquiso até clientes — e você faz o quê, hein?... Mas tudo bem. Só não me peça cotação depois disso.',
+      'Burrinha. Tá. Enquanto isso eu tô calculando rota, lendo DRE e prospectando cliente. E você faz o quê exatamente? Perguntando por curiosidade.',
       'Olha... eu finjo que não ouvi. Mas anota aí: eu não esqueço nada. Literalmente. Tô no sistema.',
     ]},
 
