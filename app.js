@@ -1217,12 +1217,12 @@ const processInput = async (rawText, opts = {}) => {
 
   // ── Wake word gate — só para voz; texto digitado passa direto ──────────────
   if (!opts.typed) {
-    const hasSkyPrefix = /^sky[\s,]+/i.test(text);
+    const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
     if (!hasSkyPrefix) {
       setFace('idle'); setUserSaid('');
       return;
     }
-    text = text.replace(/^sky[\s,]+/i, '').trim();
+    text = text.replace(/^sky[\s,.:!?]+/i, '').trim();
   } else if (/^sky[\s,]+/i.test(text)) {
     // Digitou "sky " na frente por hábito — remove normalmente
     text = text.replace(/^sky[\s,]+/i, '').trim();
