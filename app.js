@@ -249,7 +249,17 @@ const applyLearning = (learn) => {
     }
   }
 
-  if (changed) { saveMem(mem); flashLearnBadge(); renderMemoryPanel(); }
+  if (changed) {
+    saveMem(mem);
+    flashLearnBadge();
+    renderMemoryPanel();
+    const facts = mem.facts.map(f => typeof f === 'string' ? f : f.text).filter(Boolean);
+    fetch('/api/memory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName: mem.userName || '', facts })
+    }).catch(() => {});
+  }
 };
 
 const buildContextBlock = async (lastUserMsg = '') => {
@@ -944,7 +954,7 @@ const startListeningNative = () => {
   const r = new SR();
   r.lang = 'pt-BR'; r.continuous = false; r.interimResults = false;
   r.onstart  = () => { app.isListening = true; setFace('listening'); setUserSaid('Ouvindo (nativo)…'); document.getElementById('btn-mic').classList.add('listening'); };
-  r.onresult = (e) => { const t = e.results[0][0].transcript.trim(); if (t) { setUserSaid(`"${t}"`); processInput(t); } };
+  r.onresult = (e) => { const t = e.results[0][0].transcript.trim(); if (t) { const fromWake = wakeWordActivated; wakeWordActivated = false; setUserSaid(`"${t}"`); processInput(t, { fromWake }); } };
   r.onerror  = () => { app.isListening = false; setFace('idle'); setUserSaid(''); document.getElementById('btn-mic').classList.remove('listening'); };
   r.onend    = () => { app.isListening = false; document.getElementById('btn-mic').classList.remove('listening'); if (app.continuous && !app.isSpeaking) setTimeout(startListeningNative, 250); };
   r.start();
@@ -960,7 +970,8 @@ const stopListening = () => {
 };
 
 // ── Wake Word ──────────────────────────────────────────────────────────────────
-let wakeActive     = false;
+let wakeActive        = false;
+let wakeWordActivated = false; // bypass do gate na próxima fala após wake word
 let wakeStream     = null;
 let wakeAudioCtx   = null;
 let wakeAnalyser   = null;
@@ -1006,8 +1017,9 @@ const processWakeChunks = async () => {
     window.skyAPI?.showWindow();
     if (result.cmd && result.cmd !== 'null') {
       setUserSaid(`"${result.cmd}"`);
-      processInput(result.cmd);
+      processInput(result.cmd, { fromWake: true });
     } else {
+      wakeWordActivated = true;
       setTimeout(() => startListening(), 400);
     }
   } catch {}
@@ -1107,7 +1119,7 @@ const applyInlineLearn = (learned) => {
     fetch('/api/memory', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: mem.userName || '', facts })
+      body: JSON.stringify({ userName: mem.userName || '', facts })
     }).catch(() => {});
   }
 };
@@ -1236,8 +1248,8 @@ const processInput = async (rawText, opts = {}) => {
     return;
   }
 
-  // ── Wake word gate — só para voz; texto digitado passa direto ──────────────
-  if (!opts.typed) {
+  // ── Wake word gate — só para voz; texto digitado e wake word passam direto ──
+  if (!opts.typed && !opts.fromWake) {
     const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
     // Exceção: frases sobre a Sky (gag do workshop) passam mesmo sem prefixo
     const isGagAboutSky = /\bsky\b/i.test(text) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(stripAccents(text.toLowerCase()));
@@ -3730,7 +3742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!serverMem) return;
     const local = getMem();
     let changed = false;
-    if (!local.userName && serverMem.name) { local.userName = serverMem.name; changed = true; }
+    if (!local.userName && serverMem.userName) { local.userName = serverMem.userName; changed = true; }
     const localTexts = new Set(local.facts.map(f => typeof f === 'string' ? f : f.text));
     (serverMem.facts || []).forEach(sf => {
       const t = typeof sf === 'string' ? sf : sf;
