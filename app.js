@@ -892,13 +892,20 @@ const cleanForTTS = (raw) => {
   let t = raw
     .replace(/\*\*([^*]+)\*\*/g, '$1')           // **negrito** → texto puro
     .replace(/\*([^*]+)\*/g,     '$1')            // *itálico* → texto puro
+    .replace(/\*/g,              '')              // asteriscos soltos
     .replace(/#{1,6}\s*/g,       '')              // # títulos
     .replace(/^[•\-]\s*/gm,      '')              // bullets
-    .replace(/[📊📈💬⚠️✅❌🎵🔊]/gu, '')          // emojis
+    .replace(/[📊📈💬⚠️✅❌🎵🔊🔴🟡🟢🚛🔧👥💰🎯⭐⏳🔔📄✅]/gu, '') // emojis
     .replace(/-R\$\s*/g,         'menos ')        // -R$ → "menos "
     .replace(/R\$\s*/g,          '')              // R$ → remove (valor já fala)
+    // Porcentagem negativa: -7,4% → "menos 7 vírgula 4 por cento"
+    .replace(/-(\d+),(\d+)%/g, (_, i, d) => `menos ${i} vírgula ${d} por cento`)
+    .replace(/-(\d+)%/g,       (_, n)    => `menos ${n} por cento`)
+    // Porcentagem positiva: 17,6% → "17 vírgula 6 por cento"
+    .replace(/(\d+),(\d+)%/g,  (_, i, d) => `${i} vírgula ${d} por cento`)
+    .replace(/(\d+)%/g,        (_, n)    => `${n} por cento`)
+    // Valores monetários com milhar: 452.400,00 → "452 mil e 400"
     .replace(/(\d{1,3})\.(\d{3}),\d{2}/g, (_, a, b) => {
-      // 452.400,00 → "452 mil e 400" | 1.200.000,00 → "1 milhão e 200 mil"
       const total = parseInt(a.replace(/\./g, '')) * 1000 + parseInt(b);
       if (total >= 1_000_000) {
         const m = Math.floor(total / 1_000_000);
@@ -909,10 +916,16 @@ const cleanForTTS = (raw) => {
       const r = total % 1000;
       return r ? `${k} mil e ${r}` : `${k} mil`;
     })
-    .replace(/,00\b/g, '')                         // centavos zero (ex: 1.200,00 → 1.200)
+    .replace(/,00\b/g, '')                         // centavos zero
+    // Separadores visuais ── e ---
+    .replace(/─{2,}|—{2,}|-{3,}/g, '. ')
+    // Pipe e dois-pontos em tabelas viram pausas naturais
+    .replace(/\s*\|\s*/g, ', ')
     .replace(/\n{2,}/g, '. ')
     .replace(/\n/g, ', ')
     .replace(/\s{2,}/g, ' ')
+    // Remove pontuação dupla gerada pelas substituições
+    .replace(/([.!?,])\s*([.!?,])/g, '$1')
     .trim();
   return t;
 };
