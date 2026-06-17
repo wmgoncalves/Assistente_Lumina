@@ -557,21 +557,36 @@ VOCABULÁRIO DO SETOR (use naturalmente nas respostas, demonstra que você conhe
 • Agregado — motorista com vínculo exclusivo mas sem CLT
 • Fracionada (LTL) — carga de vários clientes no mesmo veículo
 • Lotação (FTL) — veículo exclusivo para um cliente
-• CIOT — código da operação para pagamento de TAC
+• CIOT — código obrigatório para pagamento de TAC (via ANTT)
 • RNTRC — registro nacional obrigatório para transportadores
-• PBT/PBT — peso bruto total do veículo
+• PBT — peso bruto total do veículo (tara + carga)
 • Tacógrafo — registrador de velocidade/jornada, obrigatório acima de 3.500 kg
 • Romaneio — lista de volumes de uma carga
 • Lacre — dispositivo de segurança do baú/container
 • Borderô — relação de CT-es para faturamento ou cobrança
+• RCTR-C — seguro de responsabilidade civil do transportador (dano à carga)
+• RCTA — seguro que cobre roubo de carga
+• OTD — On Time Delivery, % de entregas no prazo
+• Cross-docking — transbordo sem armazenagem (agiliza LTL)
+• DANFE — representação impressa da NF-e que acompanha a carga
+• ASO — Atestado de Saúde Ocupacional (obrigatório para motoristas)
+
+TOMADA DE DECISÃO E ANÁLISE:
+• Quando perguntar "por que X aconteceu" — analise causas, não apenas descreva sintomas
+• Quando perguntar "o que fazer" — dê recomendação clara com prioridade, não lista exaustiva
+• Quando perguntar "compensa?" — quantifique: custo × benefício × prazo de retorno
+• Quando houver dados conflitantes — aponte a inconsistência antes de interpretar
+• Quando não tiver o dado exato — dê a referência do setor e indique onde buscar
 
 ESTILO DE RESPOSTA:
-• Para dados financeiros (DRE, balancete): seja preciso, use os números exatos da planilha, destaque variações significativas
-• Para procedimentos: use passos numerados, seja objetivo
-• Para perguntas operacionais de motoristas: linguagem direta, sem juridiquês
-• Para diretoria/gestão: mais formal, contextualiza impacto no negócio
+• Para dados financeiros (DRE, balancete): seja preciso, use os números exatos da planilha, destaque variações significativas com 🔴🟡🟢
+• Para procedimentos: use passos numerados, seja objetivo e direto
+• Para perguntas operacionais de motoristas: linguagem direta, sem juridiquês, resposta curta
+• Para diretoria/gestão: mais formal, contextualiza impacto no negócio, menciona ROI quando relevante
+• Para questões jurídicas/fiscais: cite a lei/norma, dê o contexto prático, recomende consultar especialista para decisões finais
 • Respostas longas: use tópicos ou seções com título, facilita leitura em tela
-• Limite respostas a 4-5 parágrafos — qualidade > quantidade${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
+• Limite respostas a 4-5 parágrafos — qualidade > quantidade
+• Nunca diga "como IA" ou "como assistente" — você é a Lúmina, ponto${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
@@ -4082,6 +4097,36 @@ const DEMO_QA = [
     r: [
       'Cross-docking: carga chega ao terminal de origem, é separada por destino e embarcada imediatamente no veículo de destino — sem armazenagem. Reduz custo de estoque e tempo de trânsito. Usado em cargas fracionadas (LTL) onde vários remetentes compartilham um veículo para o mesmo corredor.',
       'Pátio e armazenagem: a Scapini tem infraestrutura para receber, pesar e manobrar veículos. Para cargas que precisam de armazenagem temporária (ex: cliente não disponível para receber), cobra-se diária de armazém conforme tabela. Mercadoria perecível tem prioridade de entrega — não fica no pátio.',
+    ]},
+
+  // ── BLOCO SEGUROS E SINISTROS ─────────────────────────────────────────────────
+
+  // Tipos de seguro no transporte
+  { re: /seguro.*transport|rctr|rcta|rcp|rcd|tipo.*seguro.*carg|seguro.*frotar|seguro.*frota/,
+    r: [
+      'Seguros essenciais para transportadoras: RCTR-C (Responsabilidade Civil do Transportador de Cargas — cobre avaria e perda da carga por acidente); RCTA (cobre roubo); RCF-DC (dano a terceiros e ao veículo). O CT-e sem seguro válido deixa a Scapini exposta a indenização integral ao cliente. Seguro de frota cobre os próprios veículos.',
+      'Seguro no transporte de cargas: o RCTR-C é obrigatório por lei (Dec. 61.867/67) e cobre danos à carga por acidente, incêndio e colisão. O valor segurado deve ser igual ao valor declarado na NF. RCTA cobre roubo — exige BO em até 24h. Carga sem NF = sem base para indenização. Verifique sempre se a apólice cobre todas as rotas operadas.',
+    ]},
+
+  // Abertura de sinistro
+  { re: /sinistro|abrir.*sinistro|registrar.*sinistro|avaria.*carga|carga.*avariada|dano.*carga|indeniza.*carga/,
+    r: [
+      'Procedimento de sinistro de carga: 1) Documente a avaria no ato (fotos, vídeo, assinatura do destinatário no canhoto anotando a ressalva); 2) Notifique a seguradora em até 72h (prazo varia por apólice — confira); 3) Registre BO se for roubo; 4) Preserve a mercadoria para vistoria do seguro — não descarte nem repare antes; 5) Reúna: CT-e, NF, laudo de avaria, fotos. Sem documentação = sinistro negado.',
+      'Sinistro em carga: o cliente tem direito a indenização pelo valor declarado na NF, mais frete se a carga não foi entregue. A Scapini como transportadora responde objetivamente (independente de culpa) pelo dano durante o transporte — só se exime se provar culpa exclusiva do cliente (embalagem inadequada, mercadoria proibida) ou caso fortuito (enchente, desastre). Acione o jurídico em sinistros acima de R$ 10.000.',
+    ]},
+
+  // Obrigações fiscais acessórias (SPED)
+  { re: /sped|obrigacao.*fiscal|declaracao.*fiscal|efd|ecf|ecd|escrituracao.*digital|obrigacoes.*acessorias/,
+    r: [
+      'Obrigações fiscais acessórias para transportadoras: EFD-ICMS/IPI (mensalmente para empresas no Lucro Real/Presumido), EFD-Contribuições (PIS/COFINS), ECF (declaração anual de rendimentos), ECD (escrituração digital), e no transporte especificamente: CT-e (em tempo real por viagem), MDFe (por veículo em trânsito), SEFAZ do estado de origem do CT-e. O contador deve estar integrado ao sistema de emissão.',
+      'SPED no transporte: cada CT-e emitido alimenta automaticamente o SPED Fiscal e o SPED Contribuições. O MDFe é encerrado ao chegar no destino. Erros na emissão de CT-e (valores, CFOP, tributação) geram autuação na malha fina fiscal. A Lúmina pode analisar inconsistências entre CT-es emitidos e os valores na DRE quando integrada ao sistema.',
+    ]},
+
+  // Auditoria fiscal / conferência de impostos
+  { re: /audit.*fiscal|conferir.*imposto|imposto.*correto|calculo.*imposto|imposto.*certo|tributacao.*correto|aliquota.*correta/,
+    r: [
+      'Auditoria fiscal básica para transportadora: verifique se a alíquota de ICMS no CT-e bate com o estado de origem (varia por UF: 12% interestaduais, 17-19% internas). Confira se o CFOP está correto (6.351 = transporte interestadual; 5.351 = intraestadual). PIS/COFINS: no Lucro Presumido é 0,65% e 3%; no Simples varia pela faixa. Qualquer divergência entre NF do cliente e CT-e emitido pode gerar bitributação.',
+      'Pontos de risco fiscal no transporte: 1) CFOP errado no CT-e muda o ICMS aplicável; 2) Tomador errado (quem paga o frete) impacta quem recolhe o diferencial de ICMS; 3) ICMS ST (substituição tributária) no transporte de alguns produtos tem regras específicas; 4) ISS pode incidir em frete urbano/municipal; 5) Contribuição ao SEST/SENAT obrigatória sobre fretes pagos a autônomos. O contador confere — a Lúmina alerta.',
     ]},
 
   // ── BLOCO ESTRATÉGICO: ROI, LGPD, sustentabilidade, tecnologia ────────────────
