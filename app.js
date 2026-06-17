@@ -3482,6 +3482,62 @@ const tryLocalResponse = (text) => {
   if (/ceo|president[ae]|vice.?president[ae]|fundador|lucas scapini|ernani scapini|rosangela scapini|diamantino|quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
     return 'A liderança da Scapini Transportes: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
 
+  // ── Lajeado / localização ──
+  if (/lajeado|vale do taquari|rs\b|rio grande do sul|onde.*fica|localiza[çc]|endere[çc]o.*scapini/.test(t))
+    return pick([
+      'A Scapini Transportes está sediada em Lajeado, RS — no Vale do Taquari, região central do Rio Grande do Sul. A localização é estratégica: acesso à BR-386 facilita rotas para todo o Sul e Sudeste do Brasil.',
+      'Lajeado/RS é a sede da Scapini há mais de 30 anos. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
+    ]);
+
+  // ── Frota / veículos ──
+  if (/frota|quantos.*caminh|caminhoes.*scapini|tipo.*veiculo|veiculos.*scapini|truck|carreta|bau|graneleiro/.test(t))
+    return pick([
+      'A Scapini opera com frota própria moderna — caminhões truck, carretas e veículos menores para distribuição local. Toda a frota tem rastreamento GPS. A composição exata da frota pode ser consultada no CGI quando eu estiver integrada.',
+      'A frota da Scapini inclui veículos para diferentes tipos de carga: veículos fechados (baú) para cargas gerais, carretas para lotação, e truck para distribuição regional. Manutenção preventiva programada mantém disponibilidade alta.',
+    ]);
+
+  // ── Frete / como solicitar ──
+  if (/como (solicitar|pedir|contratar|fazer|funciona).*(frete|coleta|entrega)|solicitar.*coleta|pedir.*frete|contratar.*frete/.test(t))
+    return pick([
+      'Para solicitar frete com a Scapini: entre em contato com o setor comercial informando origem, destino, peso, volume e tipo de mercadoria. A equipe calcula o melhor trajeto e emite o CT-e. Para clientes cadastrados, o pedido pode ser feito diretamente pelo sistema.',
+      'O processo de frete começa no setor comercial: cliente passa as informações da carga, recebe cotação, aprova e agenda a coleta. A Scapini emite o CT-e antes da retirada. O rastreamento fica disponível para o cliente acompanhar a entrega em tempo real.',
+    ]);
+
+  // ── Prazo de entrega ──
+  if (/prazo.*entrega|tempo.*entrega|quando.*chega|demora.*entrega|previsao.*entrega/.test(t))
+    return pick([
+      'Os prazos variam conforme origem, destino e modalidade: para o Sul do Brasil (PR, SC), geralmente 1-3 dias úteis. Sudeste (SP, RJ, MG): 3-5 dias úteis. Para cotação exata de prazo, o setor comercial calcula conforme a rota e disponibilidade de veículo. Cargas urgentes podem ter opção de frete expresso.',
+      'Prazo de entrega depende da rota e modalidade: carga fracionada pode levar mais dias pois aguarda composição de carga. Lotação parte mais rápido. Em geral, RS → SP leva 3-5 dias úteis na fracionada e 2-3 dias na lotação. O tracking em tempo real permite acompanhamento do cliente.',
+    ]);
+
+  // ── Segurança da carga ──
+  if (/carga.*roubada|roubo.*carga|carga.*perdida|extravio|ocorrencia.*carga|acidente.*carga|avaria/.test(t))
+    return pick([
+      'Em caso de ocorrência com a carga (acidente, avaria, roubo): notifique imediatamente o setor de operações da Scapini, registre boletim de ocorrência (obrigatório para roubo), fotografe tudo, e acione o seguro. Não mova a carga antes de registrar a situação. O prazo para comunicar sinistro ao seguro é de 24h.',
+      'Qualquer ocorrência com carga deve ser comunicada em até 24h ao setor responsável. Para roubos: BO imediato e acionamento da central de monitoramento. Para avarias: fotos detalhadas antes de descarregar. A indenização do seguro é calculada pelo valor da NF da mercadoria, deduzida a franquia contratual.',
+    ]);
+
+  // ── Documentação do veículo ──
+  if (/documentacao.*veiculo|documento.*caminhao|crlv|licenciamento|vistoria|habilitacao.*veiculo/.test(t))
+    return pick([
+      'Documentação obrigatória no veículo: CRLV (em dia), CNH do motorista (categoria E para articulados), tacógrafo calibrado e com disco/registro, kit de segurança (extintor, triângulo), RNTRC da Scapini afixado no veículo, e o CT-e + MDFe da viagem em curso. Falta de qualquer documento: risco de apreensão em fiscalização.',
+      'O CRLV precisa estar dentro da validade — vencimento gera infração gravíssima e pode autuar o veículo. O setor de frota controla os vencimentos de toda a frota. Motoristas devem verificar validade antes de cada viagem e comunicar vencimentos próximos com antecedência de 30 dias.',
+    ]);
+
+  // ── Fuel / abastecimento ──
+  if (/abastecimento|combustivel|diesel|tanque.*veiculo|consumo.*diesel|km.*litro|rendimento/.test(t))
+    return pick([
+      'O consumo médio de diesel em caminhões: truck em rodovia, cerca de 3,5 a 5 km/l. Carreta bitrem: 2,5 a 3,5 km/l. O consumo varia muito com o peso da carga, topografia e velocidade. A Scapini monitora o consumo por veículo — desvios acima de 20% indicam possível problema mecânico ou uso indevido.',
+      'Abastecimento da frota Scapini é controlado pelo setor de frota: cada motorista tem código de abastecimento, e os dados são lançados no sistema. Nunca abasteça sem registrar — o controle de combustível é parte do custo operacional e entra no DRE. Postos conveniados têm preço negociado.',
+    ]);
+
+  // ── Pneus ──
+  if (/pneu|calibragem|pressao.*pneu|vida util.*pneu|desgaste.*pneu|recapagem/.test(t))
+    return pick([
+      'Pressão dos pneus é crítica: pneu murchando aumenta consumo de combustível e risco de estouro. Para truck, pressão típica: eixo dianteiro ~130 PSI, eixo traseiro ~105-110 PSI. Verifique a cada partida. Pneu com desgaste irregular indica problema de alinhamento ou balanceamento — comunicar ao setor de manutenção.',
+      'Vida útil de pneu de caminhão: 100.000 a 150.000 km em condições normais. Recapagem pode ser feita 1-2 vezes (para eixos traseiros e reboques) com economia de até 40% vs pneu novo. Pneus do eixo dianteiro: nunca recapados (segurança). A Scapini faz rodízio e controla quilometragem por pneu no sistema de frota.',
+    ]);
+
   return null;
 };
 
@@ -3594,6 +3650,113 @@ const DEMO_QA = [
     r: [
       'Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Uso uma base de conhecimento local com documentos da Scapini e posso consultar sistemas externos quando integrada.',
       'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção, e aprendo com as notas e documentos que recebo.',
+    ]},
+
+  // ── BLOCO OPERACIONAL: Transporte, Regulamentação e Procedimentos ─────────────
+
+  // MDFe
+  { re: /mdfe|manifesto eletronico|manifesto de documento/,
+    r: [
+      'O MDFe (Manifesto Eletrônico de Documentos Fiscais) é obrigatório para transporte interestadual e intermunicipal. Deve ser emitido antes do veículo sair do estabelecimento, encerrado ao chegar no destino. Contém a placa do veículo, motorista e todos os CT-es vinculados à viagem. Multa por falta: de R$ 500 a R$ 5.000.',
+      'MDFe é o documento que "embala" os CT-es de uma viagem. Sem MDFe ativo, o veículo não pode circular com carga interestadual. É emitido pelo embarcador ou transportadora e transmitido à SEFAZ em tempo real. O encerramento deve ser feito assim que a carga for entregue no destino final.',
+    ]},
+
+  // CTe
+  { re: /\bcte\b|conhecimento de transporte|conhecimento eletronico|cte-os/,
+    r: [
+      'O CT-e (Conhecimento de Transporte Eletrônico) é a nota fiscal do serviço de transporte. Documenta o serviço prestado entre remetente e destinatário. É obrigatório para qualquer frete pago, substitui o CTRC em papel. A Scapini emite via sistema interno (CGI) antes de cada coleta. Sem CT-e, a carga não sai — é ilegal e gera multa pesada.',
+      'CT-e é o documento fiscal do transporte rodoviário de cargas. Deve ser emitido antes do transporte, com dados do remetente, destinatário, valor da mercadoria e do frete. A chave de acesso de 44 dígitos permite consulta na SEFAZ pelo embarcador e destinatário. Em caso de cancelamento, tem prazo de até 24h após a emissão.',
+    ]},
+
+  // ANTT / RNTRC
+  { re: /\bantt\b|agencia nacional.*transporte|rntrc|registro.*transportador|habilitacao.*transporte/,
+    r: [
+      'A ANTT (Agência Nacional de Transportes Terrestres) é o órgão regulador do transporte rodoviário de cargas no Brasil. O RNTRC (Registro Nacional de Transportadores Rodoviários de Carga) é o cadastro obrigatório para transportadoras e caminhoneiros autônomos. Sem RNTRC válido, não é possível emitir CT-e nem operar legalmente.',
+      'A ANTT fiscaliza peso, dimensões, documentação e condições dos veículos. O RNTRC precisa ser renovado a cada 5 anos para empresas. Para motoristas autônomos, o registro é vitalício. A Scapini mantém RNTRC regularizado — qualquer vencimento precisa ser tratado imediatamente pelo setor jurídico/financeiro.',
+    ]},
+
+  // Tacógrafo
+  { re: /tacografo|tacografo|velocidade.*registro|controle.*jornada|disco.*tacografo|jornada.*motorista|horas.*motorista/,
+    r: [
+      'O tacógrafo registra velocidade, distância e jornada do motorista. É obrigatório para veículos de carga com PBT acima de 3.500 kg. O disco (ou arquivo eletrônico) deve ser guardado por 30 dias pelo motorista e 1 ano pela empresa. Velocidade máxima permitida em rodovias: 90 km/h para caminhões — acima disso gera infração gravíssima.',
+      'A jornada do motorista profissional é regulada pela Lei 13.103/2015: máximo 8h de trabalho por dia, com 11h de descanso entre jornadas. Para viagens longas, 30 minutos de pausa a cada 4h30 de direção. O tacógrafo comprova o cumprimento. Irregularidades geram multa para o motorista e para a transportadora.',
+    ]},
+
+  // Peso e dimensões
+  { re: /peso.*veiculo|peso.*carga|limite.*peso|excesso.*peso|dimensao|largura.*caminhao|altura.*caminhao|pbr?t\b|peso bruto/,
+    r: [
+      'Os limites legais de peso para veículos de carga: PBT (Peso Bruto Total) de caminhão simples: 23 toneladas. Carreta (bitrem): 57 toneladas. Rodotrem: 74 toneladas. Largura máxima: 2,60 m. Altura máxima: 4,40 m. Comprimento máximo: 19,80 m (carreta). Excesso de peso gera multa por eixo e pode apreender o veículo.',
+      'Para transporte de carga acima dos limites, é necessária AET (Autorização Especial de Trânsito) junto ao DNIT ou ANTT. Cargas com mais de 4,40 m de altura ou 2,60 m de largura exigem escolta e autorização prévia. O setor de operações da Scapini cuida dessas autorizações — não saia sem a AET válida.',
+    ]},
+
+  // CIOT
+  { re: /\bciot\b|codigo identificador.*operacao|operacao.*transporte.*codigo/,
+    r: [
+      'O CIOT (Código Identificador da Operação de Transporte) é obrigatório quando a transportadora contrata motorista autônomo (TAC). Gerado no sistema da ANTT antes da viagem. É pelo CIOT que o pagamento do frete ao autônomo é registrado e rastreado. Não gerar o CIOT = multa de R$ 500 por operação.',
+      'O CIOT é gerado antes de cada viagem com motorista autônomo. Contém dados do contratante, do TAC, valor do frete e dados da operação. O pagamento do frete só é considerado regular se vinculado ao CIOT. A Scapini gera o CIOT via sistema CGI — qualquer problema, acionar o setor de operações.',
+    ]},
+
+  // Tipos de carga / modalidade
+  { re: /carga fracionada|fracionado|lotacao|carga completa|lote.*completo|tipo.*carga|modalidade.*frete/,
+    r: [
+      'A Scapini opera em duas modalidades principais: carga fracionada (LTL) — junta mercadorias de vários clientes no mesmo veículo, ideal para volumes menores; e lotação (FTL) — veículo exclusivo para um único cliente, mais rápido e seguro para volumes grandes. A escolha depende do volume, prazo e tipo de mercadoria.',
+      'Carga fracionada: o veículo parte quando a rota está "lotada" de volumes de vários clientes. Mais econômico por kg, prazo um pouco maior. Lotação: veículo exclusivo, parte quando o cliente precisar, prazo menor, custo maior por viagem mas menor por tonelada em volumes grandes. A equipe comercial indica o melhor para cada cliente.',
+    ]},
+
+  // MOPP
+  { re: /\bmopp\b|produto perigoso|carga perigosa|produto (quimico|inflamavel)|substancia perigosa/,
+    r: [
+      'MOPP (Movimentação e Operação de Produtos Perigosos) é o curso obrigatório para motoristas que transportam produtos perigosos (inflamáveis, corrosivos, tóxicos, explosivos). Validade: 5 anos. Sem MOPP, o motorista não pode assumir esse tipo de carga legalmente. O veículo também precisa de equipamentos específicos (extintor, kit anti-derramamento, placa de risco).',
+      'Produtos perigosos são regulados pela ANTT (Resolução 5.232/2016). Além do MOPP do motorista, a embalagem deve ser homologada, o CT-e deve indicar o número da ONU do produto e a ficha de emergência deve estar no veículo. Qualquer transporte de produto perigoso sem as documentações corretas gera apreensão e multa pesada.',
+    ]},
+
+  // Seguro de carga
+  { re: /seguro.*carga|rctr|rcta|seguro.*roubo|seguro.*avaria|cobertura.*frete|indenizacao.*carga/,
+    r: [
+      'O RCTR-C (Responsabilidade Civil do Transportador Rodoviário – Carga) é o seguro obrigatório para transportadoras. Cobre danos à carga por acidentes, incêndio e causas naturais. Além do obrigatório, a Scapini pode oferecer ao cliente o RCTA (seguro adicional contra roubo e extravio). Valores indenizados são calculados pela NF da mercadoria.',
+      'Em caso de sinistro (acidente, roubo, avaria): fotografe tudo antes de mover a carga, registre boletim de ocorrência (para roubo: imediato), acione o seguro da Scapini em até 24h e guarde todos os documentos (CT-e, MDFe, BO). O prazo de prescrição para reclamar é de 1 ano. O setor de seguros cuida do processo de indenização.',
+    ]},
+
+  // Jornada / Lei do motorista
+  { re: /lei.*motorista|lei 13103|jornada.*trabalho|hora.*extra.*motorista|descanso.*motorista|pausa.*viagem/,
+    r: [
+      'A Lei 13.103/2015 regula a jornada do motorista profissional: 8h de trabalho por dia (exceto em acordos coletivos), intervalo de 1h para refeição, 30 minutos de pausa a cada 4h30 de direção. Descanso mínimo de 11h entre jornadas. Em viagens longas, pode-se dividir o descanso: 8h + 3h (mas a fragmentação deve ser acordada em CCT).',
+      'Horas extras do motorista são limitadas a 2h por dia e precisam de acordo individual ou CCT. O motorista pode acumular banco de horas em acordos coletivos. Férias são 30 dias após 12 meses de trabalho. Em viagens que cruzem fusos, o controle é pelo horário de saída da base da Scapini.',
+    ]},
+
+  // EPI
+  { re: /epi\b|equipamento.*protecao|capacete|colete|botina|luva.*trabalhador|seguranca.*trabalho/,
+    r: [
+      'Os EPIs obrigatórios para motoristas e pessoal de pátio da Scapini: botina com bico de aço (NR-6), colete refletivo para operações externas, luva de proteção para manuseio de cargas. A empresa fornece os EPIs gratuitamente — uso é obrigatório e fiscalizado pelo SESMT. Trabalhar sem EPI é infração grave e pode afastar o colaborador.',
+      'EPIs são fornecidos pela empresa e o uso é responsabilidade do trabalhador. Em caso de EPI danificado ou vencido, comunique imediatamente ao responsável de segurança — ele deve ser substituído antes de continuar o trabalho. A NR-6 obriga a empresa a fornecer e fiscalizar o uso. A Scapini segue as normas do MTE rigorosamente.',
+    ]},
+
+  // Pedágio / gestão de frota
+  { re: /pedagio|tag.*veiculo|vale pedagio|custo.*pedagio|sem parar|auto pista/,
+    r: [
+      'O pedágio é um dos maiores custos operacionais de uma transportadora. A Scapini utiliza sistema de TAG (pagamento eletrônico) para agilizar passagens e controlar custos por veículo e rota. Qualquer problema com TAG (saldo, bloqueio, passagem não registrada) deve ser comunicado ao setor de frota imediatamente — débito posterior é mais caro.',
+      'O Vale-Pedágio (Lei 10.209/2001) é obrigatório quando a transportadora contrata motorista autônomo: o embarcador paga separado do frete, diretamente ao motorista, o valor dos pedágios da viagem. Não pagar o vale-pedágio é infração para o embarcador. A Scapini garante o repasse correto a cada viagem com TAC.',
+    ]},
+
+  // Manutenção preventiva
+  { re: /manutencao.*preventiva|revisao.*veiculo|troca.*oleo|filtro.*preventiva|checklist.*veiculo|inspecao.*veiculo/,
+    r: [
+      'A manutenção preventiva é o que mantém a frota rentável. Os intervalos básicos para caminhões: troca de óleo motor a cada 20.000-30.000 km (conforme fabricante), filtros (ar, combustível, óleo) junto com o óleo, pneus: rotação a cada 20.000 km e alinhamento a cada 40.000 km. Freios: inspeção a cada 60.000 km. Qualquer anomalia relatada pelo motorista deve ser atendida antes da próxima viagem.',
+      'O checklist pré-viagem é obrigatório e responsabilidade do motorista: nível de óleo, água, combustível, pressão dos pneus, funcionamento de faróis e lanternas, freios, documentação do veículo em dia. Veículo com defeito não sai — custo de parada programada é sempre menor que custo de quebra em viagem.',
+    ]},
+
+  // Rastreamento
+  { re: /rastreamento|rastreador|gps.*veiculo|localizar.*veiculo|onde.*veiculo|monitoramento.*frota/,
+    r: [
+      'A Scapini utiliza rastreamento GPS em toda a frota. O sistema permite localizar veículos em tempo real, controlar velocidade, paradas não autorizadas e desvios de rota. Em caso de suspeita de sinistro ou roubo, a central de monitoramento é acionada imediatamente. O motorista não deve bloquear o rastreador — é equipamento de segurança e do contrato com o cliente.',
+      'O rastreamento serve tanto para segurança da carga quanto para melhoria operacional: identifica rotas mais eficientes, motoristas que excedem velocidade e paradas fora do programado. Os dados ficam armazenados por até 6 meses. Quando integrada ao sistema, posso consultar a localização de qualquer veículo da frota por placa.',
+    ]},
+
+  // Escolta / carga especial
+  { re: /escolta|carga especial|carga pesada|aet\b|autorizacao especial|carga indivisivel|carga polemica|exces.*dimensao/,
+    r: [
+      'Cargas indivisíveis ou acima dos limites legais (largura > 2,60m, altura > 4,40m, comprimento > 19,80m ou peso acima do PBT legal) exigem AET (Autorização Especial de Trânsito) emitida pelo DNIT ou DER estadual. A escolta (empresa habilitada) é obrigatória para cargas com largura > 3,20m ou altura > 5,20m. O percurso e horários são fixados na autorização.',
+      'Para transporte de carga especial na Scapini: o setor de operações solicita a AET com antecedência (pode levar até 5 dias úteis). A escolta é contratada conforme exigência da autorização. Veículo-piloto à frente, veículo-escolta atrás para os casos mais críticos. Circulação geralmente liberada apenas durante o dia e fora dos horários de pico.',
     ]},
 
   // ── Sobre a Scapini ───────────────────────────────────────────────────────────
