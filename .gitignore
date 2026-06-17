@@ -21,6 +21,10 @@ sky.db-wal
 Lúmina.db
 Lúmina.db-shm
 Lúmina.db-wal
+# IDE / Claude Code internals
+.agents/
+.codex/
+.claude/
 # Outros arquivos locais
 audit_full.json
 learner.log
