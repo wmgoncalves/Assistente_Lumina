@@ -4677,6 +4677,29 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO CLIENTES ESTRATÉGICOS E SETOR FRIGORÍFICO ───────────────────────────
+
+  // Frigoríficos como clientes — BRF, JBS, Marfrig, Aurora
+  { re: /frigorifico|brf|jbs|marfrig|aurora.*alimentos|seara|sadia|perdigao|carne.*transporte|frigorifico.*cliente|transporte.*frigorifico/,
+    r: [
+      'Frigoríficos como clientes de transportadora: BRF (Sadia/Perdigão), JBS (Seara/Friboi) e Aurora são os maiores geradores de carga do RS e SC. Exigências típicas: frota com baú refrigerado (temperatura -18°C para congelados, 0-4°C para resfriados), rastreamento em tempo real com acesso ao sistema do cliente, HACCP (controle higiênico-sanitário), e motoristas treinados para carga alimentar. Homologação leva 30-90 dias.',
+      'Processo de homologação em frigorífico: a transportadora passa por auditoria técnica (inspeção da frota, calibração dos baús, limpeza e higienização), documental (RNTRC, RCTR-C, apólice de carga alimentar, certificado do baú pelo MAPA) e operacional (teste de entrega monitorada). Após aprovada, entra na lista de transportadoras habilitadas — as cargas são distribuídas por desempenho (OTD, avarias, comunicação).',
+    ]},
+
+  // Indústria alimentícia e HACCP
+  { re: /haccp|appcc|controle.*higienico|higiene.*veiculo|sanitizacao.*bau|limpeza.*frigorifico|temperatura.*alimento|carga.*alimentar/,
+    r: [
+      'HACCP (Hazard Analysis Critical Control Points) no transporte de alimentos: exige identificação de pontos críticos onde a contaminação pode ocorrer (temperatura fora do range, contato com substâncias estranhas, pragas). Para transportadoras: limpeza e sanitização do baú entre cargas (registrar com foto e data), manutenção do sistema de refrigeração calibrado (MAPA), e treinamento do motorista em boas práticas de manipulação.',
+      'Temperatura de transporte de alimentos: congelados (carne, sorvete) — mínimo -18°C durante todo o transporte. Resfriados (frios, laticínios) — 0°C a 4°C. Temperatura ambiente controlada (chocolate, biscoito) — até 25°C. Qualquer desvio deve ser registrado no datalogger (rastreador de temperatura) e comunicado ao cliente. Desvio sem registro = avaria presumida = responsabilidade da transportadora.',
+    ]},
+
+  // Varejo como cliente de frete
+  { re: /varejo.*frete|supermercado.*transporte|atacado.*frete|distribuicao.*varejo|redes.*supermercado|carrefour.*frete|atacadao.*frete|assai.*frete/,
+    r: [
+      'Varejo como cliente de transportadora: redes de supermercado e atacarejos têm janelas de recebimento rígidas (ex.: somente entre 6h e 10h de segunda a sexta). Entrega fora da janela = recusa ou multa contratual. Exigem NF-e e CT-e eletrônicos, agendamento pelo portal do cliente, e confirmação de entrega com foto + assinatura no app. Volumes altos mas margens menores — compensa com frequência e volume.',
+      'Entrega em CD (Centro de Distribuição) de varejo: o CD recebe a carga consolidada e distribui para as lojas. Para a Scapini, entregar no CD é mais eficiente (menos paradas) mas exige pontualidade absoluta — atraso pode resultar em desconto no frete ou perda da carga (produtos perecíveis). Agende com 24-48h de antecedência pelo portal do varejista e confirme no dia anterior.',
+    ]},
+
   // ── BLOCO EXPERIÊNCIA DO EMBARCADOR E TECNOLOGIA ──────────────────────────────
 
   // Rastreamento de carga para o cliente (embarcador)
