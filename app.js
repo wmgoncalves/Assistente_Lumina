@@ -4361,6 +4361,29 @@ const DEMO_QA = [
       'Passo a passo do CIOT: 1) Acesse o portal ANTT; 2) Informe CNPJ da transportadora, CPF do motorista, origem, destino, tipo de carga e valor do frete; 3) O sistema gera o código; 4) O motorista recebe a confirmação; 5) Guarde o comprovante — é obrigatório em fiscalização. Para volume alto de viagens, há sistemas que integram a emissão de CIOT automaticamente ao TMS.',
     ]},
 
+  // ── BLOCO COMPLIANCE E GESTÃO DE FORNECEDORES ────────────────────────────────
+
+  // Licença ambiental / pátio de veículos
+  { re: /licenca.*ambiental|patio.*licenca|ibama|fepam|fepam.*transporte|residuo.*oleo|descarte.*pneu|destinacao.*residuo/,
+    r: [
+      'Compliance ambiental para transportadora com pátio próprio: a FEPAM (RS) ou órgão estadual equivalente exige Licença de Operação para pátios com lavagem, troca de óleo e manutenção. Resíduos de óleo lubrificante são perigosos (Classe I) — exigem manifesto de resíduo e destinação a empresa habilitada. Pneus inservíveis: logística reversa obrigatória (PRONAR — decreto federal). Multa por descarte irregular vai a R$ 50 milhões.',
+      'Gestão de resíduos no pátio da Scapini: óleo usado → empresa coletora autorizada pela FEPAM (gratuito — o óleo tem valor); filtros e embalagens de óleo → classe II, coletados junto com industrial; pneus → distribuidores Reciclanip ou pontos de coleta MAPA. Mantenha manifestos de destinação por 5 anos — auditorias ambientais solicitam essa documentação.',
+    ]},
+
+  // Gestão de fornecedores / homologação
+  { re: /homologar.*fornecedor|fornecedor.*homologado|avaliacao.*fornecedor|gestao.*fornecedor|criterio.*fornecedor/,
+    r: [
+      'Homologação de fornecedores: antes de fechar com um novo fornecedor (peças, pneus, combustível, oficinas), avalie: regularidade fiscal (CNPJ ativo, certidões negativas), capacidade técnica (tem estrutura para atender sua demanda?), referências de outros clientes, prazo de entrega e política de garantia. Documente a homologação — se o fornecedor causar problema (peça falsificada, óleo adulterado), a documentação protege a Scapini.',
+      'Critérios de avaliação de fornecedor: 1) Qualidade (índice de peças com defeito/devolvidas); 2) Prazo (% de entregas no prazo); 3) Preço (competitividade vs. mercado); 4) Atendimento (resolve problemas rápido?); 5) Regularidade fiscal (sem pendências). Avalie anualmente e dê feedback ao fornecedor — os bons melhoram quando sabem onde erram.',
+    ]},
+
+  // Controle de estoque de peças
+  { re: /estoque.*(peca|material|insumo)|controle.*(estoque|almoxarife|almoxarifado)|inventario.*(peca|material)/,
+    r: [
+      'Estoque mínimo de peças para frota: filtre o que quebra com mais frequência nos últimos 12 meses e mantenha o equivalente a 15 dias de consumo médio. Itens críticos (que param o veículo): kit embreagem, filtro de ar, filtro de combustível, correia. Peças de alto custo e baixo giro: peça por demanda. Use o sistema para gerar alerta de ressuprimento automático.',
+      'Gestão de almoxarifado: a saída de cada peça deve ter um documento de requisição com a placa do veículo que recebeu. Isso permite saber o custo de manutenção por veículo, identificar os que mais consomem e calcular o custo real por km. Sem controle de almoxarifado, o custo de manutenção fica invisível — e o que não é medido não é gerenciado.',
+    ]},
+
   // ── BLOCO ESTRATÉGICO: ROI, LGPD, sustentabilidade, tecnologia ────────────────
 
   // ROI da IA
@@ -5285,13 +5308,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
     const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
 
-    // Contexto do dia da semana — dá mais personalidade ao greeting
+    // Contexto do dia da semana + hora — personalidade contextualizada
     const dowCtx = (() => {
-      if (dow === 1) return pick(['Segunda-feira — começo de semana, vamos com tudo.', 'Segunda! A semana começa agora.']);
-      if (dow === 5) return pick(['Sexta-feira — quase lá.', 'Sexta! Boa hora para fechar a semana com chave de ouro.']);
-      if (dow === 6) return pick(['Sábado — quem trabalha hoje merece dobrado.', 'Sábado de operação. Estou aqui.']);
-      if (dow === 0) return pick(['Domingo de plantão? Aqui estou.', 'Domingo. Raro ver você aqui — deve ser urgente.']);
-      return ''; // ter-qui: neutro
+      if (dow === 1) return pick(['Segunda-feira — começo de semana, vamos com tudo.', 'Segunda! A semana começa agora. O que está na fila?']);
+      if (dow === 2) return pick(['Terça — semana em ritmo. O que precisa hoje?', '']);
+      if (dow === 3) return pick(['Quarta — meio da semana, bom para fazer o balanço do que está pendente.', '']);
+      if (dow === 4) return pick(['Quinta — sprint final antes da sexta. O que está em aberto?', '']);
+      if (dow === 5) return pick(['Sexta-feira — quase lá! Boa hora para fechar a semana com chave de ouro.', 'Sexta! Última chance de resolver o que ficou pendente.']);
+      if (dow === 6) return pick(['Sábado de operação. Quem trabalha hoje merece dobrado.', 'Sábado — estou aqui se precisar.']);
+      if (dow === 0) return pick(['Domingo de plantão? Deve ser urgente — o que precisa?', 'Domingo. Aqui estou.']);
+      return '';
     })();
 
     const briefingKey = 'lumina_last_briefing';
