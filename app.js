@@ -3347,6 +3347,23 @@ const detectLocalInfo = async (text) => {
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
 
+  // ── Benchmarking do setor ──
+  if (/media.*setor.*transporte|benchmark.*transportadora|media.*margem.*transporte|media.*ebitda.*transporte|referencia.*setor.*logistica|como.*estamos.*comparado/.test(t))
+    return pick([
+      'Benchmarks do setor de transporte rodoviário de cargas no Brasil (2024-2025): margem EBITDA média 8-14%; OTD médio 88-93% (empresas líderes chegam a 97%); custo por km rodado R$1,80-2,40 (truck, sul do Brasil); índice de avaria 0,05-0,15% do faturamento; rotatividade de motoristas 40-80% ao ano; prazo médio de recebimento 35-50 dias. Saber onde a Scapini está em relação a esses números é o primeiro passo para melhorar.',
+      'Como se posiciona uma transportadora no setor: acima da média são empresas com EBITDA >12%, OTD >95%, custo/km <R$1,90 e rotatividade <30%/ano. Abaixo da média: EBITDA <7%, OTD <88%, muita manutenção corretiva. O caminho para o quartil superior: frota nova (menos corretiva), telemetria (menos combustível e sinistros), contratos longos (previsibilidade de receita) e gestão de pessoas (menos turnover).',
+    ]);
+
+  if (/quantas.*transportadora.*brasil|tamanho.*mercado.*transporte|mercado.*logistica.*brasil|setor.*transporte.*pib|faturamento.*setor.*transporte/.test(t))
+    return pick([
+      'O setor de transporte rodoviário de cargas movimenta cerca de R$400 bilhões por ano no Brasil (aprox. 4% do PIB). São mais de 1,5 milhão de transportadoras ativas (a maioria MEI ou pequena frota) e cerca de 2 milhões de motoristas profissionais. O RS tem forte concentração de transportadoras de médio porte — corredor Sul-Sudeste é um dos mais movimentados do país. Mercado ainda muito fragmentado — 80% das empresas têm menos de 5 veículos.',
+    ]);
+
+  if (/diesel.*hoje|preco.*diesel.*atual|litro.*diesel.*rs|combustivel.*preco.*atual/.test(t))
+    return pick([
+      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — é atualizado semanalmente por estado. No RS em 2025, o S-10 tem ficado entre R$5,90-6,30/l no posto. Com a integração ao sistema de cotação da Scapini, posso buscar o preço em tempo real. Você também pode me dizer o preço atual e eu ajusto os cálculos de frete.',
+    ]);
+
   // ── Perguntas clássicas de demo / apresentação ──
   if (/me.*faz.*uma.*pergunta|o que.*perguntar|o que.*voce.*faz|me.*impressiona|me.*surpreende|mostra.*o.*que.*sabe|o que.*voce.*sabe.*fazer/.test(t))
     return pick([
@@ -4716,6 +4733,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO COMBUSTÍVEL, REGULAMENTAÇÃO E FROTA TERCEIRIZADA ───────────────────
+
+  // Gestão de combustível e custo por rota
+  { re: /custo.*combustivel.*rota|diesel.*rota|consumo.*rota|quanto.*gasta.*diesel|preco.*diesel.*hoje|diesel.*litro.*rs|custo.*km.*diesel/,
+    r: [
+      'Custo de combustível por rota: consumpção média de caminhão truck em estrada = 3 km/l; carreta = 2,5 km/l. Diesel no RS em junho/2025: ~R$6,10/l (posto). Lajeado → São Paulo (~1.100 km): truck gasta ~367 litros = R$2.238 só em diesel. Carreta: ~440 litros = R$2.684. Adicione pedágio (BR-116: ~R$400-600 ida) e chegará ao custo direto de combustível+pedágio da rota.',
+      'Variação do diesel impacta diretamente a margem: a cada R$0,10 de alta no diesel, o custo de uma viagem Lajeado-SP sobe R$37-44 (truck) ou R$44-55 (carreta). Numa frota de 20 veículos fazendo essa rota, R$0,10 de alta = R$740-1.100 de custo extra por viagem completa. Daí a importância da cláusula de fuel surcharge no contrato — repassa automaticamente a variação para o cliente.',
+    ]},
+
+  // Frota terceirizada / agregados / TAC
+  { re: /frota.*terceirizada|agregado.*veiculo|tac.*gestao|gerenciar.*tac|motorista.*proprio.*veiculo|terceiro.*frota|subcontratado.*veiculo/,
+    r: [
+      'Gestão de frota terceirizada (TAC/agregados): o TAC traz o veículo próprio e recebe por frete — não há vínculo empregatício, mas é obrigatório o CIOT via ANTT. O agregado tem vínculo de exclusividade com a transportadora mas sem CLT. Vantagem da terceirização: escalabilidade (aumenta frota em safra sem comprar veículo). Risco: qualidade inconsistente e dificuldade de manter padrão de atendimento.',
+      'Controle de TAC na frota: exija seguro RCTR-C em nome da transportadora (ou endossado), RNTRC ativo, vistoria prévia do veículo (check list fotográfico), e contrato com SLA claro (OTD mínimo de 90%, tolerância zero para roubo de carga). Pague pelo CIOT dentro do prazo — atraso gera multa da ANTT e desgasta o relacionamento com o autônomo. TAC satisfeito = disponibilidade garantida em safra.',
+    ]},
+
+  // Licença ambiental e regulamentação para transportadora
+  { re: /licenca.*ambiental|ibama.*transporte|fepam.*licenca|licenciamento.*ambiental.*frota|residuo.*transporte|manifesto.*residuo|produto.*perigoso.*regulamentacao/,
+    r: [
+      'Licenciamento ambiental para transportadora: empresas que transportam produtos perigosos (inflamáveis, corrosivos, tóxicos — classe ONU) precisam de licença ambiental estadual (FEPAM no RS) e cadastro no IBAMA. O veículo deve ter identificação de risco (rótulo de risco + painel de segurança + número ONU), motorista com MOPP, e ficha de emergência da carga. Transporte sem licença: multa de R$500 a R$50 milhões (Lei 9.605/98).',
+      'Manifesto de resíduos (MTR): obrigatório para transporte de resíduos industriais, hospitalares e de construção civil. Emitido no sistema do IBAMA/SINIR. O gerador emite, o transportador assina e o destinatário confirma o recebimento. Cada fase é registrada eletronicamente — rastreabilidade total. Transportar resíduo sem MTR é infração ambiental grave. O RS exige além do MTR o manifesto estadual da FEPAM para resíduos Classe I.',
+    ]},
+
+  // Seguro de vida e benefícios diferenciados para motoristas
+  { re: /seguro.*vida.*motorista|beneficio.*motorista|plano.*saude.*motorista|odontologico.*motorista|vale.*motorista|beneficio.*diferenciado/,
+    r: [
+      'Benefícios diferenciados para motoristas: além dos obrigatórios (VT, VR, FGTS, INSS), os que mais impactam retenção são: plano de saúde (para família — motorista valoriza muito), seguro de vida (cobertura de R$100-200k, custa R$30-60/mês pela empresa), parceria com SEST SENAT (consultas, fisioterapia, academias gratuitas), e PPR atrelado a metas de combustível e OTD. Custo total de benefícios extras: R$400-700/motorista/mês.',
+      'Programa de recompensa por segurança: motoristas com 0 infrações, 0 acidentes e score de telemetria acima de 85 recebem bônus semestral (R$500-1.500). Esse programa custa menos do que um único acidente e reduz o prêmio do seguro. Anuncie o ranking mensalmente — competição saudável entre motoristas. Também reduz rotatividade: motorista que acumula pontos e benefícios tem mais razão para ficar.',
     ]},
 
   // ── BLOCO CONTABILIDADE GERENCIAL ─────────────────────────────────────────────
