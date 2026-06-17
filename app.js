@@ -2945,11 +2945,11 @@ const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reini
 // 2048 = raciocínio profundo (análise financeira, DRE, auditoria, prospecção)
 const _thinkingBudget = (msg) => {
   const t = msg.toLowerCase();
-  // Análise pesada — precisa de raciocínio profundo
-  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\./.test(t)) return 2048;
-  // Perguntas de procedimento / empresa — raciocínio leve
-  if (/como (funciona|fazer|faço|se faz|configur|ativ)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete/.test(t)) return 512;
-  // Conversas simples, lookups, saudações — sem thinking
+  // Análise pesada — raciocínio profundo (2048)
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha/.test(t)) return 2048;
+  // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa/.test(t)) return 512;
+  // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
 
@@ -3578,6 +3578,32 @@ const tryLocalResponse = (text) => {
     return pick([
       'A Scapini Transportes está sediada em Lajeado, RS — no Vale do Taquari, região central do Rio Grande do Sul. A localização é estratégica: acesso à BR-386 facilita rotas para todo o Sul e Sudeste do Brasil.',
       'Lajeado/RS é a sede da Scapini há mais de 30 anos. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
+    ]);
+
+  // ── Como usar a Lúmina ──
+  if (/como (uso|usar|utiliz|falo com|converso com|acesso|ativo|chamo|chama) (a |)(lúmina|lumina|você|vc|ia|assistente)/.test(t))
+    return pick([
+      'Me use por voz ou texto. Por voz: clique no microfone e diga "Lúmina" seguido da sua pergunta. Por texto: escreva diretamente. Para análise de planilha, arraste o Excel aqui no chat. Para PDF, use o botão de arquivo. Pergunte qualquer coisa — estou aqui.',
+      'Simples: fale comigo como falaria com uma colega de trabalho. "Lúmina, me mostra a DRE de março" ou "qual o prazo para RS → SP?" — entendo linguagem natural. Para arquivos, arraste ou use o botão de upload. Voz funciona melhor no Electron (app instalado).',
+    ]);
+
+  if (/o que (posso|dá pra|eu posso) (te|perguntar|pedir|falar|consultar|analisar|pedir para você)/.test(t))
+    return pick([
+      'Você pode me pedir: análise de planilhas DRE/balancete, cotação de frete estimada, prospecção de clientes, informações sobre regulamentações de transporte (MDFe, CTe, ANTT), procedimentos internos, pesquisa de preços de peças/pneus, e muito mais. Só perguntar — se eu não souber, aviso honestamente.',
+      'Exemplos do que posso fazer agora: "analisa essa DRE", "busca clientes do ramo de agronegócio em SP", "o que é CIOT?", "qual o prazo de RS pra SP?", "quanto custa um pneu para carreta?", "faz o fechamento de maio vs abril". Me teste — você vai se surpreender.',
+    ]);
+
+  if (/(como|consigo|posso) (mandar|enviar|carregar|importar|colocar) (uma |)(planilha|excel|pdf|arquivo|documento)/.test(t))
+    return pick([
+      'Arraste o arquivo diretamente para o chat — Excel, PDF ou Word. Ou clique no ícone de clipe/arquivo na barra de mensagens. Aceito planilhas DRE, balancetes, extratos bancários, contratos e documentos de texto. Após carregar, é só perguntar sobre o conteúdo.',
+      'Para enviar arquivo: arraste e solte no chat, ou clique no botão de upload (clipe). Formatos aceitos: .xlsx, .xls, .csv, .pdf, .docx, .txt. Tamanho máximo: 20 MB. Após o upload, analiso o conteúdo automaticamente e fico pronta para responder perguntas.',
+    ]);
+
+  // ── Rotas principais ──
+  if (/rota.*(sul|sudeste|sp|são paulo|rio|mg|pr|sc|rs)|destinos?.*scapini|onde.*entrega|cidades.*atende|regioes.*atende/.test(t))
+    return pick([
+      'A Scapini atende principalmente o Sul do Brasil (RS, SC, PR) e o Sudeste (SP, RJ, MG), com foco em cargas fracionadas e lotação. As rotas mais movimentadas saem de Lajeado/RS com destino às regiões industriais de São Paulo, Curitiba e Santa Catarina. Para destinos específicos, o comercial confirma disponibilidade e prazo.',
+      'Principais corredores da Scapini: Lajeado/RS → São Paulo/SP (rota principal, ~1.600 km), RS → Curitiba/PR (~800 km), RS → Santa Catarina (~400 km), e distribuição no interior gaúcho. Regiões do Norte e Nordeste podem ser atendidas via parceiros e subcontratação. Consulte o comercial para destinos fora do corredor Sul-Sudeste.',
     ]);
 
   // ── Frota / veículos ──
