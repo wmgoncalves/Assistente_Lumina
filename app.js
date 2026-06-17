@@ -3246,6 +3246,29 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Rastreamento GPS e telemetria ──
+  if (/rastreamento.*gps|gps.*caminhao|telemetria.*frota|rastrear.*motorista|alerta.*desvio.*rota|como.*funciona.*rastreamento|posicao.*caminhao/.test(t))
+    return pick([
+      'Rastreamento GPS da frota: cada caminhão tem um dispositivo embarcado (tracker) que envia posição, velocidade, RPM e diagnóstico OBD a cada 30-60 segundos. A gestora recebe no painel web ou app: posição em tempo real, histórico de percurso, alertas de excesso de velocidade, desvio de rota e parada não programada. Principais fornecedores: Sascar, Onixsat, Opentech, Omnilink.',
+      'Telemetria de frota além do GPS: além da posição, os sistemas modernos capturam comportamento do motorista — freadas bruscas, aceleração excessiva, curvas perigosas, fadiga (detector de somnolência). Esses dados geram um score de direção por motorista que impacta bônus, renovação de contrato e seguro. Motoristas com score alto economizam até 15% em combustível.',
+    ]);
+
+  if (/alerta.*veiculo.*parado|veiculo.*parado.*muito|veiculo.*nao.*andando|caminhao.*parado.*horas/.test(t))
+    return pick([
+      'Alerta de veículo parado: o sistema de rastreamento envia alerta se o caminhão ficar parado por mais de X minutos fora de ponto de parada autorizado (configurável: 30, 60, 120 min). O gestor recebe notificação e pode ligar para o motorista. Possíveis causas: pane, acidente, parada para descanso, problema na carga. Configure pontos autorizados de parada (bases, postos, clientes) para reduzir falsos alarmes.',
+    ]);
+
+  if (/desvio.*rota|rota.*errada|motorista.*saiu.*rota|fora.*rota|cercamento.*virtual|geofence/.test(t))
+    return pick([
+      'Geocerca (geofence) e desvio de rota: você define a rota esperada + uma margem de tolerância (ex: 5 km). Se o caminhão ultrapassar essa margem, o sistema dispara alerta imediato por e-mail, WhatsApp ou app. Útil para carga de alto valor, rotas controladas e clientes que exigem rastreabilidade. O motorista pode justificar o desvio pelo app — o sistema registra o motivo.',
+    ]);
+
+  // ── Financeiro rápido ──
+  if (/financiamento.*caminhao|finame|leasing.*frota|banco.*pj|antecipacao.*recebivel|factoring.*transporte/.test(t))
+    return pick([
+      'Financiamento de caminhão via FINAME (BNDES): taxa 1,0-1,5% ao mês, até 60 meses, carência de 6 meses. Exige nota fiscal e o caminhão como garantia. Alternativa: leasing operacional — sem IPVA, parcela como despesa (deduz IRPJ). Para antecipação de recebíveis (CT-e em aberto), factoring ou desconto de duplicata no banco cobre o caixa no curto prazo.',
+    ]);
+
   // ── Fiscalização e documentação veicular ──
   if (/fiscalizacao|posto.*fiscal|balanca.*fiscal|policia.*rodoviaria|PRF|abordagem.*policia|o que.*apresentar.*fiscal/.test(t))
     return pick([
@@ -4515,6 +4538,29 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO BANCOS, CRÉDITO E FINANCIAMENTO ─────────────────────────────────────
+
+  // Financiamento de caminhão / crédito frota
+  { re: /financiamento.*caminhao|credito.*caminhao|banco.*caminhao|finame|bndes.*caminhao|parcela.*caminhao|taxa.*financiamento/,
+    r: [
+      'Financiamento de caminhão: as principais linhas são FINAME (BNDES — taxas menores, até 60 meses, carência de 6 meses) e crédito bancário convencional (Bradesco, Itaú, Santander). Taxas: FINAME 1,0-1,5% ao mês; bancário 1,5-2,5% ao mês. O FINAME exige nota fiscal de compra e o caminhão como garantia. Para frota com mais de 3 veículos, negocie com gerente de pessoa jurídica — há margem para reduzir spread.',
+      'Financiamento vs leasing para frota: CDC (financiamento) — bem entra no ativo da empresa, paga IPVA e seguro desde o início, pode vender a qualquer momento. Leasing operacional — bem fica no nome da locadora, sem IPVA para a transportadora, parcela entra como despesa operacional (reduz IRPJ). Para frotas grandes com planejamento tributário, o leasing pode ser mais vantajoso. Consulte o contador antes de decidir.',
+    ]},
+
+  // Relacionamento com banco / conta empresarial
+  { re: /conta.*empresarial|banco.*pj|relacionamento.*banco|gerente.*banco|conta.*pj|abertura.*conta.*empresa|tarifas.*bancarias/,
+    r: [
+      'Conta PJ para transportadora: prefira bancos com câmbio (para Mercosul), cobrança bancária integrada (boleto CT-e) e crédito de capital de giro. Bancos digitais (Nubank PJ, BTG Empresas) têm tarifa zero mas atendimento remoto. Bancos tradicionais têm gerente dedicado — essencial para negociar linhas de crédito e carta de fiança para licitações.',
+      'Como melhorar relacionamento com o banco: movimente a conta consistentemente (folha, impostos, fornecedores). Mantenha limite de cheque especial ativo mas use pouco. Apresente ao gerente o balanço e DRE dos últimos 2 anos anualmente — isso melhora o rating de crédito interno e facilita aprovação de financiamentos e garantias.',
+    ]},
+
+  // Capital de giro e antecipação de recebíveis
+  { re: /capital.*giro|antecipacao.*recebivel|desconto.*duplicata|antecipacao.*frete|recebivel.*banco|fomento|factoring/,
+    r: [
+      'Antecipação de recebíveis: você emite o CT-e mas o cliente paga em 30-60 dias. Enquanto isso, você paga combustível, motorista e manutenção hoje. Solução: antecipação de CT-e (FIDC de transporte ou factoring), ou desconto de duplicata no banco. Custo: 1,5-3% ao mês. Vale quando a margem líquida suportar e o fluxo de caixa está apertado.',
+      'Factoring vs FIDC vs banco: Factoring — compra seus recebíveis à vista, sem limite de crédito, taxa mais alta (2-4% ao mês). FIDC — menor taxa (1-2%), exige histórico e volume mínimo. Banco — desconto de duplicata (1,5%): mais barato mas burocrático. Para transportadoras médias com fluxo irregular de recebimento, o factoring oferece mais agilidade.',
     ]},
 
   // ── BLOCO CARGA ESPECIAL E REFRIGERAÇÃO ───────────────────────────────────────
