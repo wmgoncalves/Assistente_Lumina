@@ -3262,6 +3262,25 @@ const detectLocalInfo = async (text) => {
       'Posição de caixa para transportadora: a receita vem de CT-es com prazo 7-28 dias; as despesas (diesel, motorista, manutenção) são mais imediatas. Esse descasamento é normal no setor — exige capital de giro. Linha de crédito rotativo no banco é comum para cobrir os picos. Quando quiser analisar o fluxo real, suba a planilha.',
     ]);
 
+  // ── Perguntas do time comercial ──
+  if (/preciso.*fechar.*venda|como.*fechar|dica.*vendas?|me ajuda.*vender|argumento.*cliente/.test(t))
+    return pick([
+      'Para fechar uma venda de frete: descubra qual é a dor real do cliente (atraso? frete caro? atendimento ruim?). Mostre como a Scapini resolve especificamente aquela dor. Proponha um piloto — uma viagem ou um mês — para o cliente testar sem compromisso. Após o piloto, fecha contrato.',
+      'Dica de fechamento: ao final de uma reunião, sempre pergunte "qual é o próximo passo?" e defina uma data. Proposta sem data de resposta é proposta esquecida. Se o cliente pedir prazo para "pensar", agende o follow-up na hora: "posso te ligar na quinta às 10h?"',
+    ]);
+
+  if (/cliente.*sumiu|cliente.*nao.*responde|follow.?up.*sem.*resposta|prospect.*frio|lead.*frio/.test(t))
+    return pick([
+      'Lead frio: tente três canais diferentes — e-mail, WhatsApp e ligação — em dias separados. No último contato, use o "e-mail da última tentativa": "Entendo que talvez não seja o momento. Arquivarei seu contato, mas fico à disposição quando precisar. Cuide-se." Muitas vezes esse e-mail reabre o diálogo.',
+      'Prospect sem resposta após 3 tentativas: pause por 30 dias e tente novamente com algo de valor — uma notícia do setor, um dado de mercado, uma mudança na tabela ANTT. Nunca insista mais de 3 vezes seguidas — desgasta e queima a ponte. Deixe a porta aberta e siga para o próximo.',
+    ]);
+
+  if (/setor.*(atacado|varejo|industria|agronegocios?|agro|alimentos?|frigori|ceramica|moveis?|madeira|quimico|farmaceu)/.test(t) && /cliente|prospectar|frete/.test(t))
+    return pick([
+      'Setores promissores para a Scapini no Sul do Brasil: agronegócio (soja, milho, arroz, suínos — alta demanda de frete a granel e refrigerado), indústria de alimentos (frigoríficos no RS/SC com rotas diárias SP), móveis (polo moveleiro de Bento Gonçalves → SP), cerâmica (SC → nacional), e varejo/e-commerce em crescimento acelerado. Qual setor você quer explorar?',
+      'Para prospectar no agronegócio: frigoríficos (JBS, BRF, Aurora, cooperativas) são âncoras de volume alto. Cooperativas agrícolas (Cotrijal, CCGL, Cotrisal) movimentam toneladas na safra. Cerealistas e tradings precisam de transporte na colheita. Esses clientes negociam tabela anual — ideal para receita previsível.',
+    ]);
+
   // ── Perguntas estratégicas da diretoria ──
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
@@ -4315,6 +4334,43 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO VENDAS E PROSPECÇÃO ─────────────────────────────────────────────────
+
+  // Como prospectar novos clientes
+  { re: /prospec|buscar.*clientes?|encontrar.*clientes?|novos?.*clientes?.*como|como.*conseguir.*cliente|captar.*cliente/,
+    r: [
+      'Prospecção para transportadora: 1) LinkedIn — busque "gerente de logística", "coordenador de supply chain" em empresas do Sul/SP; 2) Google Maps — industriais, distribuidoras e redes de varejo na sua região; 3) Feiras setoriais (Fenatran, Agrishow) — clientes que precisam de frete estão lá; 4) Indicação de clientes atuais — peça formalmente, ofereça desconto de indicação; 5) ABF (Associação Brasileira de Franchising) — franquias precisam de frete recorrente.',
+      'Canais de prospecção que funcionam para transportadoras: a) Embarcadores com frota própria em crise — querem terceirizar; b) E-commerce em crescimento — alta demanda por entrega regional; c) Indústrias novas na região — precisam de transportadora local confiável; d) Varejistas sem contrato fixo de frete — pagam caro no spot. A Lúmina pode buscar empresas por setor e região quando tiver acesso à web.',
+    ]},
+
+  // Pitch / apresentação comercial
+  { re: /pitch.*comercial|apresentacao.*comercial|como.*vender.*scapini|argumento.*venda|proposta.*ganha|fechar.*venda|discurso.*vendas/,
+    r: [
+      'Pitch da Scapini em 60 segundos: "Somos a Scapini Transportes, mais de 30 anos conectando o Sul do Brasil ao Sudeste. Frota própria, rastreamento em tempo real, zero dependência de broker — você fala direto com quem decide. Nosso diferencial: quando tem problema, a gente resolve. Nossa tecnologia: IA integrada para tracking e relatórios instantâneos. Quer um piloto de 30 dias?"',
+      'Argumentos de venda da Scapini: 1) Confiabilidade — 30 anos sem fechar as portas; 2) Atendimento — fala com quem resolve, não com call center; 3) Tecnologia — rastreamento real + IA (Lúmina); 4) Flexibilidade — fracionada ou lotação, LTL ou FTL; 5) Preço justo — sem cobrança de surpresa, tabela transparente. Para fechar: "Quando você quer o primeiro frete?"',
+    ]},
+
+  // Follow-up e CRM
+  { re: /follow.?up|crm|gestao.*clientes?|acompanhamento.*venda|pipeline.*venda|funil.*venda|cliente.*potencial/,
+    r: [
+      'Follow-up de vendas para transportadora: D+0 (primeiro contato): envie proposta + apresentação da empresa. D+3: ligação para confirmar recebimento. D+7: e-mail com case de sucesso de cliente similar. D+15: oferta de piloto ou desconto na primeira viagem. D+30: último contato — "vou entender que não é o momento, mas fico à disposição." CRM simples: planilha com nome, empresa, status e próxima ação.',
+      'Gestão de pipeline comercial: classifique cada lead em: Contato Feito / Proposta Enviada / Negociação / Fechado / Perdido. Saiba sempre qual é o próximo passo e quando executar. Uma transportadora com 10 leads em negociação simultânea e follow-up sistemático fecha 2-3 por mês. Sem acompanhamento, o lead esfria em 72h.',
+    ]},
+
+  // Negociação de preço / objeção
+  { re: /objecao.*preco|cliente.*acha.*caro|caro.*frete|concorrente.*mais.*barato|preco.*competitor|como.*negociar.*preco/,
+    r: [
+      'Quando o cliente diz que o frete está caro: não baixe o preço imediatamente — pergunte "caro em relação a quê?". Se for comparação com concorrente: questione o prazo, a cobertura de seguro, e se o concorrente usa subcontratado. Muitas vezes o "frete mais barato" não inclui seguro completo ou tem prazo pior. Se o cliente insistir, ofereça volume maior por preço menor — não desconto linear.',
+      'Tratamento de objeção de preço: 1) Valide: "Entendo a preocupação com custo"; 2) Pergunte: "Qual o valor que você tem de referência?"; 3) Justifique: liste o que está incluído (seguro RCTR-C, rastreamento, NF, CT-e, atendimento direto); 4) Crie valor: "Qual é o custo de uma carga perdida ou atrasada para você?"; 5) Proposta alternativa: piloto com volume menor para provar. Nunca desconte sem contrapartida.',
+    ]},
+
+  // Indicadores comerciais / vendas
+  { re: /indicador.*venda|kpi.*comercial|taxa.*conversao|ticket.*medio|churn|retencao.*cliente|perdeu.*cliente/,
+    r: [
+      'KPIs comerciais para transportadora: 1) Taxa de conversão de propostas (meta: 25-35%); 2) Ticket médio por CT-e; 3) Receita por cliente (identifica dependência excessiva de um só cliente); 4) Churn mensal (% de clientes que pararam de usar); 5) NPS (Net Promoter Score — "você nos indicaria?"); 6) % de receita de clientes com contrato vs. spot. Monitorar esses números mensalmente é o básico da gestão comercial.',
+      'Churn de clientes é o maior inimigo da receita recorrente: quando um cliente para de enviar carga, raramente avisa. Sinais de churn iminente: volume caindo por 2 meses seguidos, reclamações não resolvidas, contato difícil. Ação preventiva: ligação proativa do gerente comercial quando o volume cai > 20% sem justificativa. Custo de retenção é 5× menor que custo de aquisição.',
     ]},
 
   // ── BLOCO PLANEJAMENTO FINANCEIRO ─────────────────────────────────────────────
