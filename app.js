@@ -940,6 +940,13 @@ const cleanForTTS = (raw) => {
       return r ? `${k} mil e ${r}` : `${k} mil`;
     })
     .replace(/,00\b/g, '')                         // centavos zero
+    // Distâncias: 1.600 km → "mil e seiscentos quilômetros"
+    .replace(/(\d{1,3})\.(\d{3})\s*km/gi, (_, a, b) => {
+      const n = parseInt(a) * 1000 + parseInt(b);
+      if (n >= 1000) { const k = Math.floor(n/1000); const r = n%1000; return r ? `${k} mil e ${r} quilômetros` : `${k} mil quilômetros`; }
+      return `${n} quilômetros`;
+    })
+    .replace(/\b(\d+)\s*km\b/gi, (_, n) => `${n} quilômetros`)
     // Separadores visuais ── e ---
     .replace(/─{2,}|—{2,}|-{3,}/g, '. ')
     // Pipe e dois-pontos em tabelas viram pausas naturais
@@ -3957,6 +3964,43 @@ const DEMO_QA = [
     r: [
       'Agregado: motorista que tem seu próprio veículo mas trabalha exclusivamente para uma transportadora (vínculo formal, mas sem ser CLT). A Scapini paga o frete ao agregado e o agrega à sua operação. Diferente do TAC (autônomo avulso): o agregado tem contrato de exclusividade.',
       'Subcontratação no transporte: quando a transportadora principal (Scapini) repassa uma carga para outra transportadora ou TAC executar. É legal mas deve estar documentada (CT-e com destaque de subcontratação). A responsabilidade perante o cliente continua sendo da Scapini — se o subcontratado errar, a Scapini responde.',
+    ]},
+
+  // ── BLOCO RH / MOTORISTAS: gestão, admissão, desempenho ──────────────────────
+
+  // CLT vs TAC (Transportador Autônomo de Cargas)
+  { re: /clt.*motorista|motorista.*clt|autonomo.*motorista|motorista.*autonomo|tac.*vs|contrat.*motorista|agrega.*motorista/,
+    r: [
+      'Motorista CLT: vínculo empregatício formal — empresa paga FGTS, INSS, férias, 13º, vale-transporte, seguro de vida. Mais custos fixos, mas mais controle e fidelidade. Motorista TAC (autônomo): empresa paga CIOT (obrigatório para contratações > 5 dias) e frete pelo km/tonelada. Sem encargos trabalhistas, mas menor vínculo. Motorista agregado: TAC com vínculo semipermanente — veículo pode ser do motorista, usualmente pago por porcentagem do frete.',
+      'Comparativo CLT × TAC para transportadoras: CLT tem custo 50-70% maior que o salário bruto (encargos), mas garante disponibilidade, treinamento e cultura da empresa. TAC é flexível para pico de demanda, mas a Lei 13.640 exige CIOT e o piso mínimo da ANTT deve ser respeitado. A Scapini pode ter mix dos dois conforme a rota e a sazonalidade.',
+    ]},
+
+  // Admissão de motorista
+  { re: /admit.*motorista|contratar.*motorista|documentos.*motorista|processo.*selecao.*motorista|selecao.*motorista|admissao.*motorista/,
+    r: [
+      'Documentos para admissão de motorista: CNH categoria D ou E (conforme veículo), MOPP (carga perigosa, se aplicável), ANTT (RNTRC atualizado), ASO (Atestado de Saúde Ocupacional) válido, NR-11 (empilhadeiras), RG, CPF, comprovante de residência, certidão de antecedentes criminais e referências dos últimos empregos. O exame toxicológico é obrigatório por lei (Lei 13.103).',
+      'Processo seletivo de motorista: 1) Análise de CNH (sem graves nos últimos 12 meses); 2) Exame toxicológico (obrigatório — Lei 13.103); 3) ASO admissional; 4) Teste de direção + avaliação de comportamento; 5) Treinamento de integração: políticas da empresa, uso do tacógrafo, procedimentos de carga/descarga, emergências. Motorista mal selecionado = sinistro caro.',
+    ]},
+
+  // Avaliação de desempenho de motorista
+  { re: /avalia.*motorista|desempenho.*motorista|motorista.*avalia|performance.*motorista|nota.*motorista/,
+    r: [
+      'Indicadores de desempenho para motorista: 1) Consumo de combustível (km/l — referência 3,0 km/l para carreta carregada); 2) Excesso de velocidade (registros no tacógrafo); 3) Frenagens bruscas (telemetria); 4) Prazo de entrega (OTD individual); 5) Ocorrências por viagem; 6) Avaliação do cliente na entrega. Motoristas com boa pontuação merecem reconhecimento — reduz rotatividade.',
+      'Programa de desempenho para motoristas: defina metas claras (consumo, prazo, zero avarias), monitore via tacógrafo e telemetria, dê feedback regular e reconheça os melhores (bônus, prêmio de melhor motorista). A rotatividade no setor é alta — motoristas bons que se sentem valorizados ficam. Custa menos reter do que contratar e treinar.',
+    ]},
+
+  // Onboarding de cliente novo
+  { re: /onboard.*cliente|como (cadastrar|integrar|incluir|adicionar|receber) (um |novo )?cliente|contrato.*cliente.*novo|cliente.*novo.*processo|abrir.*cadastro.*cliente/,
+    r: [
+      'Onboarding de cliente novo na Scapini: 1) Proposta comercial com tabela de preços, prazos e cobertura de seguro; 2) Cadastro: CNPJ, IE, dados de faturamento, contato operacional e financeiro; 3) Contrato de prestação de serviços (prazo, penalidades, condições); 4) Alinhamento operacional: janela de carregamento, embalagem padrão, documentação exigida, restrições de carga; 5) Primeiro frete piloto com acompanhamento próximo.',
+      'Para iniciar com um cliente novo: colete CNPJ e consulte o Serasa/SPC antes de abrir crédito. Defina limite de crédito e prazo de pagamento. Emita CT-e desde a primeira viagem — sem CT-e, sem cobertura de seguro. Faça check-in pós-entrega na primeira semana para garantir que tudo correu bem. Cliente novo bem atendido na estreia tende a fechar contrato longo.',
+    ]},
+
+  // Jornada do motorista / lei do motorista
+  { re: /jornada.*motorista|lei.*motorista|horas.*motorista|descanso.*motorista|pausa.*motorista|direcao.*consecutiva/,
+    r: [
+      'Lei do Motorista (Lei 13.103/2015): direção contínua máxima de 4h30min, seguida de 30 min de pausa. Jornada diária máxima de 8h (podendo estender a 10h com acordo). Descanso diário mínimo de 11h. Descanso semanal de 35h consecutivas. O tacógrafo registra tudo — autuação por descumprimento vai para o motorista E a empresa. O contato da operação deve monitorar os períodos de pausa obrigatória.',
+      'Jornada do motorista profissional: máximo 4h30min sem pausa (tacógrafo registra), 8h/dia de trabalho, descanso de 11h entre jornadas. Na prática para rotas longas: RS→SP (~1.600 km) requer dois dias com pernoite em ponto de descanso. A Scapini deve ter pontos de parada parceiros mapeados nas rotas principais. Não adianta cobrar prazo impossível — é multa e risco de acidente.',
     ]},
 
   // ── BLOCO COMERCIAL: Diferenciais, KPIs e atendimento ao cliente ──────────────
