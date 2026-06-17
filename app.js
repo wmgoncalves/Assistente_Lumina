@@ -633,8 +633,9 @@ const flashLearnBadge = () => {
 };
 
 // ── Stop all speech (ElevenLabs or browser TTS) ───────────────────────────────
-let currentAudio = null;
-let ttsAbort     = null; // AbortController do fetch TTS em voo
+let currentAudio  = null;
+let ttsAbort      = null; // AbortController do fetch TTS em voo
+let _autoplayQueue = null; // texto enfileirado quando Chrome bloqueia autoplay na saudação
 
 const setStopBtn = (visible) => {
   const btn   = document.getElementById('btn-stop');
@@ -865,7 +866,12 @@ const speakEdge = async (text, onEnd) => {
     };
     audio.onended = finish;
     audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
-    audio.play();
+    audio.play().catch(() => {
+      // Chrome bloqueou autoplay (sem interação do usuário ainda) — enfileira para próxima interação
+      currentAudio = null; URL.revokeObjectURL(url);
+      app.isSpeaking = false; setFace('idle');
+      _autoplayQueue = { text, onEnd };
+    });
   } catch (e) {
     clearTimeout(timeoutId);
     ttsAbort = null;
@@ -4137,6 +4143,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); if (app.isListening) { stopListening(); } else { wakeWordActivated = true; startListening(); } }
     if (e.code === 'Escape') { stopListening(); stopSpeaking(); }
   });
+
+  // Drena saudação bloqueada pelo autoplay do Chrome na primeira interação
+  document.addEventListener('click', () => {
+    if (_autoplayQueue) { const q = _autoplayQueue; _autoplayQueue = null; speak(q.text, q.onEnd); }
+  }, { once: true });
 
   // ── Text input + imagem (paste / drag-drop) ──
   const textInput      = document.getElementById('text-input');
