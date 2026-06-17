@@ -4401,27 +4401,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Greeting — aguarda config do servidor para saber se tem chave Gemini
   serverCfgReady.then(() => {
-    const hr = new Date().getHours();
-    const gr = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+    const now  = new Date();
+    const hr   = now.getHours();
+    const dow  = now.getDay(); // 0=dom, 1=seg, ..., 6=sab
+    const gr   = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
     const name = mem.userName || cfg.username;
     const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
     const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
+
+    // Contexto do dia da semana — dá mais personalidade ao greeting
+    const dowCtx = (() => {
+      if (dow === 1) return pick(['Segunda-feira — começo de semana, vamos com tudo.', 'Segunda! A semana começa agora.']);
+      if (dow === 5) return pick(['Sexta-feira — quase lá.', 'Sexta! Boa hora para fechar a semana com chave de ouro.']);
+      if (dow === 6) return pick(['Sábado — quem trabalha hoje merece dobrado.', 'Sábado de operação. Estou aqui.']);
+      if (dow === 0) return pick(['Domingo de plantão? Aqui estou.', 'Domingo. Raro ver você aqui — deve ser urgente.']);
+      return ''; // ter-qui: neutro
+    })();
+
     const briefingKey = 'lumina_last_briefing';
-    const todayBrief  = new Date().toISOString().split('T')[0];
+    const todayBrief  = now.toISOString().split('T')[0];
     let greetingText;
     if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
       localStorage.setItem(briefingKey, todayBrief);
       const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
       const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
       greetingText = `${gr}. ${returning}Sou Lúmina. `;
+      if (dowCtx) greetingText += dowCtx + ' ';
       if (pendingCount || habitCount) {
         if (pendingCount) greetingText += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
         if (habitCount)   greetingText += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
-      } else {
+      } else if (!dowCtx) {
         greetingText += 'Dando vida aos dados e luz às decisões.';
       }
     } else {
-      greetingText = `${gr}. ${returning}Sou Lúmina. ${ready}`;
+      greetingText = `${gr}. ${returning}Sou Lúmina.${dowCtx ? ' ' + dowCtx : ' ' + ready}`;
     }
     // Mostra texto imediatamente; voz toca se Chrome permitir (Electron: sempre ok)
     setRespText(greetingText);
