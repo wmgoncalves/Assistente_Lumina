@@ -2903,6 +2903,20 @@ const blockGemini       = (ms = 60 * 1000) => { geminiBlockedUntil = Date.now() 
 const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reiniciar
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
+// Retorna thinkingBudget adequado para a query:
+// 0   = sem raciocínio (conversas simples, lookups) — resposta mais rápida
+// 512 = raciocínio leve (procedimentos, perguntas gerais sobre a empresa)
+// 2048 = raciocínio profundo (análise financeira, DRE, auditoria, prospecção)
+const _thinkingBudget = (msg) => {
+  const t = msg.toLowerCase();
+  // Análise pesada — precisa de raciocínio profundo
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\./.test(t)) return 2048;
+  // Perguntas de procedimento / empresa — raciocínio leve
+  if (/como (funciona|fazer|faço|se faz|configur|ativ)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete/.test(t)) return 512;
+  // Conversas simples, lookups, saudações — sem thinking
+  return 0;
+};
+
 const callGemini = async (customHistory = null) => {
   if (geminiBlocked()) throw new Error('429');
   const history = customHistory || app.history;
@@ -2936,7 +2950,7 @@ const callGemini = async (customHistory = null) => {
             contents,
             tools,
             generationConfig: { maxOutputTokens: 1200, temperature: 0.78 },
-            thinkingConfig: { thinkingBudget: 2048 }
+            thinkingConfig: { thinkingBudget: _thinkingBudget(lastMsg) }
           })
         }
       );
