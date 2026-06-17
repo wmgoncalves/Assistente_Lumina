@@ -3729,6 +3729,31 @@ const tryLocalResponse = (text) => {
       'Lajeado/RS é a sede da Scapini há mais de 30 anos. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
     ]);
 
+  // ── Produtividade / tarefas de escritório ──
+  if (/me ajuda.*(preparar|fazer|criar|montar|estruturar).*(apresentacao|slides|ppt|powerpoint)|como.*apresentar|estrutura.*apresentacao/.test(t))
+    return pick([
+      'Para uma apresentação da Scapini para clientes: comece com o problema que o cliente tem (atraso? frete caro? mau atendimento?), mostre como a Scapini resolve, use números concretos (anos de mercado, OTD, cobertura de rotas), mostre a tecnologia (Lúmina + rastreamento), e finalize com proposta e próximo passo. Quer que eu monte o esqueleto dos slides?',
+      'Estrutura de apresentação comercial: 1) Quem somos (30s — não exagere); 2) O problema que resolvemos; 3) Nossa solução; 4) Diferenciais vs. concorrência; 5) Cases e números; 6) Proposta específica para esse cliente; 7) Próximos passos. Me passe mais detalhes sobre o cliente e monto o conteúdo de cada slide.',
+    ]);
+
+  if (/resumir.*(reuniao|meeting|ata)|ata.*reuniao|pontos.*reuniao|o que.*ficou.*definido/.test(t))
+    return pick([
+      'Para resumir uma reunião, me conte: quem participou, quais foram os principais tópicos discutidos e quais decisões foram tomadas. Com essas informações, monto uma ata clara com: resumo executivo, decisões tomadas, responsáveis e prazos de cada ação. Quer fazer isso agora?',
+      'Ata de reunião tem três partes essenciais: 1) Contexto (data, participantes, objetivo); 2) Discussões e decisões (o que foi decidido, não o que foi falado); 3) Encaminhamentos (quem faz o quê, até quando). Me passa as informações e estruturo isso em 2 minutos.',
+    ]);
+
+  if (/criar.*(relatorio|report)|relatorio.*(frota|motorista|financeiro|mensal|semanal)|montar.*relatorio/.test(t))
+    return pick([
+      'Para criar um relatório, me diga o tema (frota, financeiro, operacional, RH) e o período. Se quiser análise de planilha, suba o arquivo e gero o relatório automaticamente. Se for um relatório textual, me passe os dados e eu estruturo com seções, destaques e conclusão. Qual você precisa?',
+      'Tipos de relatório que monto: DRE mensal com análise de variações, relatório de KPIs de frota (OTD, custo/km, disponibilidade), relatório de motoristas (km, consumo, ocorrências), resumo de prospecção comercial. Me dê os dados ou a planilha e entrego formatado.',
+    ]);
+
+  if (/lembra.*(nome|contato|telefone|email|dado)|grava.*(informacao|dado|contato)|anota.*(isso|aqui)/.test(t))
+    return pick([
+      'Posso guardar informações na memória — pode falar "Lúmina, lembra que o contato da empresa X é Fulano, telefone Y". Vou registrar e lembrar em conversas futuras. Essa memória fica salva no servidor da Scapini, nunca sai daqui.',
+      'Memória ativa: fale o que quer que eu registre — nome de cliente, dado de contato, preferência, decisão de reunião. Eu guardo e lembro quando você perguntar. Exemplo: "Lúmina, anota que a Metalúrgica São João tem reunião na segunda às 14h com o Carlos".',
+    ]);
+
   // ── Integração CGI / próximos passos ──
   if (/integra.*(cgi|sistema|erp)|cgi.*(integra|connect|lumina)|quando.*(integra|conecta|cgi)|proxim.*funcionalidad|roadmap.*lumina|futuro.*lumina/.test(t))
     return pick([
@@ -4353,6 +4378,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO RH AVANÇADO ─────────────────────────────────────────────────────────
+
+  // Sindicato / convenção coletiva
+  { re: /sindicato|convencao.*coletiva|acordo.*coletivo|dissidio|data.*base|negociacao.*sindical|sstran|movifort/,
+    r: [
+      'Sindicato dos motoristas no RS: o MOVIFORT (Sindicato dos Trabalhadores em Transportes de Cargas) representa os motoristas. A data-base da categoria costuma ser em março (verificar o ano). A Convenção Coletiva define: piso salarial, adicional de periculosidade (30% para carga perigosa), adicional noturno (20%), diárias de viagem, benefícios mínimos. A empresa deve negociar com base na CCT da região.',
+      'Convenção Coletiva de Trabalho (CCT): define os direitos mínimos da categoria acima da CLT. Para motoristas de carga no RS, verifique a CCT vigente no portal do MTE (empregador.mte.gov.br). Cláusulas que mais impactam a folha: piso salarial, diária de viagem, adicional de periculosidade e cesta básica. O setor de RH deve ter a CCT vigente em mãos — qualquer diferença é passivo trabalhista.',
+    ]},
+
+  // SEST SENAT
+  { re: /sest|senat|sest.?senat|contribuicao.*sest|desconto.*sest/,
+    r: [
+      'SEST/SENAT: contribuição obrigatória das transportadoras (1,5% sobre a remuneração de cada frete pago a TAC/autônomo) e dos motoristas autônomos (1,5% sobre o frete recebido). Essa contribuição financia os centros de saúde e educação profissional do SEST SENAT — o motorista tem direito a consultas médicas, odontológicas e cursos gratuitos em centros de todo o Brasil. O recolhimento é feito junto com o CIOT.',
+      'SEST SENAT na prática: quando a Scapini paga um TAC, retém 1,5% do frete para recolher ao SEST SENAT. O TAC também contribui com 1,5%. Esse valor vai para a carteirinha do motorista, que dá acesso gratuito a médicos, dentistas e cursos de direção defensiva, primeiros socorros e transporte de cargas. Motorista que usa os serviços economiza nos planos de saúde.',
+    ]},
+
+  // CAGED / admissões e demissões
+  { re: /caged|admissao.*registro|registro.*admissao|demissao.*prazo|aviso.*previo|calculo.*rescisao|verbas.*rescisoria/,
+    r: [
+      'CAGED (Cadastro Geral de Empregados e Desempregados): toda admissão e demissão de CLT deve ser informada ao Ministério do Trabalho via eSocial até o dia 7 do mês seguinte. O prazo é o mesmo para registro na CTPS (digital). Atraso gera multa. Para motoristas: a admissão só é completa com exame toxicológico (Lei 13.103) — sem ele, o contrato pode ser contestado.',
+      'Verbas rescisórias para motorista CLT demitido sem justa causa: saldo de salário, aviso prévio (trabalhado ou indenizado — 30 dias + 3 dias/ano de serviço, máx 90), férias proporcionais + 1/3, 13º proporcional, multa de 40% sobre o FGTS, liberação do FGTS. Prazo de pagamento: 10 dias após o último dia trabalhado (ou após o aviso prévio indenizado). RH deve conferir cada item — erro gera ação trabalhista.',
+    ]},
+
+  // Qual o melhor caminhão / comparativo de marcas
+  { re: /melhor.*(caminhao|marca|fabricante)|scania.*volvo|volvo.*scania|mercedes.*scania|daf.*scania|qual.*(marca|fabricante).*(comprar|recomendar|escolher)/,
+    r: [
+      'Comparativo de marcas de caminhão para longa distância: Scania (confiável, ótimo suporte técnico, custo de manutenção médio), Volvo (conforto alto, tecnologia avançada, consumo eficiente), Mercedes-Benz (rede de assistência ampla, peças mais baratas), DAF (econômico no diesel, cabine espaçosa). Todas as marcas europeias têm qualidade comparável — o diferencial está na rede de concessionárias na sua rota e no prazo de peças.',
+      'Para escolher o caminhão: 1) Rede de assistência na rota principal — veículo que quebra longe da concessionária fica parado dias; 2) Consumo médio (verifique com motoristas do mesmo segmento); 3) Custo de peças de reposição de alto giro (filtros, embreagem); 4) Condições de financiamento e valor de revenda. Faça o cálculo do Custo Total de Propriedade (CTP) em 5 anos — não só o preço de entrada.',
     ]},
 
   // ── BLOCO MANUTENÇÃO DE FROTA ─────────────────────────────────────────────────
