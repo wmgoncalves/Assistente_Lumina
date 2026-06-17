@@ -20,13 +20,23 @@
   });
   // Corrige nome errado na memória se não for Wingli
   try {
-    const mem = JSON.parse(localStorage.getItem('emerald_mem') || '{}');
+    const mem = JSON.parse(localStorage.getItem('lumina_mem') || localStorage.getItem('emerald_mem') || '{}');
     if (mem.userName && mem.userName !== 'Wingli') {
       mem.userName = 'Wingli';
-      localStorage.setItem('emerald_mem', JSON.stringify(mem));
+      localStorage.setItem('lumina_mem', JSON.stringify(mem));
     }
   } catch {}
   localStorage.setItem('lumina_migrated', '1');
+})();
+
+// ── Migração única: emerald_* → lumina_* (memória + histórico) ────────────────
+(function migrateEmeraldToLumina() {
+  if (localStorage.getItem('lumina_mem_migrated')) return;
+  const mem = localStorage.getItem('emerald_mem');
+  if (mem && !localStorage.getItem('lumina_mem')) localStorage.setItem('lumina_mem', mem);
+  const hist = localStorage.getItem('emerald_hist');
+  if (hist && !localStorage.getItem('lumina_hist')) localStorage.setItem('lumina_hist', hist);
+  localStorage.setItem('lumina_mem_migrated', '1');
 })();
 
 // ── Sessão local automática (sem login, sem multiusuário) ─────────────────────
@@ -105,8 +115,8 @@ const serverCfgReady = (location.hostname === 'localhost' || location.hostname =
   : Promise.resolve();
 
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
-const MEM_KEY   = 'emerald_mem';
-const HIST_KEY  = 'emerald_hist';
+const MEM_KEY   = 'lumina_mem';
+const HIST_KEY  = 'lumina_hist';
 const NOTES_KEY = 'lumina_notes';
 
 // ── Persistência híbrida: localStorage (cache) + servidor (fonte da verdade) ──
@@ -3242,6 +3252,17 @@ const tryLocalResponse = (text) => {
     }
     if (/^(nao|não|espera|aguarda|fica|deixa|ainda nao|ainda não)\b/.test(t)) {
       return pick(['Ok, deixo aqui.', 'Tudo bem, fica aberto.', 'Pode olhar com calma.']);
+    }
+  }
+
+  // ── Gráfico solicitado mas planilha não é DRE ──
+  if (/gr[áa]fico|gr[áa]f[io]cos|chart|visualiza[çc][aã]o gr[áa]|mostra.*gr[áa]|ver.*gr[áa]|quero.*gr[áa]|exibe.*gr[áa]/.test(t)) {
+    if (app.lastSheet?.analysis) {
+      const hasDRE = (app.lastSheet.analysis.sheets || []).some(s => s.type === 'dre');
+      if (!hasDRE) {
+        const tipo = (app.lastSheet.analysis.sheets?.[0]?.type || 'desconhecido').toUpperCase();
+        return `Os gráficos são exclusivos para planilhas DRE. Esta planilha foi lida como ${tipo} e posso responder perguntas sobre os dados em texto — é só perguntar.`;
+      }
     }
   }
 
