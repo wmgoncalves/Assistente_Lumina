@@ -3979,7 +3979,51 @@ const DEMO_QA = [
       'Tracking da carga: o cliente recebe a chave do CT-e na contratação e pode consultar o status no portal da Scapini ou por WhatsApp com a central de atendimento. Para cargas de alto valor, notificação proativa de entrega. Quando integrada ao sistema, posso responder "onde está o CT-e XXXXXXXXXXX?" em segundos.',
     ]},
 
-  // Capacidades gerais ────────────────────────────────────────────────────────
+  // ── BLOCO ESTRATÉGICO: ROI, LGPD, sustentabilidade, tecnologia ────────────────
+
+  // ROI da IA
+  { re: /roi.*ia|retorno.*ia|quanto.*economiza|resultado.*ia|vantagem.*financeira.*ia|vale a pena.*ia|custo.*beneficio.*ia|ia.*paga.*se/,
+    r: [
+      'ROI da IA em transportadoras: estudos do setor mostram retorno médio de 3 a 5× o investimento em 12-18 meses. Ganhos principais: redução de 15-30% no tempo de atendimento a consultas internas; corte de 20% no tempo de elaboração de relatórios; redução de erros em documentação fiscal (CTe, MDFe); e aceleração no ciclo de prospecção de clientes. O ROI da Scapini depende do volume de uso.',
+      'Como medir o ROI da Lúmina na Scapini: calcule o tempo economizado por colaborador × custo/hora × número de usos mensais. Adicione o valor de decisões melhores (menos erros, mais rápido). Subtraia o custo de implementação e API. Tipicamente, IA corporativa atinge payback em 6-12 meses em empresas médias de logística. Posso ajudar a montar essa conta quando tivermos os dados de uso.',
+    ]},
+
+  // LGPD
+  { re: /\blgpd\b|lei.*dados|protecao.*dados|dados.*pessoais|privacidade.*dados|titular.*dado|consentimento.*dados/,
+    r: [
+      'LGPD (Lei Geral de Proteção de Dados — Lei 13.709/2018) se aplica a qualquer dado pessoal tratado pela Scapini: CPF de clientes e motoristas, dados de localização GPS, registros de RH. Pontos principais: coletar apenas dados necessários, ter base legal para o tratamento, guardar por tempo limitado e permitir ao titular consultar/excluir seus dados. Multas chegam a R$ 50 milhões por violação.',
+      'A Lúmina foi projetada com privacidade em mente: roda localmente (127.0.0.1 apenas), dados ficam no servidor interno da Scapini, sem envio de dados pessoais a terceiros exceto o conteúdo de cada pergunta ao Gemini (Google). Para conformidade LGPD completa, a Scapini deve ter DPO designado, política de privacidade e mapa de dados. O jurídico pode orientar sobre adequação.',
+    ]},
+
+  // Sustentabilidade / ESG
+  { re: /sustentabilidade|esg|carbono|emissao.*co2|co2.*frota|frota.*verde|descarbonizacao|emissao.*diesel|pegada.*carbon/,
+    r: [
+      'Sustentabilidade no transporte é uma tendência crescente — clientes grandes exigem relatórios de emissão de CO2 dos fornecedores. Um caminhão a diesel emite aproximadamente 2,68 kg CO2/litro de combustível. Estratégias para reduzir: telemetria para reduzir excesso de velocidade e freiadas bruscas (economiza 10-15% de diesel), roteirização eficiente para reduzir km rodado, e no longo prazo, adoção de veículos a biocombustível ou elétrico.',
+      'ESG para a Scapini: na dimensão ambiental (E), o principal indicador é emissão de CO2 por tonelada-km transportada. Na social (S): segurança dos motoristas, geração de emprego, diversidade. Na governança (G): compliance fiscal, transparência, política anticorrupção. Grandes embarcadores estão exigindo relatórios ESG dos transportadores — ter os dados organizados vira diferencial competitivo.',
+    ]},
+
+  // TMS / tecnologia de transporte
+  { re: /\btms\b|sistema.*gestao.*transporte|roteirizacao|otimizacao.*rota|telemetria|iot.*frota|sensor.*veiculo|tecnologia.*frota/,
+    r: [
+      'TMS (Transportation Management System) é o sistema que gerencia operações de transporte: cotação, agendamento, tracking, documentação e faturamento. A Scapini usa o CGI como ERP principal. Um TMS integrado ao CGI e à Lúmina cria uma camada de inteligência completa: o CGI guarda os dados, a Lúmina consulta e interpreta em linguagem natural.',
+      'Telemetria e IoT na frota: sensores nos veículos capturam velocidade, rotação do motor, temperatura do pneu, abertura de porta e localização em tempo real. Com esses dados, a transportadora prevê falhas, reduz sinistros e otimiza consumo. Quando integrada ao sistema de telemetria da Scapini, poderei alertar proativamente sobre veículos com comportamento anômalo.',
+    ]},
+
+  // App Motorista
+  { re: /app motorista|aplicativo.*motorista|motorista.*app|motor.*aplicativo|app.*caminhoneiro/,
+    r: [
+      'O App Motorista da Scapini é a interface digital do motorista com a operação: check-in de viagem, entrega de CT-e digital, registro de ocorrências, comunicação com a central e acesso ao histórico de viagens. A Lúmina é o complemento inteligente: o motorista pergunta por voz e recebe respostas sobre procedimentos, regulamentações ou situações de emergência sem precisar abrir menus.',
+      'App Motorista + Lúmina: o app cuida da parte transacional (registrar, assinar, fotografar). A Lúmina cuida das dúvidas e decisões: "Lúmina, o que faço se o destinatário recusar a carga?" ou "qual a regra de pernoite nessa rodovia?" — respostas imediatas, em qualquer hora. A integração futura entre o App e a Lúmina é o próximo passo natural.',
+    ]},
+
+  // Logística reversa
+  { re: /logistica reversa|devolucao.*carga|retorno.*mercadoria|carga.*devolvida|nota.*devolucao|retorno.*frete/,
+    r: [
+      'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
+      'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── Capacidades gerais ────────────────────────────────────────────────────────
   { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
       'Respondo perguntas, busco documentos, oriento sobre procedimentos e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, acesso fretes, motoristas, manutenção e financeiro em tempo real.',
