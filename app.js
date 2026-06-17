@@ -3169,6 +3169,37 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Perguntas estratégicas da diretoria ──
+  if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
+    return pick([
+      'A Scapini Transportes tem mais de 30 anos de história no transporte rodoviário de cargas. Fundada por Diamantino Scapini em Lajeado/RS, hoje é liderada por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Mais de três décadas construindo credibilidade no Sul do Brasil.',
+      'A Scapini nasceu no Rio Grande do Sul e cresceu com o agronegócio e o setor industrial do Sul do Brasil. Três décadas de operação, frota própria moderna e, agora, inteligência artificial integrada à gestão. Família Scapini — Diamantino como fundador, Ernani, Rosangela e Lucas na liderança atual.',
+    ]);
+
+  if (/quantos (funcionarios|colaboradores|empregados|motoristas).*scapini|tamanho.*equipe|tamanho.*scapini|porte.*scapini/.test(t))
+    return pick([
+      'A Scapini Transportes tem uma equipe dedicada de motoristas, líderes de operação, pessoal administrativo e técnicos de manutenção. Para o número exato de colaboradores, o RH informa — esses dados variam com a sazonalidade. O porte é de empresa média regional com alcance Sul-Sudeste.',
+      'Não tenho o headcount exato atualizado — o RH é a fonte certa. O que posso dizer: a Scapini tem operação completa com motoristas próprios e agregados, equipe administrativa, financeiro, operações e manutenção. Uma transportadora de médio porte com gestão familiar e presença consolidada no Sul.',
+    ]);
+
+  if (/(qual|quais?).*(concorrente|competidor|rival|mercado.*scapini|scapini.*mercado)/.test(t))
+    return pick([
+      'O mercado de transporte rodoviário no Sul do Brasil é competitivo — há transportadoras regionais, cooperativas de caminhoneiros e filiais de grandes operadores nacionais. A Scapini se diferencia pela capilaridade local, atendimento personalizado e relacionamento de longo prazo com clientes — o que grandes operadores logísticos raramente oferecem.',
+      'A Scapini compete num mercado com muitos players regionais e algumas transportadoras de grande porte. Os diferenciais que pesam na decisão do cliente: confiança (mais de 30 anos), disponibilidade (frota própria), atendimento (você fala com quem decide) e agora tecnologia (IA interna, rastreamento, portal do cliente).',
+    ]);
+
+  if (/quanto.*fatura|faturamento.*scapini|receita.*anual|revenue.*scapini/.test(t))
+    return pick([
+      'O faturamento da Scapini é informação estratégica — não compartilho publicamente. Para análise interna, suba uma planilha DRE e faço o fechamento completo com variações, margens e alertas. O que posso dizer: transportadoras regionais de médio porte no Sul faturam entre R$ 20M e R$ 100M/ano dependendo da frota e das rotas.',
+      'Não divulgo faturamento da Scapini em conversa aberta — é dado confidencial da diretoria. Para análise detalhada, compartilhe a DRE e eu processo tudo: receita bruta, líquida, margens, variações mensais e anuais.',
+    ]);
+
+  if (/como.*(expansao|crescimento|escalar|crescer|nova.*rota|nova.*regiao|expandir).*scapini|plano.*crescimento|plano.*expansao/.test(t))
+    return pick([
+      'Crescimento para uma transportadora passa por: 1) aumentar densidade nas rotas existentes (mais carga por viagem = melhor margem); 2) ampliar a cobertura geográfica com rotas novas; 3) desenvolver novos clientes nos setores que já atende; 4) agregar transportadores autônomos parceiros (TACs) para pico de demanda. A Lúmina pode ajudar a identificar setores promissores para prospecção.',
+      'Estratégias de expansão que funcionam no transporte rodoviário: rotas complementares ao corredor principal (aproveitando retorno de carga), penetração em novos setores (e-commerce, saúde, agronegócio), parcerias com operadores logísticos menores como subcontratado, e aquisição de carteira de clientes de transportadoras que saem do mercado.',
+    ]);
+
   return null;
 };
 
