@@ -3299,6 +3299,30 @@ const detectLocalInfo = async (text) => {
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
 
+  // ── Perguntas da diretoria sobre IA / ROI / estratégia ──
+  if (/quanto.*custa.*implantar.*ia|custo.*implantar.*lumina|investimento.*ia.*transporte|roi.*implantar.*ia|vale.*pena.*ia/.test(t))
+    return pick([
+      'Custo de implantar a Lúmina na Scapini: infraestrutura atual é pay-per-use na API Gemini — R$200-800 por mês dependendo do volume de consultas. Sem servidor dedicado, sem equipe de TI própria. ROI: se a IA economizar 2h/dia de trabalho administrativo de um analista (salário R$3.500/mês), o payback é imediato no primeiro mês. Redução de erros em cotações e análise de DRE gera valor adicional não quantificado.',
+      'ROI da IA na Scapini em 3 dimensões: 1) Produtividade — respostas instantâneas a perguntas operacionais que antes levavam minutos ou dependiam de pessoa disponível; 2) Tomada de decisão — análise de DRE e balancete em segundos, com alertas de inconsistência; 3) Comercial — prospecção de leads, cotação automática de frete e suporte à venda. Estimativa conservadora: R$8.000-15.000/mês em valor gerado para empresa de médio porte.',
+    ]);
+
+  if (/lumina.*aprender|ia.*aprender.*scapini|lumina.*melhorar|quanto.*tempo.*aprender|treinar.*lumina|lumina.*fica.*mais.*inteligente/.test(t))
+    return pick([
+      'Como a Lúmina aprende: a base de conhecimento já tem 150+ tópicos específicos da Scapini — frota, rotas, RH, financeiro, compliance. Ela aprende conversando: cada informação que você dá ("nossa diária de motorista é R$120") ela memoriza na sessão. No futuro, com fine-tuning local (modelo próprio treinado nos dados da Scapini), ela vai responder com ainda mais precisão sobre os processos internos da empresa.',
+      'A Lúmina fica mais inteligente com uso: quanto mais a equipe usar, mais padrões de perguntas ela vai cobrir. Você pode pedir para ela "guardar" informações ("guarda que nossa tabela de frete para SP aumentou 8% em julho") e ela registra na memória persistente. A cada nova versão do modelo Gemini, o nível de raciocínio aumenta sem custo adicional de treinamento.',
+    ]);
+
+  if (/lumina.*integrar.*cgi|cgi.*lumina|sistema.*lumina|lumina.*erp|integração.*lumina/.test(t))
+    return pick([
+      'Integração Lúmina + CGI (ERP Scapini): planejada em 3 fases. Fase 1 (atual): Lúmina responde com base de conhecimento local + análise de planilhas e PDFs enviados manualmente. Fase 2: API de leitura ao CGI — Lúmina consulta dados reais de CT-e, faturamento e frota em tempo real. Fase 3: API de escrita — Lúmina abre chamados, registra ocorrências e atualiza dados diretamente no CGI por voz ou texto.',
+    ]);
+
+  // ── Riscos e clima ──
+  if (/chuva.*rota|neblina.*rota|gelo.*serra|clima.*viagem|previsao.*tempo.*rota|condicao.*estrada|risco.*clima/.test(t))
+    return pick([
+      'Riscos climáticos nas rotas da Scapini: Serra Gaúcha e SC (BR-116/BR-470) — neblina e gelo no inverno (maio a agosto). Antes de sair: Windy.com para ventos, MetSul para avisos de tempo severo, Climatempo para previsão. Se previsão de neblina densa ou gelo: aguarde 2-3h ou use rota alternativa pelo litoral (mais longa, mais segura). Nunca force passagem — custo de acidente supera qualquer atraso.',
+    ]);
+
   // ── Fiscalização e documentação veicular ──
   if (/fiscalizacao|posto.*fiscal|balanca.*fiscal|policia.*rodoviaria|PRF|abordagem.*policia|o que.*apresentar.*fiscal/.test(t))
     return pick([
@@ -4568,6 +4592,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO RISCOS E COMUNICAÇÃO COM CLIENTE ────────────────────────────────────
+
+  // Riscos de rota — clima, interdição, desvio
+  { re: /risco.*rota|clima.*rota|chuva.*rota|neblina.*rota|gelo.*rota|interdicao.*estrada|br.*fechada|rodovia.*bloqueada|acidente.*rota|desvio.*emergencia/,
+    r: [
+      'Gestão de risco de rota por clima: para rotas na Serra Gaúcha e SC (BR-116, BR-470), neblina e gelo no inverno são riscos sérios. O motorista deve verificar previsão do tempo antes de sair (apps: Windy, MetSul, Climatempo). Se neblina densa: pare, ligue o pisca-alerta, aguarde visibilidade. Interdição: o MDFe permite alteração de rota — comunique o TMS e o cliente. Nunca force passagem em estrada interditada.',
+      'Protocolo de interdição de rodovia: ao receber alerta de interdição (PRF, WhatsApp operacional, rádio), o gestor deve: 1) Identificar veículos na rota afetada via rastreamento, 2) Comunicar motorista por telefone, 3) Calcular rota alternativa e enviar ao motorista, 4) Atualizar prazo de entrega e comunicar o cliente. Documente no sistema — serve como justificativa de atraso sem ônus contratual.',
+    ]},
+
+  // Comunicação com cliente — reclamação, atraso, avaria
+  { re: /reclamacao.*cliente|cliente.*reclamou|atraso.*cliente|comunicar.*atraso|avisar.*cliente.*atraso|cliente.*insatisfeito|nps.*transporte/,
+    r: [
+      'Comunicação proativa de atraso: avise o cliente ANTES do prazo vencer — nunca espere ele ligar. O contato deve ser por canal oficial (e-mail + telefone), com causa do atraso, novo prazo estimado e nome do responsável. Clientes perdoam atrasos avisados; clientes perdidos são os que ficaram sem notícia. Documente o contato — protege a empresa em disputas contratuais.',
+      'Gestão de NPS no transporte: o índice de satisfação de clientes (NPS — Net Promoter Score) em transportadoras varia de 20-60%. Para melhorar: pesquisa automática por e-mail/SMS após cada entrega, resposta em até 24h para detratores (notas 0-6), análise mensal das causas de insatisfação (atraso, avaria, comunicação). NPS acima de 50 é diferencial competitivo na captação de novos contratos.',
+    ]},
+
+  // Devolução e avaria de carga
+  { re: /devolucao.*carga|avaria.*carga|carga.*avariada|produto.*danificado|ressarcimento.*carga|indenizacao.*avaria|recusa.*entrega|nao.*aceitou.*carga/,
+    r: [
+      'Processo de avaria de carga: ao constatar avaria na entrega, o destinatário deve assinar o CT-e com ressalva ("recebido com avaria em [descrição]"). Sem ressalva no CT-e, fica difícil provar que a avaria ocorreu no transporte. A transportadora deve: fotografar a avaria, abrir sinistro no seguro RCTR-C em até 72h, e registrar ocorrência no TMS. Prazo para contestação do remetente: 120 dias.',
+      'Devolução de carga recusada: destinatário recusou? Emita CT-e de retorno (CFOP 5.949), comunique o remetente imediatamente, e aguarde instrução (devolver ou redirecionar). O custo do frete de retorno é do remetente, salvo contrato diferente. Se a carga for perecível, tome decisão rápida — responsabilidade por deterioração pode ser disputada. Documente tudo com foto e hora.',
+    ]},
+
+  // Terceirização e parceiros de transporte
+  { re: /terceirizado|subcontratacao|transportador.*parceiro|subfrete|parceiro.*logistico|cotracking|redespacho/,
+    r: [
+      'Redespacho e subfrete: quando a Scapini não cobre determinada região, pode redespachar a carga para um transportador parceiro. Emite o CT-e normalmente, e o parceiro emite um CT-e de redespacho. A responsabilidade perante o cliente continua sendo da Scapini — o parceiro é seu subcontratado. Exija RNTRC e seguro RCTR-C válido do parceiro antes de operar.',
+      'Gestão de parceiros de transporte: critérios mínimos para homologar um parceiro: RNTRC ativo, seguro RCTR-C com cobertura mínima de R$ 300k/evento, referências de outros embarcadores, vistoria de pelo menos um veículo. Monitore OTD, avarias e reclamações dos parceiros mensalmente — desvio de padrão gera descredenciamento. Nunca subcontrate sem contrato escrito com SLA definido.',
     ]},
 
   // ── BLOCO TECNOLOGIA E INOVAÇÃO ────────────────────────────────────────────────
