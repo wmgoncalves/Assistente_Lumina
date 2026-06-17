@@ -3269,6 +3269,24 @@ const detectLocalInfo = async (text) => {
       'Financiamento de caminhão via FINAME (BNDES): taxa 1,0-1,5% ao mês, até 60 meses, carência de 6 meses. Exige nota fiscal e o caminhão como garantia. Alternativa: leasing operacional — sem IPVA, parcela como despesa (deduz IRPJ). Para antecipação de recebíveis (CT-e em aberto), factoring ou desconto de duplicata no banco cobre o caixa no curto prazo.',
     ]);
 
+  // ── Relatório e análise de desempenho ──
+  if (/relatorio.*desempenho|kpi.*frota|indicadores.*frota|como.*medir.*desempenho|painel.*indicadores|dashboard.*frota|metricas.*transportadora/.test(t))
+    return pick([
+      'KPIs essenciais de frota para transportadora: OTD (On-Time Delivery) — meta acima de 95%; custo por km rodado — meta R$1,80-2,20 no RS; km vazio sobre km total — meta abaixo de 20%; índice de avarias — meta abaixo de 0,1% do faturamento; consumo médio — meta 2,8-3,2 km/litro para trucks. Monitore mensalmente e compare com o mês anterior e o mesmo mês do ano passado.',
+      'Dashboard operacional da Scapini: acompanhe semanalmente — entregas realizadas vs programadas, veículos em manutenção vs em operação, km rodados por motorista, ocorrências abertas (avarias, atrasos, clientes insatisfeitos). Mensalmente — DRE da frota por rota, resultado por cliente, custo de manutenção por veículo. Posso ajudar a montar esse painel se você me enviar a planilha de controle.',
+    ]);
+
+  if (/planejamento.*estrategico|plano.*5.*anos|expansao.*empresa|crescimento.*transportadora|metas.*anuais|okr.*transportadora/.test(t))
+    return pick([
+      'Planejamento estratégico para transportadora de médio porte: defina 3 horizontes — curto prazo (até 12 meses): rentabilizar rotas existentes, reduzir km vazio, renegociar tarifas; médio prazo (1-3 anos): ampliar carteira de clientes, padronizar frota, implantar TMS; longo prazo (3-5 anos): expansão regional (SP/PR/SC), possível aquisição de concorrente menor, certificação ISO 9001. Revise a cada 6 meses.',
+      'Metas anuais sugeridas para a Scapini: crescimento de faturamento 15-20% ao ano (acima da inflação do setor); margem EBITDA acima de 10%; OTD acima de 96%; frota renovada a cada 5-7 anos em média; reduzir custo de manutenção em 10% com preventiva mais rigorosa. Posso ajudar a montar o plano completo se você me passar os números base.',
+    ]);
+
+  if (/licitacao|pregao.*eletronico|governo.*contrato|edital.*transporte|fornecedor.*governo|cadastro.*fornecedor.*governo/.test(t))
+    return pick([
+      'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
+    ]);
+
   // ── Fiscalização e documentação veicular ──
   if (/fiscalizacao|posto.*fiscal|balanca.*fiscal|policia.*rodoviaria|PRF|abordagem.*policia|o que.*apresentar.*fiscal/.test(t))
     return pick([
@@ -4538,6 +4556,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO TECNOLOGIA E INOVAÇÃO ────────────────────────────────────────────────
+
+  // FTL vs LTL (Carga Lotação vs Fracionada)
+  { re: /ftl|ltl|carga.*lotacao|carga.*fracionada|lotacao.*fracionada|consolidacao.*carga|fracionado.*frete/,
+    r: [
+      'FTL (Full Truck Load = carga lotação): o cliente contrata o caminhão inteiro, exclusivo para sua carga. Vantagem: mais rápido, sem transbordo, menos risco de avaria. Desvantagem: custo maior se a carga não ocupar o veículo todo. FTL compensa para cargas acima de 60% da capacidade do veículo. Para a Scapini, FTL é o foco principal nas rotas Sul-Sudeste.',
+      'LTL (Less than Truck Load = fracionado): a carga de vários clientes compartilha um caminhão. Custo menor por tonelada, mas com transbordos em CD (centro de distribuição), prazo maior e mais risco de avaria. A Scapini pode oferecer LTL consolidado para clientes menores da região — aumenta o aproveitamento da frota em rotas de retorno.',
+    ]},
+
+  // ELD / Tacógrafo eletrônico / tecnologia frota
+  { re: /eld|eletronic.*logging|tacografo.*digital|tacografo.*eletronico|tecnologia.*frota|iot.*frota|sensor.*caminhao/,
+    r: [
+      'ELD (Electronic Logging Device) e tacógrafo digital: o Brasil obriga tacógrafo eletrônico em veículos com PBT acima de 3.500 kg (CONTRAN). O tacógrafo registra velocidade, aceleração, frenagem, jornada do motorista e paradas. Dados são baixados pela fiscalização via cabo ou bluetooth. Adulteração é crime. Os dados também alimentam o sistema de telemetria da frota para análise de comportamento.',
+      'IoT na frota: além do GPS, sensores conectados monitoram nível de combustível (alerta de desvio/furto), temperatura do baú (cadeia do frio), pressão dos pneus (TPMS — reduz furos inesperados e consumo), e diagnóstico do motor via OBD-II (código de falha antes de virar pane). Integração com TMS permite correlacionar dados do veículo com os pedidos e otimizar manutenção preditiva.',
+    ]},
+
+  // ISO 9001 para transportadora
+  { re: /iso.*9001|certificacao.*qualidade|sgq|sistema.*gestao.*qualidade|norma.*qualidade|certificar.*iso/,
+    r: [
+      'ISO 9001 para transportadoras: certificação que demonstra padronização de processos — coleta, transporte, entrega, tratamento de não conformidades. Exige: mapeamento de processos, manual da qualidade, indicadores monitorados (OTD, avarias/1.000 entregas, reclamações resolvidas em X horas) e auditorias periódicas. Custo de certificação: R$ 8.000-25.000 dependendo do porte. Vantagem: requisito de clientes grandes e licitações.',
+      'Benefícios práticos da ISO 9001 numa transportadora: reduz retrabalho, padroniza o onboarding de motoristas, melhora o registro de ocorrências (avarias, atrasos) e facilita rastreabilidade de incidentes. Clientes corporativos de grande porte (BRF, Ambev, Marfrig) muitas vezes exigem ISO como pré-requisito para homologação de fornecedor.',
+    ]},
+
+  // DDS e comunicação operacional interna
+  { re: /dds|dialogo.*diario.*seguranca|reuniao.*operacional|briefing.*motorista|comunicacao.*interna.*frota|reuniao.*frota|reuniao.*motorista/,
+    r: [
+      'DDS (Diálogo Diário de Segurança): reunião rápida (5-10 min) no início da operação com motoristas e ajudantes. Pauta: alertas de segurança do dia, condições das rodovias, previsão de tempo, checklist do veículo, regras de jornada. O DDS reduz acidentes e aumenta engajamento da equipe. Registre em ata assinada — é evidência para auditoria de segurança e seguro.',
+      'Comunicação operacional interna: para frota em rota, use um grupo operacional (WhatsApp ou app de TMS) somente para informações de operação — desvios, atrasos, problemas de carga. Separe do grupo social. Motoristas devem usar o hands-free (Bluetooth) — atender o celular na direção é infração gravíssima. Para alertas urgentes, defina um número de plantão 24h.',
     ]},
 
   // ── BLOCO BANCOS, CRÉDITO E FINANCIAMENTO ─────────────────────────────────────
