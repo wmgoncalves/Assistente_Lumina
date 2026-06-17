@@ -1731,6 +1731,8 @@ const processInput = async (rawText, opts = {}) => {
         const safeResp = IDENTITY_LEAK.test(geminiResp)
           ? geminiResp.replace(IDENTITY_LEAK, 'a Lúmina, IA da Scapini Transportes')
           : geminiResp;
+        // Guarda no cache de sessão (evita rechamada para a mesma pergunta em 20min)
+        if (text && text.length > 8) _setCache(_cacheKey(text), safeResp);
         _finalize(safeResp, 'gemini');
         _hideDemoMode();
         return;
@@ -3071,6 +3073,11 @@ const callGemini = async (customHistory = null) => {
   if (geminiBlocked()) throw new Error('429');
   const history = customHistory || app.history;
   const lastMsg = history.filter(h => h.role === 'user').slice(-1)[0]?.content || '';
+
+  // Cache de sessão — retorna resposta prévia para perguntas repetidas (evita custo de API)
+  const cacheKey = _cacheKey(lastMsg);
+  const cached = _getCached(cacheKey);
+  if (cached && lastMsg.length > 8) { console.info('[cache hit]', cacheKey); return cached; }
 
   // Constrói system prompt UMA vez — reutilizado em todas as iterações do loop
   const systemText = await buildSystem(lastMsg, app.currentEmotion || 'neutral');
@@ -4670,6 +4677,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO EXPERIÊNCIA DO EMBARCADOR E TECNOLOGIA ──────────────────────────────
+
+  // Rastreamento de carga para o cliente (embarcador)
+  { re: /rastreamento.*cliente|cliente.*rastrear.*carga|link.*rastreamento|tracking.*carga|onde.*minha.*carga|status.*carga.*cliente|portal.*cliente.*transporte/,
+    r: [
+      'Rastreamento para o embarcador: o cliente quer saber onde está a carga sem precisar ligar. As melhores transportadoras oferecem: link de tracking (URL com posição em tempo real), notificação automática por WhatsApp ou SMS quando a carga sai para entrega e quando é entregue, e portal web com histórico de CT-es. Isso reduz ligações de status em até 60% e aumenta satisfação do cliente.',
+      'Implementar tracking para cliente: as plataformas de rastreamento (Sascar, Onixsat, Omnilink) geram links de tracking compartilháveis por CT-e. Integrar com o TMS permite automação — ao emitir o CT-e, o sistema já envia o link por e-mail para o cliente. Custo adicional: R$5-15 por veículo/mês para módulo de tracking público. ROI: redução de 3-4 ligações/dia de clientes perguntando sobre entrega.',
+    ]},
+
+  // TMS — sistema de gestão de transporte
+  { re: /tms|sistema.*gestao.*transporte|software.*transportadora|erp.*transportadora|plataforma.*logistica|sistema.*frete.*gestao/,
+    r: [
+      'TMS (Transportation Management System): é o ERP específico de transportadoras. Funções principais: emissão de CT-e e MDFe, rastreamento de frota, gestão de tarifas e cotações, controle de motoristas, faturamento e cobrança, relatórios de KPIs. Principais TMS no mercado brasileiro: Cargo Snap, Transdata, Nuvem TMS, Oracle TMS, SAP TM. Preço: R$500-5.000/mês dependendo do porte da frota e dos módulos contratados.',
+      'Integração CGI + TMS: o CGI (ERP geral da Scapini) e o TMS de transporte precisam trocar dados em tempo real — pedido de coleta no CGI gera automaticamente CT-e no TMS, e o status de entrega do TMS atualiza o pedido no CGI. Essa integração elimina redigitação e erros de inconsistência entre sistemas. APIs REST são o padrão atual — qualquer TMS moderno tem documentação de API disponível.',
+    ]},
+
+  // E-commerce como cliente de transportadora
+  { re: /ecommerce.*frete|loja.*virtual.*transporte|vtex.*frete|shopify.*frete|entrega.*ultimo.*km|last.*mile|b2c.*entrega|pessoa.*fisica.*entrega/,
+    r: [
+      'E-commerce como cliente de transportadora: frete B2C (empresa para pessoa física) tem características diferentes do B2B — encomendas menores, mais endereços de entrega, mais tentativas de entrega (ausência do destinatário), mais devoluções. Para a Scapini, entrar no B2C exige: software de roteirização por CEP, estrutura de reclame (destinatário ausente), e integração com plataformas como VTEX, Shopify, Mercado Livre via API.',
+      'Last mile (última milha): a entrega ao consumidor final é o segmento mais caro e complexo do transporte. Custo por entrega: R$8-25 dependendo da densidade de endereços e da região. Transportadoras tradicionais (B2B) que querem entrar no B2C precisam de: veículos menores (van ou utilitário), roteirização dinâmica, app de prova de entrega (foto + assinatura), e central de atendimento ao consumidor. Concorrência intensa: Correios, Total Express, Jadlog.',
+    ]},
+
+  // Gestão de documentação fiscal de frete (DACTE, XML)
+  { re: /xml.*cte|dacte|consulta.*cte.*sefaz|cancelar.*cte|cte.*cancelamento|complemento.*cte|carta.*correcao.*cte|cte.*inutilizacao/,
+    r: [
+      'Gestão de CT-e na SEFAZ: o CT-e pode ser cancelado em até 24h após a emissão (se a mercadoria ainda não foi transportada). Após 24h, usa-se a Carta de Correção Eletrônica (CC-e) para corrigir dados não essenciais (ex.: descrição do produto, endereço do remetente) — mas não pode corrigir CFOP, chaves da NF-e vinculada ou valor do frete. Para erros graves, emita um CT-e substituto (anulação + novo CT-e).',
+      'DACTE (Documento Auxiliar do CT-e): é a versão impressa do CT-e, que acompanha a carga fisicamente. O DACTE tem o QR Code para consulta na SEFAZ. Motorista deve carregar o DACTE impresso ou no celular (válido digitalmente). Se o sistema cair e o CT-e não puder ser transmitido, pode-se emitir em contingência (EPEC ou SVC) — o arquivo XML deve ser transmitido logo após restabelecimento.',
+    ]},
+
   // ── BLOCO SUPPLY CHAIN E OPERAÇÃO NOTURNA ─────────────────────────────────────
 
   // Supply chain / cadeia de suprimentos
@@ -5277,6 +5314,24 @@ const DEMO_QA = [
   { re: /oi lúmina$|^lúmina oi$|^lúmina$|^lu$|^oi$|^ola$|^ola lúmina$|^ei lúmina$|^hey lúmina$/,
     r: ['Oi! Pode falar.', 'Olá! Estou pronta.', 'Ei! O que precisa?'] },
 ];
+
+// Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
+const _responseCache = new Map();
+const _getCached = (key) => {
+  const e = _responseCache.get(key);
+  if (!e) return null;
+  if (Date.now() - e.ts > 20 * 60 * 1000) { _responseCache.delete(key); return null; }
+  return e.val;
+};
+const _setCache = (key, val) => {
+  if (_responseCache.size > 80) {
+    const oldest = [..._responseCache.entries()].sort((a,b) => a[1].ts - b[1].ts)[0];
+    if (oldest) _responseCache.delete(oldest[0]);
+  }
+  _responseCache.set(key, { val, ts: Date.now() });
+};
+// Chave de cache: primeiros 60 chars normalizados
+const _cacheKey = (text) => stripAccents(text.toLowerCase().replace(/\s+/g,' ').trim()).slice(0, 60);
 
 const localFallback = (text) => {
   const local = tryLocalResponse(text);
