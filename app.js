@@ -3206,6 +3206,31 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Perguntas rápidas de operação ──
+  if (/\b(cnpj|cpf).*(scapini|empresa)|qual.*(cnpj|cpf).*scapini|me passa.*cnpj/.test(t))
+    return 'O CNPJ da Scapini Transportes é informação que não compartilho por aqui por segurança. Consulte o setor administrativo ou o rodapé dos documentos fiscais da empresa.';
+
+  if (/qual.*(telefone|fone|numero|contato).*(scapini|empresa|sede|escritorio)|telefone.*scapini/.test(t))
+    return 'O contato da Scapini Transportes está no site oficial e nos documentos da empresa. Para contato interno, consulte o ramal ou o setor de atendimento diretamente.';
+
+  if (/endereco.*(scapini|sede|escritorio|empresa)|onde.*fica.*(scapini|sede)/.test(t))
+    return pick([
+      'A Scapini Transportes está sediada em Lajeado, Rio Grande do Sul — coração do Vale do Taquari, região de forte atividade agroindustrial e excelente posição logística para o corredor RS-SP.',
+      'Sede da Scapini: Lajeado/RS. Localização estratégica no Vale do Taquari, com acesso direto à BR-386 — principal corredor de escoamento do agronegócio gaúcho para o Sudeste.',
+    ]);
+
+  if (/quantos? (km|quilometro).*(fiz|rodei|percorr|acumul)|km.*acumul.*motorista|producao.*motorista.*mes/.test(t))
+    return pick([
+      'Produção por motorista: um motorista CLT em rota longa (RS↔SP) roda tipicamente 15.000–22.000 km/mês, dependendo do número de viagens e tempo de espera nas carregações. Para rotas regionais (RS interior), 8.000–12.000 km/mês. Motorista com menos de 8.000 km/mês em frota de longa distância está subutilizado — investigue o motivo.',
+      'Benchmark de produção: motorista de longa distância → 15.000 a 22.000 km/mês. Motorista regional → 8.000 a 12.000 km/mês. Se o motorista está bem abaixo dessa faixa, pode ser por manutenção do veículo, espera em clientes, rota ineficiente ou jornada mal planejada. O tacógrafo responde qual é a causa real.',
+    ]);
+
+  if (/(preciso|quero).*(modelo|exemplo|template).*(contrato|proposta|ata|relatorio|planilha)/.test(t))
+    return pick([
+      'Posso ajudar a montar o conteúdo de qualquer documento — contrato, proposta, ata ou relatório. Me diga o tipo de documento e as informações principais (partes envolvidas, objetivo, condições) e estruturo o texto completo para você finalizar com o jurídico.',
+      'Template disponível: me diga "monta um contrato de frete com as condições X, Y, Z" ou "faz uma proposta comercial para a empresa Tal" — gero o rascunho completo. O documento sai aqui no chat, você copia, revisa e assina. Para documentos com valor jurídico, sempre passe pelo advogado.',
+    ]);
+
   // ── Checagem matinal de operações ──
   if (/quais? (viagens?|entregas?|cargas?).*(hoje|amanhã|desta semana)|o que tem hoje|agenda.*hoje|o que rola hoje|programacao.*hoje/.test(t))
     return pick([
@@ -4378,6 +4403,43 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO OPERACIONAL CRÍTICO ─────────────────────────────────────────────────
+
+  // Hora extra motorista CLT
+  { re: /hora extra.*motorista|hora.*adicional.*motorista|motorista.*hora extra|calculo.*hora extra|adicional.*jornada/,
+    r: [
+      'Hora extra de motorista CLT tem regra especial: a jornada é de 8h/dia e 44h/semana. Hora extra = valor hora normal × 1,5 (dias úteis) ou × 2,0 (domingos e feriados). Para motoristas, o banco de horas é permitido por acordo coletivo — mas o máximo é 220h mensais. Pernoite em viagem gera a "diária" prevista na CCT, que não é salário mas pode ser tributada se exceder limites.',
+      'Cálculo de hora extra: salário ÷ 220h = valor hora. Hora extra 50%: valor hora × 1,5. Hora extra 100%: valor hora × 2. Para motoristas de longa distância, as horas de espera na carregação e descarregação acima de 1h por parada são computadas como jornada. O tacógrafo é a prova — guarde os discos ou registros digitais por 5 anos.',
+    ]},
+
+  // Análise de viabilidade de nova rota
+  { re: /nova.*rota.*viavel|viabilidade.*rota|abrir.*rota|nova.*rota.*analise|calcular.*rota.*nova|quando.*rota.*vale/,
+    r: [
+      'Análise de viabilidade de nova rota: 1) Mapeie a demanda — tem carga suficiente (pelo menos 80% da capacidade do veículo)? 2) Calcule o custo operacional por viagem (diesel + pedágio + motorista + manutenção rateada); 3) Simule o frete de mercado na rota; 4) Calcule a margem (frete − custo); 5) Estime o volume mensal e a receita; 6) Compare com o custo de oportunidade (o veículo estaria mais rentável em outra rota?). Margem < 10%: repense.',
+      'Para validar uma nova rota antes de comprometer frota: faça 3 viagens spot (sem contrato) para sentir o mercado, teste o prazo real, identifique pontos críticos (pedágio, restrições municipais, qualidade da estrada). Se os 3 testes foram positivos, busque um cliente ancora (contrato) antes de alocar veículo fixo. Rota sem cliente ancora é aposta — rota com âncora é negócio.',
+    ]},
+
+  // Frete spot vs contrato
+  { re: /spot.*contrato|contrato.*spot|frete.*spot|frete.*avulso|frete.*eventual|spot.*vs/,
+    r: [
+      'Frete spot (avulso): preço de mercado no momento, sem compromisso de volume. Vantagem: preço maior em picos de demanda (safra, fim de ano). Desvantagem: imprevisível, exige esforço comercial constante, sem fidelização. Frete contrato: preço fixo por período (6 ou 12 meses). Vantagem: receita previsível, planejamento de frota, fidelização. Desvantagem: pode ficar abaixo do mercado em alta. Transportadora saudável: 70% contrato, 30% spot.',
+      'Estratégia spot × contrato: use contratos anuais para cobrir os custos fixos (folha, financiamento, seguro) e o spot para gerar margem extra nos picos. Nunca aceite spot abaixo do custo variável — está pagando para trabalhar. Em momento de alta demanda (safra), o spot pode estar 30-50% acima do contrato — aproveite os veículos livres nesse momento.',
+    ]},
+
+  // Gestão de risco operacional
+  { re: /risco.*operacional|gestao.*risco|plano.*contingencia|contingencia.*frota|risco.*scapini|mitigar.*risco/,
+    r: [
+      'Principais riscos operacionais de transportadora: 1) Roubo de carga — mitigação: rastreamento + roteirização segura + seguro RCTA; 2) Acidente com vítimas — mitigação: programa de motorista seguro, telemetria, PSO; 3) Falha mecânica em rota — mitigação: manutenção preventiva + veículo reserva; 4) Inadimplência de cliente — mitigação: análise de crédito + seguro de crédito; 5) Alta do diesel — mitigação: cláusula de reajuste automático nos contratos.',
+      'Plano de contingência mínimo para frota: 1) Veículo reserva para rotas críticas; 2) Lista de TACs parceiros para pico ou emergência; 3) Seguro com cobertura total (RCTR-C + RCTA + frota); 4) Fundo de reserva de 2 meses de custos fixos; 5) Contrato de manutenção com SLA máximo de 48h. Empresa sem plano de contingência não é resistente a crises — é sorte até aparecer uma.',
+    ]},
+
+  // Planejamento de sucessão
+  { re: /sucessao|plano.*sucessao|empresa.*familiar|passar.*empresa|herdar.*empresa|proximo.*lider|futuro.*empresa/,
+    r: [
+      'Planejamento de sucessão em empresa familiar é um dos temas mais sensíveis — e mais importantes. Para a Scapini: o processo ideal começa com a documentação de processos críticos (não pode depender de uma só pessoa), formação do sucessor dentro da operação, e a definição de governança (conselho de família, acordo de sócios). Consultoria especializada em empresas familiares reduz conflitos e protege o patrimônio.',
+      'Successão familiar em transportadora: o maior risco é a dependência do fundador ou de um gestor-chave — se ele sair, a empresa para. Mitigue isso: processos documentados, time multifuncional treinado, e um substituto designado para cada função crítica. A Lúmina pode ajudar a documentar processos, criar manuais e centralizar o conhecimento operacional para que ele não fique só na cabeça das pessoas.',
     ]},
 
   // ── BLOCO RH AVANÇADO ─────────────────────────────────────────────────────────
