@@ -1,10 +1,10 @@
-@echo off
+﻿@echo off
 setlocal enabledelayedexpansion
-title Sky - Instalacao
+title Lumina - Instalacao
 color 0A
 echo.
 echo  ============================================
-echo    SKY - Assistente de IA Scapini
+echo    LUMINA - Assistente de IA Scapini
 echo    Instalacao / Primeiro Uso
 echo  ============================================
 echo.
@@ -37,7 +37,7 @@ echo.
 
 :: ── 3. Cria config.json se nao existir ───────────────────────────────────────
 if not exist config.json (
-  echo  Configurando Sky pela primeira vez...
+  echo  Configurando Lumina pela primeira vez...
   echo.
   echo  Voce precisara da chave da API Gemini.
   echo  Obtenha em: https://aistudio.google.com/app/apikey
@@ -67,7 +67,7 @@ echo.
 echo  ============================================
 echo    Instalacao concluida!
 echo.
-echo    Para iniciar a Sky, execute: start.bat
+echo    Para iniciar a Lumina, execute: start.bat
 echo  ============================================
 echo.
 pause

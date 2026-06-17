@@ -1,7 +1,7 @@
-const { contextBridge, ipcRenderer } = require('electron');
+﻿const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('skyAPI', {
-  showWindow:  () => ipcRenderer.send('sky-show'),
-  hideWindow:  () => ipcRenderer.send('sky-hide'),
-  runCommand:  (action, args) => ipcRenderer.invoke('sky-cmd', action, args),
+contextBridge.exposeInMainWorld('luminaAPI', {
+  showWindow:  () => ipcRenderer.send('lumina-show'),
+  hideWindow:  () => ipcRenderer.send('lumina-hide'),
+  runCommand:  (action, args) => ipcRenderer.invoke('lumina-cmd', action, args),
 });

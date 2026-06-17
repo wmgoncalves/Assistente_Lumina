@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain, Tray, Menu, nativeImage } = require('electron');
+﻿const { app, BrowserWindow, globalShortcut, screen, shell, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const { fork, exec } = require('child_process');
 const path = require('path');
 
@@ -19,7 +19,17 @@ let win    = null;
 let server = null;
 let tray   = null;
 
-function startServer() {
+function killPort(port) {
+  return new Promise(resolve => {
+    exec(
+      `powershell -c "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"`,
+      () => resolve()
+    );
+  });
+}
+
+async function startServer() {
+  await killPort(8080);
   return new Promise((resolve) => {
     server = fork(path.join(__dirname, 'server.js'), [], { silent: true });
     server.stdout.on('data', (d) => { if (d.toString().includes('localhost')) resolve(); });
@@ -37,10 +47,10 @@ const WIN_H = 720;
 function createTray() {
   const icon = nativeImage.createFromDataURL(`data:image/png;base64,${TRAY_ICON_B64}`).resize({ width: 16, height: 16 });
   tray = new Tray(icon);
-  tray.setToolTip('Sky — Clique para mostrar');
+  tray.setToolTip('Lúmina — Clique para mostrar');
   tray.on('click', toggleWindow);
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Mostrar Sky',  click: () => showWindow() },
+    { label: 'Mostrar Lúmina', click: () => showWindow() },
     { label: 'Esconder',     click: () => win?.hide() },
     { type: 'separator' },
     { label: 'Iniciar com Windows', type: 'checkbox',
@@ -107,10 +117,10 @@ try {
   app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
 } catch (_) {}
 
-ipcMain.on('sky-show', () => showWindow());
-ipcMain.on('sky-hide', () => win?.hide());
+ipcMain.on('lumina-show', () => showWindow());
+ipcMain.on('lumina-hide', () => win?.hide());
 
-ipcMain.handle('sky-cmd', (_, action) => {
+ipcMain.handle('lumina-cmd', (_, action) => {
   const cmd = SYS_COMMANDS[action];
   if (!cmd) return { ok: false, error: 'Comando desconhecido: ' + action };
   try { cmd(); return { ok: true }; }

@@ -1,8 +1,8 @@
-'use strict';
+﻿'use strict';
 const Database = require('better-sqlite3');
 const path     = require('path');
 
-const DB_FILE = path.join(__dirname, '..', 'sky.db');
+const DB_FILE = path.join(__dirname, '..', 'Lúmina.db');
 let _db = null;
 
 function getDb() {
@@ -91,14 +91,14 @@ function _migrate(db) {
     -- Histórico de conversas
     CREATE TABLE IF NOT EXISTS historico (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      role         TEXT    NOT NULL,  -- user / sky
+      role         TEXT    NOT NULL,  -- user / Lúmina
       conteudo     TEXT    NOT NULL,
       source       TEXT,              -- gemini / ollama / local / demo
       ms           INTEGER,
       criado_em    TEXT    DEFAULT (datetime('now','localtime'))
     );
 
-    -- Memória da Sky (migração futura do memory.json)
+    -- Memória da Lúmina (migração futura do memory.json)
     CREATE TABLE IF NOT EXISTS fatos (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       conteudo     TEXT    NOT NULL,

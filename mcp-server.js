@@ -1,13 +1,13 @@
-'use strict';
-// Sky MCP Server — expõe ferramentas da Sky para Claude Code via stdio JSON-RPC
+﻿'use strict';
+// Lúmina MCP Server — expõe ferramentas da Lúmina para Claude Code via stdio JSON-RPC
 const http = require('http');
 
-const SKY_PORT = process.env.SKY_PORT || 8080;
+const LUMINA_PORT = process.env.LUMINA_PORT || 8080;
 
-const skyFetch = (path, body) => new Promise((resolve, reject) => {
+const luminaFetch = (path, body) => new Promise((resolve, reject) => {
   const data = JSON.stringify(body);
   const req  = http.request({
-    hostname: 'localhost', port: SKY_PORT, path, method: 'POST',
+    hostname: 'localhost', port: LUMINA_PORT, path, method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
   }, res => {
     let buf = '';
@@ -22,8 +22,8 @@ const skyFetch = (path, body) => new Promise((resolve, reject) => {
   req.end();
 });
 
-const skyGet = (path) => new Promise((resolve, reject) => {
-  http.get({ hostname: 'localhost', port: SKY_PORT, path }, res => {
+const luminaGet = (path) => new Promise((resolve, reject) => {
+  http.get({ hostname: 'localhost', port: LUMINA_PORT, path }, res => {
     let buf = '';
     res.on('data', c => buf += c);
     res.on('end', () => {
@@ -36,7 +36,7 @@ const skyGet = (path) => new Promise((resolve, reject) => {
 // ── Tool definitions ───────────────────────────────────────────────────────────
 const TOOLS = [
   {
-    name: 'sky_readFile',
+    name: 'lumina_readFile',
     description: 'Lê o conteúdo de um arquivo do computador do usuário. Suporta paginação via offset/limit.',
     inputSchema: {
       type: 'object',
@@ -49,7 +49,7 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_editFile',
+    name: 'lumina_editFile',
     description: 'Edita um arquivo com find & replace exato. old_string deve ser único no arquivo.',
     inputSchema: {
       type: 'object',
@@ -62,7 +62,7 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_writeFile',
+    name: 'lumina_writeFile',
     description: 'Cria ou sobrescreve um arquivo com conteúdo completo.',
     inputSchema: {
       type: 'object',
@@ -74,7 +74,7 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_runCommand',
+    name: 'lumina_runCommand',
     description: 'Executa um comando PowerShell no computador do usuário e retorna o output.',
     inputSchema: {
       type: 'object',
@@ -86,7 +86,7 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_listDir',
+    name: 'lumina_listDir',
     description: 'Lista arquivos e pastas de um diretório.',
     inputSchema: {
       type: 'object',
@@ -97,7 +97,7 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_searchCode',
+    name: 'lumina_searchCode',
     description: 'Busca padrão de texto em todos os arquivos de um diretório (como grep/ripgrep).',
     inputSchema: {
       type: 'object',
@@ -111,13 +111,13 @@ const TOOLS = [
     }
   },
   {
-    name: 'sky_getMemory',
-    description: 'Retorna a memória persistente da Sky: nome do usuário e fatos aprendidos sobre ele.',
+    name: 'lumina_getMemory',
+    description: 'Retorna a memória persistente da Lúmina: nome do usuário e fatos aprendidos sobre ele.',
     inputSchema: { type: 'object', properties: {} }
   },
   {
-    name: 'sky_queryDB',
-    description: 'Consulta o banco de dados SQLite da Sky. Tabelas: leads, cotacoes, contatos, lembretes, historico.',
+    name: 'lumina_queryDB',
+    description: 'Consulta o banco de dados SQLite da Lúmina. Tabelas: leads, cotacoes, contatos, lembretes, historico.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -133,49 +133,49 @@ const TOOLS = [
 // ── Tool execution ─────────────────────────────────────────────────────────────
 const callTool = async (name, args) => {
   switch (name) {
-    case 'sky_readFile': {
-      const r = await skyFetch('/api/dev/read', args);
+    case 'lumina_readFile': {
+      const r = await luminaFetch('/api/dev/read', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       return `📄 ${args.path} (linhas ${r.body.offset+1}–${r.body.offset+r.body.returned} de ${r.body.totalLines}):\n\`\`\`\n${r.body.content}\n\`\`\``;
     }
-    case 'sky_editFile': {
-      const r = await skyFetch('/api/dev/edit', args);
+    case 'lumina_editFile': {
+      const r = await luminaFetch('/api/dev/edit', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       return `✅ ${args.path} editado.`;
     }
-    case 'sky_writeFile': {
-      const r = await skyFetch('/api/dev/write', args);
+    case 'lumina_writeFile': {
+      const r = await luminaFetch('/api/dev/write', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       return `✅ ${args.path} salvo (${r.body.bytes} bytes).`;
     }
-    case 'sky_runCommand': {
-      const r = await skyFetch('/api/dev/exec', args);
+    case 'lumina_runCommand': {
+      const r = await luminaFetch('/api/dev/exec', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       const icon = r.body.exitCode === 0 ? '✅' : '⚠️';
       return `${icon} \`${args.command}\`\n\`\`\`\n${r.body.output || '(sem output)'}\n\`\`\``;
     }
-    case 'sky_listDir': {
-      const r = await skyFetch('/api/dev/ls', args);
+    case 'lumina_listDir': {
+      const r = await luminaFetch('/api/dev/ls', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       const dirs  = r.body.items.filter(i => i.type === 'dir').map(i => `📁 ${i.name}`);
       const files = r.body.items.filter(i => i.type === 'file').map(i => `📄 ${i.name}`);
       return `**${args.path}**\n${[...dirs, ...files].join('\n')}`;
     }
-    case 'sky_searchCode': {
-      const r = await skyFetch('/api/dev/grep', args);
+    case 'lumina_searchCode': {
+      const r = await luminaFetch('/api/dev/grep', args);
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       if (!r.body.count) return `Nenhum resultado para \`${args.pattern}\` em ${args.dir}`;
       return `🔍 ${r.body.count} resultado(s) para \`${args.pattern}\`:\n\`\`\`\n${r.body.matches.join('\n')}\n\`\`\``;
     }
-    case 'sky_getMemory': {
-      const r = await skyGet('/api/memory');
+    case 'lumina_getMemory': {
+      const r = await luminaGet('/api/memory');
       if (r.status !== 200) return `Erro ao ler memória`;
       const m = r.body;
       const fatos = (m.facts || []).map(f => `• ${typeof f === 'string' ? f : f.text}`).join('\n');
       return `**Usuário:** ${m.userName || '(não identificado)'}\n**Fatos conhecidos:**\n${fatos || '(nenhum ainda)'}`;
     }
-    case 'sky_queryDB': {
-      const r = await skyFetch('/api/db/query', { tabela: args.tabela, filtro: args.filtro, limit: args.limit || 20 });
+    case 'lumina_queryDB': {
+      const r = await luminaFetch('/api/db/query', { tabela: args.tabela, filtro: args.filtro, limit: args.limit || 20 });
       if (r.status !== 200) return `Erro: ${r.body.error}`;
       if (!r.body.rows?.length) return `Nenhum registro em ${args.tabela}`;
       return `**${args.tabela}** (${r.body.rows.length} registros):\n\`\`\`json\n${JSON.stringify(r.body.rows, null, 2)}\n\`\`\``;
@@ -209,7 +209,7 @@ const handleMessage = async (msg) => {
     return send({ jsonrpc: '2.0', id, result: {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'sky-mcp', version: '1.0.0' }
+      serverInfo: { name: 'Lúmina-mcp', version: '1.0.0' }
     }});
   }
 
@@ -239,4 +239,4 @@ const handleMessage = async (msg) => {
   }
 };
 
-process.stderr.write('[Sky MCP] Servidor iniciado. Aguardando conexão do Claude Code...\n');
+process.stderr.write('[Lúmina MCP] Servidor iniciado. Aguardando conexão do Claude Code...\n');

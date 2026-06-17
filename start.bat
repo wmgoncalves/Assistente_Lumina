@@ -1,9 +1,9 @@
-@echo off
-title Sky - Assistente de IA Scapini
+﻿@echo off
+title Lumina - Assistente de IA Scapini
 color 0A
 echo.
 echo  ============================================
-echo    SKY - Assistente de IA Scapini
+echo    Lumina - Assistente de IA Scapini
 echo  ============================================
 echo.
 
@@ -41,8 +41,8 @@ timeout /T 5 /NOBREAK >nul
 echo  Ollama iniciado em modo CPU.
 echo.
 
-:: ─── Sky ─────────────────────────────────────────────────────────────────────
-echo  Iniciando Sky...
+:: ─── Lumina ─────────────────────────────────────────────────────────────────────
+echo  Iniciando Lumina...
 echo  Abra o Chrome em: http://localhost:8080
 echo  Pressione Ctrl+C para encerrar.
 echo.

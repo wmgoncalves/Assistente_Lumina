@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sky Admin</title>
+<title>Lúmina Admin</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #0e0e10; color: #c8c8d0; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
@@ -79,7 +79,7 @@
 <body>
 
 <header>
-  <h1>Sky — Painel Admin</h1>
+  <h1>Lúmina — Painel Admin</h1>
   <div class="badge">AUDITORIA</div>
   <span id="status-msg"></span>
 </header>
@@ -179,7 +179,7 @@ async function loadHistory() {
     if (!hist.length) { el.innerHTML = '<div class="empty">Nenhuma conversa registrada.</div>'; return; }
     el.innerHTML = hist.map(m => {
       const isUser = m.role === 'user';
-      const label  = isUser ? '👤 Você' : '🤖 Sky';
+      const label  = isUser ? '👤 Você' : '🤖 Lúmina';
       const color  = isUser ? '#5ab4ff' : '#5ae08a';
       return `<div style="margin-bottom:12px;padding:10px 14px;background:#13131a;border-radius:8px;border-left:3px solid ${color}">
         <div style="font-size:0.7rem;color:${color};font-weight:600;margin-bottom:4px;">${label}</div>

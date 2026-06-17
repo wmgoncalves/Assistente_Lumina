@@ -1,8 +1,8 @@
-'use strict';
+﻿'use strict';
 const fs   = require('fs');
 const path = require('path');
 
-const LOG_FILE = path.join(__dirname, '..', 'sky-logs.jsonl');
+const LOG_FILE = path.join(__dirname, '..', 'Lúmina-logs.jsonl');
 const MAX_KEEP = 10000;
 
 let _lineCount = -1; // -1 = não inicializado

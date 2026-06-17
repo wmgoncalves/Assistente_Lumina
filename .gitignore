@@ -8,13 +8,22 @@ finances.json
 embeddings.json
 server.log
 uploads/
+# Workspaces
 sky.code-workspace
+lumina.code-workspace
+*.code-workspace
 *.log
 *.jsonl
 # Banco SQLite — dados reais, não vai pro git
 sky.db
 sky.db-shm
 sky.db-wal
+Lúmina.db
+Lúmina.db-shm
+Lúmina.db-wal
+# Outros arquivos locais
+audit_full.json
+learner.log
 # Build artifacts
 dist/
 build/

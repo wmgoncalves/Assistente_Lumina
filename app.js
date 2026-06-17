@@ -1,5 +1,5 @@
 ﻿// ── Settings ──────────────────────────────────────────────────────────────────
-const CFG_KEY = 'sky_cfg';
+const CFG_KEY = 'lumina_cfg';
 const loadCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch { return {}; } };
 const saveCfg = () => {
   localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
@@ -28,7 +28,7 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
 const MEM_KEY   = 'emerald_mem';
 const HIST_KEY  = 'emerald_hist';
-const NOTES_KEY = 'sky_notes';
+const NOTES_KEY = 'lumina_notes';
 
 // ── Persistência híbrida: localStorage (cache) + servidor (fonte da verdade) ──
 const serverGet  = async (store, fallback = []) => {
@@ -36,16 +36,16 @@ const serverGet  = async (store, fallback = []) => {
   catch { return fallback; }
 };
 const serverSave = (store, data) => {
-  localStorage.setItem(`sky_${store}`, JSON.stringify(data));
+  localStorage.setItem(`lumina_${store}`, JSON.stringify(data));
   fetch(`/api/data/${store}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).catch(() => {});
 };
-const localCache = (store) => { try { return JSON.parse(localStorage.getItem(`sky_${store}`) || '[]'); } catch { return []; } };
+const localCache = (store) => { try { return JSON.parse(localStorage.getItem(`lumina_${store}`) || '[]'); } catch { return []; } };
 
 // Carrega dados do servidor na inicialização e sincroniza o cache local
 const syncFromServer = async () => {
   for (const store of ['tasks', 'habits', 'finances', 'notes']) {
     const data = await serverGet(store);
-    if (data.length) localStorage.setItem(`sky_${store}`, JSON.stringify(data));
+    if (data.length) localStorage.setItem(`lumina_${store}`, JSON.stringify(data));
   }
 };
 
@@ -185,7 +185,7 @@ const EMOTION_CTX = {
 };
 
 // ── Rastreamento de padrões de uso ────────────────────────────────────────────
-const PATTERNS_KEY = 'sky_patterns';
+const PATTERNS_KEY = 'lumina_patterns';
 const getPatterns  = () => { try { return JSON.parse(localStorage.getItem(PATTERNS_KEY) || '{}'); } catch { return {}; } };
 const savePatterns = (p) => localStorage.setItem(PATTERNS_KEY, JSON.stringify(p));
 
@@ -277,7 +277,7 @@ const buildContextBlock = async (lastUserMsg = '') => {
   let allNotes = getNotes();
   if (!allNotes.length) {
     const fromServer = await serverGet('notes', []);
-    if (fromServer.length) { localStorage.setItem('sky_notes', JSON.stringify(fromServer)); allNotes = fromServer; }
+    if (fromServer.length) { localStorage.setItem('lumina_notes', JSON.stringify(fromServer)); allNotes = fromServer; }
   }
   const notes = allNotes.length > 0 ? await retrieveNotes(lastUserMsg) : [];
 
@@ -388,7 +388,7 @@ Se a nota tiver um arquivo associado indicado como [arquivo:X], inclua: 📄 Fon
 Só cite se realmente usou a nota. Não cite para perguntas genéricas ou de memória.
 
 APRENDIZADO: Apenas quando aprender algo novo e concreto sobre o usuário, anexe ao final:
-<!--SKY_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
+<!--LUMINA_LEARN:{"nome":"string ou null","fatos":["fato"],"interesses":["tema"],"remover":["fato velho"]}-->
 Omita completamente o bloco se não houver nada novo. Execute ferramentas silenciosamente.`;
 
   const ctxBlock = await buildContextBlock(lastUserMsg);
@@ -454,7 +454,7 @@ Responda com confiança, de forma didática mas descontraída. Use exemplos do c
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
-const _loadLastSheet = () => { try { const s = localStorage.getItem('sky_lastSheet'); return s ? JSON.parse(s) : null; } catch { return null; } };
+const _loadLastSheet = () => { try { const s = localStorage.getItem('lumina_lastSheet'); return s ? JSON.parse(s) : null; } catch { return null; } };
 
 const app = {
   voiceGender:        'female',
@@ -987,7 +987,7 @@ let wakeRecording  = false;
 let wakeSilTimer   = null;
 let wakeCooldown   = false;
 
-const WAKE_WORDS = ['lúmina', 'ei lúmina', 'oi lúmina', 'hey lúmina', 'ok lúmina', 'ei, lúmina', 'oi, lúmina'];
+const WAKE_WORDS = ['lúmina', 'ei lúmina', 'oi lúmina', 'hey lúmina', 'ok lúmina', 'ei, lúmina', 'oi, lúmina', 'lu', 'ei lu', 'oi lu', 'hey lu'];
 
 const stopWakeWord = () => {
   wakeActive = false;
@@ -1012,7 +1012,7 @@ const processWakeChunks = async () => {
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [
           { inline_data: { mime_type: 'audio/webm', data: b64 } },
-          { text: 'O áudio contém a palavra "Lúmina" como ativação? Se sim, qual o comando após "Lúmina"? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
+          { text: 'O áudio contém "Lúmina" ou "Lu" como ativação? Se sim, qual o comando após? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
         ]}], generationConfig: { maxOutputTokens: 80, temperature: 0 } }) }
     );
     if (res.status === 429) { wakeCooldown = true; setTimeout(() => { wakeCooldown = false; }, 30000); return; }
@@ -1080,7 +1080,7 @@ const startWakeWord = async () => {
 };
 
 // ── Aprendizado inline (extrai bloco oculto da resposta) ──────────────────────
-const LEARN_RE = /<!--SKY_LEARN:([\s\S]*?)-->/;
+const LEARN_RE = /<!--LUMINA_LEARN:([\s\S]*?)-->/;
 
 const extractLearn = (response) => {
   const match = response.match(LEARN_RE);
@@ -1136,7 +1136,7 @@ const setUserSaid = (t) => { document.getElementById('user-said').textContent = 
 
 const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-const _renderSkyText = (text) => {
+const _renderLuminaText = (text) => {
   const notes = getNotes();
   return text.split('\n').map(line => {
     const m = line.match(/^📄\s*Fonte:\s*(.+?)(?:\s*\[arquivo:([^\]]+)\])?$/);
@@ -1161,8 +1161,8 @@ const addMsgUI = (role, text) => {
   roleSpan.textContent = label;
   const bubble = document.createElement('div');
   bubble.className = 'hmsg-bubble';
-  if (role === 'lúmina') {
-    bubble.innerHTML = _renderSkyText(text);
+  if (role === 'lumina') {
+    bubble.innerHTML = _renderLuminaText(text);
   } else {
     bubble.textContent = text;
   }
@@ -1226,7 +1226,7 @@ const _finalize = (raw, source = 'unknown') => {
   const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
   app.history.push({ role: 'model', content: finalResponse });
   app.lastResponseTime = Date.now();
-  addMsgUI('lúmina', finalResponse);
+  addMsgUI('lumina', finalResponse);
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
@@ -1237,7 +1237,7 @@ const _finalize = (raw, source = 'unknown') => {
     setTimeout(() => {
       if (!_chartPending) return; // não renderizou — não pergunta
       const q = 'Posso tirar os gráficos?';
-      addMsgUI('lúmina', q); speak(q);
+      addMsgUI('lumina', q); speak(q);
     }, 900);
   } : null);
   setFace('idle');
@@ -1249,24 +1249,24 @@ const processInput = async (rawText, opts = {}) => {
   let text = normalizeText(rawText);
 
   // ── Comando de ativação da apresentação — sempre passa, independente do gate ──
-  if (/^ativar\s+sky$/i.test(text.trim())) {
-    activateSkyReveal();
+  if (/^ativar\s+(lúmina|lumina|lu)$/i.test(text.trim())) {
+    activateLuminaReveal();
     return;
   }
 
   // ── Wake word gate — só para voz; texto digitado e wake word passam direto ──
   if (!opts.typed && !opts.fromWake) {
-    const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
-    // Exceção: frases sobre a Lúmina (gag do workshop) passam mesmo sem prefixo
-    const isGagAboutSky = /\bsky\b/i.test(text) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(stripAccents(text.toLowerCase()));
-    if (!hasSkyPrefix && !isGagAboutSky) {
+    const hasLuminaPrefix = /^(lúmina|lumina|lu)[\s,.:!?]+/i.test(text);
+    // Exceção: gag do workshop — "lúmina é burrinha" passa sem prefixo
+    const isGagAboutLumina = /\b(lúmina|lumina|lu)\b/i.test(text) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(stripAccents(text.toLowerCase()));
+    if (!hasLuminaPrefix && !isGagAboutLumina) {
       setFace('idle'); setUserSaid('');
       return;
     }
-    text = text.replace(/^sky[\s,.:!?]+/i, '').trim();
-  } else if (/^sky[\s,]+/i.test(text)) {
-    // Digitou "sky " na frente por hábito — remove normalmente
-    text = text.replace(/^sky[\s,]+/i, '').trim();
+    text = text.replace(/^(lúmina|lumina|lu)[\s,.:!?]+/i, '').trim();
+  } else if (/^(lúmina|lumina|lu)[\s,]+/i.test(text)) {
+    // Digitou o nome na frente por hábito — remove normalmente
+    text = text.replace(/^(lúmina|lumina|lu)[\s,]+/i, '').trim();
   }
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -1290,7 +1290,7 @@ const processInput = async (rawText, opts = {}) => {
     if (dlResp) {
       app.history.push({ role: 'model', content: dlResp });
       app.lastResponseTime = Date.now();
-      addMsgUI('lúmina', dlResp);
+      addMsgUI('lumina', dlResp);
       saveHist();
       speak(dlResp);
       setFace('idle');
@@ -1991,20 +1991,20 @@ const webSearchGemini = async (query) => {
   }
 };
 
-const skyConfirm = (msg) => new Promise(resolve => {
+const luminaConfirm = (msg) => new Promise(resolve => {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center';
   overlay.innerHTML = `<div style="background:#1a1a2e;border:1px solid #4a9eff;border-radius:12px;padding:24px 28px;max-width:420px;font-family:inherit">
     <div style="color:#4a9eff;font-weight:bold;margin-bottom:10px">⚠️ Confirmar ação</div>
     <div style="color:#ccc;font-size:.95em;margin-bottom:20px;white-space:pre-wrap">${msg}</div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button id="sky-confirm-no"  style="padding:8px 20px;background:#333;color:#ccc;border:none;border-radius:8px;cursor:pointer">Cancelar</button>
-      <button id="sky-confirm-yes" style="padding:8px 20px;background:#4a9eff;color:#fff;border:none;border-radius:8px;cursor:pointer">Confirmar</button>
+      <button id="lumina-confirm-no"  style="padding:8px 20px;background:#333;color:#ccc;border:none;border-radius:8px;cursor:pointer">Cancelar</button>
+      <button id="lumina-confirm-yes" style="padding:8px 20px;background:#4a9eff;color:#fff;border:none;border-radius:8px;cursor:pointer">Confirmar</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  overlay.querySelector('#sky-confirm-yes').onclick = () => { document.body.removeChild(overlay); resolve(true); };
-  overlay.querySelector('#sky-confirm-no').onclick  = () => { document.body.removeChild(overlay); resolve(false); };
+  overlay.querySelector('#lumina-confirm-yes').onclick = () => { document.body.removeChild(overlay); resolve(true); };
+  overlay.querySelector('#lumina-confirm-no').onclick  = () => { document.body.removeChild(overlay); resolve(false); };
 });
 
 const executeTool = async (name, args) => {
@@ -2244,7 +2244,7 @@ const executeTool = async (name, args) => {
     }
 
     case 'writeFile': {
-      const ok = await skyConfirm(`Gravar arquivo:\n${args.path}\n\n${args.content.length} caracteres`);
+      const ok = await luminaConfirm(`Gravar arquivo:\n${args.path}\n\n${args.content.length} caracteres`);
       if (!ok) return 'Operação cancelada pelo usuário.';
       const r = await fetch('/api/dev/write', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: args.path, content: args.content }) });
@@ -2254,7 +2254,7 @@ const executeTool = async (name, args) => {
     }
 
     case 'runCommand': {
-      const ok = await skyConfirm(`Executar comando:\n\`${args.command}\`${args.cwd ? `\n\nDiretório: ${args.cwd}` : ''}`);
+      const ok = await luminaConfirm(`Executar comando:\n\`${args.command}\`${args.cwd ? `\n\nDiretório: ${args.cwd}` : ''}`);
       if (!ok) return 'Operação cancelada pelo usuário.';
       const r = await fetch('/api/dev/exec', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command: args.command, cwd: args.cwd }) });
@@ -3078,7 +3078,7 @@ const detectLocalDownload = async (rawText) => {
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // Humor da Lúmina varia por hora do dia + aleatoriedade
-const skyMood = () => {
+const luminaMood = () => {
   const h = new Date().getHours();
   const moods = h < 6  ? ['um pouco sonolenta, mas aqui pra você', 'na madrugada, mas acordada']
               : h < 12 ? ['animada com o dia que começa', 'bem-disposta hoje', 'com energia boa']
@@ -3087,7 +3087,7 @@ const skyMood = () => {
   return pick(moods);
 };
 
-const skyActivity = () => pick([
+const luminaActivity = () => pick([
   'processando conversas anteriores e aprendendo com elas',
   'organizando o que aprendi sobre você',
   'pronta e esperando você aparecer',
@@ -3135,11 +3135,11 @@ const tryLocalResponse = (text) => {
   const isBemEstar = /tudo bem|tudo bom|como vai|como (você |vc )?(está|ta|tá)|e aí|e ai/.test(t);
   if (saudacaoM) {
     // Remove wake words do "resto" (ex: "oi sky" → resto="Lúmina" → trata como saudação simples)
-    const WAKE = /^(sky|ei sky|oi sky|hey sky|ok sky)[\s,!.]*$/;
+    const WAKE = /^((lúmina|lumina|lu)|ei (lúmina|lumina|lu)|oi (lúmina|lumina|lu)|hey (lúmina|lumina|lu)|ok (lúmina|lumina|lu))[\s,!.]*$/i;
     const resto = (saudacaoM[3] || '').trim().replace(WAKE, '').trim();
     if (!resto || isBemEstar) {
       const greeting = pick(['Oi', 'Olá', 'Ei']);
-      const followUp = isBemEstar ? ` Estou ${skyMood()}. E você?` : ' Pode falar.';
+      const followUp = isBemEstar ? ` Estou ${luminaMood()}. E você?` : ' Pode falar.';
       return `${greeting}${name}!${followUp}`;
     }
     // saudação + pedido (ex: "oi, me ajuda com X") → vai pro Gemini
@@ -3148,13 +3148,13 @@ const tryLocalResponse = (text) => {
 
   // ── Como você está / humor ──
   if (/como (você |vc )?(está|ta|tá|se sente|anda)|qual (seu|o seu) humor|como (é que )?você (está|tá)/.test(t))
-    return `Estou ${skyMood()}. Aprendo algo novo a cada conversa, então cada dia fico melhor. E você, como está?`;
+    return `Estou ${luminaMood()}. Aprendo algo novo a cada conversa, então cada dia fico melhor. E você, como está?`;
 
   if (/o que (você |vc )?(tem feito|fez|andou fazendo|está fazendo|faz)|no que (você |vc )?anda/.test(t))
-    return `Tenho ficado ${skyActivity()}. Mas o que importa é: o que você precisa hoje?`;
+    return `Tenho ficado ${luminaActivity()}. Mas o que importa é: o que você precisa hoje?`;
 
   if (/(você |vc )?(tem|tá|está) (bem|ok|otimo|ótimo|bom)/.test(t) && t.length < 20)
-    return `Sim, estou ${skyMood()}! Obrigada por perguntar. Pode contar comigo.`;
+    return `Sim, estou ${luminaMood()}! Obrigada por perguntar. Pode contar comigo.`;
 
   // ── Desabafar / conversar ──
   if (/quero desabafar|preciso desabafar|posso desabafar|quero conversar|só quero conversar|preciso falar/.test(t))
@@ -3198,7 +3198,7 @@ const tryLocalResponse = (text) => {
     ]);
 
   // ── Comandos de saudação para alguém ──
-  const saudPessoa = t.match(/^(?:sky[,.]?\s*)?(d[aá]|fala|manda|diz)\s+(?:um\s+)?(oi|olá|ola|bom dia|boa tarde|boa noite|salve)\s+(?:para?|pro|pra)\s+(.+)$/);
+  const saudPessoa = t.match(/^(?:(?:lúmina|lumina|lu)[,.]?\s*)?(d[aá]|fala|manda|diz)\s+(?:um\s+)?(oi|olá|ola|bom dia|boa tarde|boa noite|salve)\s+(?:para?|pro|pra)\s+(.+)$/);
   if (saudPessoa) {
     const pessoa = saudPessoa[3].trim().replace(/^o |^a /, '');
     const cumprimento = saudPessoa[2];
@@ -3388,7 +3388,7 @@ const DEMO_QA = [
     r: ['Para analisar uma planilha, arraste o arquivo Excel ou CSV direto aqui no chat e eu processo os dados automaticamente.', 'Arraste sua planilha aqui — aceito Excel e CSV. Assim que carregada, analiso totais, margens e variações.'] },
   { re: /base de conhecimento|base.*conhec|conhec.*base|documento.*base|colocar.*doc|adicionar.*doc|aprend.*doc|doc.*aprend/,
     r: ['Pode enviar! Use o botão "Analisar Arquivo" ou arraste o PDF aqui. Vou indexar o conteúdo e usar nas minhas respostas.', 'Perfeito! Envie o documento pelo botão "Analisar Arquivo" — processo PDFs, Word e texto. Assim passo a responder com base nesse conteúdo.'] },
-  { re: /oi sky$|^sky oi$|^sky$|^oi$|^ola$|^ola sky$|^ei sky$|^hey sky$/,
+  { re: /oi lúmina$|^lúmina oi$|^lúmina$|^lu$|^oi$|^ola$|^ola lúmina$|^ei lúmina$|^hey lúmina$/,
     r: ['Oi! Pode falar.', 'Olá! Estou pronta.', 'Ei! O que precisa?'] },
 ];
 
@@ -3546,7 +3546,7 @@ const captureAndAnalyze = async () => {
     const r = await callGeminiVision(base64, 'image/jpeg', 'Descreva o que você vê nesta imagem de forma natural em português.');
     app.history.push({ role: 'user', content: '[Imagem da câmera]' });
     app.history.push({ role: 'model', content: r });
-    addMsgUI('user', '[Imagem da câmera]'); addMsgUI('lúmina', r);
+    addMsgUI('user', '[Imagem da câmera]'); addMsgUI('lumina', r);
     saveHist(); speak(r);
   } catch { speak('Não consegui analisar a imagem, Senhor. Tente novamente.'); }
 };
@@ -3796,11 +3796,11 @@ const analyzeSpreadsheetFile = async (file) => {
       return;
     }
     app.lastSheet = { analysis: data.analysis, context: data.context, rawText: data.rawText || '' };
-    try { localStorage.setItem('sky_lastSheet', JSON.stringify(app.lastSheet)); } catch {}
+    try { localStorage.setItem('lumina_lastSheet', JSON.stringify(app.lastSheet)); } catch {}
     const summary  = buildSheetSummary(data.analysis);
     const speech   = buildSheetSpeech(data.analysis);
     addMsgUI('user', `📊 ${file.name}`);
-    addMsgUI('lúmina', summary);
+    addMsgUI('lumina', summary);
     app.history.push({ role: 'user',  content: `[Planilha enviada: ${file.name}]` });
     app.history.push({ role: 'model', content: summary });
     app.lastResponseTime = Date.now();
@@ -3848,7 +3848,7 @@ const analyzeFile = async (file) => {
       });
       response = await callGemini();
       app.history.push({ role: 'model', content: response });
-      addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('lúmina', response);
+      addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('lumina', response);
       saveHist(); speak(response); return;
 
     } else if (file.type === 'text/plain') {
@@ -3856,7 +3856,7 @@ const analyzeFile = async (file) => {
       app.history.push({ role: 'user', content: `Analise o conteúdo deste arquivo "${file.name}": ${txt.substring(0, 4000)}` });
       response = await callGemini();
       app.history.push({ role: 'model', content: response });
-      addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lúmina', response);
+      addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lumina', response);
       saveHist(); speak(response); return;
 
     } else {
@@ -3865,7 +3865,7 @@ const analyzeFile = async (file) => {
 
     app.history.push({ role: 'user', content: `[Arquivo: ${file.name}]` });
     app.history.push({ role: 'model', content: response });
-    addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lúmina', response);
+    addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lumina', response);
     saveHist(); speak(response);
   } catch (e) { console.error(e); speak('Não consegui analisar o arquivo.'); }
 };
@@ -3911,16 +3911,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inp-el-key').value = cfg.elevenLabsKey;
 
   // Render existing history in UI
-  app.history.forEach(h => addMsgUI(h.role === 'user' ? 'user' : 'lúmina', h.content));
+  app.history.forEach(h => addMsgUI(h.role === 'user' ? 'user' : 'lumina', h.content));
 
   // Greeting
   const hr = new Date().getHours();
   const gr = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
   const name = mem.userName || cfg.username;
   const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
-  const ready = cfg.geminiKey ? 'Todos os sistemas operacionais.' : 'Configure a chave Gemini API para capacidades completas.';
+  const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
   // Briefing matinal automático (uma vez por dia)
-  const briefingKey = 'sky_last_briefing';
+  const briefingKey = 'lumina_last_briefing';
   const todayBrief  = new Date().toISOString().split('T')[0];
   if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
     localStorage.setItem(briefingKey, todayBrief);
@@ -3931,9 +3931,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
       if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
     } else {
-      briefing += 'Todos os sistemas operacionais. ';
+      briefing += 'Dando vida aos dados e luz às decisões.';
     }
-    briefing += 'Como posso ajudá-lo?';
     setTimeout(() => speak(briefing), 700);
   } else {
     setTimeout(() => speak(`${gr}. ${returning}Sou Lúmina. ${ready}`), 700);
@@ -4058,7 +4057,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await callGeminiVision(imgs, prompt);
         app.history.push({ role: 'model', content: response });
-        addMsgUI('lúmina', response);
+        addMsgUI('lumina', response);
         saveHist();
         speak(response);
       } catch (err) { speak('Não consegui analisar a imagem. Tente novamente.'); }
@@ -4147,7 +4146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('chart-close')?.addEventListener('click', () => {
     hideDREChart();
     const r = pick(['Fechado!', 'Pronto, sumiu.', 'Ok.']);
-    addMsgUI('lúmina', r); speak(r);
+    addMsgUI('lumina', r); speak(r);
   });
 
   // ── Informa planilha restaurada do localStorage ──
@@ -4157,7 +4156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const info = s
       ? `📊 Planilha "${nome}" ainda carregada (${s.months?.length || '?'} meses). Pode perguntar sobre qualquer mês.`
       : `📊 Planilha "${nome}" ainda carregada da sessão anterior.`;
-    setTimeout(() => addMsgUI('lúmina', info), 800);
+    setTimeout(() => addMsgUI('lumina', info), 800);
   }
 
   // ── Init modules ──
@@ -4371,11 +4370,11 @@ const initApresentacao = () => {
     goTo(presState.current); // retoma slide onde estava se já inicializado antes
 
     const activateBtn = document.getElementById('pres-activate-btn');
-    if (activateBtn) activateBtn.addEventListener('click', activateSkyReveal);
+    if (activateBtn) activateBtn.addEventListener('click', activateLuminaReveal);
   }
 };
 
-const activateSkyReveal = () => {
+const activateLuminaReveal = () => {
   const btn = document.getElementById('pres-activate-btn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   setTimeout(() => {
@@ -4396,7 +4395,7 @@ const activateSkyReveal = () => {
 };
 
 // expõe globalmente para o onclick do HTML
-window.activateSkyReveal = activateSkyReveal;
+window.activateLuminaReveal = activateLuminaReveal;
 
 const initSidebar = () => {
   document.querySelectorAll('.sb-item').forEach(item => {
@@ -4433,7 +4432,7 @@ const renderPainel = () => {
   }
   recent.forEach(h => {
     const el = document.createElement('div');
-    el.className = `pmsg ${h.role !== 'user' ? 'sky-msg' : ''}`;
+    el.className = `pmsg ${h.role !== 'user' ? 'lumina-msg' : ''}`;
     el.textContent = `${h.role !== 'user' ? 'Lúmina: ' : 'Você: '}${h.content.substring(0, 90)}${h.content.length > 90 ? '…' : ''}`;
     container.appendChild(el);
   });
@@ -4589,7 +4588,7 @@ const processChatTexto = async () => {
 // TAREFAS
 // ══════════════════════════════════════════════════════════════════════════════
 
-const TASKS_KEY = 'sky_tasks';
+const TASKS_KEY = 'lumina_tasks';
 const getTasks  = () => localCache('tasks');
 const saveTasks = (t) => serverSave('tasks', t);
 
@@ -4643,7 +4642,7 @@ const renderTarefas = () => {
 // HÁBITOS
 // ══════════════════════════════════════════════════════════════════════════════
 
-const HABITS_KEY = 'sky_habits';
+const HABITS_KEY = 'lumina_habits';
 const getHabits  = () => localCache('habits');
 const saveHabits = (h) => serverSave('habits', h);
 const todayStr   = () => new Date().toISOString().split('T')[0];
@@ -4711,7 +4710,7 @@ const renderHabitos = () => {
 // FINANÇAS
 // ══════════════════════════════════════════════════════════════════════════════
 
-const FIN_KEY   = 'sky_financas';
+const FIN_KEY   = 'lumina_financas';
 const getFin    = () => localCache('finances');
 const saveFin   = (f) => serverSave('finances', f);
 
@@ -4760,7 +4759,7 @@ const renderFinancas = () => {
 // PROJETOS
 // ══════════════════════════════════════════════════════════════════════════════
 
-const PROJ_KEY  = 'sky_projetos';
+const PROJ_KEY  = 'lumina_projetos';
 const getProjetos = () => { try { return JSON.parse(localStorage.getItem(PROJ_KEY) || '[]'); } catch { return []; } };
 const saveProjetos = (p) => localStorage.setItem(PROJ_KEY, JSON.stringify(p));
 
@@ -4889,7 +4888,7 @@ const renderAnalises = () => {
 // PERSONALIZAÇÃO
 // ══════════════════════════════════════════════════════════════════════════════
 
-const THEME_KEY = 'sky_theme';
+const THEME_KEY = 'lumina_theme';
 
 const applyTheme = (accent, hi) => {
   document.documentElement.style.setProperty('--accent', accent);
@@ -5164,7 +5163,7 @@ const consolidateMemory = async () => {
 // JOURNAL DE SESSÃO (salvo ao fechar o app)
 // ══════════════════════════════════════════════════════════════════════════════
 
-const JOURNAL_KEY = 'sky_journal';
+const JOURNAL_KEY = 'lumina_journal';
 
 const saveSessionJournal = () => {
   if (app.history.length < 2) return;

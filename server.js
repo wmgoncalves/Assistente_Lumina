@@ -326,7 +326,7 @@ app.post('/api/tts-piper', (req, res) => {
   const modelPath = path.join(PIPER_VOICES, `${voice}.onnx`);
   if (!fs.existsSync(modelPath)) return res.status(503).json({ error: `Modelo não encontrado: ${voice}.onnx` });
 
-  const tmpFile = path.join(os.tmpdir(), `sky_tts_${Date.now()}.wav`);
+  const tmpFile = path.join(os.tmpdir(), `lumina_tts_${Date.now()}.wav`);
   const child   = spawn(PIPER_EXE, ['--model', modelPath, '--output_file', tmpFile], { stdio: ['pipe', 'pipe', 'pipe'] });
 
   child.stdin.write(text.substring(0, 1000), 'utf8');
@@ -661,7 +661,7 @@ const syncStoreToObsidian = async (store, data) => {
       slugs.push(slug);
       writeVault(`Tarefas/${slug}.md`,
 `---
-tags: [sky, tarefa, ${tag}]
+tags: [lumina,tarefa, ${tag}]
 status: ${tag}
 id: "${t.id}"
 ---
@@ -675,7 +675,7 @@ id: "${t.id}"
     });
     writeVault('Tarefas/Tarefas.md',
 `---
-tags: [sky, index]
+tags: [lumina,index]
 ---
 # Tarefas
 
@@ -693,7 +693,7 @@ ${slugs.map(s => `- [[Tarefas/${s}]]`).join('\n') || '- nenhuma ainda'}
       slugs.push(slug);
       writeVault(`Hábitos/${slug}.md`,
 `---
-tags: [sky, habito]
+tags: [lumina,habito]
 streak: ${streak}
 ---
 # ${h.name}
@@ -707,7 +707,7 @@ streak: ${streak}
     });
     writeVault('Hábitos/Hábitos.md',
 `---
-tags: [sky, index]
+tags: [lumina,index]
 ---
 # Hábitos
 
@@ -724,7 +724,7 @@ ${slugs.map(s => `- [[Hábitos/${s}]]`).join('\n') || '- nenhum ainda'}
     ).join('\n');
     writeVault('Finanças/Resumo.md',
 `---
-tags: [sky, financas]
+tags: [lumina,financas]
 updated: ${now()}
 ---
 # Finanças
@@ -747,7 +747,7 @@ ${linhas}
       slugs.push(slug);
       writeVault(`Conhecimento/${slug}.md`,
 `---
-tags: [sky, conhecimento]
+tags: [lumina,conhecimento]
 source: "${n.source || 'manual'}"
 date: "${(n.date || '').split('T')[0]}"
 ---
@@ -761,7 +761,7 @@ ${n.content}
     });
     writeVault('Conhecimento/Conhecimento.md',
 `---
-tags: [sky, index]
+tags: [lumina,index]
 ---
 # Base de Conhecimento
 
@@ -778,7 +778,7 @@ const syncMemoryToObsidian = (mem) => {
 
   writeVault('Memória/Perfil.md',
 `---
-tags: [sky, memoria, perfil]
+tags: [lumina,memoria, perfil]
 updated: ${now()}
 sessions: ${mem.sessions || 0}
 ---
@@ -805,7 +805,7 @@ ${fatos}
     ).join('\n\n');
     writeVault(`Conversas/${dateSlug}.md`,
 `---
-tags: [sky, conversa]
+tags: [lumina,conversa]
 date: ${dateSlug}
 ---
 # Conversa — ${dateSlug}
@@ -825,7 +825,7 @@ ${linhas}
         .sort().reverse().slice(0, 30);
       writeVault('Conversas/Conversas.md',
 `---
-tags: [sky, index]
+tags: [lumina,index]
 ---
 # Conversas
 
@@ -839,7 +839,7 @@ ${files.map(f => `- [[Conversas/${f.replace('.md', '')}]]`).join('\n') || '- nen
   // Nó central — Cérebro da Lúmina
   writeVault('Cérebro.md',
 `---
-tags: [sky, cerebro, hub]
+tags: [lumina,cerebro, hub]
 updated: ${now()}
 ---
 # 🧠 Cérebro da Lúmina
@@ -1079,7 +1079,7 @@ app.post('/api/browser', async (req, res) => {
     } else if (action === 'screenshot') {
       const domain    = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
       const stamp     = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
-      const fileName  = `sky_${stamp}_${domain}.png`;
+      const fileName  = `lumina_${stamp}_${domain}.png`;
       const filePath  = path.join(LUMINA_PRINTS_DIR, fileName);
       await page.setViewport({ width: 1280, height: 800 });
       await page.screenshot({ path: filePath, fullPage: false });
@@ -1089,7 +1089,7 @@ app.post('/api/browser', async (req, res) => {
       if (activeRecording.recorder) return res.status(409).json({ error: 'Gravação já em andamento. Diga "Lúmina, para de gravar" primeiro.' });
       const domain   = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
       const stamp    = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
-      const fileName = `sky_${stamp}_${domain}.webm`;
+      const fileName = `lumina_${stamp}_${domain}.webm`;
       const filePath = path.join(LUMINA_GRAVACOES_DIR, fileName);
       await page.setViewport({ width: 1280, height: 800 });
       const recorder = await page.screencast({ path: filePath });
@@ -1144,7 +1144,7 @@ async function geocode(local) {
   const queries = [normalized, local.replace(/\//g, ' ').trim() + ', Brasil'];
   for (const query of queries) {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
-    const r = await fetch(url, { headers: { 'User-Agent': 'SkyScapini/1.0' }, signal: AbortSignal.timeout(8000) });
+    const r = await fetch(url, { headers: { 'User-Agent': 'LuminaScapini/1.0' }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) continue;
     const d = await r.json();
     if (!d.length) continue;
@@ -1160,7 +1160,7 @@ async function geocode(local) {
 
 async function calcRoute(lat1, lon1, lat2, lon2) {
   const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
-  const r = await fetch(url, { headers: { 'User-Agent': 'SkyScapini/1.0' }, signal: AbortSignal.timeout(10000) });
+  const r = await fetch(url, { headers: { 'User-Agent': 'LuminaScapini/1.0' }, signal: AbortSignal.timeout(10000) });
   if (!r.ok) throw new Error(`OSRM HTTP ${r.status}`);
   const d = await r.json();
   if (d.code !== 'Ok' || !d.routes.length) throw new Error('Rota não encontrada');
@@ -1866,7 +1866,7 @@ app.get('/api/news', async (_, res) => {
     try {
       const r = await fetch(feed.url, {
         signal: AbortSignal.timeout(5000),
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SkyBot/1.0)' }
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LuminaBot/1.0)' }
       });
       if (!r.ok) continue;
       const xml    = await r.text();

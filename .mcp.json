@@ -1,10 +1,10 @@
-﻿{
+{
   "mcpServers": {
-    "sky": {
+    "lumina": {
       "command": "node",
       "args": ["C:\\Users\\Scapini\\.gemini\\antigravity-ide\\scratch\\aura-os\\mcp-server.js"],
       "env": {
-        "SKY_PORT": "8080"
+        "LUMINA_PORT": "8080"
       }
     }
   }
