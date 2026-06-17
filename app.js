@@ -3206,6 +3206,25 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Fiscalização e documentação veicular ──
+  if (/fiscalizacao|posto.*fiscal|balanca.*fiscal|policia.*rodoviaria|PRF|abordagem.*policia|o que.*apresentar.*fiscal/.test(t))
+    return pick([
+      'Na fiscalização rodoviária, o motorista deve apresentar: CNH válida (categoria D ou E), CRLV do veículo (licenciamento em dia), CT-e da carga que transporta, MDFe ativo, tacógrafo com registro do dia, e documentos pessoais (RG/CPF). Para carga perigosa: MOPP, ficha de emergência e rótulo de risco. Motorista sem MDFe ou CT-e pode ter a carga retida e multa pesada.',
+      'Checklist de documentos para fiscalização: CNH + CRLV + CT-e + MDFe + tacógrafo (disco ou eletrônico). Para autônomos: CIOT. Para carga perigosa: MOPP + Ficha de Emergência + certificado do veículo. Para cargas especiais: AET (Autorização Especial de Trânsito). Para transporte de animais: GTA (Guia de Trânsito Animal). Motorista bem documentado não tem problema na balança.',
+    ]);
+
+  if (/crlv|licenciamento.*veiculo|vistoria.*detran|ipva.*caminhao|ipva.*caminhao/.test(t))
+    return pick([
+      'CRLV (Certificado de Registro e Licenciamento de Veículo): emitido anualmente após pagamento de IPVA, DPVAT (extinto em 2020) e taxas de licenciamento. Deve estar sempre no veículo. Para caminhão acima de 3.500 kg, o IPVA é cobrado com alíquota reduzida em muitos estados (RS: 1%). Vencimento geralmente segue o final da placa. Veículo sem CRLV é autuado e pode ser removido.',
+      'IPVA de caminhão no RS: alíquota de 1% sobre o valor venal. Para frotas, existe desconto por antecipação no pagamento à vista. O prazo varia conforme o final da placa (fevereiro a junho no RS). CRLV digital: disponível no app DETRAN RS — o motorista pode apresentar no celular em fiscalizações. Veículo financiado: o banco recebe o CRLV original e o devedor fica com a cópia autenticada.',
+    ]);
+
+  if (/aet|autorizacao.*especial.*transito|carga.*especial|excesso.*peso|veiculo.*largo|carga.*indivisivel/.test(t))
+    return pick([
+      'AET (Autorização Especial de Trânsito): necessária para veículos com excesso de peso, largura, comprimento ou altura acima dos limites legais. Emitida pelo DNIT (rodovias federais) ou DER (estaduais). Pode exigir escolta, viagem noturna ou horários específicos. Carga indivisível (máquina industrial, estrutura metálica, turbina) sempre requer AET. Sem AET, multa pesada e apreensão da carga.',
+      'Limites legais sem AET: comprimento máximo 19,8 m (bitrem), largura 2,6 m, altura 4,4 m, PBT conforme eixos (truck: 23t, carreta: 41,5t). Acima disso: AET obrigatória. O processo de AET leva 3 a 15 dias úteis — planeje com antecedência para não atrasar a entrega. Consultores especializados em cargas especiais agilizam o processo.',
+    ]);
+
   // ── Perguntas rápidas de operação ──
   if (/\b(cnpj|cpf).*(scapini|empresa)|qual.*(cnpj|cpf).*scapini|me passa.*cnpj/.test(t))
     return 'O CNPJ da Scapini Transportes é informação que não compartilho por aqui por segurança. Consulte o setor administrativo ou o rodapé dos documentos fiscais da empresa.';
@@ -4359,6 +4378,36 @@ const DEMO_QA = [
     r: [
       'CIOT (Código Identificador da Operação de Transporte): obrigatório para contratar TAC (autônomo) por mais de 5 dias corridos. Gerado no portal da ANTT (transportes.gov.br). Contém: dados da viagem, valor do frete, dados do motorista e do embarcador. O pagamento ao motorista deve ocorrer via banco (transferência rastreável) — não pode ser dinheiro vivo se o valor > R$ 500. Multa por operar sem CIOT: até R$ 10.000.',
       'Passo a passo do CIOT: 1) Acesse o portal ANTT; 2) Informe CNPJ da transportadora, CPF do motorista, origem, destino, tipo de carga e valor do frete; 3) O sistema gera o código; 4) O motorista recebe a confirmação; 5) Guarde o comprovante — é obrigatório em fiscalização. Para volume alto de viagens, há sistemas que integram a emissão de CIOT automaticamente ao TMS.',
+    ]},
+
+  // ── BLOCO INTERNACIONAL E FISCAL AVANÇADO ────────────────────────────────────
+
+  // Transporte internacional / Mercosul
+  { re: /mercosul|argentina|uruguai|paraguai|transporte.*internacional|internacional.*transporte|importacao.*frete|exportacao.*frete|alfandega|aduana/,
+    r: [
+      'Transporte internacional Mercosul a partir do RS: documentação obrigatória — DTA (Declaração de Trânsito Aduaneiro), TIF/DTA (conhecimento de transporte internacional), Certificado de Origem, Lista de Embalagem. Para Argentina e Uruguai, a Scapini precisa de habilitação na ANTT para transporte internacional e seguro específico para cobertura fora do Brasil. Prazo: +3 a 7 dias por burocracia aduaneira.',
+      'Exportação de carga do RS: Lajeado → Argentina (Uruguaiana ou Foz do Iguaçu) — 600 a 900 km. A carga sai com NF de exportação + DU-E (Declaração Única de Exportação) e DTA. O frete internacional é isento de ICMS (exportação) mas sujeito ao IOF sobre o pagamento em moeda estrangeira. Para operar regularmente, a Scapini precisa de RNTRC com habilitação para internacional.',
+    ]},
+
+  // DIFAL — Diferencial de Alíquota ICMS
+  { re: /difal|diferencial.*aliquota|icms.*diferencial|icms.*interestadual|partilha.*icms|emenda.*87/,
+    r: [
+      'DIFAL (Diferencial de Alíquota de ICMS): quando uma empresa vende mercadoria de um estado para outro destinada a consumidor final não contribuinte do ICMS, há uma partilha entre o estado de origem e o de destino. Para o transporte: o CT-e interestadual tem a alíquota do estado de origem (7% ou 12% conforme a UF). O DIFAL é responsabilidade do remetente da mercadoria, não da transportadora — mas o CT-e deve refletir o CFOP correto.',
+      'ICMS no transporte interestadual: a alíquota do CT-e depende da UF de origem do serviço. RS → SP: 12% (estados do Sul para Sudeste). RS → RS: 17% (intraestadual). O tomador do frete (quem paga) determina quem recolhe o ICMS. Se o tomador for contribuinte do ICMS, ele recolhe por substituição tributária. Se não for, a transportadora recolhe na emissão do CT-e.',
+    ]},
+
+  // Pix no pagamento de frete
+  { re: /pix.*frete|pagar.*frete.*pix|pix.*transportadora|receber.*pix|cobranca.*pix/,
+    r: [
+      'Pix no frete: a cobrança de frete via Pix é legal e cada vez mais comum. Vantagens: recebimento imediato (D+0), sem taxa para a empresa recebedora, facilidade para cliente. Porém: o Pix não substitui o boleto bancário para crédito registrado, e para volumes grandes (acima de R$ 1 milhão), o Banco Central pode monitorar. A chave Pix empresarial deve estar cadastrada no CNPJ — nunca no CPF do sócio para cobranças corporativas.',
+      'Para aceitar Pix como transportadora: cadastre a chave Pix no CNPJ da Scapini (preferencialmente o próprio CNPJ como chave). Gere um Pix cobrança com o valor do CT-e, vencimento e dados do devedor — fica rastreável igual ao boleto. Concilie o Pix recebido com o CT-e correspondente no financeiro. O extrato bancário é o comprovante fiscal — guarde por 5 anos.',
+    ]},
+
+  // Programa de motorista seguro / PSO
+  { re: /programa.*motorista.*seguro|pso|motorista.*seguro.*programa|seguranca.*motorista.*programa|direcao.*defensiva.*programa/,
+    r: [
+      'Programa de Segurança Operacional (PSO): obrigatório para transportadoras que operam produtos perigosos (carga química, combustíveis). Para as demais, é boas práticas mas reduz sinistros. Componentes: treinamento em direção defensiva (obrigatório pela Lei 13.103), curso de primeiros socorros, gestão de fadiga (tacógrafo + cronograma de descanso), protocolo de emergência em rota, e avaliação semestral de desempenho.',
+      'Direção defensiva para motoristas: a Lei 13.103 exige o curso a cada 5 anos para renovação da CNH categoria D e E. O SEST SENAT oferece gratuitamente (direito do motorista contribuinte). Além do treinamento, a telemetria monitora comportamento em tempo real: excesso de velocidade, freadas bruscas, curvas perigosas. Motoristas com nota alta na telemetria têm menos sinistros e consomem menos combustível.',
     ]},
 
   // ── BLOCO COMPLIANCE E GESTÃO DE FORNECEDORES ────────────────────────────────
