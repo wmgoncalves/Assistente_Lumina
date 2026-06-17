@@ -964,6 +964,8 @@ const cleanForTTS = (raw) => {
     .replace(/\b(\d+)\s*km\b/gi, (_, n) => `${n} quilômetros`)
     // Separadores visuais ── e ---
     .replace(/─{2,}|—{2,}|-{3,}/g, '. ')
+    // Listas numeradas "1)" ou "1." no meio do texto → pausa natural
+    .replace(/\s(\d+)[.)]\s+/g, '. ')
     // Pipe e dois-pontos em tabelas viram pausas naturais
     .replace(/\s*\|\s*/g, ', ')
     .replace(/\n{2,}/g, '. ')
@@ -4177,6 +4179,43 @@ const DEMO_QA = [
     r: [
       'Auditoria fiscal básica para transportadora: verifique se a alíquota de ICMS no CT-e bate com o estado de origem (varia por UF: 12% interestaduais, 17-19% internas). Confira se o CFOP está correto (6.351 = transporte interestadual; 5.351 = intraestadual). PIS/COFINS: no Lucro Presumido é 0,65% e 3%; no Simples varia pela faixa. Qualquer divergência entre NF do cliente e CT-e emitido pode gerar bitributação.',
       'Pontos de risco fiscal no transporte: 1) CFOP errado no CT-e muda o ICMS aplicável; 2) Tomador errado (quem paga o frete) impacta quem recolhe o diferencial de ICMS; 3) ICMS ST (substituição tributária) no transporte de alguns produtos tem regras específicas; 4) ISS pode incidir em frete urbano/municipal; 5) Contribuição ao SEST/SENAT obrigatória sobre fretes pagos a autônomos. O contador confere — a Lúmina alerta.',
+    ]},
+
+  // ── BLOCO PLANEJAMENTO ESTRATÉGICO ────────────────────────────────────────────
+
+  // Sazonalidade / agronegócio
+  { re: /sazonalidade|safra|soja|milho|colheita|alta.*frete|pico.*demanda|demanda.*pico|frete.*sazonal/,
+    r: [
+      'Sazonalidade no frete do Sul do Brasil: o maior pico ocorre na safra de soja e milho (jan–abr no RS/SC). Nesse período, a demanda por caminhões explode, o preço do frete sobe 20-40% e a oferta de TACs escasseia. A Scapini deve garantir contratos fixos com clientes de agronegócio antes da safra, pré-alocar frota e planejar manutenção preventiva entre setembro e novembro (entressafra).',
+      'Picos de demanda para transportadoras gaúchas: safra soja/milho (jan–abr), safra uva/vinho (fev–mar, Serra Gaúcha), colheita de arroz (mar–mai), final de ano (nov–dez) com varejo aquecido. Na entressafra (mai–ago), demanda cai — momento para renovação de contratos, treinamentos e manutenção preventiva da frota. Planejamento de 12 meses evita susto.',
+    ]},
+
+  // Km vazio / retorno de carga
+  { re: /km.*vazio|quilometro.*vazio|retorno.*vazio|carga.*retorno|frete.*volta|volta.*vazia|carga.*volta|aproveit.*retorno/,
+    r: [
+      'Km vazio (deadhead) é o maior inimigo da margem no transporte — o veículo roda, consome diesel e paga pedágio sem gerar receita. Solução: bolsa de cargas (TruckPad, Fretefy, iCarros Caminhões) para encontrar carga no destino; contratos de round-trip com clientes que têm fluxo bidirecional; parcerias com outras transportadoras para troca de retornos. Meta: manter km vazio abaixo de 15% do total rodado.',
+      'Aproveitamento de retorno: ao programar uma viagem, a operação já deve buscar carga de volta. Uma carreta que vai RS→SP carregada e volta vazia perde ~50% da rentabilidade da viagem. Plataformas digitais de frete têm cargas disponíveis por rota e data. Clientes industriais de SP para o Sul são bons parceiros de retorno — consulte o comercial.',
+    ]},
+
+  // Escala e planejamento de motoristas
+  { re: /escala.*motorista|planejamento.*motorista|escala.*viagem|programacao.*motorista|folga.*motorista|ferias.*motorista/,
+    r: [
+      'Planejamento de escala de motoristas: a jornada CLT limita a 220h mensais; viagens longas (RS→SP ~2 dias ida+volta) consomem mais horas que rotas curtas. Planeje com margem de 15% de reserva para cobertura de imprevistos, férias e atestados. Rotação justa entre rotas boas (mais frete) e complicadas (clientes difíceis) melhora o clima da equipe.',
+      'Escala inteligente: cruze a demanda prevista de viagens com a disponibilidade de motoristas (férias, banco de horas, escalas de descanso). Em pico de safra, antecipe contratação de TACs — o processo demora 15-30 dias (documentação + integração). Motorista improvisado em alta temporada = sinistro na certa.',
+    ]},
+
+  // Custo por viagem / rentabilidade de rota
+  { re: /custo.*viagem|rentabilidade.*rota|rota.*lucrativa|rota.*rentavel|margem.*rota|quanto.*custa.*viagem/,
+    r: [
+      'Custo por viagem (carreta RS→SP, ~1.600 km ida): diesel ~400L × R$ 6,50 = R$ 2.600; pedágio ~R$ 600; motorista (diária+pernoite) ~R$ 350; depreciação veículo ~R$ 400; pneus/manutenção rateada ~R$ 200. Total custo operacional: ~R$ 4.150. Frete mínimo para cobrir custos: R$ 4.150 + overhead + margem. Valores são referência 2025 — ajuste ao preço atual do diesel.',
+      'Para calcular a rentabilidade de uma rota: some todos os custos variáveis (diesel, pedágio, pneu, diária motorista) mais o rateio de custos fixos (depreciação, seguro, financiamento). Compare com o frete recebido. Margem abaixo de 12% numa rota longa é sinal de reajuste urgente. Rotas curtas toleram margens menores pelo menor risco e menor imobilização.',
+    ]},
+
+  // Precificação dinâmica / reajuste de tabela
+  { re: /reajuste.*tabela|reajustar.*frete|atualizar.*preco|revisao.*tabela|tabela.*defasada|frete.*desatualizado/,
+    r: [
+      'Quando e como reajustar a tabela de frete: o principal indexador é o preço do diesel (monitore semanalmente). Quando o diesel sobe > 5% e não há cláusula de reajuste automático, negocie com o cliente. Use o índice INPC ou IPCA como base para contratos anuais. Comunicação de reajuste: mínimo 30 dias de aviso, apresente os dados de custo que justificam — cliente bem informado aceita melhor.',
+      'Reajuste de frete: transportadoras que não reajustam a tabela por constrangimento comercial correm para a margem zero. A regra: se o custo operacional subiu, o frete tem que subir. Documente o histórico de preço do diesel e salário de motoristas — essa planilha é o argumento na negociação. Clientes estratégicos podem receber reajuste menor; clientes marginais não têm desconto.',
     ]},
 
   // ── BLOCO CONFORMIDADE E CONTRATOS ────────────────────────────────────────────
