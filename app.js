@@ -3902,7 +3902,58 @@ const DEMO_QA = [
       'Subcontratação no transporte: quando a transportadora principal (Scapini) repassa uma carga para outra transportadora ou TAC executar. É legal mas deve estar documentada (CT-e com destaque de subcontratação). A responsabilidade perante o cliente continua sendo da Scapini — se o subcontratado errar, a Scapini responde.',
     ]},
 
-  // ── Capacidades gerais ────────────────────────────────────────────────────────
+  // ── BLOCO COMERCIAL: Diferenciais, KPIs e atendimento ao cliente ──────────────
+
+  // Diferenciais da Scapini
+  { re: /diferencial.*scapini|por que (escolher|contratar|usar) a scapini|vantagem.*scapini|scapini.*melhor|scapini.*diferente|por que a scapini/,
+    r: [
+      'Os diferenciais da Scapini: mais de 30 anos de experiência no Sul do Brasil; frota própria moderna com rastreamento em tempo real; comprometimento com prazo e integridade da carga; equipe especializada no atendimento ao cliente; e agora, inteligência artificial interna para mais agilidade em cotações, tracking e suporte.',
+      'A Scapini se destaca por: confiabilidade — mais de 3 décadas de história sem abrir mão da qualidade; abrangência — Sul e Sudeste com rotas consolidadas; tecnologia — rastreamento, App Motorista e agora IA; e relacionamento — clientes tratados como parceiros, não como número.',
+    ]},
+
+  // Capacidade de veículos
+  { re: /capacidade.*(veiculo|caminhao|carreta|truck|bau)|quanto (cabe|carrega|suporta).*(caminhao|carreta|truck|bau)|capacidade.*carga|dimensao.*bau/,
+    r: [
+      'Capacidades típicas de veículos de carga: Caminhão truck (3 eixos): até 14 toneladas, baú de 10m (60 m³). Carreta simples (4 eixos): até 28 toneladas, baú de 14m (90 m³). Carreta bitrem (7 eixos): até 45 toneladas, dois semirreboques. Para a frota específica da Scapini, o setor de operações informa a disponibilidade.',
+      'Referência de capacidade: 1 pallet europeu (120×80 cm, 1m de altura) = aprox. 0,096 m³. Um baú truck comporta cerca de 60 pallets. Uma carreta comporta 33 pallets em fileira dupla. Para volumes irregulares, o cálculo é pelo maior entre peso real e peso cubado (peso/300 para aéreo, peso/1.000.000 cm³ para rodoviário).',
+    ]},
+
+  // KPIs de frota / operação
+  { re: /kpi|indicador.*frota|indicador.*transporte|otd|entrega.*prazo|taxa.*avaria|custo.*km|produtividade.*motorista|disponibilidade.*frota/,
+    r: [
+      'KPIs essenciais para transportadoras: OTD (On Time Delivery) — % de entregas no prazo; meta ideal > 95%. Custo por km rodado — diesel + pedágio + pneu + manutenção. Taxa de avaria — danos à carga ÷ total de entregas; meta < 0,5%. Disponibilidade de frota — veículos disponíveis ÷ total da frota; meta > 90%. Quando integrada ao CGI, calculo esses indicadores em tempo real.',
+      'Indicadores chave para gestão de frota Scapini: 1) % entrega no prazo (OTD); 2) Custo operacional por km (meta: reduzir 5% ao ano com manutenção preventiva); 3) Taxa de ocorrências por viagem; 4) Produtividade por motorista (km/mês); 5) Giro do ativo de frota. Esses dados saem do CGI — quando integrada, monto o painel para você.',
+    ]},
+
+  // Peso cubado / cubagem
+  { re: /peso cubado|cubagem|cubar|calculo.*volume|m3.*frete|peso.*volume.*frete/,
+    r: [
+      'Peso cubado: em transporte rodoviário, o frete é cobrado pelo maior valor entre peso real e peso cubado. Fórmula: (Comprimento cm × Largura cm × Altura cm) ÷ 300.000 = peso cubado em kg. Ex: caixa 100×80×60cm = 480.000 ÷ 300.000 = 1,6 kg cubado. Se pesar 0,5 kg real, cobra-se por 1,6 kg. Cargas leves e volumosas sempre pagam pelo cubado.',
+      'Cubagem no rodoviário: divisor 300.000 para kg (ou fator 300 quando medidas em metros). Uma caixa de 1m³ = 300 kg cubados. Se a carga pesa 100 kg reais mas ocupa 1m³, o frete é calculado sobre 300 kg. Por isso embalagens compactas reduzem custo de frete. A Scapini usa peso ou cubado, o que for maior.',
+    ]},
+
+  // Como elaborar proposta comercial de frete
+  { re: /proposta.*comercial|como elaborar.*proposta|cotacao.*formal|proposta.*frete|tabela.*preco|tabela.*frete.*cliente/,
+    r: [
+      'Uma proposta comercial de frete deve conter: tabela de preços por faixa de peso e região (origem/destino), prazo de entrega por trecho, cobertura do seguro RCTR-C inclusa, condições de pagamento, validade da proposta (normalmente 30 dias), e contato do responsável comercial. A Scapini elabora propostas customizadas por cliente e volume.',
+      'Para montar uma proposta de frete competitiva: levante o volume mensal do cliente (kg e m³), defina as rotas principais, calcule o custo operacional (combustível, pedágio, mão de obra), adicione a margem desejada e compare com o mercado. Clientes com volume alto negociam tabela especial — o comercial da Scapini tem autonomia para isso.',
+    ]},
+
+  // Reclamação / atendimento
+  { re: /reclamacao|reclamacao.*cliente|cliente.*reclamando|entrega.*atrasou|carga.*atrasada|cliente.*insatisfeito|problema.*cliente/,
+    r: [
+      'Protocolo de atendimento a reclamações: 1) Registre o problema (cliente, CT-e, data, natureza da reclamação). 2) Verifique o status no rastreador. 3) Acione o responsável pelo trecho/setor. 4) Retorne ao cliente em até 2h com previsão. 5) Documente a ocorrência e a resolução. Reclamações resolvidas rapidamente viram fidelização — reclamações ignoradas viram processo.',
+      'Quando um cliente reclama de atraso: confirme a localização do veículo, informe a nova previsão com clareza, justifique se houve causa externa (acidente, greve, interdição de rodovia) e ofereça compensação proporcional se o erro foi da Scapini. Nunca culpe o cliente ou minimize o problema. O relacionamento pós-problema é o que define se o cliente fica.',
+    ]},
+
+  // Como funciona o tracking para o cliente
+  { re: /tracking.*cliente|rastreamento.*cliente|cliente.*acompanhar|onde.*minha carga|como.*saber.*onde.*carga/,
+    r: [
+      'A Scapini oferece rastreamento em tempo real — o cliente pode acompanhar a carga pela chave do CT-e ou pelo portal de tracking. O motorista está com GPS ativo e a central monitora desvios de rota e paradas não programadas. Para clientes com grande volume, é possível integrar o rastreamento via API diretamente no sistema do cliente.',
+      'Tracking da carga: o cliente recebe a chave do CT-e na contratação e pode consultar o status no portal da Scapini ou por WhatsApp com a central de atendimento. Para cargas de alto valor, notificação proativa de entrega. Quando integrada ao sistema, posso responder "onde está o CT-e XXXXXXXXXXX?" em segundos.',
+    ]},
+
+  // Capacidades gerais ────────────────────────────────────────────────────────
   { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
       'Respondo perguntas, busco documentos, oriento sobre procedimentos e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, acesso fretes, motoristas, manutenção e financeiro em tempo real.',
