@@ -539,7 +539,23 @@ VISÃO LÚMINA-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhor
 • Treinamento de novos sem depender de pessoa disponível
 • Respostas com o texto exato do procedimento interno da Scapini
 
-Lúmina será integrada à Central de Dados da Scapini para tornar tudo isso realidade. O que já funciona hoje: cotações de frete, prospecção de clientes, análise de DRE, base de ATIs e muito mais.
+🚨 SEGURANÇA E EMERGÊNCIA
+• Protocolo de acidente na estrada por voz — Lúmina guia o motorista passo a passo (SAMU, PRF, seguradora)
+• Alerta de roubo de carga — BO, RCTA 24h, não recuperar sem polícia
+• Checklist de risco climático antes da viagem (neblina, gelo, interdição)
+
+📊 COMERCIAL E CLIENTES
+• Prospecção de leads por segmento e região agora mesmo
+• Cotação automática de frete com custo por componente (combustível, pedágio, margem)
+• Tracking de carga com link compartilhável para o cliente
+• NPS pós-entrega e gestão de reclamações
+
+🌱 ESG E TECNOLOGIA
+• Cálculo de emissão de CO2 por viagem
+• Relatório de consumo por motorista (telemetria → score de direção)
+• Integração com TMS via API para automação de CT-e e MDFe
+
+Lúmina será integrada à Central de Dados da Scapini para tornar tudo isso realidade. O que já funciona hoje: cotações de frete, prospecção de clientes, análise de DRE, base de ATIs, protocolo de emergência e muito mais.
 
 QUANDO NÃO TIVER O DADO (use esse padrão — nunca invente números, nomes ou placas):
 "Esse dado fica na Central da Scapini — assim que integrada, consulto em segundos." Varie a forma, mas nunca fabrique valores.
@@ -4700,6 +4716,29 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO CONTABILIDADE GERENCIAL ─────────────────────────────────────────────
+
+  // DRE gerencial vs fiscal
+  { re: /dre.*gerencial|dre.*fiscal|diferenca.*dre|contabilidade.*gerencial|resultado.*gerencial|resultado.*contabil|ajuste.*dre/,
+    r: [
+      'DRE Gerencial vs DRE Fiscal: a DRE Fiscal segue as normas contábeis (CPC, IFRS) e é o que vai para o contador e o fisco. A DRE Gerencial é o que a diretoria olha para tomar decisão — pode ter ajustes como: excluir provisões contábeis que não representam caixa, separar receita recorrente de receita pontual, e detalhar custos por rota ou centro de resultado que a DRE fiscal não mostra. São complementares, não excludentes.',
+      'Como construir uma DRE Gerencial para transportadora: comece pela DRE contábil e faça os ajustes: (1) Some de volta depreciação para chegar no EBITDA. (2) Separe receita de frete por tipo (FTL/LTL/redespacho). (3) Detalhe custo por veículo ou rota. (4) Exclua itens não recorrentes (venda de ativo, indenização). O resultado gerencial mostra a real capacidade de geração de caixa da operação.',
+    ]},
+
+  // Fluxo de caixa — controle e projeção
+  { re: /fluxo.*caixa.*controle|projecao.*caixa|caixa.*projetado|necessidade.*caixa|saldo.*caixa.*futuro|planilha.*caixa|gestao.*caixa/,
+    r: [
+      'Fluxo de caixa gerencial para transportadora: registre diariamente entradas (recebimento de fretes, CIOT, outras) e saídas (combustível, motoristas, fornecedores, impostos). Projeção a 30-60 dias: some os recebíveis confirmados e estime as despesas fixas. O saldo projetado mostra se a empresa precisará de capital de giro antes que o problema apareça. Planilha simples funciona melhor do que sistema complexo não utilizado.',
+      'Indicadores-chave do fluxo de caixa: Ciclo Financeiro = prazo médio de recebimento − prazo médio de pagamento. Se o cliente paga em 45 dias e você paga fornecedor em 30 dias, seu ciclo é 15 dias de capital de giro necessário. Para transportadora com faturamento de R$500k/mês, 15 dias = R$250k de necessidade de capital. Reduza o ciclo negociando prazos maiores com fornecedores ou antecipando recebíveis de clientes.',
+    ]},
+
+  // Centros de custo e resultado por rota
+  { re: /centro.*custo|centro.*resultado|resultado.*rota|lucro.*rota|perda.*rota|rota.*rentavel|rota.*prejuizo|analise.*rota.*financeira/,
+    r: [
+      'Centro de custo por rota: divida a DRE por rota principal (Lajeado-SP, Lajeado-Curitiba, Lajeado-Porto Alegre). Para cada rota, calcule: receita média por viagem, custo direto (combustível + motorista + pedágio + desgaste), resultado bruto e margem. Rotas com margem abaixo de 8% precisam de reajuste ou reavaliação. Rotas com margem acima de 15% merecem maior alocação de frota.',
+      'Análise de rentabilidade por cliente: clientes que pagam pontual, têm carga consistente e não geram reclamações valem mais do que a margem indica. Clientes que atrasam pagamento, têm muita avaria e exigem muita atenção comercial corroem margem mesmo com preço alto. Calcule o custo de servir cada cliente (tempo do comercial + inadimplência + avarias + desvios de rota) e compare com a margem bruta.',
     ]},
 
   // ── BLOCO PÁTIO, MANUTENÇÃO E AGRONEGÓCIO ──────────────────────────────────────
