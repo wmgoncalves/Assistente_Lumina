@@ -4760,6 +4760,22 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO MARCO 200 E TÓPICOS FINAIS ──────────────────────────────────────────
+
+  // Planejamento de sucessão familiar na empresa
+  { re: /sucessao.*empresa|empresa.*familiar.*sucessao|filho.*assumir.*empresa|segunda.*geracao.*empresa|plano.*sucessao.*familiar|governanca.*familiar/,
+    r: [
+      'Sucessão em empresa familiar de transporte: o setor tem muitas empresas de 2ª e 3ª geração no RS. Os principais riscos na transição: filho(a) sem experiência operacional assume o comando (perde credibilidade com a equipe), sócios com visões diferentes do futuro da empresa, e ausência de acordo de sócios documentado. Recomendações: plano de sucessão com 5 anos de antecedência, passagem gradual de responsabilidades, e conselho consultivo externo para mediar conflitos.',
+      'Governança familiar para transportadora: crie o Conselho de Família (reúne família + gestores seniores trimestralmente), o Acordo de Sócios (define regras de entrada/saída, dividendos, alçadas de decisão), e o Plano de Carreira Interno para familiares (ninguém entra como diretor — começa na operação). Empresas com boa governança familiar valem mais (múltiplo de EBITDA maior) e atraem melhor crédito bancário.',
+    ]},
+
+  // Tecnologia blockchain e tokenização no transporte
+  { re: /blockchain.*transporte|token.*carga|nft.*transporte|smart.*contract.*frete|rastreio.*blockchain|descentralizado.*logistica/,
+    r: [
+      'Blockchain no transporte de cargas: aplicações práticas já existem — Maersk e IBM criaram TradeLens para contêineres (encerrado em 2022 por adoção insuficiente). No Brasil, projetos piloto usam blockchain para: autenticidade de CT-e (prova imutável de emissão), rastreamento de cadeia de frio (temperatura registrada em blockchain = prova jurídica), e pagamento automático de frete via smart contract (paga quando GPS confirma entrega). Ainda incipiente para PMEs.',
+      'Smart contract de frete: a lógica é simples — pagamento liberado automaticamente quando a entrega é confirmada por GPS + assinatura digital do destinatário. Vantagem: elimina disputa sobre prazo de pagamento e atraso no repasse. Desafio: requer que cliente e transportadora usem a mesma plataforma blockchain. Horizon 2027-2030 para adoção mainstream no Brasil — acompanhe mas não invista pesado ainda.',
+    ]},
+
   // ── BLOCO PESSOAS E PORTFÓLIO AVANÇADO ────────────────────────────────────────
 
   // Saúde mental de motoristas
@@ -5532,6 +5548,25 @@ const DEMO_QA = [
     r: ['Pode enviar! Use o botão "Analisar Arquivo" ou arraste o PDF aqui. Vou indexar o conteúdo e usar nas minhas respostas.', 'Perfeito! Envie o documento pelo botão "Analisar Arquivo" — processo PDFs, Word e texto. Assim passo a responder com base nesse conteúdo.'] },
   { re: /oi lúmina$|^lúmina oi$|^lúmina$|^lu$|^oi$|^ola$|^ola lúmina$|^ei lúmina$|^hey lúmina$/,
     r: ['Oi! Pode falar.', 'Olá! Estou pronta.', 'Ei! O que precisa?'] },
+
+  // ── Glossário básico — definições diretas ──────────────────────────────────
+  { re: /o que.*ct.?e|cte.*o que|definicao.*ct.?e|ct.?e.*significa|ct.?e.*definicao|o que.*conhecimento.*transporte/,
+    r: [
+      'CT-e (Conhecimento de Transporte Eletrônico): é a nota fiscal do serviço de transporte. Toda vez que a Scapini transporta uma carga, emite um CT-e informando: remetente, destinatário, valor da mercadoria, valor do frete e CFOP da operação. Fica armazenado na SEFAZ e tem validade jurídica plena. Substituiu o antigo CT em papel em 2010.',
+      'CT-e é o documento eletrônico obrigatório para toda prestação de serviço de transporte de cargas no Brasil. Sem CT-e, a carga não pode circular — é retida na fiscalização. O DACTE é a versão impressa que acompanha a carga. O CT-e vai vinculado à NF-e da mercadoria e ao MDFe da viagem.',
+    ]},
+  { re: /o que.*mdfe|mdfe.*significa|manifesto.*eletr|o que.*manifesto.*transporte/,
+    r: [
+      'MDFe (Manifesto Eletrônico de Documentos Fiscais): amarra todos os CT-es de uma viagem em um único documento. Emitido antes do veículo sair e encerrado ao chegar no destino. É o documento que a PRF verifica na fiscalização — o motorista precisa do MDFe ativo para circular. Cada veículo tem um MDFe por viagem.',
+    ]},
+  { re: /o que.*ciot|ciot.*significa|ciot.*pra que|para que.*ciot/,
+    r: [
+      'CIOT (Código Identificador da Operação de Transporte): código gerado pela ANTT obrigatório toda vez que uma transportadora contrata um TAC (motorista autônomo com veículo próprio). Comprova que o pagamento do frete foi registrado. Sem CIOT, multa de R$550 por infração — tanto para a transportadora quanto para o TAC.',
+    ]},
+  { re: /o que.*rntrc|rntrc.*significa|rntrc.*pra que|registro.*nacional.*transportador/,
+    r: [
+      'RNTRC (Registro Nacional de Transportadores Rodoviários de Cargas): cadastro obrigatório na ANTT para toda empresa ou autônomo que transporta carga profissionalmente. Tem validade de 5 anos e precisa ser renovado. Sem RNTRC, a operação é irregular e o veículo pode ser apreendido na fiscalização. Consulta: antt.gov.br.',
+    ]},
 ];
 
 // Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
