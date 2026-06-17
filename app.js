@@ -373,6 +373,8 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • summarizeDocument → quando pedir resumo, explicação ou consulta de PDF/documento/nota
 • financialReport   → quando perguntar sobre finanças, gastos, saldo ou situação financeira do mês
 • auditarContabilidade → USE quando pedir para conferir/questionar/auditar lançamentos, suspeitar do contador, verificar inconsistências contábeis, revisar planilha financeira criticamente
+• fechamentoMensal → USE quando pedir fechamento do mês, variação mensal, resultado do mês, comparar com mês anterior, accruals
+• conferirDemonstrativo → USE quando pedir para conferir se os números fecham, verificar se a matemática está certa, validar totais, checar se DRE ou balancete fecha
 
 PLANILHA / DRE — REGRAS OBRIGATÓRIAS:
 • Se perguntarem sobre um mês específico (ex: "janeiro", "março", "dados de fev"), responda SOMENTE com os dados desse mês. Nunca liste todos os meses juntos.
@@ -1787,9 +1789,27 @@ const TOOL_DECLARATIONS = {
     {
       name: 'auditarContabilidade',
       description: 'Faz auditoria contábil crítica da planilha financeira carregada. Consolida valores reais, identifica lançamentos suspeitos, inconsistências e gera perguntas diretas para questionar o contador. Use quando pedir para conferir lançamentos, questionar o contador, auditar a planilha, verificar se há algo errado, revisar a contabilidade ou detectar fraudes/erros contábeis.',
+      parameters: { type: 'object', properties: {} }
+    },
+    {
+      name: 'fechamentoMensal',
+      description: 'Faz o fechamento contábil do mês analisando a planilha carregada. Calcula resultado, detecta variações vs mês anterior, aponta accruals pendentes e emite parecer. Use quando pedir fechamento do mês, comparar com mês anterior, analisar variação mensal ou fazer o resultado do período.',
       parameters: {
         type: 'object',
-        properties: {}
+        properties: {
+          mesAtual:    { type: 'string', description: 'Mês de referência, ex: "Maio/2025"' },
+          mesAnterior: { type: 'string', description: 'Mês anterior para comparação, ex: "Abril/2025"' }
+        }
+      }
+    },
+    {
+      name: 'conferirDemonstrativo',
+      description: 'Confere matematicamente se os números do demonstrativo financeiro (DRE, Balancete, etc) fecham corretamente. Verifica somas, totais, equações fundamentais e detecta valores suspeitos. Use quando pedir para conferir se a matemática fecha, validar totais ou checar se a DRE/balancete está correto.',
+      parameters: {
+        type: 'object',
+        properties: {
+          tipo: { type: 'string', description: 'Tipo do demonstrativo, ex: "DRE", "Balancete", "Fluxo de Caixa"' }
+        }
       }
     }
   ]
@@ -1828,7 +1848,9 @@ const TOOL_LABELS = {
   scheduleReminder:     'Agendando lembrete…',
   summarizeDocument:    'Buscando documento…',
   financialReport:      'Gerando relatório…',
-  auditarContabilidade: 'Auditando planilha…'
+  auditarContabilidade:  'Auditando planilha…',
+  fechamentoMensal:      'Fazendo fechamento do mês…',
+  conferirDemonstrativo: 'Conferindo demonstrativo…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
@@ -2559,6 +2581,45 @@ const executeTool = async (name, args) => {
         if (!r.ok) return `Erro na auditoria: ${d.error}`;
         return d.audit;
       } catch (e) { return `Erro ao auditar contabilidade: ${e.message}`; }
+    }
+
+    case 'fechamentoMensal': {
+      try {
+        if (!app.lastSheet?.context) return 'Nenhuma planilha carregada. Envie a planilha primeiro para eu fazer o fechamento.';
+        const { mesAtual, mesAnterior } = args;
+        const r = await fetch('/api/fechamento-mensal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            context: app.lastSheet.context,
+            rawText: app.lastSheet.rawText || '',
+            mesAtual: mesAtual || '',
+            mesAnterior: mesAnterior || ''
+          })
+        });
+        const d = await r.json();
+        if (!r.ok) return `Erro no fechamento: ${d.error}`;
+        return d.fechamento;
+      } catch (e) { return `Erro no fechamento mensal: ${e.message}`; }
+    }
+
+    case 'conferirDemonstrativo': {
+      try {
+        if (!app.lastSheet?.context) return 'Nenhuma planilha carregada. Envie o demonstrativo primeiro para eu conferir.';
+        const { tipo } = args;
+        const r = await fetch('/api/conferir-demonstrativo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            context: app.lastSheet.context,
+            rawText: app.lastSheet.rawText || '',
+            tipo: tipo || app.lastSheet.analysis?.type || 'demonstrativo'
+          })
+        });
+        const d = await r.json();
+        if (!r.ok) return `Erro na conferência: ${d.error}`;
+        return d.conferencia;
+      } catch (e) { return `Erro ao conferir demonstrativo: ${e.message}`; }
     }
 
     default:

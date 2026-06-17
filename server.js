@@ -1453,6 +1453,146 @@ Se os dados forem insuficientes para alguma análise, aponte o que está faltand
   }
 });
 
+// ── Month-End Closer ─────────────────────────────────────────────────────────
+app.post('/api/fechamento-mensal', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const { context, rawText, mesAtual, mesAnterior } = req.body;
+  if (!context && !rawText) return res.status(400).json({ error: 'context obrigatório' });
+
+  const dados = rawText
+    ? `DADOS COMPLETOS:\n${rawText.substring(0, 12000)}\n\nRESUMO:\n${(context||'').substring(0, 3000)}`
+    : `DADOS:\n${(context||'').substring(0, 12000)}`;
+
+  const refMes = mesAtual ? `Mês de referência: ${mesAtual}` : '';
+  const refAnt = mesAnterior ? `\nMês anterior para comparação: ${mesAnterior}` : '';
+
+  const prompt = `Você é um especialista em fechamento contábil mensal de transportadoras rodoviárias. Analise os dados abaixo e faça o fechamento do mês.
+${refMes}${refAnt}
+
+${dados}
+
+Estruture sua resposta EXATAMENTE assim:
+
+## 📅 FECHAMENTO MENSAL
+
+### Receitas do Mês
+Liste todas as receitas encontradas com valores. Total geral.
+
+### Despesas do Mês
+Liste as despesas por categoria (combustível, manutenção, salários, pedágios, administrativo, outros). Total por categoria e total geral.
+
+### Resultado
+- Receita Total: R$ X
+- Despesa Total: R$ X
+- **Resultado Líquido: R$ X (margem X%)**
+
+## 📈 VARIAÇÕES vs MÊS ANTERIOR
+Para cada item com variação acima de 15%, analise:
+🔴 [ALTA VARIAÇÃO] — item, variação em % e R$, possível causa
+🟡 [VARIAÇÃO MODERADA] — item, variação em % e R$
+🟢 [ESTÁVEL] — itens sem variação relevante
+
+## 📋 ACCRUALS E PENDÊNCIAS
+Aponte lançamentos que provavelmente deveriam existir mas não aparecem:
+- Férias e 13º provisionados?
+- Manutenções recorrentes lançadas?
+- Impostos a pagar?
+
+## ✅ PARECER DO FECHAMENTO
+Em 2-3 linhas: o fechamento está completo? Há pendências críticas? Pode ser aprovado ou precisa de ajustes?`;
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.2 }
+        })
+      }
+    );
+    if (!r.ok) throw new Error(`Gemini ${r.status}`);
+    const d = await r.json();
+    res.json({ ok: true, fechamento: d.candidates[0].content.parts[0].text.trim() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Statement Auditor ─────────────────────────────────────────────────────────
+app.post('/api/conferir-demonstrativo', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+  const { context, rawText, tipo } = req.body;
+  if (!context && !rawText) return res.status(400).json({ error: 'context obrigatório' });
+
+  const dados = rawText
+    ? `DADOS COMPLETOS:\n${rawText.substring(0, 12000)}\n\nRESUMO:\n${(context||'').substring(0, 3000)}`
+    : `DADOS:\n${(context||'').substring(0, 12000)}`;
+
+  const tipoDoc = tipo || 'demonstrativo financeiro';
+
+  const prompt = `Você é um auditor especializado em conferência de demonstrativos financeiros de transportadoras. Confira matematicamente e logicamente o ${tipoDoc} abaixo antes de aceitá-lo como correto.
+
+${dados}
+
+Estruture sua resposta EXATAMENTE assim:
+
+## 🔍 CONFERÊNCIA MATEMÁTICA
+
+### Soma das Linhas
+Verifique se a soma das linhas bate com os totais declarados. Para cada discrepância:
+❌ [DIVERGÊNCIA] — linha X: declarado R$ Y, calculado R$ Z, diferença R$ W
+✅ [CONFERE] — total da seção X bate
+
+### Equação Fundamental
+- Balancete: Saldo Inicial + Débitos - Créditos = Saldo Final → confere?
+- DRE: Receita - Despesas = Resultado → confere?
+- Diferença encontrada: R$ X (se houver)
+
+### Consistência entre Demonstrativos
+Se houver mais de uma demonstração, cruzar os valores entre elas.
+
+## 🚩 ALERTAS DE QUALIDADE
+
+🔴 [ERRO MATEMÁTICO] — discrepâncias que não fecham
+🟡 [SUSPEITO] — valores redondos demais, categorias vagas, lançamentos sem data
+🟢 [OK] — seções que conferem corretamente
+
+Verifique especialmente:
+- Mais de 30% dos valores são números redondos (múltiplos de 1.000 ou 5.000)?
+- Há categorias "Outros" ou "Diversos" com valores acima de 10% do total?
+- Existe algum mês zerado ou com valor idêntico ao mês anterior?
+- Há lançamentos duplicados (mesma data + mesmo valor)?
+
+## ✅ PARECER FINAL
+- **Integridade matemática:** [Aprovado / Reprovado / Aprovado com ressalvas]
+- **Confiabilidade:** [Alta / Média / Baixa]
+- **Recomendação:** aceitar, devolver para correção ou solicitar documentação de suporte?`;
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.15 }
+        })
+      }
+    );
+    if (!r.ok) throw new Error(`Gemini ${r.status}`);
+    const d = await r.json();
+    res.json({ ok: true, conferencia: d.candidates[0].content.parts[0].text.trim() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Dev Mode — Agente de Desenvolvimento ─────────────────────────────────────
 const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]/i;
 
