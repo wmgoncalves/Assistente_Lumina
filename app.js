@@ -3651,6 +3651,71 @@ const DEMO_QA = [
       'No Excel, a fórmula certa é SOMASES com múltiplos critérios. Para vencimentos em aberto até hoje: =SOMASES(Valores, Status, "Em aberto", Data, "<="&HOJE()). Para somar por mês específico, use uma Tabela Dinâmica agrupando por mês ou troque HOJE por uma data fixa. Me fala como sua planilha está organizada se precisar de mais detalhe.',
     ]},
 
+  // ── BLOCO RH: Perguntas de colaboradores ──────────────────────────────────────
+
+  // Férias
+  { re: /ferias|quando tiro ferias|direito.*ferias|ferias.*quando|quantos dias.*ferias|tirar ferias/,
+    r: [
+      'O colaborador tem direito a 30 dias de férias após 12 meses de trabalho (período aquisitivo). As férias podem ser parceladas em até 3 períodos, desde que acordado. O aviso de férias deve ser dado com antecedência mínima de 30 dias. Para agendar ou tirar dúvidas, procure o setor de RH da Scapini.',
+      'Férias: 30 dias por ano trabalhado. O 1/3 constitucional (adicional de férias) é pago junto. As férias devem ser usufruídas até 12 meses após o período aquisitivo, caso contrário viram férias em dobro. A programação é combinada entre o colaborador e o gestor, e comunicada ao RH.',
+    ]},
+
+  // 13º salário
+  { re: /13|decimo terceiro|gratificacao natalina|13.*salario/,
+    r: [
+      'O 13º salário é pago em duas parcelas: a primeira (50%) até 30 de novembro, a segunda até 20 de dezembro. Para quem trabalhou o ano inteiro, é um salário completo. Quem entrou no meio do ano recebe proporcional aos meses trabalhados. Rescisão no meio do ano: 13º proporcional é pago junto com os acertos.',
+      '13º salário: pago em duas parcelas, novembro e dezembro. O cálculo é: salário bruto ÷ 12 × meses trabalhados. Sobre o 13º incidem INSS e IR (se aplicável). Para dúvidas sobre seu cálculo específico, o RH da Scapini pode detalhar o holerite.',
+    ]},
+
+  // FGTS
+  { re: /\bfgts\b|fundo de garantia|saldo.*fgts|retirar.*fgts|saque.*fgts/,
+    r: [
+      'O FGTS (Fundo de Garantia do Tempo de Serviço) é depositado mensalmente pela empresa: 8% do salário bruto na conta vinculada do trabalhador na Caixa Econômica. O saldo pode ser consultado pelo app FGTS (Caixa). Saque permitido em: demissão sem justa causa, aposentadoria, compra de imóvel, doenças graves, entre outros.',
+      'A Scapini deposita o FGTS até o dia 7 de cada mês. Se o depósito atrasar, a empresa paga multa. O trabalhador pode sacar o FGTS na demissão sem justa causa (mais multa de 40%) ou nas situações previstas em lei. Dúvidas sobre saldo: app FGTS da Caixa ou agência.',
+    ]},
+
+  // Vale-transporte
+  { re: /vale transporte|vt\b|passagem.*trabalho|transporte.*colaborador|beneficio.*transporte/,
+    r: [
+      'O vale-transporte cobre os deslocamentos casa-trabalho-casa. O trabalhador contribui com no máximo 6% do salário, a empresa arca com o restante. Quem usa veículo próprio não tem direito. Para cadastrar ou alterar o vale-transporte, procure o RH com os dados da linha de ônibus que usa.',
+      'Vale-transporte é um benefício obrigatório por lei. O desconto máximo no salário é de 6% — se o custo das passagens for menor, o desconto é apenas sobre esse valor. Em caso de mudança de endereço ou itinerário, comunique o RH em até 5 dias úteis para atualizar.',
+    ]},
+
+  // Banco de horas / hora extra
+  { re: /banco de horas|hora extra|horas extras|hora extra.*pag|compensacao.*hora/,
+    r: [
+      'Na Scapini, horas extras podem ser compensadas em banco de horas (conforme CCT) ou pagas: adicional de 50% para hora extra normal, 100% para domingo e feriado. O banco de horas deve ser zerado no prazo estabelecido em acordo coletivo. Converse com seu gestor sobre a melhor forma de compensação.',
+      'Hora extra: precisa de autorização prévia do gestor. O adicional é de 50% para dias úteis, 100% para domingos e feriados. Se a empresa tem banco de horas por CCT, a compensação pode ser em folga. Para verificar seu saldo de banco de horas, consulte o RH ou o holerite.',
+    ]},
+
+  // Atestado médico
+  { re: /atestado medico|atestado.*dias|faltei.*doente|falta.*atestado|licenca medica|afastamento/,
+    r: [
+      'Atestado médico deve ser entregue ao RH em até 48h úteis após o retorno. Atestados de até 15 dias são descontados pelo INSS e compensados pela empresa (doença = 15 dias pela empresa, a partir do 16º o INSS paga). Para afastamentos longos, o RH orienta sobre o processo de perícia do INSS.',
+      'Com atestado médico, a falta é justificada e o salário não é descontado. Entregue o original ao RH — cópia não é aceita. Para cirurgia ou internação, comunique o gestor e o RH com antecedência quando possível. Doenças ocupacionais têm tratamento diferente — procure o SESMT da Scapini.',
+    ]},
+
+  // Integração / novo funcionário
+  { re: /novo funcionario|integrac|onboarding|comecar a trabalhar|primeiro dia|documentos.*admissao|admissao/,
+    r: [
+      'Para admissão na Scapini, os documentos geralmente solicitados são: RG, CPF, carteira de trabalho, comprovante de residência, foto 3×4, certificado de escolaridade, exame admissional (marcado pelo RH) e certificados específicos da função (CNH, MOPP se motorista). O RH informa a lista completa por função.',
+      'No primeiro dia, o novo colaborador passa pela integração: apresentação da empresa, normas de segurança, políticas internas e apresentação ao time. A Lúmina pode ajudar a tirar dúvidas sobre procedimentos a qualquer hora — não precisa esperar um colega estar disponível. Bem-vindo à Scapini!',
+    ]},
+
+  // PLR / lucros
+  { re: /plr\b|participacao.*lucro|lucro.*resultado|bonus.*anual|premio.*resultado/,
+    r: [
+      'A PLR (Participação nos Lucros e Resultados) depende do acordo coletivo ou programa interno da Scapini. Geralmente é paga uma vez ao ano, condicionada ao atingimento de metas. Os critérios de elegibilidade, valor e metas são definidos no início do período. Consulte o RH ou o sindicato da categoria para detalhes do acordo vigente.',
+      'PLR é um benefício que varia por empresa e não é garantida por lei — é negociada em CCT ou estabelecida por programa interno. Na Scapini, qualquer dúvida sobre PLR, bônus ou participação nos resultados deve ser tratada diretamente com o RH.',
+    ]},
+
+  // Uniforme / EPI (RH)
+  { re: /uniforme|fardamento|roupa.*trabalho|kit.*uniforme/,
+    r: [
+      'Uniforme é fornecido pela Scapini sem custo para o colaborador. Deve ser usado durante o expediente e mantido limpo e em boas condições. Em caso de desgaste, solicite reposição ao RH ou responsável do setor. O uso do uniforme é obrigatório — representa a imagem da empresa.',
+      'A Scapini fornece uniformes padronizados por função. Motoristas e pessoal de pátio recebem também os EPIs necessários. Guarde bem — perda ou dano por mau uso pode gerar desconto proporcional. Para solicitar peças ou relatar problema, procure o RH.',
+    ]},
+
   // ── Capacidades gerais ────────────────────────────────────────────────────────
   { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
