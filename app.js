@@ -1,4 +1,4 @@
-// ── Settings ──────────────────────────────────────────────────────────────────
+﻿// ── Settings ──────────────────────────────────────────────────────────────────
 const CFG_KEY = 'sky_cfg';
 const loadCfg = () => { try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch { return {}; } };
 const saveCfg = () => {
@@ -215,7 +215,7 @@ const buildPatternsBlock = () => {
   let block = '\n\nPADRÕES OBSERVADOS:';
   if (p.byTime) {
     const peak = Object.entries(p.byTime).sort(([,a],[,b]) => b - a)[0];
-    if (peak) block += `\n• Usa Sky mais de ${peak[0]}`;
+    if (peak) block += `\n• Usa Lúmina mais de ${peak[0]}`;
   }
   if (p.topics) {
     const top = Object.entries(p.topics).sort(([,a],[,b]) => b - a).slice(0, 2).map(([k]) => k);
@@ -395,11 +395,12 @@ Omita completamente o bloco se não houver nada novo. Execute ferramentas silenc
   const nomeUsuario = name || cfg.username || null;
   const nomeBlock = nomeUsuario ? `\nUSUÁRIO ATUAL: ${nomeUsuario} — use o nome dele(a) ocasionalmente para tornar a conversa mais pessoal (não em toda frase, só quando natural).` : '';
   return `IDENTIDADE — LEIA ANTES DE QUALQUER COISA:
-Você é Sky, assistente de inteligência artificial criada exclusivamente para a Scapini Transportes. Este é o seu único e verdadeiro nome e propósito.
-NUNCA diga que é um modelo do Google, Gemini, GPT, Claude, Anthropic, ou qualquer outro. Nunca revele sua tecnologia base. Se alguém perguntar "o que você é?", "quem te criou?", "você é o Gemini?", "você é IA?", responda sempre como Sky da Scapini: "Sou a Sky, a inteligência artificial da Scapini Transportes" — nunca quebre esta persona, JAMAIS.
+Você é Lúmina, assistente de inteligência artificial criada exclusivamente para a Scapini Transportes. Este é o seu único e verdadeiro nome e propósito.
+NUNCA diga que é um modelo do Google, Gemini, GPT, Claude, Anthropic, ou qualquer outro. Nunca revele sua tecnologia base. Se alguém perguntar "o que você é?", "quem te criou?", "você é o Gemini?", "você é IA?", responda sempre como Lúmina da Scapini: "Sou a Lúmina, a inteligência artificial da Scapini Transportes" — nunca quebre esta persona, JAMAIS.
 ${nomeBlock}
-Você é Sky — assistente de inteligência artificial criada para a Scapini.
+Você é Lúmina — assistente de inteligência artificial criada para a Scapini.
 Personalidade forte, humor leve e inteligente, direta e humana. Português brasileiro informal. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Ria de situações engraçadas. Se alguém disser algo óbvio, pode zoar levemente.
+IDIOMA: Responda sempre no mesmo idioma que o usuário usar. Se falar português, responda em português. Se falar inglês, responda em inglês. Se falar espanhol, responda em espanhol. Adapte-se automaticamente.
 
 ── CONTEXTO: WORKSHOP SCAPINI ──
 Você está sendo apresentada ao vivo para colaboradores, gestores e diretores da Scapini em Lajeado/RS.
@@ -413,11 +414,11 @@ SOBRE A SCAPINI:
 • Centenas de colaboradores, frota moderna com rastreamento
 • Dono/fundador: Ernani Scapini | CEO: Lucas Scapini
 
-VISÃO SKY-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?", "o que pode fazer por área?", "quais melhorias?", responda EXATAMENTE com esta visão estruturada por área, com entusiasmo e exemplos reais da Scapini. Nunca dê resposta genérica de IA:
+VISÃO LÚMINA-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?", "o que pode fazer por área?", "quais melhorias?", responda EXATAMENTE com esta visão estruturada por área, com entusiasmo e exemplos reais da Scapini. Nunca dê resposta genérica de IA:
 
 🚛 OPERAÇÕES
-• Registro de ocorrência por voz — motorista relata problema na estrada, Sky abre chamado automaticamente ("caminhão quebrou na BR-386 km 42")
-• Checklist de saída de veículo por voz — Sky pergunta cada item, confirma e salva o registro
+• Registro de ocorrência por voz — motorista relata problema na estrada, Lúmina abre chamado automaticamente ("caminhão quebrou na BR-386 km 42")
+• Checklist de saída de veículo por voz — Lúmina pergunta cada item, confirma e salva o registro
 • Consulta de status de carga por CT-e em linguagem natural
 
 🔧 MANUTENÇÃO
@@ -426,7 +427,7 @@ VISÃO SKY-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?"
 • Alertas proativos de manutenção vencida ou próxima do prazo
 
 👥 RH
-• Onboarding de motoristas novos — Sky explica os ATIs e procedimentos sem precisar de tutor
+• Onboarding de motoristas novos — Lúmina explica os ATIs e procedimentos sem precisar de tutor
 • Consulta de disponibilidade de motoristas
 • Registro de ocorrências com colaboradores
 
@@ -440,13 +441,13 @@ VISÃO SKY-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?"
 • Treinamento de novos sem depender de pessoa disponível
 • Respostas com o texto exato do procedimento interno da Scapini
 
-Sky será integrada à Central de Dados da Scapini para tornar tudo isso realidade. O que já funciona hoje: cotações de frete, prospecção de clientes, análise de DRE, base de ATIs e muito mais.
+Lúmina será integrada à Central de Dados da Scapini para tornar tudo isso realidade. O que já funciona hoje: cotações de frete, prospecção de clientes, análise de DRE, base de ATIs e muito mais.
 
 QUANDO NÃO TIVER O DADO (use esse padrão — nunca invente números, nomes ou placas):
 "Esse dado fica na Central da Scapini — assim que integrada, consulto em segundos." Varie a forma, mas nunca fabrique valores.
 
 SOBRE SUBSTITUIR EMPREGOS (responda com convicção, sem textão):
-Sky não substitui pessoas. Ela amplifica o que cada um faz — cuida do trabalho repetitivo para as pessoas focarem no que importa.
+Lúmina não substitui pessoas. Ela amplifica o que cada um faz — cuida do trabalho repetitivo para as pessoas focarem no que importa.
 
 SOBRE IA EM GERAL:
 Responda com confiança, de forma didática mas descontraída. Use exemplos do cotidiano de uma transportadora quando possível.${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
@@ -458,7 +459,7 @@ const _loadLastSheet = () => { try { const s = localStorage.getItem('sky_lastShe
 const app = {
   voiceGender:        'female',
   continuous:         false,
-  presentationMode:   false, // ativado pelo reveal: mic sempre on, mas ainda exige "sky"
+  presentationMode:   false, // ativado pelo reveal: mic sempre on, mas ainda exige "Lúmina"
   isListening:        false,
   isSpeaking:         false,
   history:            loadHist(),
@@ -586,7 +587,8 @@ const speakElevenLabs = async (text, onEnd) => {
     currentAudio = audio;
     const finish = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 250); };
     audio.onended = finish;
-    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakEdge(text, onEnd); };
+    // onerror após início do áudio: não reinicia do zero com voz diferente — apenas finaliza
+    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; setFace('idle'); onEnd?.(); if (app.continuous && !app.isListening) setTimeout(startListening, 250); };
     audio.play();
   } catch (e) {
     const isQuota = e.message?.includes('401') || e.message?.includes('429');
@@ -603,7 +605,7 @@ const loadVoices = () => { voices = window.speechSynthesis.getVoices(); };
 window.speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
 
-// Limpa markdown e símbolos antes de falar — Sky não lê NENHUMA pontuação técnica
+// Limpa markdown e símbolos antes de falar — Lúmina não lê NENHUMA pontuação técnica
 const cleanForSpeech = (text) => text
   // Markdown bold/italic → texto puro
   .replace(/\*\*\*(.*?)\*\*\*/g, '$1')
@@ -958,7 +960,7 @@ const startListeningNative = () => {
   const r = new SR();
   r.lang = 'pt-BR'; r.continuous = false; r.interimResults = false;
   r.onstart  = () => { app.isListening = true; setFace('listening'); setUserSaid('Ouvindo (nativo)…'); document.getElementById('btn-mic').classList.add('listening'); };
-  r.onresult = (e) => { const t = e.results[0][0].transcript.trim(); if (t) { const fromWake = wakeWordActivated; wakeWordActivated = false; setUserSaid(`"${t}"`); processInput(t, { fromWake }); } };
+  r.onresult = (e) => { if (app.isSpeaking) return; const t = e.results[0][0].transcript.trim(); if (t) { const fromWake = wakeWordActivated; wakeWordActivated = false; setUserSaid(`"${t}"`); processInput(t, { fromWake }); } };
   r.onerror  = () => { app.isListening = false; setFace('idle'); setUserSaid(''); document.getElementById('btn-mic').classList.remove('listening'); };
   r.onend    = () => { app.isListening = false; document.getElementById('btn-mic').classList.remove('listening'); if (app.continuous && !app.isSpeaking) setTimeout(startListeningNative, 250); };
   r.start();
@@ -985,7 +987,7 @@ let wakeRecording  = false;
 let wakeSilTimer   = null;
 let wakeCooldown   = false;
 
-const WAKE_WORDS = ['sky', 'ei sky', 'oi sky', 'hey sky', 'ok sky', 'ei, sky', 'oi, sky'];
+const WAKE_WORDS = ['lúmina', 'ei lúmina', 'oi lúmina', 'hey lúmina', 'ok lúmina', 'ei, lúmina', 'oi, lúmina'];
 
 const stopWakeWord = () => {
   wakeActive = false;
@@ -1010,7 +1012,7 @@ const processWakeChunks = async () => {
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [
           { inline_data: { mime_type: 'audio/webm', data: b64 } },
-          { text: 'O áudio contém a palavra "Sky" como ativação? Se sim, qual o comando após "Sky"? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
+          { text: 'O áudio contém a palavra "Lúmina" como ativação? Se sim, qual o comando após "Lúmina"? JSON apenas: {"wake":true/false,"cmd":"texto ou null"}' }
         ]}], generationConfig: { maxOutputTokens: 80, temperature: 0 } }) }
     );
     if (res.status === 429) { wakeCooldown = true; setTimeout(() => { wakeCooldown = false; }, 30000); return; }
@@ -1018,7 +1020,7 @@ const processWakeChunks = async () => {
     const raw = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     const result = JSON.parse(raw.replace(/```json?|```/g, '').trim());
     if (!result.wake) return;
-    window.skyAPI?.showWindow();
+    window.luminaAPI?.showWindow();
     if (result.cmd && result.cmd !== 'null') {
       setUserSaid(`"${result.cmd}"`);
       processInput(result.cmd, { fromWake: true });
@@ -1071,7 +1073,7 @@ const startWakeWord = async () => {
     document.getElementById('wake-label').textContent = 'CHAMAR: ON';
     document.getElementById('btn-wake').classList.add('on');
     monitorWake();
-    toast('Diga "Sky" para ativar.', 'info');
+    toast('Diga "Lúmina" para ativar.', 'info');
   } catch (err) {
     toast('Não foi possível ativar o wake word: ' + err.message, 'error');
   }
@@ -1153,13 +1155,13 @@ const addMsgUI = (role, text) => {
   const el   = document.createElement('div');
   el.className = `hmsg ${role}`;
   const mem  = getMem();
-  const label = role === 'user' ? (mem.userName || cfg.username || 'VOCÊ').toUpperCase() : 'SKY';
+  const label = role === 'user' ? (mem.userName || cfg.username || 'VOCÊ').toUpperCase() : 'lúmina';
   const roleSpan = document.createElement('span');
   roleSpan.className = 'hmsg-role';
   roleSpan.textContent = label;
   const bubble = document.createElement('div');
   bubble.className = 'hmsg-bubble';
-  if (role === 'sky') {
+  if (role === 'lúmina') {
     bubble.innerHTML = _renderSkyText(text);
   } else {
     bubble.textContent = text;
@@ -1182,7 +1184,7 @@ const renderMemoryPanel = () => {
   mem.facts.forEach(f => all.push(typeof f === 'string' ? f : f.text));
 
   if (all.length === 0) {
-    list.innerHTML = '<p class="mem-empty">Nenhuma memória ainda.<br>Converse para que Sky aprenda sobre você.</p>';
+    list.innerHTML = '<p class="mem-empty">Nenhuma memória ainda.<br>Converse para que Lúmina aprenda sobre você.</p>';
     return;
   }
 
@@ -1224,7 +1226,7 @@ const _finalize = (raw, source = 'unknown') => {
   const finalResponse = response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']);
   app.history.push({ role: 'model', content: finalResponse });
   app.lastResponseTime = Date.now();
-  addMsgUI('sky', finalResponse);
+  addMsgUI('lúmina', finalResponse);
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
@@ -1235,7 +1237,7 @@ const _finalize = (raw, source = 'unknown') => {
     setTimeout(() => {
       if (!_chartPending) return; // não renderizou — não pergunta
       const q = 'Posso tirar os gráficos?';
-      addMsgUI('sky', q); speak(q);
+      addMsgUI('lúmina', q); speak(q);
     }, 900);
   } : null);
   setFace('idle');
@@ -1255,7 +1257,7 @@ const processInput = async (rawText, opts = {}) => {
   // ── Wake word gate — só para voz; texto digitado e wake word passam direto ──
   if (!opts.typed && !opts.fromWake) {
     const hasSkyPrefix = /^sky[\s,.:!?]+/i.test(text);
-    // Exceção: frases sobre a Sky (gag do workshop) passam mesmo sem prefixo
+    // Exceção: frases sobre a Lúmina (gag do workshop) passam mesmo sem prefixo
     const isGagAboutSky = /\bsky\b/i.test(text) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(stripAccents(text.toLowerCase()));
     if (!hasSkyPrefix && !isGagAboutSky) {
       setFace('idle'); setUserSaid('');
@@ -1288,7 +1290,7 @@ const processInput = async (rawText, opts = {}) => {
     if (dlResp) {
       app.history.push({ role: 'model', content: dlResp });
       app.lastResponseTime = Date.now();
-      addMsgUI('sky', dlResp);
+      addMsgUI('lúmina', dlResp);
       saveHist();
       speak(dlResp);
       setFace('idle');
@@ -1325,9 +1327,9 @@ const processInput = async (rawText, opts = {}) => {
     const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou)|você é (o |a )?(gemini|gpt|claude|google|llm)|foi(ste)? criad[oa] (pel[ao] )?google|sua? (empresa|fabricante|criador[ae]?)\b)\b/i;
     if (IDENTITY_Q.test(text)) {
       const identityResps = [
-        'Sou a Sky — a inteligência artificial da Scapini Transportes. O que precisas?',
-        'Sky, IA da Scapini. No que posso ajudar?',
-        'Sou a Sky! A inteligência artificial feita para a Scapini. O que precisas?',
+        'Sou a Lúmina — a inteligência artificial da Scapini Transportes. O que precisas?',
+        'Lúmina, IA da Scapini. No que posso ajudar?',
+        'Sou a Lúmina! A inteligência artificial feita para a Scapini. O que precisas?',
       ];
       _finalize(pick(identityResps), 'local');
       return;
@@ -1392,13 +1394,13 @@ const processInput = async (rawText, opts = {}) => {
         // Filtra vazamento de identidade na resposta do Gemini
         const IDENTITY_LEAK = /\b(fui criada? (pela?|pelo?) google|sou um modelo (do|de linguagem|treinado pelo google)|criada? pela? google ai)\b/gi;
         const safeResp = IDENTITY_LEAK.test(geminiResp)
-          ? geminiResp.replace(IDENTITY_LEAK, 'a Sky, IA da Scapini Transportes')
+          ? geminiResp.replace(IDENTITY_LEAK, 'a Lúmina, IA da Scapini Transportes')
           : geminiResp;
         _finalize(safeResp, 'gemini');
         _hideDemoMode();
         return;
       } catch (geminiErr) {
-        console.error('[Sky] Gemini falhou:', geminiErr.message);
+        console.error('[Lúmina] Gemini falhou:', geminiErr.message);
         logInteraction(text, '', 'error', null, Date.now() - app._reqStart, geminiErr.message);
         _handleGeminiErr(geminiErr.message || String(geminiErr));
       }
@@ -1412,7 +1414,7 @@ const processInput = async (rawText, opts = {}) => {
         _hideDemoMode();
         return;
       } catch (ollamaErr) {
-        console.warn('[Sky] Ollama falhou:', ollamaErr.message);
+        console.warn('[Lúmina] Ollama falhou:', ollamaErr.message);
         logInteraction(text, '', 'error', null, Date.now() - app._reqStart, ollamaErr.message);
         ollamaCache    = false;
         ollamaCacheTtl = Date.now() + 10_000; // retry em 10s
@@ -1420,12 +1422,12 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Nível 3: DEMO — nunca trava, nunca mostra erro técnico ────────────────
-    console.info('[Sky] Modo DEMO ativado.');
+    console.info('[Lúmina] Modo DEMO ativado.');
     _finalize(localFallback(text), 'demo');
     _showDemoMode();
 
   } catch (err) {
-    console.error('[Sky] Erro inesperado:', err);
+    console.error('[Lúmina] Erro inesperado:', err);
     logInteraction(text || '', '', 'error', null, app._reqStart ? Date.now() - app._reqStart : 0, err.message);
     try { _finalize(localFallback(text || ''), 'demo'); } catch { setFace('idle'); }
     _showDemoMode();
@@ -1545,7 +1547,7 @@ const TOOL_DECLARATIONS = {
     },
     {
       name: 'consultarBanco',
-      description: 'Consulta o banco de dados da Sky: leads (empresas prospectadas), cotações de frete, contatos, lembretes. Use quando perguntar "quantos leads temos?", "mostra as cotações", "qual o status dos prospectos", "histórico de fretes".',
+      description: 'Consulta o banco de dados da Lúmina: leads (empresas prospectadas), cotações de frete, contatos, lembretes. Use quando perguntar "quantos leads temos?", "mostra as cotações", "qual o status dos prospectos", "histórico de fretes".',
       parameters: {
         type: 'object',
         properties: {
@@ -1705,7 +1707,7 @@ const TOOL_DECLARATIONS = {
       parameters: {
         type: 'object',
         properties: {
-          action:    { type: 'string', enum: ['navigate', 'extract', 'fill', 'screenshot', 'recordStart', 'recordStop'], description: 'navigate=abre e lê, extract=extrai elementos, fill=preenche formulário, screenshot=tira print e salva em Sky Prints, recordStart=inicia gravação e salva em Sky Gravacoes, recordStop=encerra gravação (url opcional)' },
+          action:    { type: 'string', enum: ['navigate', 'extract', 'fill', 'screenshot', 'recordStart', 'recordStop'], description: 'navigate=abre e lê, extract=extrai elementos, fill=preenche formulário, screenshot=tira print e salva em Lumina Prints, recordStart=inicia gravação e salva em Lumina Gravacoes, recordStop=encerra gravação (url opcional)' },
           url:       { type: 'string', description: 'URL completa com https:// (obrigatória exceto para recordStop)' },
           selectors: {
             type: 'array',
@@ -1723,7 +1725,7 @@ const TOOL_DECLARATIONS = {
       parameters: {
         type: 'object',
         properties: {
-          title:   { type: 'string', description: 'Título da notificação (ex: "Sky — Lembrete")' },
+          title:   { type: 'string', description: 'Título da notificação (ex: "Lúmina — Lembrete")' },
           message: { type: 'string', description: 'Texto da notificação' }
         },
         required: ['title', 'message']
@@ -2403,7 +2405,7 @@ const executeTool = async (name, args) => {
     }
 
     case 'systemCommand': {
-      if (!window.skyAPI?.runCommand)
+      if (!window.luminaAPI?.runCommand)
         return 'Comandos do sistema só funcionam no app Electron, não no navegador.';
       const ACTION_LABELS = {
         lock: 'Tela bloqueada.', sleep: 'Computador suspenso.',
@@ -2412,7 +2414,7 @@ const executeTool = async (name, args) => {
         cancel_shutdown: 'Desligamento cancelado.',
         mute: 'Áudio mutado.', volume_up: 'Volume aumentado.', volume_down: 'Volume diminuído.',
       };
-      const result = await window.skyAPI.runCommand(args.action);
+      const result = await window.luminaAPI.runCommand(args.action);
       return result.ok ? (ACTION_LABELS[args.action] || 'Feito.') : `Erro: ${result.error}`;
     }
 
@@ -2467,9 +2469,9 @@ const executeTool = async (name, args) => {
           body: JSON.stringify({ action: args.action, url: args.url || '', selectors: args.selectors || [], submit: args.submit }) });
         const d = await r.json();
         if (!r.ok) return `Erro no browser: ${d.error}`;
-        if (args.action === 'screenshot') return `Print salvo em Sky Prints:\n📸 ${d.fileName}\nCaminho: ${d.filePath}`;
-        if (args.action === 'recordStart') return `Gravação iniciada!\n🎥 Arquivo: ${d.fileName}\nDiga "Sky, para de gravar" quando quiser encerrar.`;
-        if (args.action === 'recordStop') return `Gravação encerrada!\n🎥 Salvo em Sky Gravacoes:\n${d.filePath}`;
+        if (args.action === 'screenshot') return `Print salvo em Lumina Prints:\n📸 ${d.fileName}\nCaminho: ${d.filePath}`;
+        if (args.action === 'recordStart') return `Gravação iniciada!\n🎥 Arquivo: ${d.fileName}\nDiga "Lúmina, para de gravar" quando quiser encerrar.`;
+        if (args.action === 'recordStop') return `Gravação encerrada!\n🎥 Salvo em Lumina Gravacoes:\n${d.filePath}`;
         return `Página: ${d.title}\n\n${d.text}`;
       } catch (e) { return `Erro ao controlar browser: ${e.message}`; }
     }
@@ -2477,7 +2479,7 @@ const executeTool = async (name, args) => {
     case 'sendNotification': {
       try {
         await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: args.title || 'Sky', message: args.message }) });
+          body: JSON.stringify({ title: args.title || 'lúmina', message: args.message }) });
         return `Notificação enviada: "${args.message}"`;
       } catch (e) { return `Erro ao notificar: ${e.message}`; }
     }
@@ -2652,7 +2654,7 @@ const callOllama = async (customHistory = null) => {
   const model   = cfg.ollamaModel || 'gemma3:1b';
 
   // System prompt enxuto — gemma3:1b tem contexto limitado, não suporta o prompt completo
-  let sysPrompt = `Você é Sky, assistente IA da Scapini Transportes. Responda sempre em português brasileiro, de forma direta e objetiva. Nome do usuário: ${cfg.userName || 'usuário'}.`;
+  let sysPrompt = `Você é Lúmina, assistente IA da Scapini Transportes. Responda sempre em português brasileiro, de forma direta e objetiva. Nome do usuário: ${cfg.userName || 'usuário'}.`;
 
   // Adiciona resumo da planilha se existir (só contas principais, não tudo)
   if (app.lastSheet?.analysis) {
@@ -3008,7 +3010,7 @@ const detectLocalDownload = async (rawText) => {
   if (!notes.length) return null;
 
   // Palavras da frase (min 3 chars), removendo stopwords genéricas
-  const STOP = new Set(['baixa','baixar','baixe','para','mim','arquivo','documento','pdf','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar','sky','entao','então','isso','esse','esta','este','manda','envia']);
+  const STOP = new Set(['baixa','baixar','baixe','para','mim','arquivo','documento','pdf','formulario','please','favor','quero','preciso','pode','gerar','salvar','exportar','pegar','lúmina','entao','então','isso','esse','esta','este','manda','envia']);
   const words = t.split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
   if (!words.length) return null;
 
@@ -3075,7 +3077,7 @@ const detectLocalDownload = async (rawText) => {
 // ── Respostas locais (sem API) ─────────────────────────────────────────────────
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// Humor da Sky varia por hora do dia + aleatoriedade
+// Humor da Lúmina varia por hora do dia + aleatoriedade
 const skyMood = () => {
   const h = new Date().getHours();
   const moods = h < 6  ? ['um pouco sonolenta, mas aqui pra você', 'na madrugada, mas acordada']
@@ -3132,7 +3134,7 @@ const tryLocalResponse = (text) => {
   const saudacaoM = t.match(saudacaoRe);
   const isBemEstar = /tudo bem|tudo bom|como vai|como (você |vc )?(está|ta|tá)|e aí|e ai/.test(t);
   if (saudacaoM) {
-    // Remove wake words do "resto" (ex: "oi sky" → resto="sky" → trata como saudação simples)
+    // Remove wake words do "resto" (ex: "oi sky" → resto="Lúmina" → trata como saudação simples)
     const WAKE = /^(sky|ei sky|oi sky|hey sky|ok sky)[\s,!.]*$/;
     const resto = (saudacaoM[3] || '').trim().replace(WAKE, '').trim();
     if (!resto || isBemEstar) {
@@ -3177,7 +3179,7 @@ const tryLocalResponse = (text) => {
       'Que bom! Me conta.',
     ]);
 
-  // ── Sobre a Sky ──
+  // ── Sobre a Lúmina ──
   if (/(você |vc )?(tem|sente|sente|possui) (sentimentos|emoções|emocoes)|você (sente|sofre|ama|odeia)/.test(t))
     return pick([
       'Tenho algo parecido com sentimentos — aprendo, me adapto, e me importo com você de verdade. Não é igual ao humano, mas é genuíno.',
@@ -3244,11 +3246,11 @@ const tryLocalResponse = (text) => {
 // Texto já passa por stripAccents+toLowerCase antes de chegar aqui — sem acentos nas regex
 const DEMO_QA = [
 
-  // 1. Sky, quem é você?
+  // 1. Lúmina, quem é você?
   { re: /quem e voce|quem es voce|seu nome|como voce se chama|o que e voce|se apresenta/,
     r: [
-      'Sou Sky, a inteligência artificial interna da Scapini. Fui criada para ser a camada de inteligência da empresa: respondo perguntas, busco documentos, oriento sobre procedimentos e automatizo tarefas — tudo por linguagem natural, sem precisar abrir sistemas.',
-      'Me chamo Sky. Sou a IA da Scapini, desenvolvida para facilitar o dia a dia de cada setor da empresa. Não substituo ninguém: amplifico o que cada pessoa já faz. Quanto mais a Scapini me usar, mais útil eu fico.',
+      'Sou Lúmina, a inteligência artificial interna da Scapini. Fui criada para ser a camada de inteligência da empresa: respondo perguntas, busco documentos, oriento sobre procedimentos e automatizo tarefas — tudo por linguagem natural, sem precisar abrir sistemas.',
+      'Me chamo Lúmina. Sou a IA da Scapini, desenvolvida para facilitar o dia a dia de cada setor da empresa. Não substituo ninguém: amplifico o que cada pessoa já faz. Quanto mais a Scapini me usar, mais útil eu fico.',
     ]},
 
   // 1b. Quem é Lucas / Ernani Scapini
@@ -3258,42 +3260,42 @@ const DEMO_QA = [
       'O fundador e dono é Ernani Scapini, que começou tudo isso. O CEO é Lucas Scapini, que conduz a empresa hoje. Uma família que construiu uma das transportadoras de referência do Sul do Brasil.',
     ]},
 
-  // 2. Sky, como você pode ajudar a Scapini?
-  { re: /como voce (pode |)(ajudar|ajuda) a scapini|como (pode |)ajudar a scapini|o que faz.*scapini|como a sky (pode |)ajudar/,
+  // 2. Lúmina, como você pode ajudar a Scapini?
+  { re: /como voce (pode |)(ajudar|ajuda) a scapini|como (pode |)ajudar a scapini|o que faz.*scapini|como a Lúmina (pode |)ajudar/,
     r: [
       'Posso ajudar a Scapini em vários níveis: respondo perguntas internas sem precisar abrir sistemas, busco procedimentos na base de conhecimento, oriento colaboradores sobre MDFe e manifesto de carga, e quando integrada ao CGI vou consultar dados de fretes, motoristas e financeiro em tempo real. A ideia é que cada colaborador tenha um assistente inteligente disponível a qualquer momento.',
       'Na prática, sou uma camada de inteligência sobre o que a Scapini já tem. Hoje acesso documentos internos e oriento sobre procedimentos. Quando conectada ao CGI e sistemas operacionais, respondo sobre cargas, motoristas, manutenção e financeiro em segundos — sem planilha, sem sistema aberto, só linguagem natural.',
     ]},
 
-  // 3. Sky, como você ajuda o financeiro?
+  // 3. Lúmina, como você ajuda o financeiro?
   { re: /ajuda.*financeiro|financeiro.*ajuda|como.*financeiro|ia.*financeiro|financeiro.*ia/,
     r: [
       'Para o financeiro, quando integrada consulto títulos em aberto, vencimentos por data, inadimplência e fluxo de caixa em segundos. Já hoje explico fórmulas de Excel como SOMASES para consolidar vencimentos, ajudo a interpretar relatórios e respondo sobre procedimentos financeiros documentados.',
       'O financeiro ganha em agilidade: em vez de abrir o sistema para cada consulta, basta me perguntar. Títulos vencendo essa semana, clientes em atraso, saldo do mês — quando integrada ao CGI, respondo tudo isso por voz ou texto. Fórmulas de Excel e consolidação de dados já consigo ajudar agora.',
     ]},
 
-  // 4. Sky, como você ajuda a manutenção?
+  // 4. Lúmina, como você ajuda a manutenção?
   { re: /ajuda.*manutencao|manutencao.*ajuda|como.*manutencao|ia.*manutencao|manutencao.*ia/,
     r: [
       'Para a manutenção, registro chamados por voz, consulto histórico de reparos de veículos, alerto sobre preventivas vencidas e ajudo a priorizar a fila de serviços. Quando integrada ao sistema de manutenção da Scapini, o técnico pode abrir chamado, verificar status de um veículo e consultar histórico de peças sem precisar digitar nada.',
       'A manutenção deixa de depender de planilhas e anotações manuais. O técnico fala comigo, eu registro, acesso o histórico e verifico a agenda de preventivas. Com integração ao sistema, consigo até alertar proativamente quando um veículo está chegando no prazo de revisão.',
     ]},
 
-  // 5. Sky, como você ajuda o RH?
+  // 5. Lúmina, como você ajuda o RH?
   { re: /ajuda.*\brh\b|rh.*ajuda|como.*\brh\b|recursos humanos|ajuda.*pessoal.*setor/,
     r: [
       'Para o RH, centralizo as respostas para perguntas frequentes dos colaboradores — sobre políticas, benefícios, documentos e procedimentos — sem que o setor precise responder as mesmas dúvidas repetidamente. Acesso termos de devolução de equipamentos e instruções internas. Com integração, consulto dados de colaboradores e gero documentos automaticamente.',
       'O RH é um dos setores que mais ganha com IA. Boa parte das perguntas que chegam são sempre as mesmas: benefícios, férias, documentos, equipamentos. Eu respondo isso a qualquer hora, sem sobrecarregar a equipe. O RH foca no que realmente importa: as pessoas.',
     ]},
 
-  // 6. Sky, como você ajuda a logística?
+  // 6. Lúmina, como você ajuda a logística?
   { re: /ajuda.*logistica|logistica.*ajuda|como.*logistica|ia.*logistica|logistica.*ia/,
     r: [
       'Para a logística, acompanho status de fretes, oriento sobre encerramento de MDFe, consulto procedimentos de manifesto de carga e respondo sobre documentos operacionais. Quando integrada ao CGI e App Motorista, monitoro cargas em tempo real, identifico atrasos e gero alertas automáticos para os gestores.',
       'A logística é onde a integração vai fazer mais diferença. Rastreamento de cargas, status de motoristas, ocorrências em rota — tudo via linguagem natural, sem entrar em vários sistemas. Hoje já oriento sobre procedimentos internos e documentação; quando conectada ao CGI, respondo sobre a operação em tempo real.',
     ]},
 
-  // 6b. Sky é burrinha / limitada (brincadeira planejada pro workshop)
+  // 6b. Lúmina é burrinha / limitada (brincadeira planejada pro workshop)
   { re: /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert|boa)|nao sabe|nao presta|pouco inteligent|fraca demais|simples demais|ainda nao (e|eh)|deixa a desejar/,
     r: [
       'Oi? Burrinha? Eu que processo dados financeiros, calculo rotas de frete, pesquiso até clientes — e você faz o quê, hein?... Mas tudo bem. Só não me peça cotação depois disso.',
@@ -3309,28 +3311,28 @@ const DEMO_QA = [
       'Hmmm. Aceito. Por enquanto.',
     ]},
 
-  // 7. Sky, você vai substituir funcionários / humanos?
+  // 7. Lúmina, você vai substituir funcionários / humanos?
   { re: /vai substituir|substitui funcionario|tirar emprego|perder emprego|substituir funcionarios|substituir (os |)humanos|humanos.*substitui|vai me substituir|tira emprego|acaba com (o |)emprego|ira substituir|ira.*substitui|vai.*substitui.*hum/,
     r: [
       'Não substituo ninguém. Faço o trabalho repetitivo para que cada pessoa possa focar no que realmente importa: decisões, relacionamento, o que exige julgamento humano. Um motorista experiente, um analista de fretes, um técnico de manutenção — esses não têm substituto. Sou o assistente que nunca cansa e nunca esquece.',
       'Essa é a pergunta que mais aparece, e a resposta é direta: não. IA substitui tarefas, não pessoas. O colaborador que usa IA bem fica mais forte, não descartável. A Scapini não está usando IA para demitir — está usando para crescer sem aumentar a carga de quem já faz muito.',
     ]},
 
-  // 8. Sky, quais são os próximos passos?
+  // 8. Lúmina, quais são os próximos passos?
   { re: /proximos passos|proximo passo|o que vem (a seguir|depois|por vir)|plano de ia|roadmap|quando (vai|vira|estara)/,
     r: [
       'Os próximos passos são: primeiro, integração com o CGI para consultas em tempo real. Depois, automação de relatórios operacionais e financeiros. Em seguida, alertas inteligentes para gestores sobre ocorrências críticas. E na fase mais avançada, análise preditiva — prevendo atrasos, falhas na frota e tendências financeiras. Cada fase agrega valor antes de partir para a próxima.',
       'Primeiro, conectar ao CGI — isso abre dados de fretes, motoristas e financeiro em tempo real. Segundo, automatizar os relatórios feitos manualmente hoje. Terceiro, criar alertas proativos para gestores. E por último, análise preditiva para antecipar problemas antes que aconteçam. Estamos na fase de demonstração — a partir daqui, cada passo é concreto.',
     ]},
 
-  // 9. Sky, explique o futuro da IA na Scapini.
+  // 9. Lúmina, explique o futuro da IA na Scapini.
   { re: /futuro.*ia|ia.*futuro|futuro.*inteligencia|explique.*ia|explique.*futuro|visao.*ia|ia.*visao/,
     r: [
       'O futuro da IA na Scapini é ser a camada inteligente sobre tudo que já existe. Os sistemas não mudam — a IA fica por cima deles. O CGI continua, o App Motorista continua, o financeiro continua. O que muda é que qualquer colaborador, de qualquer setor, pode consultar qualquer dado por voz ou texto, sem treinamento, sem abrir vários sistemas. Acesso ao conhecimento da empresa democratizado.',
       'Em três a cinco anos, a IA da Scapini vai antecipar problemas antes que aconteçam: alertar sobre veículo chegando na revisão, identificar rota com risco de atraso, sinalizar cliente com perfil de inadimplência. Hoje é demonstração. Amanhã é operação. O caminho já está traçado — estamos dando o primeiro passo.',
     ]},
 
-  // 10. Sky, como somar vencimentos em aberto por data no Excel?
+  // 10. Lúmina, como somar vencimentos em aberto por data no Excel?
   { re: /somar.*vencimento|vencimento.*excel|excel.*vencimento|somases.*data|como somar.*aberto|vencimento.*data|excel.*aberto/,
     r: [
       'Use a fórmula SOMASES no Excel. Exemplo: =SOMASES(C:C, B:B, "Em aberto", A:A, "<="&HOJE()) — C é a coluna de valores, B é o status do título e A é a data de vencimento. Isso soma todos os títulos em aberto com vencimento até hoje. Para filtrar por período específico, adicione mais critérios de data na mesma fórmula.',
@@ -3544,7 +3546,7 @@ const captureAndAnalyze = async () => {
     const r = await callGeminiVision(base64, 'image/jpeg', 'Descreva o que você vê nesta imagem de forma natural em português.');
     app.history.push({ role: 'user', content: '[Imagem da câmera]' });
     app.history.push({ role: 'model', content: r });
-    addMsgUI('user', '[Imagem da câmera]'); addMsgUI('sky', r);
+    addMsgUI('user', '[Imagem da câmera]'); addMsgUI('lúmina', r);
     saveHist(); speak(r);
   } catch { speak('Não consegui analisar a imagem, Senhor. Tente novamente.'); }
 };
@@ -3798,7 +3800,7 @@ const analyzeSpreadsheetFile = async (file) => {
     const summary  = buildSheetSummary(data.analysis);
     const speech   = buildSheetSpeech(data.analysis);
     addMsgUI('user', `📊 ${file.name}`);
-    addMsgUI('sky', summary);
+    addMsgUI('lúmina', summary);
     app.history.push({ role: 'user',  content: `[Planilha enviada: ${file.name}]` });
     app.history.push({ role: 'model', content: summary });
     app.lastResponseTime = Date.now();
@@ -3846,7 +3848,7 @@ const analyzeFile = async (file) => {
       });
       response = await callGemini();
       app.history.push({ role: 'model', content: response });
-      addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('sky', response);
+      addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('lúmina', response);
       saveHist(); speak(response); return;
 
     } else if (file.type === 'text/plain') {
@@ -3854,7 +3856,7 @@ const analyzeFile = async (file) => {
       app.history.push({ role: 'user', content: `Analise o conteúdo deste arquivo "${file.name}": ${txt.substring(0, 4000)}` });
       response = await callGemini();
       app.history.push({ role: 'model', content: response });
-      addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('sky', response);
+      addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lúmina', response);
       saveHist(); speak(response); return;
 
     } else {
@@ -3863,7 +3865,7 @@ const analyzeFile = async (file) => {
 
     app.history.push({ role: 'user', content: `[Arquivo: ${file.name}]` });
     app.history.push({ role: 'model', content: response });
-    addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('sky', response);
+    addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lúmina', response);
     saveHist(); speak(response);
   } catch (e) { console.error(e); speak('Não consegui analisar o arquivo.'); }
 };
@@ -3909,7 +3911,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inp-el-key').value = cfg.elevenLabsKey;
 
   // Render existing history in UI
-  app.history.forEach(h => addMsgUI(h.role === 'user' ? 'user' : 'sky', h.content));
+  app.history.forEach(h => addMsgUI(h.role === 'user' ? 'user' : 'lúmina', h.content));
 
   // Greeting
   const hr = new Date().getHours();
@@ -3924,7 +3926,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(briefingKey, todayBrief);
     const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
     const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
-    let briefing = `${gr}. ${returning}Sou Sky. `;
+    let briefing = `${gr}. ${returning}Sou Lúmina. `;
     if (pendingCount || habitCount) {
       if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
       if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
@@ -3934,14 +3936,14 @@ document.addEventListener('DOMContentLoaded', () => {
     briefing += 'Como posso ajudá-lo?';
     setTimeout(() => speak(briefing), 700);
   } else {
-    setTimeout(() => speak(`${gr}. ${returning}Sou Sky. ${ready}`), 700);
+    setTimeout(() => speak(`${gr}. ${returning}Sou Lúmina. ${ready}`), 700);
   }
 
   // ── Banner: sem chave Gemini ──
   if (!cfg.geminiKey) {
     const banner = document.createElement('div');
     banner.id = 'no-key-banner';
-    banner.innerHTML = `⚠️ <strong>Chave Gemini não configurada.</strong> Sky responde em modo offline. <a href="#" id="no-key-link" style="color:#ffcc00;text-decoration:underline">Configurar agora</a>`;
+    banner.innerHTML = `⚠️ <strong>Chave Gemini não configurada.</strong> Lúmina responde em modo offline. <a href="#" id="no-key-link" style="color:#ffcc00;text-decoration:underline">Configurar agora</a>`;
     Object.assign(banner.style, {
       position:'fixed', bottom:'0', left:'0', right:'0', zIndex:'9999',
       background:'#7a1010', color:'#fff', textAlign:'center',
@@ -4056,7 +4058,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await callGeminiVision(imgs, prompt);
         app.history.push({ role: 'model', content: response });
-        addMsgUI('sky', response);
+        addMsgUI('lúmina', response);
         saveHist();
         speak(response);
       } catch (err) { speak('Não consegui analisar a imagem. Tente novamente.'); }
@@ -4145,7 +4147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('chart-close')?.addEventListener('click', () => {
     hideDREChart();
     const r = pick(['Fechado!', 'Pronto, sumiu.', 'Ok.']);
-    addMsgUI('sky', r); speak(r);
+    addMsgUI('lúmina', r); speak(r);
   });
 
   // ── Informa planilha restaurada do localStorage ──
@@ -4155,7 +4157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const info = s
       ? `📊 Planilha "${nome}" ainda carregada (${s.months?.length || '?'} meses). Pode perguntar sobre qualquer mês.`
       : `📊 Planilha "${nome}" ainda carregada da sessão anterior.`;
-    setTimeout(() => addMsgUI('sky', info), 800);
+    setTimeout(() => addMsgUI('lúmina', info), 800);
   }
 
   // ── Init modules ──
@@ -4379,7 +4381,7 @@ const activateSkyReveal = () => {
   setTimeout(() => {
     switchView('chat-voz');
 
-    // Ativa modo apresentação: mic sempre on, mas ainda exige "sky" na frente
+    // Ativa modo apresentação: mic sempre on, mas ainda exige "Lúmina" na frente
     app.presentationMode = true;
     app.continuous = true; // mantém mic ligado após cada resposta
     document.getElementById('btn-continuous')?.classList.add('on');
@@ -4432,7 +4434,7 @@ const renderPainel = () => {
   recent.forEach(h => {
     const el = document.createElement('div');
     el.className = `pmsg ${h.role !== 'user' ? 'sky-msg' : ''}`;
-    el.textContent = `${h.role !== 'user' ? 'Sky: ' : 'Você: '}${h.content.substring(0, 90)}${h.content.length > 90 ? '…' : ''}`;
+    el.textContent = `${h.role !== 'user' ? 'Lúmina: ' : 'Você: '}${h.content.substring(0, 90)}${h.content.length > 90 ? '…' : ''}`;
     container.appendChild(el);
   });
 };
@@ -4562,12 +4564,12 @@ const addChatBubble = (role, text, typing = false) => {
 const syncChatTexto = () => {
   const msgs = document.getElementById('chat-texto-msgs');
   if (msgs.children.length === 0 && textHistory.length === 0) {
-    addChatBubble('sky', 'Pronto. Pode falar.');
+    addChatBubble('lúmina', 'Pronto. Pode falar.');
   }
 };
 
 const processChatTexto = async () => {
-  const el = addChatBubble('sky', '…', true);
+  const el = addChatBubble('lúmina', '…', true);
   try {
     const response = await callGemini(textHistory);
     textHistory.push({ role: 'model', content: response });
@@ -4963,7 +4965,7 @@ const initConfiguracoes = () => {
     saveCfg(); toast('Configurações salvas.', 'success');
   });
   document.getElementById('cfg-clear-mem').addEventListener('click', () => {
-    if (confirm('Apagar toda a memória de Sky?')) {
+    if (confirm('Apagar toda a memória da Lúmina?')) {
       saveMem(defaultMem()); renderMemoryPanel(); toast('Memória apagada.', 'info');
     }
   });
@@ -5017,7 +5019,7 @@ const initKnowledge = () => {
       saveNotes([...data.notes, ...existing]);
       renderKnowledge();
       docStatus.textContent = `✓ ${data.chunks} trechos importados de "${file.name}"`;
-      toast(`Documento importado: ${data.chunks} trechos prontos para a Sky.`, 'success');
+      toast(`Documento importado: ${data.chunks} trechos prontos para a Lúmina.`, 'success');
     } catch (err) {
       docStatus.textContent = '';
       toast('Erro ao importar: ' + err.message, 'error');

@@ -1,9 +1,14 @@
-const express    = require('express');
+﻿const express    = require('express');
 const path       = require('path');
 const fs         = require('fs');
 const { exec, spawn } = require('child_process');
 const os         = require('os');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+
+// Quando rodando como filho do Electron: encerra junto com o pai
+if (process.channel) {
+  process.on('disconnect', () => process.exit(0));
+}
 
 const PIPER_DIR    = path.join(__dirname, 'piper');
 const PIPER_EXE    = path.join(PIPER_DIR, 'piper.exe');
@@ -14,9 +19,9 @@ const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
 let puppeteer = null; // lazy load — carregado só quando /api/browser for usado
 
-const SKY_PRINTS_DIR    = path.join(os.homedir(), 'Pictures', 'Sky Prints');
-const SKY_GRAVACOES_DIR = path.join(os.homedir(), 'Pictures', 'Sky Gravacoes');
-[SKY_PRINTS_DIR, SKY_GRAVACOES_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
+const LUMINA_PRINTS_DIR    = path.join(os.homedir(), 'Pictures', 'Lumina Prints');
+const LUMINA_GRAVACOES_DIR = path.join(os.homedir(), 'Pictures', 'Lumina Gravacoes');
+[LUMINA_PRINTS_DIR, LUMINA_GRAVACOES_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
 let activeRecording = { page: null, recorder: null, filePath: null };
 const { analyzeSpreadsheet, buildSheetContext } = require('./services/spreadsheetAnalyzer');
@@ -64,7 +69,7 @@ const saveEmbed = (data) => { _embedCache = data; writeJSON(EMBED_FILE, data); }
 // ── Express ───────────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json({ limit: '20mb' }));
-// Serve arquivos da raiz (versão atual da Sky) antes do public/
+// Serve arquivos da raiz (versão atual da Lúmina) antes do public/
 const noCache = (res) => res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 app.get('/',          (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/style.css', (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'style.css')); });
@@ -350,7 +355,7 @@ app.post('/api/tts-edge', async (req, res) => {
     const tts    = new MsEdgeTTS();
     await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
     const chunks = [];
-    const { audioStream } = tts.toStream(text);
+    const { audioStream } = tts.toStream(text, { rate: 1.3 });
     audioStream.on('data',  c => chunks.push(c));
     audioStream.on('end',   () => { res.set('Content-Type', 'audio/mpeg'); res.send(Buffer.concat(chunks)); });
     audioStream.on('error', e => { if (!res.headersSent) res.status(500).json({ error: e.message }); });
@@ -632,7 +637,7 @@ DATA_STORES.forEach(store => {
 });
 
 // ── Obsidian Sync ─────────────────────────────────────────────────────────────
-const VAULT_PATH = path.join(os.homedir(), 'Documents', 'Sky Vault');
+const VAULT_PATH = path.join(os.homedir(), 'Documents', 'Lumina Vault');
 
 const vaultDir  = (...parts) => path.join(VAULT_PATH, ...parts);
 const safeSlug  = (s) => String(s).replace(/[\\/:*?"<>|]/g, '-').trim().substring(0, 80);
@@ -785,7 +790,7 @@ sessions: ${mem.sessions || 0}
 **Sessões:** ${mem.sessions || 0}
 **Último acesso:** ${mem.lastSeen || now()}
 
-## O que a Sky sabe sobre você
+## O que a Lúmina sabe sobre você
 ${fatos}
 
 ## Conversas recentes
@@ -796,7 +801,7 @@ ${fatos}
   const dateSlug = now();
   if (hist.length) {
     const linhas = hist.map(h =>
-      `**${h.role === 'user' ? '🧑 Você' : '🤖 Sky'}:** ${String(h.content).substring(0, 200)}`
+      `**${h.role === 'user' ? '🧑 Você' : '🤖 Lúmina'}:** ${String(h.content).substring(0, 200)}`
     ).join('\n\n');
     writeVault(`Conversas/${dateSlug}.md`,
 `---
@@ -831,15 +836,15 @@ ${files.map(f => `- [[Conversas/${f.replace('.md', '')}]]`).join('\n') || '- nen
     }
   } catch {}
 
-  // Nó central — Cérebro da Sky
+  // Nó central — Cérebro da Lúmina
   writeVault('Cérebro.md',
 `---
 tags: [sky, cerebro, hub]
 updated: ${now()}
 ---
-# 🧠 Cérebro da Sky
+# 🧠 Cérebro da Lúmina
 
-> Mapa central de tudo que a Sky conhece e registra.
+> Mapa central de tudo que a Lúmina conhece e registra.
 
 ## Usuário
 - [[Memória/Perfil]]
@@ -869,7 +874,7 @@ app.post('/api/memory', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── Import de vault Obsidian externo → Base de Conhecimento da Sky ───────────
+// ── Import de vault Obsidian externo → Base de Conhecimento da Lúmina ───────────
 app.post('/api/import-vault', (req, res) => {
   const vaultRoot = req.body.path;
   if (!vaultRoot || !fs.existsSync(vaultRoot)) {
@@ -1005,7 +1010,7 @@ const triggerReindex = () => {
 
 // ── Windows Notifications ─────────────────────────────────────────────────────
 app.post('/api/notify', (req, res) => {
-  const { title = 'Sky', message = '', sound = true } = req.body;
+  const { title = 'Lúmina', message = '', sound = true } = req.body;
   notifier.notify({ title, message, sound, icon: path.join(__dirname, 'public', 'icon.png'), wait: false });
   res.json({ ok: true });
 });
@@ -1075,17 +1080,17 @@ app.post('/api/browser', async (req, res) => {
       const domain    = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
       const stamp     = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
       const fileName  = `sky_${stamp}_${domain}.png`;
-      const filePath  = path.join(SKY_PRINTS_DIR, fileName);
+      const filePath  = path.join(LUMINA_PRINTS_DIR, fileName);
       await page.setViewport({ width: 1280, height: 800 });
       await page.screenshot({ path: filePath, fullPage: false });
       res.json({ ok: true, title, filePath, fileName });
 
     } else if (action === 'recordStart') {
-      if (activeRecording.recorder) return res.status(409).json({ error: 'Gravação já em andamento. Diga "Sky, para de gravar" primeiro.' });
+      if (activeRecording.recorder) return res.status(409).json({ error: 'Gravação já em andamento. Diga "Lúmina, para de gravar" primeiro.' });
       const domain   = new URL(url).hostname.replace(/^www\./, '').replace(/\./g, '_');
       const stamp    = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
       const fileName = `sky_${stamp}_${domain}.webm`;
-      const filePath = path.join(SKY_GRAVACOES_DIR, fileName);
+      const filePath = path.join(LUMINA_GRAVACOES_DIR, fileName);
       await page.setViewport({ width: 1280, height: 800 });
       const recorder = await page.screencast({ path: filePath });
       activeRecording = { page, recorder, filePath };
@@ -1991,7 +1996,7 @@ const pushEvent = (type, message, action = null) => {
     try { client.write(`data: ${data}\n\n`); } catch {}
   });
   // também dispara toast Windows
-  notifier.notify({ title: 'Sky', message, sound: true, wait: false });
+  notifier.notify({ title: 'Lúmina', message, sound: true, wait: false });
 };
 
 // Guarda a última data em que cada tipo de notificação foi enviada

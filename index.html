@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sky | Assistente de IA</title>
+  <title>Lúmina | Assistente de IA</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://accounts.google.com/gsi/client" async></script>
   <script src="/chart.min.js"></script>
@@ -15,7 +15,7 @@
   <nav class="sidebar" id="sidebar">
     <div class="sb-brand">
       <div class="sb-dot"></div>
-      <span class="sb-title">SKY</span>
+      <span class="sb-title">LÚMINA</span>
     </div>
     <ul class="sb-nav">
       <li class="sb-item" data-view="painel">
@@ -150,7 +150,7 @@
                   <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
               </defs>
-              <!-- Sky glow border rings -->
+              <!-- Lumina glow border rings -->
               <circle cx="100" cy="100" r="97" fill="none" stroke="#f87171" stroke-width="10" opacity="0.07"/>
               <circle cx="100" cy="100" r="97" fill="none" stroke="#ef4444" stroke-width="4"  opacity="0.28"/>
               <circle cx="100" cy="100" r="97" fill="none" stroke="#fca5a5" stroke-width="2"  opacity="0.9"/>
@@ -186,7 +186,7 @@
           <div class="chart-body">
             <canvas id="dre-chart"></canvas>
           </div>
-          <p class="chart-hint">💬 Diga "Sky, pode remover" para fechar</p>
+          <p class="chart-hint">💬 Diga "Lúmina, pode remover" para fechar</p>
         </div>
       </div>
       </main>
@@ -238,8 +238,8 @@
     <section class="view" id="view-novidades">
       <div class="view-header"><h2 class="view-title">Novidades</h2></div>
       <div class="view-body">
-        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Sky — redesign completo</h3><p class="news-body">Interface reformulada com tema vermelho, animação de bolha flutuante e sistema de navegação com módulos.</p></div>
-        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Aprendizado unificado</h3><p class="news-body">Sky aprende sobre você na mesma requisição da resposta, sem chamadas duplas — mais rápido e econômico.</p></div>
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Lúmina — redesign completo</h3><p class="news-body">Interface reformulada com tema vermelho, animação de bolha flutuante e sistema de navegação com módulos.</p></div>
+        <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Aprendizado unificado</h3><p class="news-body">Lúmina aprende sobre você na mesma requisição da resposta, sem chamadas duplas — mais rápido e econômico.</p></div>
         <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Módulos: Tarefas, Hábitos, Finanças</h3><p class="news-body">Gerencie seu dia diretamente no painel sem sair do assistente.</p></div>
         <div class="news-item"><div class="news-date">Maio 2025</div><h3 class="news-title">Personalização de tema</h3><p class="news-body">Escolha a cor de destaque da interface em Personalização.</p></div>
       </div>
@@ -276,12 +276,12 @@
           <div style="display:flex;align-items:center;gap:1rem">
             <div class="intg-logo" style="font-size:1.1rem">🟣</div>
             <div class="intg-info">
-              <div class="intg-name">Obsidian — Sky Vault</div>
+              <div class="intg-name">Obsidian — Lumina Vault</div>
               <div class="intg-status" id="intg-obsidian-status">Pronto para sincronizar</div>
             </div>
             <div class="intg-badge ok" id="intg-obsidian-dot">●</div>
           </div>
-          <p class="fld-hint" style="margin:0">Tarefas, hábitos, finanças, notas e memória são sincronizados automaticamente no vault <strong>~/Documents/Sky Vault</strong>. Clique abaixo para forçar uma sincronização completa.</p>
+          <p class="fld-hint" style="margin:0">Tarefas, hábitos, finanças, notas e memória são sincronizados automaticamente no vault <strong>~/Documents/Lumina Vault</strong>. Clique abaixo para forçar uma sincronização completa.</p>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="green-btn" id="intg-obsidian-sync" style="flex:1">Sincronizar agora</button>
             <button class="ghost-btn" id="intg-obsidian-import-brain" style="flex:1">Importar Cérebro Obsidian</button>
@@ -305,7 +305,7 @@
       </div>
       <div class="chat-msgs" id="chat-texto-msgs"></div>
       <div class="chat-input-wrap">
-        <input type="text" id="chat-texto-input" class="text-fld" placeholder="Digite sua mensagem para Sky…" autocomplete="off">
+        <input type="text" id="chat-texto-input" class="text-fld" placeholder="Digite sua mensagem para Lúmina…" autocomplete="off">
         <button class="send-btn" id="chat-texto-send">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -329,12 +329,12 @@
     <section class="view" id="view-como-usar">
       <div class="view-header"><h2 class="view-title">Como Usar</h2></div>
       <div class="view-body">
-        <div class="help-item"><div class="help-icon">🎤</div><div><div class="help-title">Chat por Voz</div><div class="help-desc">Clique no microfone ou pressione Espaço. Sky responde com voz. Escape para parar.</div></div></div>
+        <div class="help-item"><div class="help-icon">🎤</div><div><div class="help-title">Chat por Voz</div><div class="help-desc">Clique no microfone ou pressione Espaço. Lúmina responde com voz. Escape para parar.</div></div></div>
         <div class="help-item"><div class="help-icon">💬</div><div><div class="help-title">Chat por Texto</div><div class="help-desc">Use "Chat IA Texto" na barra lateral ou o campo de texto na tela de voz. Enter para enviar.</div></div></div>
-        <div class="help-item"><div class="help-icon">📷</div><div><div class="help-title">Câmera</div><div class="help-desc">Botão "Ver Câmera" na barra do chat de voz. Capture e Sky analisa a imagem.</div></div></div>
+        <div class="help-item"><div class="help-icon">📷</div><div><div class="help-title">Câmera</div><div class="help-desc">Botão "Ver Câmera" na barra do chat de voz. Capture e Lúmina analisa a imagem.</div></div></div>
         <div class="help-item"><div class="help-icon">📎</div><div><div class="help-title">Arquivos</div><div class="help-desc">Envie imagens ou .txt para análise pelo botão "Analisar Arquivo".</div></div></div>
-        <div class="help-item"><div class="help-icon">🧠</div><div><div class="help-title">Memória</div><div class="help-desc">Sky aprende sobre você automaticamente. Veja em "Memória" (ícone banco de dados).</div></div></div>
-        <div class="help-item"><div class="help-icon">⚡</div><div><div class="help-title">Conversa Contínua</div><div class="help-desc">Ative para Sky ouvir e responder automaticamente sem precisar clicar.</div></div></div>
+        <div class="help-item"><div class="help-icon">🧠</div><div><div class="help-title">Memória</div><div class="help-desc">Lúmina aprende sobre você automaticamente. Veja em "Memória" (ícone banco de dados).</div></div></div>
+        <div class="help-item"><div class="help-icon">⚡</div><div><div class="help-title">Conversa Contínua</div><div class="help-desc">Ative para Lúmina ouvir e responder automaticamente sem precisar clicar.</div></div></div>
         <div class="help-item"><div class="help-icon">🔑</div><div><div class="help-title">Chaves API</div><div class="help-desc">Configure em Configurações e Notificações. Gemini obrigatório, ElevenLabs opcional.</div></div></div>
       </div>
     </section>
@@ -412,7 +412,7 @@
     <section class="view" id="view-conhecimento">
       <div class="view-header">
         <h2 class="view-title">Base de Conhecimento</h2>
-        <span style="font-size:0.72rem;color:var(--text-dim)">Sky consulta automaticamente por contexto</span>
+        <span style="font-size:0.72rem;color:var(--text-dim)">Lúmina consulta automaticamente por contexto</span>
       </div>
       <div class="view-body">
         <div class="add-row">
@@ -432,7 +432,7 @@
 
         <div class="kb-hint">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Importe PDFs, Word (.docx) ou TXT de manuais da empresa. Sky vai ler tudo e responder com base no conteúdo.
+          Importe PDFs, Word (.docx) ou TXT de manuais da empresa. Lúmina vai ler tudo e responder com base no conteúdo.
         </div>
         <div id="note-list" class="item-list"></div>
       </div>
@@ -475,7 +475,7 @@
         <div class="setting-section">
           <div class="setting-label">Seu nome</div>
           <div style="display:flex;gap:0.5rem;align-items:center">
-            <input type="text" id="prs-name" class="text-fld" placeholder="Como Sky deve te chamar?" style="max-width:280px">
+            <input type="text" id="prs-name" class="text-fld" placeholder="Como Lúmina deve te chamar?" style="max-width:280px">
             <button class="ghost-btn" id="prs-save-name" style="font-size:0.8rem">Salvar</button>
           </div>
         </div>
@@ -675,13 +675,13 @@
             </div>
           </div>
 
-          <!-- SLIDE 12: ARQUITETURA SKY -->
+          <!-- SLIDE 12: ARQUITETURA LÚMINA -->
           <div class="pres-slide" data-slide="12">
             <div class="pres-tag">A RESPOSTA DA SCAPINI</div>
             <h2 class="pres-title">Uma camada de inteligência<br><span class="pres-accent">acima de tudo</span></h2>
             <div class="pres-arch">
               <div class="pres-arch-top">
-                <div class="pres-arch-sky">🧠 SKY — Inteligência</div>
+                <div class="pres-arch-sky">🧠 LÚMINA — Inteligência</div>
                 <div class="pres-arch-desc">Linguagem natural · Alertas · Relatórios · Decisão</div>
               </div>
               <div class="pres-arch-arrow">↕</div>
@@ -699,9 +699,9 @@
           <div class="pres-slide pres-reveal" data-slide="13">
             <div class="pres-reveal-glow"></div>
             <p class="pres-reveal-pre">Senhoras e senhores,</p>
-            <h1 class="pres-reveal-title">eu apresento a <span class="pres-accent">Sky</span></h1>
+            <h1 class="pres-reveal-title">eu apresento a <span class="pres-accent">LÚMINA</span></h1>
             <p class="pres-reveal-sub">A inteligência da Scapini</p>
-            <button class="pres-activate-btn" id="pres-activate-btn">&#9654; Ativar Sky</button>
+            <button class="pres-activate-btn" id="pres-activate-btn">&#9654; Ativar Lúmina</button>
             <div class="pres-reveal-ring"></div>
             <div class="pres-reveal-ring2"></div>
           </div>
@@ -753,7 +753,7 @@
         <button class="green-btn" id="cfg-save" style="margin-top:1.2rem">Salvar Configurações</button>
         <div class="setting-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
           <div class="setting-label" style="color:var(--text-dim);margin-bottom:0.5rem">Zona de perigo</div>
-          <button class="ghost-btn" id="cfg-clear-mem" style="font-size:0.8rem;border-color:rgba(239,68,68,0.3);color:rgba(239,68,68,0.7)">Apagar memória de Sky</button>
+          <button class="ghost-btn" id="cfg-clear-mem" style="font-size:0.8rem;border-color:rgba(239,68,68,0.3);color:rgba(239,68,68,0.7)">Apagar memória de Lúmina</button>
         </div>
       </div>
     </section>
