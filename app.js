@@ -1011,6 +1011,12 @@ const cleanForTTS = (raw) => {
     // Consumo km/l → "X vírgula Y quilômetros por litro"
     .replace(/(\d+),(\d+)\s*km\/l/gi, (_, i, d) => `${i} vírgula ${d} quilômetros por litro`)
     .replace(/\bkm\/l\b/gi, 'quilômetros por litro')
+    // Intervalos de porcentagem "8-14%" → "8 a 14 por cento"
+    .replace(/(\d+)\s*[-–]\s*(\d+)\s*%/g, (_, a, b) => `${a} a ${b} por cento`)
+    // Porcentagem simples já cobertas, mas garante o hífen antes
+    // Intervalos de valor "R$200-800" ou "R$200 a R$800" → "200 a 800 reais"
+    .replace(/R\$\s*(\d[\d.,]*)\s*[-–a]\s*(?:R\$\s*)?(\d[\d.,]*)/g, (_, a, b) => `${a} a ${b} reais`)
+    // "x a y reais por mês" → já natural; garante sem R$
     // Temperatura: -18°C → "menos 18 graus"
     .replace(/-(\d+)\s*°C/g, (_, n) => `menos ${n} graus`)
     .replace(/\+?(\d+)\s*°C/g, (_, n) => `${n} graus`)
@@ -4639,6 +4645,35 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO ESTRATÉGIA EMPRESARIAL AVANÇADA ─────────────────────────────────────
+
+  // Valuation / avaliação de empresa transportadora
+  { re: /valuation|avaliacao.*empresa|quanto.*vale.*empresa|valor.*empresa|multiplo.*ebitda|vender.*empresa|venda.*transportadora|quanto.*vale.*scapini/,
+    r: [
+      'Valuation de transportadora: o método mais usado no setor é múltiplo de EBITDA. Transportadoras de médio porte no Brasil são avaliadas em 4 a 7x o EBITDA anual. Se a Scapini tem EBITDA de R$2 milhões/ano, o valor justo fica entre R$8 e R$14 milhões. O múltiplo sobe se a empresa tem: contratos longos com clientes âncora, frota própria (não financiada), tecnologia integrada, e baixa dependência do dono.',
+      'Fatores que aumentam o valuation: frota com menos de 5 anos de média (reduz risco de manutenção), carteira diversificada (nenhum cliente com mais de 20% do faturamento), fluxo de caixa previsível (contratos de 12+ meses), e processos documentados (não depende de pessoas-chave). Esses mesmos fatores reduzem risco para compradores e aumentam o múltiplo de EBITDA na negociação.',
+    ]},
+
+  // Fusão, aquisição e expansão
+  { re: /fusao|aquisicao|comprar.*transportadora|adquirir.*empresa|m&a.*transporte|crescer.*aquisicao|expansao.*regional|abrir.*filial/,
+    r: [
+      'M&A no transporte rodoviário: o setor está em consolidação — grandes grupos (JSL, Sequoia, Tegma) estão comprando transportadoras regionais. Para a Scapini, duas estratégias: ser vendedor (preparar empresa por 2-3 anos para venda a múltiplo alto) ou ser comprador (adquirir concorrente menor para ganhar rota, frota ou carteira). Due diligence mínima: DRE 3 anos, passivo trabalhista, estado da frota, contratos ativos.',
+      'Abertura de filial: para expansão regional (ex: Scapini abrindo em São Paulo ou Curitiba), avalie primeiro um ponto de apoio operacional (cross-docking, sem funcionários fixos) antes de montar estrutura completa. Custo de filial pequena: R$15.000-40.000/mês fixo. ROI mínimo: volume que pague a estrutura + 20% de margem. Tempo para break-even: 6 a 18 meses dependendo da rota.',
+    ]},
+
+  // Governo e incentivos fiscais para transporte
+  { re: /incentivo.*fiscal.*transporte|beneficio.*fiscal.*transportadora|pis.*cofins.*transporte|simples.*nacional.*transporte|regime.*tributario.*transporte|lucro.*presumido.*transporte/,
+    r: [
+      'Regime tributário para transportadora: Simples Nacional (até R$4,8M de faturamento) — alíquota efetiva 11-14% sobre faturamento. Lucro Presumido (até R$78M) — tributação sobre 8% do faturamento como base de IRPJ + CSLL + PIS/COFINS (9,25% sobre receita bruta). Para transportadoras médias, Lucro Presumido costuma ser mais vantajoso que Simples acima de R$1,5M/ano. Consulte seu contador para simulação comparativa.',
+      'Incentivos fiscais para transporte: o subsetor de transporte de cargas tem isenção de PIS/COFINS sobre receitas de exportação de serviços (frete internacional). Estados do Sul oferecem ICMS diferido ou reduzido para transportadoras com operação relevante — negocie com a SEFAZ/RS. Programa BNDES para renovação de frota: FINAME com taxa subsidiada para caminhões da indústria nacional (Euro 6).',
+    ]},
+
+  // Pandemia / resiliência / black swan
+  { re: /pandemia.*transporte|crise.*pandemia|resiliencia.*empresa|black.*swan|evento.*extremo.*transporte|greve.*caminhoneiro|2018.*caminhoneiro/,
+    r: [
+      'Resiliência no transporte pós-pandemia: a greve de 2018 e a pandemia de 2020 mostraram que transportadoras sem reserva de caixa quebram em 3-4 semanas de operação reduzida. Boas práticas: reserva de emergência de 3 meses de custo fixo, contratos com cláusula de força maior revisada, diversificação de clientes (nenhum com mais de 20% do faturamento), e seguro de lucros cessantes. Empresas resilientes saíram de cada crise com market share maior.',
     ]},
 
   // ── BLOCO GESTÃO DE CRISE E TÓPICOS AVANÇADOS ─────────────────────────────────
