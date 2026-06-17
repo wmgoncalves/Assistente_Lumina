@@ -43,7 +43,7 @@ echo.
 
 :: ─── Lumina ─────────────────────────────────────────────────────────────────────
 echo  Iniciando Lumina...
-echo  Abra o Chrome em: http://localhost:8080
+echo  Abra o Chrome em: http://127.0.0.1:8080
 echo  Pressione Ctrl+C para encerrar.
 echo.
 

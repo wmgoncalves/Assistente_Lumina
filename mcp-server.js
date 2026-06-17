@@ -3,12 +3,37 @@
 const http = require('http');
 
 const LUMINA_PORT = process.env.LUMINA_PORT || 8080;
+const LUMINA_HOST = process.env.LUMINA_HOST || '127.0.0.1';
+const MCP_DANGEROUS = process.env.LUMINA_MCP_DANGEROUS === '1' || process.env.LUMINA_DEV === '1';
+const DANGEROUS_TOOLS = new Set(['lumina_editFile', 'lumina_writeFile', 'lumina_runCommand']);
 
-const luminaFetch = (path, body) => new Promise((resolve, reject) => {
+let _sessionTokenPromise = null;
+const getSessionToken = () => {
+  if (_sessionTokenPromise) return _sessionTokenPromise;
+  _sessionTokenPromise = new Promise((resolve) => {
+    http.get({ hostname: LUMINA_HOST, port: LUMINA_PORT, path: '/api/local-session' }, res => {
+      let buf = '';
+      res.on('data', c => buf += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(buf).token || ''); }
+        catch { resolve(''); }
+      });
+    }).on('error', () => resolve(''));
+  });
+  return _sessionTokenPromise;
+};
+
+const luminaFetch = async (path, body) => {
+  const token = await getSessionToken();
+  return new Promise((resolve, reject) => {
   const data = JSON.stringify(body);
   const req  = http.request({
-    hostname: 'localhost', port: LUMINA_PORT, path, method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
+    hostname: LUMINA_HOST, port: LUMINA_PORT, path, method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(data),
+      'X-Lumina-Token': token,
+    }
   }, res => {
     let buf = '';
     res.on('data', c => buf += c);
@@ -20,10 +45,13 @@ const luminaFetch = (path, body) => new Promise((resolve, reject) => {
   req.on('error', reject);
   req.write(data);
   req.end();
-});
+  });
+};
 
-const luminaGet = (path) => new Promise((resolve, reject) => {
-  http.get({ hostname: 'localhost', port: LUMINA_PORT, path }, res => {
+const luminaGet = async (path) => {
+  const token = await getSessionToken();
+  return new Promise((resolve, reject) => {
+  http.get({ hostname: LUMINA_HOST, port: LUMINA_PORT, path, headers: { 'X-Lumina-Token': token } }, res => {
     let buf = '';
     res.on('data', c => buf += c);
     res.on('end', () => {
@@ -31,10 +59,11 @@ const luminaGet = (path) => new Promise((resolve, reject) => {
       catch { resolve({ status: res.statusCode, body: { raw: buf } }); }
     });
   }).on('error', reject);
-});
+  });
+};
 
 // ── Tool definitions ───────────────────────────────────────────────────────────
-const TOOLS = [
+const ALL_TOOLS = [
   {
     name: 'lumina_readFile',
     description: 'Lê o conteúdo de um arquivo do computador do usuário. Suporta paginação via offset/limit.',
@@ -129,9 +158,14 @@ const TOOLS = [
     }
   }
 ];
+const TOOLS = MCP_DANGEROUS ? ALL_TOOLS : ALL_TOOLS.filter(t => !DANGEROUS_TOOLS.has(t.name));
 
 // ── Tool execution ─────────────────────────────────────────────────────────────
 const callTool = async (name, args) => {
+  if (DANGEROUS_TOOLS.has(name) && !MCP_DANGEROUS) {
+    return 'Ferramenta bloqueada no MCP seguro. Inicie com LUMINA_MCP_DANGEROUS=1 ou LUMINA_DEV=1 para liberar edição/escrita/comandos conscientemente.';
+  }
+
   switch (name) {
     case 'lumina_readFile': {
       const r = await luminaFetch('/api/dev/read', args);

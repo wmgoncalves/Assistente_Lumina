@@ -32,7 +32,7 @@ async function startServer() {
   await killPort(8080);
   return new Promise((resolve) => {
     server = fork(path.join(__dirname, 'server.js'), [], { silent: true });
-    server.stdout.on('data', (d) => { if (d.toString().includes('localhost')) resolve(); });
+    server.stdout.on('data', (d) => { if (/http:\/\/(127\.0\.0\.1|localhost):8080/.test(d.toString())) resolve(); });
     server.stderr.on('data', () => {});
     setTimeout(resolve, 2000);
   });
@@ -93,20 +93,41 @@ function createWindow() {
     }
   });
 
-  win.webContents.session.setPermissionRequestHandler((_, permission, callback) => {
-    callback(['media','microphone','audioCapture','videoCapture','camera'].includes(permission));
+  const isLuminaOrigin = (url = '') => {
+    try {
+      const u = new URL(url);
+      return u.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(u.hostname) && u.port === '8080';
+    } catch {
+      return false;
+    }
+  };
+
+  win.webContents.session.setPermissionRequestHandler((_, permission, callback, details = {}) => {
+    const allowedPermission = ['media','microphone','audioCapture','videoCapture','camera'].includes(permission);
+    const allowedOrigin = isLuminaOrigin(details.requestingUrl || details.embeddingOrigin || details.securityOrigin);
+    callback(allowedPermission && allowedOrigin);
   });
-  win.webContents.session.setPermissionCheckHandler((_, permission) => {
-    return ['media','microphone','audioCapture','videoCapture','camera'].includes(permission);
+  win.webContents.session.setPermissionCheckHandler((_, permission, requestingOrigin) => {
+    return ['media','microphone','audioCapture','videoCapture','camera'].includes(permission) && isLuminaOrigin(requestingOrigin);
   });
 
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const u = new URL(url);
+      if (['http:', 'https:', 'mailto:'].includes(u.protocol)) shell.openExternal(url);
+    } catch (_) {}
+    return { action: 'deny' };
+  });
   win.webContents.setBackgroundThrottling(false);
 
-  win.webContents.session.clearCache().then(() => win.loadURL('http://localhost:8080'));
+  win.webContents.session.clearCache().then(() => win.loadURL('http://127.0.0.1:8080'));
 
   win.webContents.on('before-input-event', (_, input) => {
     if (input.key === 'Escape' && input.type === 'keyDown') win.hide();
+    // Ctrl+R ou F5 — recarrega só o frontend (app.js, CSS) sem reiniciar o servidor
+    if (input.type === 'keyDown' && (input.key === 'F5' || (input.key === 'r' && input.control))) {
+      win.webContents.reload();
+    }
   });
 
   win.on('close', (e) => { e.preventDefault(); win.hide(); });
@@ -114,7 +135,7 @@ function createWindow() {
 
 try {
   app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
-  app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://localhost:8080');
+  app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://127.0.0.1:8080');
 } catch (_) {}
 
 ipcMain.on('lumina-show', () => showWindow());

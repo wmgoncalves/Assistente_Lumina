@@ -1,7 +1,8 @@
 ﻿const express    = require('express');
 const path       = require('path');
 const fs         = require('fs');
-const { exec, spawn } = require('child_process');
+const crypto     = require('crypto');
+const { exec, execFile, spawn } = require('child_process');
 const os         = require('os');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
@@ -34,9 +35,13 @@ if (!globalThis.fetch) {
   process.exit(1);
 }
 
-const PORT        = process.env.PORT || 8080;
+const PORT        = Number(process.env.PORT || 8080);
+const HOST        = process.env.HOST || '127.0.0.1';
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 const MEMORY_FILE = path.join(__dirname, 'memory.json');
+const WORKSPACE_ROOT = path.resolve(__dirname);
+const DEV_TOOLS_ENABLED = process.env.LUMINA_DEV === '1';
+const ALLOW_SYSTEM_FILES = process.env.LUMINA_ALLOW_SYSTEM_FILES === '1';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const readJSON = (file, def) => {
@@ -66,6 +71,78 @@ const saveCfg  = (data) => { _cfgCache  = data; writeJSON(CONFIG_FILE,  data); }
 const saveMem  = (data) => { _memCache  = data; writeJSON(MEMORY_FILE,  data); };
 const saveEmbed = (data) => { _embedCache = data; writeJSON(EMBED_FILE, data); };
 
+const getLocalApiToken = () => {
+  const c = getCfg();
+  if (!c.localApiToken || typeof c.localApiToken !== 'string' || c.localApiToken.length < 32) {
+    c.localApiToken = crypto.randomBytes(32).toString('hex');
+    saveCfg(c);
+  }
+  return c.localApiToken;
+};
+
+const isLoopbackAddress = (addr = '') =>
+  addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+
+const isTrustedHost = (hostname = '') =>
+  ['localhost', '127.0.0.1', '[::1]', '::1'].includes(String(hostname).toLowerCase());
+
+const isTrustedOrigin = (origin = '') => {
+  try {
+    const u = new URL(origin);
+    return (u.protocol === 'http:' || u.protocol === 'https:') && isTrustedHost(u.hostname);
+  } catch {
+    return false;
+  }
+};
+
+const hasValidLocalToken = (req) => {
+  const provided = req.get('x-lumina-token') || req.get('x-lumina-dev-token') || '';
+  const expected = getLocalApiToken();
+  if (!provided || provided.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+};
+
+const PUBLIC_GET_ENDPOINTS = [
+  /^\/api\/local-session$/,
+  /^\/api\/events$/,
+  /^\/api\/download-doc\//,
+  /^\/api\/leads\/export$/,
+  /^\/api\/piper-available$/,
+  /^\/api\/news$/,
+  /^\/api\/sports$/,
+];
+
+const SENSITIVE_GET_ENDPOINTS = [
+  /^\/api\/config$/,
+  /^\/api\/memory$/,
+  /^\/api\/history$/,
+  /^\/api\/logs$/,
+  /^\/api\/db\/stats$/,
+  /^\/api\/data\//,
+];
+
+const requiresLocalToken = (req) => {
+  if (!req.path.startsWith('/api/')) return false;
+  if (req.method === 'GET' && PUBLIC_GET_ENDPOINTS.some(re => re.test(req.path))) return false;
+  if (req.method !== 'GET') return true;
+  return SENSITIVE_GET_ENDPOINTS.some(re => re.test(req.path)) || req.path.startsWith('/api/dev/');
+};
+
+const resolveWorkspacePath = (inputPath = '.') => {
+  const raw = String(inputPath || '.');
+  const resolved = path.resolve(path.isAbsolute(raw) ? raw : path.join(WORKSPACE_ROOT, raw));
+  if (!ALLOW_SYSTEM_FILES && resolved !== WORKSPACE_ROOT && !resolved.startsWith(WORKSPACE_ROOT + path.sep)) {
+    throw new Error('Caminho fora do workspace bloqueado. Defina LUMINA_ALLOW_SYSTEM_FILES=1 para liberar conscientemente.');
+  }
+  return resolved;
+};
+
+const ensureDevToolsEnabled = (res) => {
+  if (DEV_TOOLS_ENABLED) return true;
+  res.status(403).json({ error: 'Ferramentas de desenvolvimento bloqueadas. Inicie com LUMINA_DEV=1 para liberar write/edit/exec.' });
+  return false;
+};
+
 // ── Express ───────────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json({ limit: '20mb' }));
@@ -77,29 +154,67 @@ app.get('/app.js',    (_, res) => { noCache(res); res.sendFile(path.join(__dirna
 app.get('/admin',     (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'admin.html')); });
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api/')) return next();
+
+  if (!isLoopbackAddress(req.socket.remoteAddress)) {
+    return res.status(403).json({ error: 'local_only' });
+  }
+
+  const origin = req.get('origin');
+  if (origin && !isTrustedOrigin(origin)) {
+    return res.status(403).json({ error: 'origin_blocked' });
+  }
+
+  const fetchSite = req.get('sec-fetch-site');
+  if (fetchSite && !['same-origin', 'same-site', 'none'].includes(fetchSite)) {
+    return res.status(403).json({ error: 'cross_site_blocked' });
+  }
+
+  if (requiresLocalToken(req) && !hasValidLocalToken(req)) {
+    return res.status(401).json({ error: 'local_token_required' });
+  }
+
+  next();
+});
+
+app.get('/api/local-session', (req, res) => {
+  noCache(res);
+  res.json({
+    ok: true,
+    token: getLocalApiToken(),
+    devToolsEnabled: DEV_TOOLS_ENABLED,
+    workspaceOnly: !ALLOW_SYSTEM_FILES,
+  });
+});
+
 // ── Config ────────────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
   const c = getCfg();
-  // Expõe chaves apenas para localhost (app local, sem risco)
-  const isLocal = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
+  const canExposeSecrets = hasValidLocalToken(req);
   res.json({
     username:      c.username      || '',
-    geminiKey:     isLocal ? (c.geminiKey     || '') : '',
-    elevenLabsKey: isLocal ? (c.elevenLabsKey || '') : '',
-    elevenVoiceId: isLocal ? (c.elevenVoiceId || '') : '',
+    geminiKey:     canExposeSecrets ? (c.geminiKey     || '') : '',
+    elevenLabsKey: canExposeSecrets ? (c.elevenLabsKey || '') : '',
+    elevenVoiceId: c.elevenVoiceId || '',
+    elevenVoiceFemaleId: c.elevenVoiceFemaleId || '',
+    elevenVoiceMaleId: c.elevenVoiceMaleId || '',
     ollamaModel:   c.ollamaModel   || 'gemma3:1b',
     hasGemini:     !!c.geminiKey,
     hasElevenLabs: !!c.elevenLabsKey,
+    devToolsEnabled: DEV_TOOLS_ENABLED,
   });
 });
 
 app.post('/api/config', (req, res) => {
   const c = getCfg();
-  const { username, geminiKey, elevenLabsKey, elevenVoiceId, ollamaModel, frete_params } = req.body;
+  const { username, geminiKey, elevenLabsKey, elevenVoiceId, elevenVoiceFemaleId, elevenVoiceMaleId, ollamaModel, frete_params } = req.body;
   if (username      !== undefined)             c.username      = username;
   if (geminiKey     && geminiKey.trim())       c.geminiKey     = geminiKey.trim();
   if (elevenLabsKey && elevenLabsKey.trim())   c.elevenLabsKey = elevenLabsKey.trim();
   if (elevenVoiceId !== undefined)             c.elevenVoiceId = elevenVoiceId;
+  if (elevenVoiceFemaleId !== undefined)       c.elevenVoiceFemaleId = elevenVoiceFemaleId;
+  if (elevenVoiceMaleId   !== undefined)       c.elevenVoiceMaleId   = elevenVoiceMaleId;
   if (ollamaModel   && ollamaModel.trim())     c.ollamaModel   = ollamaModel.trim();
   if (frete_params  && typeof frete_params === 'object') {
     const ALLOWED = ['preco_diesel','pedagio_por_km','rendimento_km_l','margem_pct',
@@ -355,7 +470,7 @@ app.post('/api/tts-edge', async (req, res) => {
     const tts    = new MsEdgeTTS();
     await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
     const chunks = [];
-    const { audioStream } = tts.toStream(text, { rate: 1.3 });
+    const { audioStream } = tts.toStream(text);
     audioStream.on('data',  c => chunks.push(c));
     audioStream.on('end',   () => { res.set('Content-Type', 'audio/mpeg'); res.send(Buffer.concat(chunks)); });
     audioStream.on('error', e => { if (!res.headersSent) res.status(500).json({ error: e.message }); });
@@ -368,6 +483,27 @@ app.post('/api/tts-edge', async (req, res) => {
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
 const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+const fileExt = (name = '') => path.extname(String(name)).toLowerCase().replace('.', '');
+const hasMagic = (buffer, ext) => {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) return false;
+  if (['txt', 'csv'].includes(ext)) return !buffer.subarray(0, Math.min(buffer.length, 4096)).includes(0);
+  if (buffer.length < 4) return false;
+  if (ext === 'pdf') return buffer.subarray(0, 5).toString('ascii') === '%PDF-';
+  if (['docx', 'xlsx'].includes(ext)) return buffer[0] === 0x50 && buffer[1] === 0x4b;
+  if (ext === 'xls') return buffer.subarray(0, 8).equals(Buffer.from([0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1]));
+  return false;
+};
+const validateUpload = (file, allowedExts) => {
+  const ext = fileExt(file.originalname);
+  if (!allowedExts.includes(ext)) throw new Error(`Formato não suportado: .${ext || 'sem_extensao'}`);
+  if (!hasMagic(file.buffer, ext)) throw new Error(`Arquivo .${ext} inválido ou disfarçado.`);
+  return ext;
+};
+const safeUploadName = (originalname) => {
+  const cleaned = path.basename(String(originalname)).replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 120) || 'arquivo';
+  return `${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${cleaned}`;
+};
 
 const chunkText = (text, size = 800, overlap = 100) => {
   const chunks = [];
@@ -384,22 +520,24 @@ app.post('/api/extract-doc', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   const { originalname, mimetype, buffer } = req.file;
   try {
+    const ext = validateUpload(req.file, ['pdf', 'docx', 'txt']);
     let text = '', pages = null;
-    if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
+    if (ext === 'pdf') {
       const data = await pdfParse(buffer);
       text  = data.text;
       pages = data.numpages;
-    } else if (mimetype.includes('wordprocessingml') || originalname.endsWith('.docx')) {
+    } else if (ext === 'docx') {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value;
-    } else if (mimetype === 'text/plain') {
+    } else if (ext === 'txt') {
       text = buffer.toString('utf8');
     } else {
       return res.status(422).json({ error: 'Formato não suportado. Use PDF, DOCX ou TXT.' });
     }
     res.json({ ok: true, text: text.trim(), pages, chars: text.length });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const status = /Formato|disfarçado|inválido/i.test(e.message) ? 422 : 500;
+    res.status(status).json({ error: e.message });
   }
 });
 
@@ -408,10 +546,11 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
   const { originalname, mimetype, buffer } = req.file;
   let text = '';
   try {
-    if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
+    const ext = validateUpload(req.file, ['pdf', 'docx', 'txt']);
+    if (ext === 'pdf') {
       const data = await pdfParse(buffer);
       text = data.text;
-    } else if (mimetype.includes('wordprocessingml') || originalname.endsWith('.docx')) {
+    } else if (ext === 'docx') {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value;
     } else {
@@ -437,7 +576,7 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
     if (!text) return res.status(422).json({ error: 'Não foi possível extrair texto do arquivo.' });
 
     // Salva arquivo original para download posterior
-    const safeName = originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const safeName = safeUploadName(originalname);
     fs.writeFileSync(path.join(UPLOADS_DIR, safeName), buffer);
 
     const baseName = originalname.replace(/\.[^.]+$/, '');
@@ -451,7 +590,10 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
       date:    new Date().toISOString()
     }));
     res.json({ ok: true, chunks: notes.length, notes });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    const status = /Formato|disfarçado|inválido/i.test(e.message) ? 422 : 500;
+    res.status(status).json({ error: e.message });
+  }
 });
 
 // ── Download de arquivo original da base de conhecimento ─────────────────────
@@ -494,11 +636,8 @@ const buildRawSheetText = (buffer, filename) => {
 app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   const { originalname, buffer } = req.file;
-  const ext = (originalname.split('.').pop() || '').toLowerCase();
-  if (!['xlsx', 'xls', 'csv'].includes(ext)) {
-    return res.status(422).json({ error: `Formato não suportado: .${ext}. Use .xlsx, .xls ou .csv.` });
-  }
   try {
+    validateUpload(req.file, ['xlsx', 'xls', 'csv']);
     const result = analyzeSpreadsheet(buffer, originalname);
     if (!result.sheets.length) {
       return res.status(422).json({ error: 'Nenhuma aba com dados de valor/data foi detectada.' });
@@ -507,7 +646,8 @@ app.post('/api/analyze-spreadsheet', upload.single('file'), (req, res) => {
     res.json({ ok: true, analysis: result, context: buildSheetContext(result), rawText });
   } catch (err) {
     console.error('[analyze-spreadsheet]', err);
-    res.status(500).json({ error: 'Erro ao processar planilha: ' + err.message });
+    const status = /Formato|disfarçado|inválido/i.test(err.message) ? 422 : 500;
+    res.status(status).json({ error: 'Erro ao processar planilha: ' + err.message });
   }
 });
 
@@ -1005,7 +1145,10 @@ app.post('/api/search-notes', async (req, res) => {
 const triggerReindex = () => {
   const c = getCfg();
   if (!c.geminiKey) return;
-  fetch(`http://localhost:${PORT}/api/index-notes`, { method: 'POST' }).catch(() => {});
+  fetch(`http://${HOST}:${PORT}/api/index-notes`, {
+    method: 'POST',
+    headers: { 'X-Lumina-Token': getLocalApiToken() },
+  }).catch(() => {});
 };
 
 // ── Windows Notifications ─────────────────────────────────────────────────────
@@ -1600,19 +1743,61 @@ Verifique especialmente:
 
 // ── Dev Mode — Agente de Desenvolvimento ─────────────────────────────────────
 const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]/i;
+const DEV_SEARCH_SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.codex', '.agents', '.claude']);
+
+const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function collectSearchFiles(root, fileGlob, out = []) {
+  if (out.length >= 1000) return out;
+  const suffix = String(fileGlob || '**/*').replace(/^\*\*\//, '').startsWith('*.')
+    ? String(fileGlob).replace(/^\*\*\//, '').slice(1)
+    : '';
+
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (out.length >= 1000) break;
+    const full = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      if (!DEV_SEARCH_SKIP_DIRS.has(entry.name)) collectSearchFiles(full, fileGlob, out);
+    } else if (!suffix || entry.name.endsWith(suffix)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+function searchFiles({ pattern, dir, glob, caseSensitive }) {
+  if (String(pattern).length > 200) throw new Error('pattern muito grande');
+  const root = resolveWorkspacePath(dir || '.');
+  const flags = caseSensitive ? '' : 'i';
+  let re;
+  try { re = new RegExp(pattern, flags); }
+  catch { re = new RegExp(escapeRegExp(pattern), flags); }
+
+  const matches = [];
+  for (const file of collectSearchFiles(root, glob || '**/*')) {
+    if (matches.length >= 200) break;
+    let content = '';
+    try { content = fs.readFileSync(file, 'utf8'); } catch { continue; }
+    const lines = content.split(/\r?\n/);
+    for (let i = 0; i < lines.length && matches.length < 200; i++) {
+      if (re.test(lines[i])) {
+        matches.push(`${path.relative(WORKSPACE_ROOT, file) || path.basename(file)}:${i + 1}: ${lines[i].trim().substring(0, 500)}`);
+      }
+      re.lastIndex = 0;
+    }
+  }
+  return matches;
+}
 
 app.post('/api/dev/grep', (req, res) => {
   const { pattern, dir = '.', glob: fileGlob = '**/*', caseSensitive = false } = req.body;
   if (!pattern) return res.status(400).json({ error: 'pattern required' });
   try {
-    const flags = caseSensitive ? '' : '/i';
-    const cmd   = `Get-ChildItem -Path "${dir}" -Recurse -Include "${fileGlob.replace('**/', '')}" -File | Select-String -Pattern "${pattern.replace(/"/g, '`"')}" ${caseSensitive ? '' : '-CaseSensitive:$false'} | Select-Object -First 200 | ForEach-Object { "$($_.Filename):$($_.LineNumber): $($_.Line.Trim())" }`;
-    exec(cmd, { timeout: 15000, maxBuffer: 1024 * 512, shell: 'powershell.exe' }, (err, stdout) => {
-      const lines = stdout.trim().split('\n').filter(Boolean);
-      res.json({ ok: true, pattern, matches: lines, count: lines.length });
-    });
+    const matches = searchFiles({ pattern, dir, glob: fileGlob, caseSensitive });
+    res.json({ ok: true, pattern, matches, count: matches.length });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const status = /Formato|disfarçado|inválido/i.test(e.message) ? 422 : 500;
+    res.status(status).json({ error: e.message });
   }
 });
 
@@ -1620,10 +1805,11 @@ app.post('/api/dev/read', (req, res) => {
   const { path: filePath, offset = 0, limit = 300 } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path required' });
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const safePath = resolveWorkspacePath(filePath);
+    const content = fs.readFileSync(safePath, 'utf8');
     const lines   = content.split('\n');
     const slice   = lines.slice(offset, offset + limit);
-    res.json({ ok: true, path: filePath, content: slice.join('\n'), totalLines: lines.length, offset, returned: slice.length });
+    res.json({ ok: true, path: safePath, content: slice.join('\n'), totalLines: lines.length, offset, returned: slice.length });
   } catch (e) {
     res.status(404).json({ error: e.message });
   }
@@ -1632,10 +1818,12 @@ app.post('/api/dev/read', (req, res) => {
 app.post('/api/dev/write', (req, res) => {
   const { path: filePath, content = '' } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path required' });
+  if (!ensureDevToolsEnabled(res)) return;
   try {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, content, 'utf8');
-    res.json({ ok: true, path: filePath, bytes: Buffer.byteLength(content, 'utf8') });
+    const safePath = resolveWorkspacePath(filePath);
+    fs.mkdirSync(path.dirname(safePath), { recursive: true });
+    fs.writeFileSync(safePath, content, 'utf8');
+    res.json({ ok: true, path: safePath, bytes: Buffer.byteLength(content, 'utf8') });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1644,14 +1832,16 @@ app.post('/api/dev/write', (req, res) => {
 app.post('/api/dev/edit', (req, res) => {
   const { path: filePath, old_string, new_string } = req.body;
   if (!filePath || old_string == null || new_string == null) return res.status(400).json({ error: 'path, old_string e new_string são obrigatórios' });
+  if (!ensureDevToolsEnabled(res)) return;
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const safePath = resolveWorkspacePath(filePath);
+    const content = fs.readFileSync(safePath, 'utf8');
     const count   = (content.split(old_string).length - 1);
     if (!count) return res.status(400).json({ error: 'old_string não encontrado no arquivo' });
     if (count > 1) return res.status(400).json({ error: `old_string encontrado ${count}x — seja mais específico` });
     const updated = content.replace(old_string, new_string);
-    fs.writeFileSync(filePath, updated, 'utf8');
-    res.json({ ok: true, path: filePath });
+    fs.writeFileSync(safePath, updated, 'utf8');
+    res.json({ ok: true, path: safePath });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1660,9 +1850,10 @@ app.post('/api/dev/edit', (req, res) => {
 app.post('/api/dev/ls', (req, res) => {
   const { path: dirPath = '.' } = req.body;
   try {
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    const safePath = resolveWorkspacePath(dirPath);
+    const entries = fs.readdirSync(safePath, { withFileTypes: true });
     const items   = entries.map(e => ({ name: e.name, type: e.isDirectory() ? 'dir' : 'file' }));
-    res.json({ ok: true, path: dirPath, items });
+    res.json({ ok: true, path: safePath, items });
   } catch (e) {
     res.status(404).json({ error: e.message });
   }
@@ -1671,9 +1862,15 @@ app.post('/api/dev/ls', (req, res) => {
 app.post('/api/dev/exec', (req, res) => {
   const { command, cwd = process.cwd() } = req.body;
   if (!command) return res.status(400).json({ error: 'command required' });
+  if (!ensureDevToolsEnabled(res)) return;
+  if (String(command).length > 500) return res.status(400).json({ error: 'Comando muito grande' });
   if (BLOCKED_CMDS.test(command)) return res.status(403).json({ error: 'Comando bloqueado por segurança' });
 
-  exec(command, { cwd, timeout: 30000, maxBuffer: 1024 * 512, shell: 'powershell.exe' }, (err, stdout, stderr) => {
+  let safeCwd;
+  try { safeCwd = resolveWorkspacePath(cwd); }
+  catch (e) { return res.status(400).json({ error: e.message }); }
+
+  exec(command, { cwd: safeCwd, timeout: 30000, maxBuffer: 1024 * 512, shell: 'powershell.exe' }, (err, stdout, stderr) => {
     const output = (stdout + (stderr ? '\n[stderr]\n' + stderr : '')).trim().substring(0, 6000);
     res.json({ ok: !err || !!stdout, exitCode: err?.code ?? 0, output, error: err && !stdout ? err.message : null });
   });
@@ -1826,8 +2023,12 @@ Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem 
 app.post('/api/vscode', (req, res) => {
   const { file = '', line } = req.body;
   if (!file) return res.status(400).json({ error: 'file required' });
-  const target = line ? `"${file}:${line}"` : `"${file}"`;
-  exec(`code --goto ${target}`, (err) => {
+  let safeFile;
+  try { safeFile = resolveWorkspacePath(file); }
+  catch (e) { return res.status(400).json({ error: e.message }); }
+  const safeLine = Number(line);
+  const target = Number.isFinite(safeLine) && safeLine > 0 ? `${safeFile}:${Math.floor(safeLine)}` : safeFile;
+  execFile('code', ['--goto', target], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ ok: true });
   });
@@ -2044,10 +2245,14 @@ const checkProactive = () => {
 // Roda a cada 60 segundos
 setInterval(checkProactive, 60 * 1000);
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+// ── Start — libera a porta antes de subir ─────────────────────────────────────
+const killPort = (port) => new Promise(resolve => {
+  exec(`powershell -c "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"`, () => resolve());
+});
+
+killPort(PORT).then(() => app.listen(PORT, HOST, () => {
   console.log('\n╔═══════════════════════════════════════╗');
-  console.log(`║  Emerald  →  http://localhost:${PORT}    ║`);
+  console.log(`║  Lúmina  →  http://${HOST}:${PORT}    ║`);
   console.log('╚═══════════════════════════════════════╝\n');
   console.log('  Pressione Ctrl+C para encerrar.\n');
-});
+}));
