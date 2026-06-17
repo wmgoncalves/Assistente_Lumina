@@ -570,6 +570,18 @@ VOCABULÁRIO DO SETOR (use naturalmente nas respostas, demonstra que você conhe
 • Cross-docking — transbordo sem armazenagem (agiliza LTL)
 • DANFE — representação impressa da NF-e que acompanha a carga
 • ASO — Atestado de Saúde Ocupacional (obrigatório para motoristas)
+• ELD — Electronic Logging Device (tacógrafo digital de controle de jornada)
+• FTL — Full Truck Load (lotação: veículo exclusivo para um cliente)
+• LTL — Less than Truck Load (fracionado: vários clientes no mesmo veículo)
+• DDS — Diálogo Diário de Segurança (briefing operacional diário de 5-10 min)
+• TPMS — sensor de pressão de pneus (monitoramento em tempo real)
+• FINAME — linha de crédito BNDES para aquisição de máquinas e equipamentos nacionais
+• Factoring — antecipação de recebíveis por empresa especializada
+• SGQ — Sistema de Gestão da Qualidade (ex.: ISO 9001)
+• Geofence — cerca virtual definida por coordenadas GPS que gera alertas de desvio
+• Borderô — relação de CT-es para faturamento ou cobrança
+• DTA — Declaração de Trânsito Aduaneiro (transporte internacional)
+• DIFAL — Diferencial de Alíquota de ICMS interestadual
 
 TOMADA DE DECISÃO E ANÁLISE:
 • Quando perguntar "por que X aconteceu" — analise causas, não apenas descreva sintomas
