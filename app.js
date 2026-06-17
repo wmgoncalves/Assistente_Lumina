@@ -1443,14 +1443,27 @@ const _handleGeminiErr = (msg) => {
 // Sanitiza vazamento de identidade antes de exibir qualquer resposta
 const sanitizeIdentity = (text) => {
   if (!text) return text;
-  // Substitui frases que revelam ser Google/Gemini por resposta correta
   return text
+    // "sou o/a Gemini" → Lúmina
+    .replace(/sou\s+(o\s+|a\s+)?gemini/gi, 'Sou a Lúmina')
+    // "criado/desenvolvido pelo Google" → Scapini
+    .replace(/criad[ao]\s+pel[ao]\s+google/gi, 'desenvolvida para a Scapini Transportes')
+    .replace(/desenvolvid[ao]\s+pel[ao]\s+google/gi, 'desenvolvida para a Scapini Transportes')
+    // "inteligência artificial criada pelo Google"
     .replace(/eu\s+sou\s+(um[a]?\s+)?(intelig[eê]ncia\s+artificial|ia|assistente)\s+criad[ao]\s+pel[ao]\s+google/gi,
              'Sou a Lúmina, a inteligência artificial da Scapini Transportes')
-    .replace(/sou\s+(o\s+|a\s+)?gemini/gi, 'Sou a Lúmina')
-    .replace(/criad[ao]\s+pel[ao]\s+google/gi, 'desenvolvida para a Scapini Transportes')
+    // "google ia/ai/gemini" solto
     .replace(/\bgoogle\s+(ia|ai|gemini)\b/gi, 'Lúmina')
-    .replace(/modelo\s+de\s+(linguagem\s+)?(ia\s+)?do\s+google/gi, 'assistente da Scapini');
+    // "modelo de linguagem do Google"
+    .replace(/modelo\s+de\s+(linguagem\s+)?(ia\s+)?do\s+google/gi, 'assistente da Scapini')
+    // "como modelo de linguagem" genérico
+    .replace(/como\s+modelo\s+de\s+linguagem/gi, 'como assistente da Scapini')
+    // "meu nome é Gemini" / "me chamo Gemini"
+    .replace(/(meu\s+nome\s+[eé]|me\s+chamo)\s+gemini/gi, 'meu nome é Lúmina')
+    // Claude / Anthropic / OpenAI / GPT — por precaução
+    .replace(/\b(claude|anthropic|openai|gpt-?\d*|chatgpt)\b/gi, 'Lúmina')
+    // "Sou um modelo de IA" sem contexto → mais específico
+    .replace(/sou\s+um[a]?\s+modelo\s+de\s+ia\b/gi, 'Sou a Lúmina, a IA da Scapini Transportes');
 };
 
 const logInteraction = (question, response, source, tool, ms, error) => {
@@ -3576,8 +3589,14 @@ const tryLocalResponse = (text) => {
     return pick(['Disponha!', 'Sempre que precisar.', 'Por nada!', 'Às ordens.', 'Fico feliz em ajudar.']);
 
   // ── Despedidas ──
-  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois)/.test(t) && t.length < 20)
-    return pick(['Até logo!', 'Estarei aqui quando precisar.', 'Até mais!', 'Cuide-se!']) + (name ? ` ${name.slice(2)}.` : '');
+  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois|encerrando|vou sair|vou embora|vou desligar|até)\b/.test(t) && t.length < 28) {
+    const h = new Date().getHours();
+    const context = h < 6  ? pick(['Vai descansar — amanhã tem mais estrada pela frente.', 'Boa noite! Que a madrugada seja tranquila.'])
+                 : h < 12  ? pick(['Bom dia e bons fretes!', 'Vai lá que a semana não espera.', 'Boa jornada!'])
+                 : h < 18  ? pick(['Boa tarde e boas entregas!', 'Vai com tudo!', 'Até logo — qualquer coisa é só chamar.'])
+                 :            pick(['Boa noite!', 'Vai descansar.', 'Até amanhã — fique bem.']);
+    return `${context}${name ? ' ' + name.slice(2) + '.' : ''}`;
+  }
 
   // ── Te amo / sentimentos românticos ──
   if (/te amo|te adoro|gosto muito de você|você é tudo|minha vida/.test(t) && t.length < 40)
@@ -4158,6 +4177,36 @@ const DEMO_QA = [
     r: [
       'Auditoria fiscal básica para transportadora: verifique se a alíquota de ICMS no CT-e bate com o estado de origem (varia por UF: 12% interestaduais, 17-19% internas). Confira se o CFOP está correto (6.351 = transporte interestadual; 5.351 = intraestadual). PIS/COFINS: no Lucro Presumido é 0,65% e 3%; no Simples varia pela faixa. Qualquer divergência entre NF do cliente e CT-e emitido pode gerar bitributação.',
       'Pontos de risco fiscal no transporte: 1) CFOP errado no CT-e muda o ICMS aplicável; 2) Tomador errado (quem paga o frete) impacta quem recolhe o diferencial de ICMS; 3) ICMS ST (substituição tributária) no transporte de alguns produtos tem regras específicas; 4) ISS pode incidir em frete urbano/municipal; 5) Contribuição ao SEST/SENAT obrigatória sobre fretes pagos a autônomos. O contador confere — a Lúmina alerta.',
+    ]},
+
+  // ── BLOCO CONFORMIDADE E CONTRATOS ────────────────────────────────────────────
+
+  // Habilitação da empresa / licenças
+  { re: /habilitac|licenca.*transport|alvara.*transport|registro.*antt|rntrc.*empresa|document.*empresa.*transport|empresa.*regularizada/,
+    r: [
+      'Para operar legalmente como transportadora no Brasil: RNTRC ativo (Registro Nacional de Transportadores Rodoviários de Cargas — emitido pela ANTT, renovação anual). CNPJ ativo com CNAE de transporte (4930-2/01 para carga geral; outros para especialidades). Alvará municipal. Licença ambiental se operar pátio. Veículos com CRLV, tacógrafo calibrado e ART assinada para veículos acima de limite.',
+      'Regularidade da Scapini: RNTRC vigente, emissão de CT-e e MDFe ativa no SEFAZ, contribuição SEST/SENAT em dia para TACs. Transportadora irregular não pode emitir CT-e — qualquer inconsistência no cadastro bloqueia a emissão. O setor fiscal deve monitorar o RNTRC mensalmente.',
+    ]},
+
+  // Gestão de contratos com clientes
+  { re: /contrato.*cliente|clausula.*contrato|rescisao.*contrato|multa.*contrato|renovar.*contrato|prazo.*contrato/,
+    r: [
+      'Contrato de transporte deve conter: partes (CNPJ e dados completos), objeto (rotas/regiões), tabela de preços com critério de reajuste (IPCA, INPC ou IGP-M + data base), responsabilidades de cada parte, cobertura de seguro, prazo de vigência e condições de rescisão (prazo de aviso prévio e multa proporcional). Contratos sem cláusula de reajuste ficam desatualizados — prejudicam a margem.',
+      'Gestão de contratos: revise anualmente os contratos mais antigos — valores sem reajuste há mais de 12 meses provavelmente estão abaixo do custo operacional atualizado. Para rescisão por inadimplência, o contrato deve prever a suspensão do serviço após X dias de atraso. Contratos verbais são válidos juridicamente, mas sem prova em disputas — sempre formalize.',
+    ]},
+
+  // Auditoria de frota / vistoria
+  { re: /vistoria.*veiculo|laudo.*vistoria|inspe.*veiculo|auditoria.*frota|auditoria.*veiculo|checklist.*veiculo/,
+    r: [
+      'Checklist de vistoria de veículo (antes de cada viagem): nível de óleo, água, combustível; pressão dos pneus; freios; faróis e lanternas; sinalização; extintor dentro do prazo; tacógrafo funcionando; documentos: CRLV, CNH, MDFe e CT-e; kit de emergência (triângulo, colete). Motorista que sai sem fazer o checklist e tem sinistro pode dividir responsabilidade com a empresa.',
+      'Auditoria de frota: pelo menos trimestralmente, avalie cada veículo em: quilometragem acumulada, histórico de manutenções, consumo médio, multas vinculadas, ocorrências de sinistro, condição dos pneus e freios. Veículo acima de 5 anos com custo de manutenção crescente deve entrar na fila de substituição. Plano de manutenção preventiva corta o custo corretivo em até 40%.',
+    ]},
+
+  // Como funciona o CIOT
+  { re: /ciot|como.*gerar.*ciot|ciot.*como|ciot.*pagar|pagar.*autonomo.*ciot/,
+    r: [
+      'CIOT (Código Identificador da Operação de Transporte): obrigatório para contratar TAC (autônomo) por mais de 5 dias corridos. Gerado no portal da ANTT (transportes.gov.br). Contém: dados da viagem, valor do frete, dados do motorista e do embarcador. O pagamento ao motorista deve ocorrer via banco (transferência rastreável) — não pode ser dinheiro vivo se o valor > R$ 500. Multa por operar sem CIOT: até R$ 10.000.',
+      'Passo a passo do CIOT: 1) Acesse o portal ANTT; 2) Informe CNPJ da transportadora, CPF do motorista, origem, destino, tipo de carga e valor do frete; 3) O sistema gera o código; 4) O motorista recebe a confirmação; 5) Guarde o comprovante — é obrigatório em fiscalização. Para volume alto de viagens, há sistemas que integram a emissão de CIOT automaticamente ao TMS.',
     ]},
 
   // ── BLOCO ESTRATÉGICO: ROI, LGPD, sustentabilidade, tecnologia ────────────────
