@@ -3324,6 +3324,29 @@ const detectLocalInfo = async (text) => {
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
 
+  // ── Motorista em rota — perguntas práticas ──
+  if (/quanto.*falta.*chegar|falta.*quanto.*chegar|distancia.*ainda|quantos.*km.*faltam|estou.*em.*qual.*cidade/.test(t))
+    return pick([
+      'Para saber a distância que falta, usa o Google Maps ou Waze com o destino da entrega. Se tiver o endereço do destinatário no CT-e, insere lá. Precisa de ajuda com alguma coisa da rota?',
+      'Essa informação de posição em tempo real vai estar disponível assim que integrar o rastreamento com a Lúmina. Por enquanto, o Waze é seu melhor amigo na estrada. Alguma outra dúvida?',
+    ]);
+
+  if (/posto.*gasolina.*perto|onde.*abastecer|posto.*24.*horas|onde.*tem.*posto|posto.*br/.test(t))
+    return pick([
+      'Para achar posto próximo: no Waze, toca em "Postos" no menu. Postos com diesel 24h na BR-386 (Lajeado-Porto Alegre): Posto Scapini conveniado, redes BR e Ipiranga têm cobertura frequente. Para a BR-116 sentido SP, Petrobras e Vibra têm rede densa a cada 80-100 km. Precisa de informação sobre posto conveniado da Scapini?',
+    ]);
+
+  if (/tempo.*descanso|hora.*descanso|posso.*dirigir.*mais|jornada.*motorista.*horas|quantas.*horas.*posso.*dirigir/.test(t))
+    return pick([
+      'Jornada do motorista (Lei 13.103): máximo 8h de direção contínua, com pausa de 30 min a cada 4h30 de direção. Após 8h de direção, descanso mínimo de 11h. Semana: máximo 60h (com extras documentadas). Dirigir além disso é infração gravíssima (tacógrafo registra tudo) e risco real de acidente por fadiga. Se estiver com sono, para — nenhuma carga vale sua vida.',
+      'Regras de descanso: a cada 4h30 de direção, para 30 minutos (pode ser fracionado em 2x15 min). Após a jornada diária, descansa 11h mínimo (caminhão parado). No fim de semana, 35h de descanso semanal. O tacógrafo registra tudo — fiscalização pode multar empresa e motorista. Seu bem-estar na estrada é prioridade.',
+    ]);
+
+  if (/pneu.*furou|furo.*pneu|estepe|troca.*pneu.*estrada|borracharia.*perto/.test(t))
+    return pick([
+      'Pneu furado na estrada: 1) Acenda o pisca-alerta imediatamente. 2) Reduza a velocidade aos poucos — não freia brusco. 3) Para no acostamento largo ou área segura. 4) Coloque o triângulo a 30m do veículo. 5) Se tiver estepe e for seguro trocar: faça. 6) Se não tiver estepe ou não for seguro: acione a seguradora (reboque) e avise o gestor. Número da seguradora deve estar na cabine — confirme antes de sair.',
+    ]);
+
   // ── Emergências operacionais (detecção por urgência) ──
   if (/caminhao.*quebrou|quebrou.*na.*estrada|pane.*veiculo|acidente.*agora|bateu.*caminhao|socorro.*estrada|emergencia.*rota|motorista.*acidente|ocorrencia.*agora|urgente/.test(t)) {
     const h = new Date().getHours();
@@ -4645,6 +4668,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO CONTRATOS, TECNOLOGIA EMBARCADA E OPERAÇÕES ─────────────────────────
+
+  // Contrato de frete — cláusulas e reajuste
+  { re: /contrato.*frete|clausula.*frete|sla.*contrato|prazo.*contrato.*frete|reajuste.*tabela|reajustar.*frete|contrato.*transportadora|contrato.*logistico/,
+    r: [
+      'Cláusulas essenciais num contrato de frete: prazo de entrega (OTD e consequências do atraso), responsabilidade por avaria (RCTR-C até X% do valor da mercadoria), reajuste (INPC ou variação do diesel a cada 90 dias), volume mínimo mensal garantido, forma de cobrança (por tonelagem, por viagem ou por km), e foro de eleição. Contratos sem cláusula de reajuste viram armadilha no longo prazo — inflação do diesel come a margem.',
+      'Reajuste de tabela de frete: o índice mais usado é o INPC (IBGE) para custo de vida + variação do diesel ANP. Aplique o reajuste a cada 3 meses no mínimo — aguardar 12 meses expõe a empresa a perdas de margem. Clientes grandes aceitam fuel surcharge automático: se diesel subir mais de 5% no período, o frete aumenta proporcionalmente sem renegociação. Documente o cálculo com o cliente antes de implementar.',
+    ]},
+
+  // Câmeras embarcadas e ADAS
+  { re: /camera.*caminhao|camera.*embarcada|adas|sistema.*colisao|alerta.*colisao|camera.*motorista|dvr.*frota|dash.*cam|fadiga.*camera/,
+    r: [
+      'Câmeras embarcadas (dashcam/DVR): registram o que acontece na cabine e na frente do veículo. Em caso de acidente, o vídeo é a prova mais forte — define culpa, agiliza seguro e protege a empresa de ações injustas. Para frota de risco (alto valor de carga), câmeras com envio de alerta em tempo real de freada brusca ou desvio de faixa são padrão. Custo: R$800-2.500 por veículo instalado.',
+      'ADAS (Advanced Driver Assistance Systems): sistemas embarcados que detectam fadiga do motorista (piscar de olhos, inclinação da cabeça), desvio de faixa sem sinal, distância insegura e colisão iminente. Alertam o motorista com beep + vibração no volante. Reduzem acidentes em até 40% segundo estudos da CNT. Principais fornecedores no Brasil: Mobileye, Seeing Machines, MiX Telematics integrado ao rastreador.',
+    ]},
+
+  // Automação de processos internos (RPA/integração)
+  { re: /automacao.*processo|rpa|robô.*processo|automatizar.*emissao|automatizar.*cte|emissao.*automatica|integracao.*sistema.*frete|api.*cte/,
+    r: [
+      'Automação de emissão de CT-e: com integração entre TMS e SEFAZ, o CT-e pode ser emitido automaticamente quando o pedido de coleta é confirmado no sistema. Elimina o trabalho manual do digitador, reduz erros de digitação (CFOP, CNPJ tomador, valor da mercadoria) e acelera o início da cobrança. Plataformas como PlugNotaS, Tecnospeed e Focus NFe oferecem API de emissão a partir de R$200/mês.',
+      'RPA em transportadora: robôs de software que executam tarefas repetitivas — baixar XML de CT-e do portal SEFAZ e importar no ERP, conciliar boletos pagos com CT-es no financeiro, enviar e-mail de aviso de entrega ao cliente após atualização de status. Ferramentas: Power Automate (Microsoft, incluído no Office 365), UiPath e n8n (open source). ROI em 3-6 meses para processos que consomem mais de 4h/dia de um funcionário.',
+    ]},
+
+  // Gestão de custos variáveis vs fixos
+  { re: /custo.*fixo.*variavel|fixo.*variavel.*frota|alavancagem.*operacional|ponto.*equilibrio.*frota|margem.*contribuicao.*frete|estrutura.*custo.*transporte/,
+    r: [
+      'Estrutura de custos numa transportadora: custos fixos (40-50% do total) — depreciação da frota, salários fixos, aluguel de pátio, seguros, IPVA, licenciamento. Custos variáveis (50-60%) — combustível, pneus, manutenção por km, diária de motorista, pedágio. Alavancagem operacional: ao aumentar o volume de cargas, os custos fixos diluem e a margem cresce. Por isso, km vazio é o inimigo — cada km sem carga só gera custo variável sem receita.',
+      'Ponto de equilíbrio por veículo: some todos os custos mensais do veículo (fixo + variável no km médio esperado). Divida pelo frete médio por km. O resultado é o km mínimo de carga que o veículo precisa rodar para cobrir os custos. Exemplo: veículo com custo de R$18.000/mês e frete de R$3,50/km precisa de 5.143 km de carga por mês para cobrir custos. Abaixo disso, está no prejuízo.',
     ]},
 
   // ── BLOCO ESTRATÉGIA EMPRESARIAL AVANÇADA ─────────────────────────────────────
