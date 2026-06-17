@@ -996,6 +996,12 @@ const cleanForTTS = (raw) => {
       return `${n} quilômetros`;
     })
     .replace(/\b(\d+)\s*km\b/gi, (_, n) => `${n} quilômetros`)
+    // Consumo km/l → "X vírgula Y quilômetros por litro"
+    .replace(/(\d+),(\d+)\s*km\/l/gi, (_, i, d) => `${i} vírgula ${d} quilômetros por litro`)
+    .replace(/\bkm\/l\b/gi, 'quilômetros por litro')
+    // Temperatura: -18°C → "menos 18 graus"
+    .replace(/-(\d+)\s*°C/g, (_, n) => `menos ${n} graus`)
+    .replace(/\+?(\d+)\s*°C/g, (_, n) => `${n} graus`)
     // Separadores visuais ── e ---
     .replace(/─{2,}|—{2,}|-{3,}/g, '. ')
     // Listas numeradas "1)" ou "1." no meio do texto → pausa natural
@@ -4509,6 +4515,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO CARGA ESPECIAL E REFRIGERAÇÃO ───────────────────────────────────────
+
+  // Carga refrigerada / cadeia do frio
+  { re: /carga.*refrigerada|frigorifico.*transporte|cadeia.*frio|temperatura.*carga|baú.*refrigerado|reefer|frigo|frio.*carga/,
+    r: [
+      'Transporte de carga refrigerada: o baú refrigerado (reefer) mantém temperatura controlada entre -25°C (congelado) e +8°C (resfriado). Exige: certificado de calibração do sistema de refrigeração (MAPA/ANVISA para alimentos), registro de temperatura durante toda a viagem (datalogger), e inspeção visual do baú antes do carregamento. Avaria por quebra da cadeia de frio tem cobertura especial no seguro — exige laudo técnico.',
+      'Cadeia do frio para frigoríficos: o motorista deve verificar a temperatura do produto no carregamento e registrar no CT-e ou na ficha de carga. Durante a viagem, o sistema de refrigeração não pode ser desligado — tem alarme. Na entrega, o destinatário confere a temperatura de recebimento. Divergência de temperatura = recusa da carga + sinistro. Requer treinamento específico do motorista.',
+    ]},
+
+  // Multas de trânsito — responsabilidade
+  { re: /multa.*transito|infração.*transito|quem.*paga.*multa|multa.*motorista.*empresa|contestar.*multa|recurso.*multa/,
+    r: [
+      'Multa de trânsito — responsabilidade: se a multa é por excesso de velocidade, avanço de sinal ou infração de conduta (culpa do motorista), a empresa pode imputar ao condutor — desde que previsto em contrato ou acordo coletivo. Multas por peso excedente ou documentação irregular (CRLV, MDFe) são responsabilidade da empresa. Para CLT: desconto em folha exige autorização escrita do funcionário. Para TAC: preveja em contrato.',
+      'Como contestar multa de trânsito: prazo é de 30 dias a partir da notificação (Auto de Infração). Recurso 1ª instância: JARI (Junta Administrativa de Recursos de Infrações). Recurso 2ª instância: CETRAN (estadual) ou CONTRAN (federal). Infrações de nível leve e médio têm taxa de conversão em advertência para motorista sem multas anteriores. Guarde os recibos de pedágio e câmeras como prova de localização alternativa.',
+    ]},
+
+  // Vale-refeição vs diária de motorista
+  { re: /vale.*refeicao.*motorista|diaria.*motorista|diaria.*viagem|pernoite.*motorista|ajuda.*custo.*motorista|refeicao.*motorista/,
+    r: [
+      'Diária de motorista em viagem: valor pago para cobrir alimentação e pernoite fora do domicílio. Pela CLT, não tem natureza salarial se não ultrapassar 50% do salário mensal — acima disso, o excedente integra o salário. A CCT do motorista define o valor mínimo de diária. Importante: não confunda com vale-refeição (benefício mensal) — a diária é variável por viagem.',
+      'Vale-refeição vs diária: vale-refeição é benefício fixo mensal (PAT — Programa de Alimentação do Trabalhador), com isenção de INSS e IR até certo limite. Diária de viagem é reembolso variável por dia fora de casa — isenta de encargos se dentro do limite de 50% do salário. Para motoristas de longa distância, a diária faz mais sentido que o vale-refeição como benefício principal.',
+    ]},
+
+  // Gestão de contratos de seguro
+  { re: /contrato.*seguro|apólice.*seguro|renovar.*seguro|vistoria.*seguro|premio.*seguro|franquia.*seguro|seguro.*vencer/,
+    r: [
+      'Gestão de apólice de seguro de frota: renove com 60 dias de antecedência (seguradoras exigem vistoria prévia do veículo — defeitos descobertos na vistoria podem elevar o prêmio). Compare pelo menos 3 seguradoras anualmente. Para frota acima de 10 veículos, negocie apólice frota (prêmio menor por veículo). Registre todos os sinistros — histórico limpo dá bônus de até 30% no prêmio.',
+      'Franquia no seguro de carga: é o valor que a empresa paga antes de a seguradora cobrir. Franquia alta = prêmio menor, mas a empresa absorve mais nos sinistros pequenos. Para transportadoras, é comum ter franquia de R$ 2.000 a R$ 5.000 por sinistro de carga. Avalie a frequência histórica de sinistros antes de escolher: muitos sinistros pequenos → franquia baixa vale mais.',
     ]},
 
   // ── BLOCO OPERACIONAL CRÍTICO ─────────────────────────────────────────────────
