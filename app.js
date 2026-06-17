@@ -2983,9 +2983,9 @@ const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reini
 const _thinkingBudget = (msg) => {
   const t = msg.toLowerCase();
   // Análise pesada — raciocínio profundo (2048)
-  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha/.test(t)) return 2048;
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -4334,6 +4334,29 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO BENCHMARK E GESTÃO DE METAS ────────────────────────────────────────
+
+  // Benchmarking setorial de transporte
+  { re: /benchmark|media.*setor|mercado.*transportadora|comparativo.*setor|referencia.*mercado|setor.*transporte.*numero/,
+    r: [
+      'Benchmarks do setor de transporte rodoviário brasileiro: margem EBITDA média = 8-14% (transportadoras eficientes chegam a 18%); custo do diesel como % da receita = 25-35%; custo de pessoal = 20-28%; OTD (On Time Delivery) = 92-97% para as melhores; km vazio = 10-20% do total rodado; giro de frota = 200-250 dias úteis por veículo por ano.',
+      'Referências do mercado: transportadora de médio porte saudável tem margem líquida de 5-10%. Abaixo de 3% é zona de risco. Custo por km rodado varia entre R$ 3,00 e R$ 5,00 dependendo do porte e tipo de veículo. OTD abaixo de 90% gera perda de contratos. Churn acima de 5% ao mês é sinal de problema de qualidade. A Scapini deve comparar seus números com essas referências mensalmente.',
+    ]},
+
+  // Gestão por metas / OKR
+  { re: /meta.*empresa|okr|definir.*metas?|metas?.*equipe|gestao.*metas?|como.*definir.*meta|meta.*quarter|trimestre/,
+    r: [
+      'Gestão por metas para transportadora (modelo OKR simples): Objetivo anual ex: "Crescer 20% em receita mantendo margem EBITDA > 10%". Key Results: 1) Fechar 5 novos contratos acima de R$ 50k/mês; 2) Reduzir km vazio de 18% para 12%; 3) Manter OTD acima de 94%. Cada KR tem dono e data. Revise trimestralmente.',
+      'Definição de metas para equipe de transporte: metas de motorista (km/mês, consumo, zero multas/mês), metas de operações (% entregas no prazo, ocorrências por viagem), metas comerciais (novos clientes, receita por carteira), metas financeiras (prazo médio de recebimento, inadimplência < 2%). Metas sem dono e sem data não existem.',
+    ]},
+
+  // O que é EBITDA / margem / rentabilidade
+  { re: /o que (e|eh|é|significa) (o |)(ebitda|margem ebitda|ebit|lajida|lajir)|como (calcular|interpretar) (o )?ebitda/,
+    r: [
+      'EBITDA (Earnings Before Interest, Taxes, Depreciation and Amortization) — em português: Lucro antes de Juros, Impostos, Depreciação e Amortização (LAJIDA). É o resultado operacional "limpo", sem efeitos financeiros e contábeis. Fórmula: Receita Líquida − Custos e Despesas Operacionais (excluindo depreciação e amortização). Mede a eficiência operacional do negócio.',
+      'Para uma transportadora, EBITDA é o indicador mais usado porque: exclui a depreciação da frota (que é alta e distorce o lucro contábil), exclui os juros do financiamento dos veículos, e mostra quanto o negócio gera de caixa operacional. Margem EBITDA = EBITDA ÷ Receita Líquida × 100. Transporte bom: 10-15%. Excelente: acima de 18%.',
     ]},
 
   // ── BLOCO VENDAS E PROSPECÇÃO ─────────────────────────────────────────────────
