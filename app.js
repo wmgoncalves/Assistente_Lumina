@@ -3797,7 +3797,19 @@ const detectLocalDownload = async (rawText) => {
 };
 
 // ── Respostas locais (sem API) ─────────────────────────────────────────────────
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+// pick com anti-repetição: evita escolher o mesmo item consecutivamente
+const _pickLast = new Map();
+const pick = (arr) => {
+  if (!arr || arr.length === 0) return '';
+  if (arr.length === 1) return arr[0];
+  const key = arr[0].slice(0, 20); // chave pelo início do primeiro item
+  const last = _pickLast.get(key);
+  let idx;
+  do { idx = Math.floor(Math.random() * arr.length); } while (idx === last && arr.length > 1);
+  _pickLast.set(key, idx);
+  if (_pickLast.size > 200) { const k = _pickLast.keys().next().value; _pickLast.delete(k); }
+  return arr[idx];
+};
 
 // Humor da Lúmina varia por hora do dia + aleatoriedade
 const luminaMood = () => {
@@ -4746,6 +4758,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO PESSOAS E PORTFÓLIO AVANÇADO ────────────────────────────────────────
+
+  // Saúde mental de motoristas
+  { re: /saude.*mental.*motorista|depressao.*motorista|ansiedade.*motorista|burnout.*motorista|solidao.*estrada|bem.*estar.*motorista|motorista.*solitario|psicologico.*motorista/,
+    r: [
+      'Saúde mental de motoristas é pauta crescente no setor: pesquisa da CNT (2024) mostra que 35% dos motoristas de longa distância relatam sintomas de depressão ou ansiedade. Causas: isolamento (dias longe de casa), pressão por prazo, risco de roubo e medo de acidentes. A transportadora pode atuar com: psicólogo via plano de saúde, canal de apoio anônimo, grupos de WhatsApp com moderação positiva, e pausa programada de saúde mental nas férias.',
+      'Programa de bem-estar para motoristas: reconhecimento público (motorista do mês), comunicação regular da diretoria (mensagem de valorização), and encontros presenciais anuais (confraternização). Motorista que se sente visto e reconhecido tem menor propensão ao absenteísmo e ao consumo de substâncias em rota. Parceria com SEST SENAT inclui atendimento psicológico gratuito — direito do motorista contribuinte.',
+    ]},
+
+  // Gestão de portfólio de clientes (Matriz BCG aplicada)
+  { re: /portfolio.*cliente|carteira.*cliente|segmentar.*cliente|classificar.*cliente|cliente.*estrategico|cliente.*vip|80.*20.*cliente|pareto.*cliente/,
+    r: [
+      'Gestão de portfólio de clientes — regra 80/20 (Pareto): em transportadoras, geralmente 20% dos clientes geram 80% do faturamento. Identifique esses clientes e trate-os como estratégicos: visita presencial trimestral, gestor de conta dedicado, SLA diferenciado, e primeiro acesso a capacidade de frota em alta demanda. Os 80% restantes merecem atendimento eficiente mas não custoso — autoatendimento, portal web, atendimento centralizado.',
+      'Classificação ABC de clientes: A — top 20% em faturamento, contratos longos, pagamento em dia; B — média do portfólio, crescimento potencial; C — volume baixo, pagamento irregular, custo de servir alto. Estratégia: proteja os A, desenvolva os B, reavalie os C (aumento de preço ou desligamento). Clientes C que consomem mais tempo do comercial do que geram de margem devem ser descontinuados.',
+    ]},
+
+  // Inadimplência avançada — recuperação e prevenção
+  { re: /inadimplencia.*gestao|recuperacao.*credito|protestos.*clientes|serasa.*cliente|negativar.*cliente|cobranca.*juridica|acordo.*inadimplente|renegociar.*divida/,
+    r: [
+      'Pipeline de cobrança para transportadora: D+1 após vencimento — e-mail automático com 2ª via do boleto. D+5 — ligação do financeiro, oferta de parcelamento. D+15 — carta formal com prazo de 5 dias para regularização. D+30 — protesto em cartório (custo de R$80-150, mas eficácia alta — 70% pagam em 48h após protesto). D+60 — SERASA/SPC + negociação de acordo. D+90 — encaminhar para escritório de cobrança (comissão 15-25% do recuperado) ou ação judicial (acima de R$10.000).',
+      'Prevenção de inadimplência: antes de fechar contrato com novo cliente, consulte SERASA, CNPJ ativo na Receita Federal, referências de outras transportadoras, e situação no CAGED (empresa que está demitindo em massa é sinal de alerta). Para clientes novos, exija pagamento adiantado nas 3 primeiras viagens ou limite de crédito baixo. Clientes recorrentes com histórico limpo podem ter 30-60 dias de prazo.',
+    ]},
+
+  // Expansão geográfica — como entrar em novo mercado
+  { re: /entrar.*novo.*mercado|expandir.*regiao|nova.*rota.*viabilidade|mercado.*nordeste|mercado.*centro.*oeste|sp.*mercado|como.*expandir.*frota/,
+    r: [
+      'Análise de viabilidade para nova rota: antes de colocar frota numa rota nova, valide: (1) Existe carga de retorno ou vai voltar vazio? (2) Qual o frete médio praticado na rota? (3) Quem já opera — dá para competir em preço ou serviço? (4) Há clientes potenciais identificados? (5) O km vazio total da rota fica abaixo de 25%? Se passar nesses filtros, inicie com 1-2 viagens teste antes de comprometer frota permanente.',
+      'Entrar no mercado de SP para transportadora gaúcha: SP é o mercado mais disputado do Brasil, mas também o de maior volume. Vantagem da Scapini: já está na rota Sul-Sudeste. Para expandir dentro de SP (capital + interior): foco em nichos específicos (frigoríficos da região de Barretos, agro do Triângulo Mineiro limítrofe, indústria do ABCD). Tenha um ponto de apoio em SP (cross-docking) antes de montar filial completa.',
     ]},
 
   // ── BLOCO COMBUSTÍVEL, REGULAMENTAÇÃO E FROTA TERCEIRIZADA ───────────────────
