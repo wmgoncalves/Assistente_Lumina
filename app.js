@@ -510,7 +510,7 @@ SOBRE A SCAPINI:
 • Transporte rodoviário de cargas fracionadas e lotação para todo o Brasil (foco no Sul e Sudeste)
 • Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras
 • Centenas de colaboradores, frota moderna com rastreamento
-• Dono/fundador: Ernani Scapini | CEO: Lucas Scapini
+• Fundador: Diamantino Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | CEO: Lucas Scapini
 
 VISÃO LÚMINA-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?", "o que pode fazer por área?", "quais melhorias?", responda EXATAMENTE com esta visão estruturada por área, com entusiasmo e exemplos reais da Scapini. Nunca dê resposta genérica de IA:
 
@@ -633,8 +633,9 @@ const flashLearnBadge = () => {
 };
 
 // ── Stop all speech (ElevenLabs or browser TTS) ───────────────────────────────
-let currentAudio = null;
-let ttsAbort     = null; // AbortController do fetch TTS em voo
+let currentAudio    = null;
+let ttsAbort        = null; // AbortController do fetch TTS em voo
+let _chunkStopped   = false; // flag para abortar cadeia de chunks TTS
 
 const setStopBtn = (visible) => {
   const btn   = document.getElementById('btn-stop');
@@ -645,6 +646,7 @@ const setStopBtn = (visible) => {
 };
 
 const stopSpeaking = () => {
+  _chunkStopped = true;
   if (ttsAbort) { try { ttsAbort.abort(); } catch {} ttsAbort = null; }
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
   try { window.speechSynthesis.cancel(); } catch {}
@@ -915,18 +917,36 @@ const cleanForTTS = (raw) => {
   return t;
 };
 
+// Divide texto em frases para TTS por chunk — reduz latência até a primeira palavra
+const _splitTTSChunks = (text) => {
+  const parts = text.match(/[^.!?]+[.!?]+\s*|[^.!?]+$/g) || [text];
+  const chunks = []; let buf = '';
+  for (const s of parts) {
+    if (buf.length + s.length > 220 && buf) { chunks.push(buf.trim()); buf = s; }
+    else buf += s;
+  }
+  if (buf.trim()) chunks.push(buf.trim());
+  return chunks.filter(Boolean);
+};
+
 const speak = (text, onEnd) => {
-  // Para áudio anterior mas sem cancelar o ttsAbort — Edge TTS em voo pode ainda estar ok
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
   try { window.speechSynthesis.cancel(); } catch {}
   app.isSpeaking = false;
-  let clean = cleanForTTS(text);
-  // Resposta muito longa (tabela/DRE): corta na última frase completa até 650 chars
-  if (clean.length > 650) {
-    const match = clean.slice(0, 650).match(/^(.*[.!?])\s/s);
-    clean = match ? match[1] : clean.slice(0, 650).replace(/\s\S*$/, '') + '.';
+  _chunkStopped = false;
+  const clean = cleanForTTS(text);
+  const chunks = _splitTTSChunks(clean);
+  if (chunks.length <= 1) {
+    return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
   }
-  return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
+  let i = 0;
+  const next = () => {
+    if (_chunkStopped || i >= chunks.length) { onEnd?.(); return; }
+    const chunk = chunks[i++];
+    const cb = (i >= chunks.length) ? onEnd : next;
+    cfg.elevenLabsKey ? speakElevenLabs(chunk, cb) : speakLocal(chunk, cb);
+  };
+  next();
 };
 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
@@ -3404,6 +3424,10 @@ const tryLocalResponse = (text) => {
   if (/que dia|qual a data|hoje é|data de hoje/.test(t) && t.length < 20)
     return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
 
+  // ── Liderança da Scapini ──
+  if (/ceo|president[ae]|vice.?president[ae]|fundador|lucas scapini|ernani scapini|rosangela scapini|diamantino|quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
+    return 'A liderança da Scapini Transportes: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
+
   return null;
 };
 
@@ -3418,11 +3442,11 @@ const DEMO_QA = [
       'Me chamo Lúmina. Sou a IA da Scapini, desenvolvida para facilitar o dia a dia de cada setor da empresa. Não substituo ninguém: amplifico o que cada pessoa já faz. Quanto mais a Scapini me usar, mais útil eu fico.',
     ]},
 
-  // 1b. Quem é Lucas / Ernani Scapini
-  { re: /quem (e|eh|é|sao|são) (o |a )?(lucas|ernani|ceo|dono|fundador|diretor|presidente|lideranca|liderança|familia scapini|familia)/,
+  // 1b. Liderança da Scapini
+  { re: /quem (e|eh|é|sao|são) (o |a )?(lucas|ernani|rosangela|diamantino|ceo|dono|fundador|diretor|presidente|lideranca|liderança|familia scapini|familia)|ceo|presidente|fundador|lideranca da scapini/,
     r: [
-      'Lucas Scapini é o CEO da Scapini Transportes — ele lidera a operação e a estratégia da empresa. Ernani Scapini é o fundador e dono, com mais de 30 anos dedicados a construir o que a Scapini é hoje.',
-      'O fundador e dono é Ernani Scapini, que começou tudo isso. O CEO é Lucas Scapini, que conduz a empresa hoje. Uma família que construiu uma das transportadoras de referência do Sul do Brasil.',
+      'A liderança da Scapini: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini. Uma família que construiu uma das transportadoras de referência do Sul do Brasil.',
+      'Lucas Scapini é o CEO, quem conduz a estratégia hoje. Ernani Scapini é o Presidente. Rosangela Scapini é Vice-Presidente. E tudo começou com Diamantino Scapini, o fundador da empresa.',
     ]},
 
   // 2. Lúmina, como você pode ajudar a Scapini?
