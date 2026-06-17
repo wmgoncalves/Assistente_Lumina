@@ -3225,7 +3225,7 @@ const detectLocalInfo = async (text) => {
       'Diesel S-10 em Lajeado/RS oscila com o mercado da Petrobras. A ANP publica o preço semanal por UF em gov.br/anp. Para a Scapini, o preço negociado com a distribuidora costuma ser melhor que o de bomba — monitore a diferença mensalmente e ajuste o custo por km nos seus cálculos.',
     ]);
 
-  if (/tempo.*estimado|quanto.*demora|prazo.*entrega.*(hoje|amanhã|agora)/.test(t) && /rs|sc|pr|sp|são paulo|porto alegre|curitiba|florianopolis|lajeado/i.test(t))
+  if (/prazo.*(entrega|frete|viagem|rota|transport)|quanto.*demora.*(chegar|entregar|ir)|tempo.*(transit|viagem|entrega|rota)|qual.*(prazo|sla|tempo).*(rs|sc|pr|sp|rj|mg|sul|sudeste|lajeado|curitiba)/.test(t) || (/prazo|demora|chega|transit|sla/.test(t) && /rs|sc|pr|sp|rj|mg|sul|sudeste|lajeado|porto alegre|curitiba|sao paulo|florianopolis/.test(t)))
     return pick([
       'Prazos de entrega estimados a partir de Lajeado/RS: Região Metropolitana RS (1-2 dias), Santa Catarina (1-2 dias), Paraná (2-3 dias), São Paulo capital (3-4 dias), interior SP (3-5 dias). Carga fracionada (LTL) tem prazo maior que lotação (FTL). Tráfego, condições de rodovia e restrições municipais de circulação podem afetar.',
       'Tempo de trânsito típico saindo de Lajeado: RS interior (1 dia), Grande Porto Alegre (1 dia), SC (1-2 dias), Curitiba PR (2 dias), São Paulo SP (3-4 dias). Para cotação com prazo garantido, o comercial confirma o SLA disponível para o trecho e tipo de carga.',
@@ -3727,6 +3727,25 @@ const tryLocalResponse = (text) => {
     return pick([
       'A Scapini Transportes está sediada em Lajeado, RS — no Vale do Taquari, região central do Rio Grande do Sul. A localização é estratégica: acesso à BR-386 facilita rotas para todo o Sul e Sudeste do Brasil.',
       'Lajeado/RS é a sede da Scapini há mais de 30 anos. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
+    ]);
+
+  // ── Integração CGI / próximos passos ──
+  if (/integra.*(cgi|sistema|erp)|cgi.*(integra|connect|lumina)|quando.*(integra|conecta|cgi)|proxim.*funcionalidad|roadmap.*lumina|futuro.*lumina/.test(t))
+    return pick([
+      'A integração da Lúmina com o CGI é a próxima fase — ela já está pronta para receber os dados. Quando conectada, vou responder em tempo real: "quantas viagens estão abertas?", "qual o frete médio do mês?", "quais motoristas estão em rota?" — tudo por voz ou texto, sem abrir tela nenhuma.',
+      'Roadmap da Lúmina na Scapini: Fase 1 (atual) — análise de planilhas, base de conhecimento, prospecção de clientes e TTS. Fase 2 — integração CGI: consulta de viagens, CT-es, frota e financeiro em tempo real. Fase 3 — automação: geração de CT-e por voz, alertas proativos de desvio de rota, relatório diário automático no WhatsApp do gestor.',
+    ]);
+
+  if (/quanto custa.*lumina|custo.*lumina|preco.*lumina|mensalidade.*lumina|lumina.*quanto|investimento.*lumina/.test(t))
+    return pick([
+      'A Lúmina roda internamente na infraestrutura da Scapini — sem mensalidade de licença de software. O custo principal é a API do Gemini (Google), que funciona no modelo pay-per-use: paga só pelo que usa, sem contrato mínimo. Para o volume de uso da Scapini, o custo estimado é de R$ 200 a R$ 800/mês dependendo da intensidade. Bem abaixo do ROI gerado.',
+      'Custo de operação da Lúmina: servidor local (já existe), API Gemini (~R$ 0,001 por pergunta complexa — baratíssimo), e manutenção de software feita internamente. Sem licença, sem contrato de SaaS. É um sistema próprio da Scapini — pode ser expandido, personalizado e nunca "cai" por corte de fornecedor.',
+    ]);
+
+  if (/lumina.*offline|sem.*internet|cai.*internet|funciona.*sem.*net|modo.*offline/.test(t))
+    return pick([
+      'A Lúmina tem modo offline parcial: sem internet, ela responde tudo que está na base local de conhecimento (+ de 100 tópicos de transporte, RH, fiscal, operação e financeiro) — sem gastar API. Para análise de planilhas e perguntas complexas, precisa da conexão com o Gemini. O TTS (voz) usa o Edge TTS da Microsoft — também precisa de internet.',
+      'Sem internet: a Lúmina entra em modo demo automático e responde pela base local de conhecimento — mais de 60 tipos de perguntas sem API. Com internet: usa o Gemini 2.5 Flash para perguntas complexas. Recomendo que o servidor da Scapini tenha conexão estável — o ideal é 10 Mbps estável para experiência fluida.',
     ]);
 
   // ── Como usar a Lúmina ──
@@ -4334,6 +4353,29 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO MANUTENÇÃO DE FROTA ─────────────────────────────────────────────────
+
+  // Manutenção preventiva vs corretiva
+  { re: /manutencao.*preventiva|preventiva.*manutencao|plano.*manutencao|programa.*manutencao|manutencao.*frota/,
+    r: [
+      'Programa de manutenção preventiva para frota: troca de óleo a cada 20.000–30.000 km (conforme fabricante), filtros junto com óleo, revisão de freios a cada 50.000 km, alinhamento e balanceamento a cada 20.000 km, troca de correia dentada conforme manual. Pneus: rodízio a cada 30.000 km, troca quando sulco < 1,6 mm. Custo preventivo médio: R$ 0,15–0,25/km — corretivo pode ser 3–5× mais caro.',
+      'Manutenção programada reduz paradas não planejadas (maior inimigo da operação). Crie um calendário por veículo com as próximas revisões. Controle o histórico de cada caminhão: km, data, serviço, peças trocadas e custo. Com esse histórico, você prevê falhas antes que aconteçam e negocia melhor com a oficina. Quando a Lúmina estiver integrada ao sistema, monto alertas automáticos de manutenção.',
+    ]},
+
+  // Custo de pneus
+  { re: /pneu.*custo|custo.*pneu|preco.*pneu|pneu.*carreta|pneu.*truck|quanto.*pneu|vida.*util.*pneu/,
+    r: [
+      'Custo de pneus para frota: pneu radial novo de carreta (295/80 R22,5) custa R$ 1.800–2.400. Uma carreta tem 22 pneus = R$ 40.000–53.000 por conjunto completo. Vida útil: 120.000–200.000 km com rodízio e calibragem correta. Custo por km: R$ 0,25–0,35. Para reduzir: recauchutagem (R$ 400–600 por pneu, rende 60.000–80.000 km a mais) é opção viável para pneus de reboque.',
+      'Gestão de pneus: a calibragem correta aumenta a vida útil em 20–30% e reduz o consumo de diesel em 1–3%. Rodízio sistemático equaliza o desgaste entre posições. Rastreie o km de cada pneu por posição — pneus dianteiros desgastam mais rápido. Parceria com borracheiro de confiança para emergência em rota é essencial. Pneu recauchutado economiza mas deve ser usado só em posições não direcionais.',
+    ]},
+
+  // Oficina / mecânico / fornecedor
+  { re: /oficina|mecanico|fornecedor.*peca|peca.*fornecedor|homologar.*fornecedor|parceiro.*oficina|manutencao.*terceirizada/,
+    r: [
+      'Gestão de oficinas e fornecedores de peças: homologue 2–3 fornecedores por categoria (motor, freio, elétrica) para ter opção de preço e prazo. Negocie tabela de preços e prazo de crédito — fornecedor que atende frota grande dá prazo 30–60 dias. Mantenha estoque mínimo de peças críticas e de alto giro (filtros, correias, buchas) para não parar veículo por falta de peça.',
+      'Para terceirizar a manutenção: avalie custo total (serviço + peça + deslocamento + tempo parado) vs. manutenção interna. Frota acima de 20 veículos justifica oficina interna com mecânico CLT. Abaixo disso, terceirização com contratos de SLA (prazo máximo de reparo) é mais eficiente. Exija orçamento antes de qualquer serviço e nota fiscal de tudo — controle de custos começa pela documentação.',
     ]},
 
   // ── BLOCO BENCHMARK E GESTÃO DE METAS ────────────────────────────────────────
