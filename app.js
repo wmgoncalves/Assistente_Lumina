@@ -3206,6 +3206,31 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Checagem matinal de operações ──
+  if (/quais? (viagens?|entregas?|cargas?).*(hoje|amanhã|desta semana)|o que tem hoje|agenda.*hoje|o que rola hoje|programacao.*hoje/.test(t))
+    return pick([
+      'Ainda não tenho acesso direto à agenda de viagens do CGI — quando integrada, consulto em segundos. Por enquanto, verifique no sistema de operações ou solicite ao setor de programação o relatório do dia. Posso ajudar a organizar as informações se você me passar os dados.',
+      'A programação de viagens fica no CGI da operação. Quando a Lúmina estiver integrada, vou trazer isso direto aqui: viagens do dia, motoristas escalados, CT-es pendentes e ocorrências em aberto. Por enquanto, como posso ajudar de outra forma?',
+    ]);
+
+  if (/quantas? (entregas?|viagens?).*(pendentes?|abertas?|em andamento)|entregas?.*(hoje|pendentes?|em aberto)/.test(t))
+    return pick([
+      'Entregas em andamento estão no rastreador e no CGI. Quando integrada, trago o painel completo: viagens abertas, CT-es emitidos hoje, motoristas em rota e estimativa de chegada. Por enquanto, o setor de operações tem esse dado em tempo real.',
+      'Não tenho esse dado sem integração ao CGI — mas quando conectada, respondo "quantas entregas estão em aberto?" em 2 segundos com mapa completo. Por ora, me passe as informações e analiso qualquer coisa que você precisar.',
+    ]);
+
+  if (/qual.*diesel.*hoje|preco.*diesel|combustivel.*hoje|litro.*diesel/.test(t))
+    return pick([
+      'O preço do diesel varia por posto e região — em junho de 2026, o S-10 (diesel comum) está em torno de R$ 6,20 a R$ 6,80/litro no Sul do Brasil, dependendo da cidade e do contrato com distribuidora. Para o preço exato dos postos parceiros da Scapini, verifique com o setor de abastecimento. Queda ou alta > 5% na semana justifica revisão da tabela de frete.',
+      'Diesel S-10 em Lajeado/RS oscila com o mercado da Petrobras. A ANP publica o preço semanal por UF em gov.br/anp. Para a Scapini, o preço negociado com a distribuidora costuma ser melhor que o de bomba — monitore a diferença mensalmente e ajuste o custo por km nos seus cálculos.',
+    ]);
+
+  if (/tempo.*estimado|quanto.*demora|prazo.*entrega.*(hoje|amanhã|agora)/.test(t) && /rs|sc|pr|sp|são paulo|porto alegre|curitiba|florianopolis|lajeado/i.test(t))
+    return pick([
+      'Prazos de entrega estimados a partir de Lajeado/RS: Região Metropolitana RS (1-2 dias), Santa Catarina (1-2 dias), Paraná (2-3 dias), São Paulo capital (3-4 dias), interior SP (3-5 dias). Carga fracionada (LTL) tem prazo maior que lotação (FTL). Tráfego, condições de rodovia e restrições municipais de circulação podem afetar.',
+      'Tempo de trânsito típico saindo de Lajeado: RS interior (1 dia), Grande Porto Alegre (1 dia), SC (1-2 dias), Curitiba PR (2 dias), São Paulo SP (3-4 dias). Para cotação com prazo garantido, o comercial confirma o SLA disponível para o trecho e tipo de carga.',
+    ]);
+
   // ── Perguntas do administrativo / financeiro do dia a dia ──
   if (/como (cobrar|cobranca|receber).*(cliente|devedor|inadimplente)|inadimplencia|cliente.*n[aã]o.*pagou|cliente.*atrasado|titulo.*vencido/.test(t))
     return pick([
@@ -4290,6 +4315,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO PLANEJAMENTO FINANCEIRO ─────────────────────────────────────────────
+
+  // Budget / orçamento anual
+  { re: /budget|orcamento.*anual|planejamento.*financeiro|previsao.*receita|meta.*faturamento|projecao.*anual/,
+    r: [
+      'Estrutura de budget anual para transportadora: 1) Projeção de receita (volume de viagens × frete médio por rota, por mês, considerando sazonalidade); 2) Custos variáveis (diesel, pneu, manutenção corretiva, pedágio, diárias); 3) Custos fixos (folha, encargos, depreciação, seguro, financiamento, aluguel); 4) Resultado operacional; 5) Plano de investimento (renovação de frota, tecnologia). Posso montar essa estrutura com você se me der os dados base.',
+      'Budget de transportadora: a receita está diretamente ligada ao km rodado — projete km/mês por veículo, multiplique pela taxa de ocupação (% do tempo carregado) e pelo frete médio por km. Os custos variáveis seguem o km: diesel consome 70-75% dos custos variáveis, o resto são pneus e manutenção. Monte o orçamento mês a mês com os picos de safra e lembre-se: km vazio é custo sem receita.',
+    ]},
+
+  // Depreciação de veículos
+  { re: /depreciacao|depreciar|vida.*util.*veiculo|valor.*residual|caminhao.*desvaloriza/,
+    r: [
+      'Depreciação de caminhão: a Receita Federal aceita taxa de depreciação de 25% ao ano pelo método linear (vida útil de 4 anos) ou acelerada. Na prática, um caminhão novo de R$ 500.000 vale ~R$ 375.000 após 1 ano, ~R$ 250.000 após 2 anos. O valor residual (de revenda) depende do mercado de usados e da conservação. Depreciação contabilizada reduz o IR/CSLL — consulte o contador.',
+      'Vida útil técnica vs. contábil: contabilmente, 4 anos de depreciação. Operacionalmente, caminhões bem mantidos rodam 10-15 anos e 1-2 milhões de km. O ponto de equilíbrio para renovação: quando o custo anual de manutenção supera 30% do valor de mercado do veículo. Frota nova = menor custo de manutenção, menor consumo de diesel, menos paradas não programadas.',
+    ]},
+
+  // Capital de giro
+  { re: /capital.*giro|giro.*capital|necessidade.*giro|nig|desconto.*recebivel|antecipacao.*recebivel|caixa.*curto.*prazo/,
+    r: [
+      'Capital de giro no transporte: o principal descasamento é entre o prazo de recebimento (7-30 dias do CT-e) e o pagamento de diesel e motorista (praticamente no ato). Numa semana com 50 viagens, a empresa financia o giro por até 30 dias. Soluções: linha de capital de giro no banco, antecipação de recebíveis (desconta o CT-e antes do vencimento) ou fundo de reserva equivalente a 30-45 dias de custos variáveis.',
+      'Necessidade de Investimento em Giro (NIG) da transportadora: calcule quanto dinheiro fica preso no ciclo operacional. Fórmula simplificada: Clientes a receber × dias de prazo ÷ 30 − Fornecedores a pagar × dias de prazo ÷ 30. O resultado positivo é o caixa que você precisa ter disponível para rodar. Transporte tem NIG positivo alto — exige gestão de caixa ativa.',
+    ]},
+
+  // Ponto de equilíbrio
+  { re: /ponto.*equilibrio|break.?even|break even|minimo.*faturar|quando.*cobrir.*custo|quando.*da.*lucro/,
+    r: [
+      'Ponto de equilíbrio operacional: some todos os custos fixos mensais (folha, depreciação, seguro, financiamento, overhead). Divida pelo percentual de margem de contribuição (frete − custos variáveis ÷ frete). O resultado é a receita mínima mensal para não ter prejuízo. Abaixo disso, cada km rodado aprofunda o vermelho.',
+      'Break-even de frota: se os custos fixos da Scapini são R$ 200.000/mês e a margem de contribuição por km é R$ 1,20 (frete R$ 3,50/km − custo variável R$ 2,30/km), o ponto de equilíbrio é 200.000 ÷ 1,20 = 166.667 km/mês. Dividido pela frota, cada veículo precisa rodar X km. Se o mercado não absorver, o problema é estrutural — reveja a estrutura de custos.',
     ]},
 
   // ── Capacidades gerais ────────────────────────────────────────────────────────
