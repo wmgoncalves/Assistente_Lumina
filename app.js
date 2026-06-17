@@ -90,19 +90,19 @@ const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleI
 persistCfgLocal();
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-  fetch('/api/config').then(r => r.json()).then(d => {
-    if (d.geminiKey       && !cfg.geminiKey)          { cfg.geminiKey          = d.geminiKey;          }
-    if (d.elevenLabsKey   && !cfg.elevenLabsKey)      { cfg.elevenLabsKey       = d.elevenLabsKey;      }
-    if (d.elevenVoiceId   !== undefined)              { cfg.elevenVoiceId       = d.elevenVoiceId;
-                                                        if (!cfg.elevenVoiceFemaleId) cfg.elevenVoiceFemaleId = d.elevenVoiceId; }
-    if (d.elevenVoiceFemaleId !== undefined)          { cfg.elevenVoiceFemaleId = d.elevenVoiceFemaleId; }
-    if (d.elevenVoiceMaleId   !== undefined)          { cfg.elevenVoiceMaleId   = d.elevenVoiceMaleId;   }
-    if (d.username        && !cfg.username)           { cfg.username            = d.username;             }
-    if (d.ollamaModel     && !cfg.ollamaModel)        { cfg.ollamaModel         = d.ollamaModel;          }
-    persistCfgLocal();
-  }).catch(() => {});
-}
+const serverCfgReady = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? fetch('/api/config').then(r => r.json()).then(d => {
+      if (d.geminiKey       && !cfg.geminiKey)          { cfg.geminiKey          = d.geminiKey;          }
+      if (d.elevenLabsKey   && !cfg.elevenLabsKey)      { cfg.elevenLabsKey       = d.elevenLabsKey;      }
+      if (d.elevenVoiceId   !== undefined)              { cfg.elevenVoiceId       = d.elevenVoiceId;
+                                                          if (!cfg.elevenVoiceFemaleId) cfg.elevenVoiceFemaleId = d.elevenVoiceId; }
+      if (d.elevenVoiceFemaleId !== undefined)          { cfg.elevenVoiceFemaleId = d.elevenVoiceFemaleId; }
+      if (d.elevenVoiceMaleId   !== undefined)          { cfg.elevenVoiceMaleId   = d.elevenVoiceMaleId;   }
+      if (d.username        && !cfg.username)           { cfg.username            = d.username;             }
+      if (d.ollamaModel     && !cfg.ollamaModel)        { cfg.ollamaModel         = d.ollamaModel;          }
+      persistCfgLocal();
+    }).catch(() => {})
+  : Promise.resolve();
 
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
 const MEM_KEY   = 'emerald_mem';
@@ -437,7 +437,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
 • configurarFrete   → quando disser "atualiza o diesel", "muda a margem", "pedágio está X", "rendimento é X km/l", "diária do motorista é X". Salva os novos parâmetros e confirma.
 • estimarFrete      → OBRIGATÓRIO quando pedir cotação, estimativa, valor ou preço de frete entre cidades. Extrai origem e destino da fala (ex: "Lajeado pra Uberlândia" → origem:"Lajeado/RS" destino:"Uberlândia/MG"). NUNCA invente valores — use sempre esta tool.
-• prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "leads", "quem pode ser cliente". SEMPRE use esta tool, NUNCA responda na conversa. Use "para" = empresa que prospecta (ex: "para Scapini" → para: "Scapini Transportes"). Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
+• prospectClients   → OBRIGATÓRIO quando pedir "busca clientes", "encontra empresas", "prospecta", "prospecte", "consiga clientes", "arruma clientes", "leads", "quem pode ser cliente", "preciso de clientes". NUNCA peça mais informações — use os padrões: segmento="transporte de cargas", regiao="Vale do Taquari/RS", quantidade=5 como padrão se não especificado. SEMPRE chame a tool diretamente, NUNCA responda na conversa. Use "para"="Scapini Transportes" por padrão. Busca EMPRESAS REAIS com CNPJ, não pessoas físicas.
 • generateFile      → quando pedir para criar, gerar ou exportar um arquivo Excel, Word, PowerPoint ou PDF. Detecte o formato pelo pedido ("planilha"→xlsx, "documento/relatório"→docx, "apresentação/slides"→pptx, "pdf"→pdf). Coloque TODO o contexto relevante da conversa na instrucao.
 
 ── DEV MODE — use para desenvolver software ──
@@ -1363,13 +1363,13 @@ const processInput = async (rawText, opts = {}) => {
     return;
   }
 
-  // ── Wake word gate — só para voz; texto digitado e wake word passam direto ──
-  if (!opts.typed && !opts.fromWake) {
+  // ── Wake word gate — só para voz; texto digitado, wake word e conversa contínua passam direto ──
+  if (!opts.typed && !opts.fromWake && !app.continuous) {
     // Normaliza acentos para evitar mismatch NFD/NFC do Chrome SpeechRecognition
     const _ts = stripAccents(text.toLowerCase());
     const hasLuminaPrefix = /^(lumina|lu)[\s,.:!?]+/.test(_ts);
-    // Exceção: gag do workshop — "lúmina é burrinha" passa sem prefixo
-    const isGagAboutLumina = /\b(lumina|lu)\b/.test(_ts) && /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(_ts);
+    // Exceção: gag do workshop — qualquer variação de "burrinha" passa sem prefixo
+    const isGagAboutLumina = /burrinh|burr[ao]\b|meio (limit|fraca|simpl|burr)|nao (e|eh|ta) (tao |muito )?(inteligent|espert)/i.test(_ts);
     if (!hasLuminaPrefix && !isGagAboutLumina) {
       setFace('idle'); setUserSaid('');
       return;
@@ -1447,7 +1447,7 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Intercept: prospecção — Gemini responde sobre a empresa em vez de chamar a tool
-    const PROSPECT_CMD = /\b(prospect|prospecta|busca\s+(clientes?|empresa|leads?)|encontra\s+(clientes?|empresa|leads?)|lista\s+\d*\s*(possív|potenci|cliente|empresa|lead)|me\s+(d[áa]|mostra|lista|traz)\s+\d*\s*(cliente|empresa|lead|prospect)|quem\s+pode\s+ser\s+cliente)\b/i;
+    const PROSPECT_CMD = /\b(prospec[a-z]*|busca\s+(clientes?|empresa|leads?)|encontra\s+(clientes?|empresa|leads?)|consig[ao]\s+\d*\s*(clientes?|empresa|leads?)|arruma\s+\d*\s*(clientes?|empresa|leads?)|preciso\s+de\s+\d*\s*(clientes?|empresa|leads?)|quero\s+\d*\s*(clientes?|empresa|leads?)|lista\s+\d*\s*(possív|potenci|cliente|empresa|lead)|me\s+(d[áa]|mostra|lista|traz|conseg[ue]|arruma)\s+\d*\s*(cliente|empresa|lead|prospect)|quem\s+pode\s+ser\s+cliente|\d+\s+clientes?\s+para\b)\b/i;
     if (PROSPECT_CMD.test(text)) {
       try {
         const qtdMatch = text.match(/\b(\d+)\b/);
@@ -4035,48 +4035,51 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render existing history in UI
   app.history.forEach(h => addMsgUI(h.role === 'user' ? 'user' : 'lumina', h.content));
 
-  // Greeting
-  const hr = new Date().getHours();
-  const gr = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
-  const name = mem.userName || cfg.username;
-  const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
-  const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
-  // Briefing matinal automático (uma vez por dia)
-  const briefingKey = 'lumina_last_briefing';
-  const todayBrief  = new Date().toISOString().split('T')[0];
-  if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
-    localStorage.setItem(briefingKey, todayBrief);
-    const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
-    const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
-    let briefing = `${gr}. ${returning}Sou Lúmina. `;
-    if (pendingCount || habitCount) {
-      if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
-      if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
+  // Greeting — aguarda config do servidor para saber se tem chave Gemini
+  serverCfgReady.then(() => {
+    const hr = new Date().getHours();
+    const gr = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+    const name = mem.userName || cfg.username;
+    const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
+    const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
+    const briefingKey = 'lumina_last_briefing';
+    const todayBrief  = new Date().toISOString().split('T')[0];
+    if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
+      localStorage.setItem(briefingKey, todayBrief);
+      const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
+      const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
+      let briefing = `${gr}. ${returning}Sou Lúmina. `;
+      if (pendingCount || habitCount) {
+        if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
+        if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
+      } else {
+        briefing += 'Dando vida aos dados e luz às decisões.';
+      }
+      speak(briefing);
     } else {
-      briefing += 'Dando vida aos dados e luz às decisões.';
+      speak(`${gr}. ${returning}Sou Lúmina. ${ready}`);
     }
-    setTimeout(() => speak(briefing), 700);
-  } else {
-    setTimeout(() => speak(`${gr}. ${returning}Sou Lúmina. ${ready}`), 700);
-  }
 
-  // ── Banner: sem chave Gemini ──
-  if (!cfg.geminiKey) {
-    const banner = document.createElement('div');
-    banner.id = 'no-key-banner';
-    banner.innerHTML = `⚠️ <strong>Chave Gemini não configurada.</strong> Lúmina responde em modo offline. <a href="#" id="no-key-link" style="color:#ffcc00;text-decoration:underline">Configurar agora</a>`;
-    Object.assign(banner.style, {
-      position:'fixed', bottom:'0', left:'0', right:'0', zIndex:'9999',
-      background:'#7a1010', color:'#fff', textAlign:'center',
-      padding:'8px 16px', fontSize:'13px', lineHeight:'1.4',
-    });
-    document.body.appendChild(banner);
-    document.getElementById('no-key-link').addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('[data-panel="integracoes"]')?.click() ||
-      document.querySelector('.nav-item[data-tab="integracoes"]')?.click();
-    });
-  }
+    // ── Banner: sem chave Gemini ──
+    const existingBanner = document.getElementById('no-key-banner');
+    if (existingBanner) existingBanner.remove();
+    if (!cfg.geminiKey) {
+      const banner = document.createElement('div');
+      banner.id = 'no-key-banner';
+      banner.innerHTML = `⚠️ <strong>Chave Gemini não configurada.</strong> Lúmina responde em modo offline. <a href="#" id="no-key-link" style="color:#ffcc00;text-decoration:underline">Configurar agora</a>`;
+      Object.assign(banner.style, {
+        position:'fixed', bottom:'0', left:'0', right:'0', zIndex:'9999',
+        background:'#7a1010', color:'#fff', textAlign:'center',
+        padding:'8px 16px', fontSize:'13px', lineHeight:'1.4',
+      });
+      document.body.appendChild(banner);
+      document.getElementById('no-key-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelector('[data-panel="integracoes"]')?.click() ||
+        document.querySelector('.nav-item[data-tab="integracoes"]')?.click();
+      });
+    }
+  });
 
   // ── Microphone — clique para fala imediatamente e começa a ouvir ──
   document.getElementById('btn-mic').addEventListener('click', () => {
