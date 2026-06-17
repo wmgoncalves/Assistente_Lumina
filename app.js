@@ -4526,15 +4526,22 @@ const DEMO_QA = [
   // ── Capacidades gerais ────────────────────────────────────────────────────────
   { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
-      'Respondo perguntas, busco documentos, oriento sobre procedimentos e executo tarefas — tudo em linguagem natural. Quando integrada à Central de Dados da Scapini, acesso fretes, motoristas, manutenção e financeiro em tempo real.',
-      'Hoje consulto documentos internos, respondo sobre procedimentos e automatizo tarefas simples. A próxima fase é integração com CGI e os sistemas operacionais da Scapini.',
+      'Analiso planilhas DRE e balancetes, respondo sobre operação e financeiro da Scapini, ajudo na prospecção de clientes, oriento sobre legislação de transporte, e aprendo com cada conversa. Quando integrada ao CGI, consulto fretes, motoristas e financeiro em tempo real.',
+      'Faço cinco coisas bem: análise financeira (DRE, balancete, fechamento mensal), base de conhecimento operacional (frete, motorista, legislação), prospecção de clientes, resposta a perguntas estratégicas da diretoria, e memória de contexto — lembro o que você me conta. O que quer testar primeiro?',
     ]},
 
   // ── Como funciona ─────────────────────────────────────────────────────────────
   { re: /como voce funciona|como voce pensa|inteligencia artificial|o que e ia|o que e a ia/,
     r: [
-      'Sou baseada em modelos de linguagem — processo texto, entendo contexto e gero respostas. Uso uma base de conhecimento local com documentos da Scapini e posso consultar sistemas externos quando integrada.',
-      'Funciono como um modelo de linguagem treinado com bilhões de textos. Entendo português, contexto e intenção, e aprendo com as notas e documentos que recebo.',
+      'Uso IA generativa (raciocínio em linguagem natural) combinada com uma base de conhecimento local específica para a Scapini. Para análise pesada, aciono o Gemini 2.5 Flash da Google com pensamento adaptativo — perguntas simples respondem em 1-2s, análises complexas em 5-10s.',
+      'Funciono em duas camadas: base local (respostas instantâneas, sem custo de API) e Gemini 2.5 Flash (análise profunda de planilhas e perguntas complexas). Processo texto, números e arquivos — PDF, Excel e Word. Tudo roda no servidor interno da Scapini, seus dados ficam aqui.',
+    ]},
+
+  // ── O que eu NÃO faço ────────────────────────────────────────────────────────
+  { re: /o que voce nao (faz|pode|consegue)|limitacao|nao (consegue|sabe|pode|faz)|restricao|o que falta/,
+    r: [
+      'O que ainda não faço: acessar dados em tempo real do CGI (aguardando integração), fazer ligações ou enviar e-mails autonomamente, aprovar pagamentos ou tomar decisões sozinha. Sou analista e consultora — a decisão final é sempre humana. O que consigo fazer surpreende mais do que o que falta.',
+      'Minhas limitações atuais: sem acesso ao CGI (dados de viagem, frota em tempo real), sem envio autônomo de mensagens externas, sem acesso à internet em modo offline. Não invento dados — quando não sei, aviso claramente. Quando integrada ao CGI, 80% dessas limitações somem.',
     ]},
 
   // ── BLOCO OPERACIONAL: Transporte, Regulamentação e Procedimentos ─────────────
@@ -5702,8 +5709,12 @@ const activateLuminaReveal = () => {
     if (contLabel) contLabel.textContent = 'CONVERSA CONTÍNUA: ON';
 
     setTimeout(() => {
-      // app.continuous=true faz o mic reiniciar automaticamente após a fala via finish()
-      speak('Olá. Estou pronta. Pode começar.');
+      const intros = [
+        'Olá. Sou a Lúmina, a inteligência artificial da Scapini Transportes. Estou pronta para demonstrar o que posso fazer. Pode começar.',
+        'Bem-vindos. Sou a Lúmina — a IA interna da Scapini. Analiso planilhas, respondo sobre operação e financeiro, e aprendo com cada conversa. Pode perguntar.',
+        'Pronta. Sou a Lúmina da Scapini. Pergunte sobre frota, financeiro, rotas, motoristas ou qualquer coisa do dia a dia da empresa. Estou aqui.',
+      ];
+      speak(intros[Math.floor(Math.random() * intros.length)]);
     }, 800);
   }, 600);
 };
