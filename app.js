@@ -3299,6 +3299,24 @@ const detectLocalInfo = async (text) => {
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
 
+  // ── RH avançado — perguntas de gestão ──
+  if (/rotatividade|turnover|retencao.*motorista|motorista.*fica.*pouco|motorista.*saindo|fidelizar.*motorista/.test(t))
+    return pick([
+      'Rotatividade de motoristas no Brasil: o setor tem turnover médio de 40-80% ao ano — um dos maiores do mercado. Principais causas: jornada excessiva, falta de reconhecimento, diferencial salarial de concorrentes. Para reter: plano de carreira claro (motorista → líder de equipe → gestor de frota), PPR (Participação nos Resultados), benefícios além do obrigatório (plano de saúde, parceria com SEST SENAT), e comunicação transparente da diretoria.',
+      'Custo do turnover de motorista: admissão + desligamento + treinamento de substituto custa em média 1,5x o salário mensal do cargo. Para um motorista com salário de R$4.500, isso representa R$6.750 por substituição. Se a Scapini substitui 10 motoristas por ano, são R$67.500 só em custo de rotatividade. Investir R$200/motorista/ano em benefícios extras paga o ROI facilmente.',
+    ]);
+
+  if (/pprl|programa.*prevencao.*risco|cipa|cipamo|comissao.*prevencao|sesmt|servico.*seguranca/.test(t))
+    return pick([
+      'PPRA e PCMSO para transportadora: o PPRA (Programa de Prevenção de Riscos Ambientais) e o PCMSO (Programa de Controle Médico de Saúde Ocupacional) são obrigatórios para empresas com CLT. O SESMT (Serviço Especializado em Engenharia de Segurança) é obrigatório conforme o grau de risco e número de funcionários. Transportadoras são grau de risco 3 (alto) — exigências maiores. Consulte a NR-4 para dimensionamento.',
+      'CIPA em transportadora: a Comissão Interna de Prevenção de Acidentes é obrigatória a partir de 20 funcionários. O CIPAMO (Motoristas) foca em riscos específicos da estrada: ergonomia, fadiga, condições de estrada, cargas perigosas. Membros são eleitos pelos funcionários + designados pela empresa. A CIPA deve se reunir mensalmente e fazer inspeções periódicas nos veículos e instalações.',
+    ]);
+
+  if (/home.*office.*administrativo|trabalho.*remoto.*scapini|hibrido.*trabalho|escritorio.*administrativo/.test(t))
+    return pick([
+      'Home office para administrativo de transportadora: funções como financeiro, RH, TI, comercial e marketing podem trabalhar remotamente ou em modelo híbrido. O que não funciona remoto: operacional (motoristas, mecânicos, conferentes), recepção e portaria. Modelo híbrido (3 dias escritório / 2 remoto) é o mais adotado no setor administrativo de transportadoras de médio porte. Benefícios: redução de custos de escritório, atração de talentos fora de Lajeado.',
+    ]);
+
   // ── Perguntas da diretoria sobre IA / ROI / estratégia ──
   if (/quanto.*custa.*implantar.*ia|custo.*implantar.*lumina|investimento.*ia.*transporte|roi.*implantar.*ia|vale.*pena.*ia/.test(t))
     return pick([
@@ -4592,6 +4610,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO ESG, ACIDENTE E MARKETING ───────────────────────────────────────────
+
+  // ESG e sustentabilidade no transporte
+  { re: /esg|sustentabilidade.*transporte|emissao.*co2|carbono.*frota|descarbonizacao|combustivel.*verde|biodiesel|gas.*natural.*veiculo|gnv.*caminhao|caminhao.*eletrico|frota.*sustentavel/,
+    r: [
+      'ESG no transporte rodoviário: o setor é responsável por ~25% das emissões de CO2 do Brasil. Ações ESG para a Scapini: renovação de frota (caminhões Euro 6 emitem até 80% menos que Euro 3), uso de biodiesel B15/B20 (obrigatório pelo Renovabio), telemetria para reduzir consumo por motorista agressivo, e logística reversa. Relatório de emissões atrai clientes com metas ESG (indústrias, varejistas) que exigem ESG de fornecedores.',
+      'Combustíveis alternativos para frota: GNV (Gás Natural Veicular) — custo até 40% menor que diesel, mas requer adaptação do motor e postos limitados nas rodovias. Biodiesel B100 — disponível em algumas regiões, reduz CO2 em 74% vs diesel fóssil. Caminhão elétrico — ainda inviável para rotas longas (autonomia 300-500 km vs 1.000+ km no diesel). Horizonte real: GNL (Gás Natural Liquefeito) para rotas Sul-Sudeste a partir de 2027.',
+    ]},
+
+  // Custo real de acidente de trabalho
+  { re: /custo.*acidente|acidente.*custo|acidente.*trabalho.*impacto|impacto.*acidente.*empresa|quanto.*custa.*acidente|acidente.*financeiro/,
+    r: [
+      'Custo real de um acidente de trabalho: além do custo direto (tratamento médico, afastamento, INSS), há custos ocultos: substituição do motorista, perda de produtividade, dano ao veículo, carga sinistrada, horas da gestão no processo, multas e eventual ação judicial. Estudos do SESI estimam que o custo oculto é 4x o custo direto. Um acidente grave pode custar R$100.000-500.000 considerando todos os fatores.',
+      'Prevenção de acidentes como investimento: treinamento em direção defensiva (R$300-600/motorista) tem ROI documentado de 5:1 — para cada real investido, economiza cinco em acidentes, combustível e manutenção. Motoristas com telemetria e feedback semanal reduzem sinistros em 30-50% em 6 meses. O seguro RCTR-C é a proteção financeira, mas a prevenção é o que não interrompe a operação.',
+    ]},
+
+  // Marketing de transportadora
+  { re: /marketing.*transportadora|divulgar.*empresa|redes.*sociais.*transporte|linkedin.*transportadora|site.*transportadora|captacao.*cliente.*marketing/,
+    r: [
+      'Marketing para transportadora: o B2B de transporte se fecha no relacionamento, não em campanhas virais. Canais que funcionam: LinkedIn (gestores de logística e supply chain — publique cases, dados de OTD, diferenciais), Google Ads para "transportadora RS para SP" (quem pesquisa já tem necessidade), e indicação de clientes (o melhor canal — peça formalmente a cada cliente satisfeito). Site profissional com cotação online aumenta conversão.',
+      'Conteúdo que atrai clientes na área de transporte: posts sobre prazos por rota, como funciona o CT-e e MDFe, dicas de embalagem para evitar avaria, dados de mercado (alta do diesel, impacto nos fretes). Esse conteúdo posiciona a Scapini como especialista e atrai embarcadores que estão pesquisando transportadoras. Frequência: 2-3 posts por semana no LinkedIn, 1 artigo técnico por mês.',
+    ]},
+
+  // Precificação de frete — variáveis e formação de preço
+  { re: /como.*precificar.*frete|formacao.*preco.*frete|calcular.*tabela.*frete|variavel.*frete|composicao.*frete|custo.*frete.*componente/,
+    r: [
+      'Formação de preço de frete: os componentes são — combustível (35-45% do custo), mão de obra do motorista (20-25%), manutenção (10-15%), pedágio (5-10%), seguro RCTR-C (2-4%), depreciação do veículo (5-8%), administração e overhead (5-10%), e margem de lucro (10-15%). O total vira o preço de tabela por tonelada × km, ajustado por volume, frequência e perfil da carga.',
+      'Reajuste de frete: a tabela de frete deve ser reajustada sempre que o diesel variar mais de 5% ou trimestralmente como mínimo. Indique no contrato a cláusula de reajuste pelo INPC (inflação geral) ou pelo IBGE Transporte Rodoviário. Clientes grandes aceitam cláusula de variação de diesel (fuel surcharge) — o reajuste passa a ser automático e transparente, sem renegociação todo mês.',
     ]},
 
   // ── BLOCO RISCOS E COMUNICAÇÃO COM CLIENTE ────────────────────────────────────
