@@ -4670,6 +4670,35 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO SUPPLY CHAIN E OPERAÇÃO NOTURNA ─────────────────────────────────────
+
+  // Supply chain / cadeia de suprimentos
+  { re: /supply.*chain|cadeia.*suprimento|just.*in.*time|kanban.*estoque|giro.*estoque|ruptura.*estoque|lead.*time.*entrega|visibilidade.*carga/,
+    r: [
+      'Supply chain no transporte: a Scapini faz parte da cadeia de suprimentos dos clientes. Atraso na entrega pode causar parada de linha de produção (just-in-time) ou ruptura de estoque no varejo. Por isso, OTD acima de 95% não é diferencial — é requisito básico para clientes que operam com estoque enxuto. Visibilidade de carga em tempo real (tracking URL para o cliente) é o próximo passo para reduzir chamadas de "cadê minha entrega?".',
+      'Lead time de entrega e estoque do cliente: transportadoras que oferecem janelas de entrega flexíveis (ex.: entrega entre 8h e 10h na segunda-feira) agregam valor ao planejamento do cliente. Clientes que operam com kanban precisam de frequência e pontualidade, não de volume. Contratos de entrega parcelada (milk run) são mais rentáveis por viagem e criam dependência positiva do cliente com a transportadora.',
+    ]},
+
+  // Operação noturna e turno da madrugada
+  { re: /operacao.*noturna|turno.*madrugada|trabalho.*noite.*transportadora|adicional.*noturno|periculosidade.*motorista|insalubridade.*motorista/,
+    r: [
+      'Adicional noturno para motoristas: trabalho entre 22h e 5h tem adicional de 20% sobre o salário-hora (CLT, Art. 73). A hora noturna é reduzida: equivale a 52 minutos e 30 segundos. Para motoristas em viagem que passam a madrugada na estrada, o adicional incide sobre as horas efetivamente trabalhadas (ou dirigidas, registradas no tacógrafo) nesse período.',
+      'Operação noturna na transportadora: cargas de alto valor (eletrônicos, medicamentos, bebidas) frequentemente viajam à noite para reduzir tempo de exposição a roubo nos centros urbanos (menos tráfego, entregas cedo). Exige motorista descansado, veículo com iluminação em dia, câmera frontal e rastreamento com alerta a cada 2h de silêncio (protocolo de segurança contra sequestro relâmpago).',
+    ]},
+
+  // Negociação com sindicato / convenção coletiva
+  { re: /negociacao.*sindicato|convencao.*coletiva.*2025|cct.*motorista|dissidio.*motorista|acordo.*coletivo.*transporte|sindicato.*patronal/,
+    r: [
+      'Negociação com sindicato de motoristas: a CCT (Convenção Coletiva de Trabalho) é negociada anualmente entre o sindicato dos motoristas (MOVIFORT no RS) e o sindicato patronal (SETCERGS). Define piso salarial, reajuste anual, benefícios mínimos e condições de trabalho. A empresa pode oferecer condições acima da CCT, mas nunca abaixo. Para negociar diretamente com o sindicato, contrate um advogado trabalhista especializado em transporte.',
+      'Dissídio coletivo: quando sindicato e empresa não chegam a acordo na CCT, o caso vai para a Justiça do Trabalho (Dissídio Coletivo). O tribunal pode impor reajuste e condições. Para evitar isso, a empresa deve entrar na negociação com proposta embasada em dados (custo da folha, inflação do período, situação do setor). Sindicato forte no RS: MOVIFORT — tem histórico de negociações com reajustes acima do INPC.',
+    ]},
+
+  // Tokenização / digitalização de CT-e e documentos
+  { re: /ct.*e.*digital|documento.*digital.*transporte|blockchain.*transporte|nfe.*digital|digitalizacao.*documentos.*frota|arquivo.*digital.*transporte/,
+    r: [
+      'Digitalização de documentos no transporte: CT-e, MDFe e NF-e já são 100% digitais (XML na SEFAZ). O que ainda é físico: CRLV (já tem versão digital via app DETRAN), CNH (digital via app do SENATRAN), ASO e contratos de trabalho. Digitalizar contratos com clientes (via DocuSign ou Clicksign) elimina custos de papel, correio e arquivo físico — e tem validade jurídica igual ao papel assinado.',
+    ]},
+
   // ── BLOCO CONTRATOS, TECNOLOGIA EMBARCADA E OPERAÇÕES ─────────────────────────
 
   // Contrato de frete — cláusulas e reajuste
