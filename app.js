@@ -3495,6 +3495,34 @@ const tryLocalResponse = (text) => {
   if (/ceo|president[ae]|vice.?president[ae]|fundador|lucas scapini|ernani scapini|rosangela scapini|diamantino|quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
     return 'A liderança da Scapini Transportes: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
 
+  // ── O que é margem bruta / EBITDA / ML (financeiro básico) ──
+  if (/o que (é|e|significa) (a |o )?(margem bruta|mb\b|ebitda|margem (líquida|liquida)|ml\b|lucro bruto|resultado|ebit\b)/.test(t))
+    return pick([
+      'Margem Bruta (MB): receita menos custos diretos da operação (combustível, pedágio, motorista) ÷ receita. Mede a eficiência operacional pura. EBITDA: resultado antes de juros, impostos, depreciação e amortização — mede a geração de caixa operacional. Margem Líquida (ML): lucro após TODOS os custos e impostos ÷ receita. É o que sobrou de fato.',
+      'Na DRE: MB = Receita Líquida − Custos Diretos. EBITDA = MB − Despesas Operacionais + Depreciação. Lucro Líquido = EBITDA − Juros − Impostos − Depreciação. Para uma transportadora saudável: MB acima de 20%, EBITDA positivo, ML acima de 5%. Abaixo disso, algum custo está fora de controle.',
+    ]);
+
+  // ── Como ler a DRE ──
+  if (/(como|o que é|explica|explique|me explica) (a |uma )?(dre|demonstracao.*resultado|demonstrativo.*resultado)/.test(t))
+    return pick([
+      'A DRE (Demonstração do Resultado do Exercício) mostra se a empresa lucrou ou teve prejuízo. A estrutura: Receita Bruta − Deduções = Receita Líquida → − Custos Diretos = Lucro Bruto → − Despesas Operacionais = EBITDA → − Depreciação/Juros = EBIT → − IR/CSLL = Lucro Líquido. Cada linha revela onde o dinheiro entra e sai.',
+      'Ler a DRE da Scapini: comece pela Receita Líquida (faturamento real após devoluções e impostos). Veja o Lucro Bruto — se estiver baixo, os custos de operação (diesel, pedágio) estão altos. O EBITDA revela a eficiência operacional. O Lucro Líquido é o resultado final. Envie a planilha DRE aqui e analiso linha por linha.',
+    ]);
+
+  // ── Carta frete / pagamento motorista autônomo ──
+  if (/carta.?frete|pagamento.*autonomo|pagar.*tac|remunera.*motorista.*autôn/.test(t))
+    return pick([
+      'Carta frete é o comprovante de pagamento ao motorista autônomo (TAC). Deve conter: valor do frete, dados do TAC (CPF/RNTRC), origem, destino e data. O pagamento deve ser vinculado ao CIOT gerado antes da viagem. Pagar frete sem CIOT ou carta frete é infração para a contratante.',
+      'O pagamento ao TAC deve ser feito em até 3 dias úteis após a entrega (conforme contrato). Retenção de impostos: INSS (20% + 2,5% SENAT/SEST) e ISS municipal (se aplicável). A carta frete serve como comprovante para o motorista e para a contabilidade da Scapini.',
+    ]);
+
+  // ── Como funciona o Simples Nacional para transportadoras ──
+  if (/simples nacional.*transport|transport.*simples nacional|regime.*simples|das.*simples/.test(t))
+    return pick([
+      'Transportadoras de cargas no Simples Nacional ficam no Anexo III ou V, com alíquotas progressivas. Até R$ 180 mil/ano: ~6%. De R$ 180 mil a R$ 360 mil: ~11,2%. O limite do Simples é R$ 4,8 milhões/ano. Acima disso, a empresa migra para Lucro Presumido ou Lucro Real. A escolha do regime depende da análise do contador.',
+      'No Simples, o DAS recolhe tudo num único boleto: IR, CSLL, PIS, COFINS, ICMS e ISS. Transportadoras maiores geralmente migram para Lucro Presumido pois as alíquotas do Simples ficam altas com o crescimento. Qualquer mudança de regime precisa de análise do contador da Scapini.',
+    ]);
+
   // ── Lajeado / localização ──
   if (/lajeado|vale do taquari|rs\b|rio grande do sul|onde.*fica|localiza[çc]|endere[çc]o.*scapini/.test(t))
     return pick([
@@ -3758,6 +3786,70 @@ const DEMO_QA = [
     r: [
       'Faturamento da Scapini: cada CT-e emitido gera uma conta a receber. O prazo de pagamento é definido em contrato com o cliente (à vista, 15, 30, 60 dias). O acompanhamento de títulos vencidos e a inadimplência são controlados pelo financeiro via CGI. Quando integrada, posso responder "quais clientes estão em atraso?" em tempo real.',
       'Contas a receber: clientes com prazo vencido devem ser acionados pelo financeiro. O processo padrão: aviso amigável (e-mail/WhatsApp), ligação, e se necessário, protesto ou cobrança jurídica. A análise de crédito antes de liberar crédito a um cliente novo é fundamental — evita inadimplência futura.',
+    ]},
+
+  // ── BLOCO SEGURANÇA: NRs e emergências em viagem ──────────────────────────────
+
+  // CAT — Comunicação de Acidente de Trabalho
+  { re: /\bcat\b|acidente de trabalho|comunicacao.*acidente|acidentei|acidente.*trabalho|me machuquei.*trabalho/,
+    r: [
+      'Em caso de acidente de trabalho: 1) Comunique imediatamente o gestor e o RH. 2) Procure atendimento médico — use a UPA ou hospital conveniado. 3) A CAT (Comunicação de Acidente de Trabalho) deve ser emitida pelo RH em até 1 dia útil. 4) Guarde toda documentação médica. Acidentes ocultados geram multa para a empresa e prejudicam o trabalhador no INSS.',
+      'CAT é o documento que registra formalmente o acidente de trabalho no INSS. Sem CAT, o trabalhador pode perder direitos (estabilidade de 12 meses após retorno do INSS, cobertura do seguro acidente). A emissão é responsabilidade da empresa — o trabalhador não precisa pagar nada. Ligue para o RH imediatamente após qualquer acidente.',
+    ]},
+
+  // NR-11 — movimentação de cargas
+  { re: /\bnr.?11\b|empilhadeira|movimentacao.*carga|operador.*empilhadeira|carga.*pallet|pallet.*carga/,
+    r: [
+      'NR-11 regula operações com equipamentos de movimentação de cargas (empilhadeiras, transpaletes, pontes rolantes). Pontos principais: operador de empilhadeira precisa de treinamento e habilitação específica, carga máxima deve ser respeitada (placa no equipamento), passageiros em empilhadeiras são proibidos, e manutenção deve ser periódica com registro. EPI obrigatório: capacete e cinto.',
+      'Empilhadeiras na Scapini: somente operadores habilitados pela NR-11. A habilitação tem validade e deve ser renovada. Nunca transporte pessoas em empilhadeiras — multa e risco de acidente grave. Em caso de defeito no equipamento, sinalize, interrompa o uso e comunique a manutenção imediatamente.',
+    ]},
+
+  // NR-20 — inflamáveis e combustíveis
+  { re: /\bnr.?20\b|inflamavel|combustivel.*armazenamento|tanque.*diesel.*seguranca|posto.*interno/,
+    r: [
+      'NR-20 regula segurança em atividades com inflamáveis e combustíveis (diesel, gasolina, lubrificantes). Na Scapini: área de abastecimento deve ter sinalização, extintor e proibição de fumar. Tanques de diesel instalados: licença ambiental e spill kit (kit anti-derramamento) obrigatórios. Qualquer vazamento: isole a área, não use faíscas e acione a equipe de segurança.',
+      'Cuidados com diesel e combustíveis na Scapini: nunca abasteça com motor ligado, proibido fumar a menos de 10m da área de abastecimento, use EPI adequado (luva nitrílica). Em caso de derramamento: contenha com areia ou estopa, nunca lave para o ralo — é infração ambiental. Comunique o SESMT imediatamente.',
+    ]},
+
+  // NR-17 — ergonomia
+  { re: /\bnr.?17\b|ergonomia|postura.*trabalho|dor.*coluna.*trabalho|lesao.*postura|ler|dort/,
+    r: [
+      'NR-17 trata de ergonomia no trabalho — adaptar o ambiente às características físicas do trabalhador. Para motoristas: assento regulável, apoio lombar, altura do volante. Para administrativo: mesa e cadeira reguláveis, monitor na altura dos olhos, pausas de 10 min a cada 50 min de digitação. Dor ou desconforto persistente: comunique o RH e procure o SESMT.',
+      'LER/DORT (lesões por esforço repetitivo) são reconhecidas como doença ocupacional — geram CAT e afastamento pelo INSS. Prevenção: pausas regulares, ginástica laboral (quando disponível), posto de trabalho ergonômico. Se sentir dor nos pulsos, ombros ou coluna no trabalho, não espere piorar — comunique o SESMT da Scapini.',
+    ]},
+
+  // Emergência em viagem — acidente/quebra
+  { re: /caminh.*quebrou|quebrei.*estrada|acidente.*viagem|sinistro.*estrada|pane.*estrada|socorro.*viagem|emergencia.*viagem|o que faz.*quebr/,
+    r: [
+      'Procedimento em caso de pane ou acidente na estrada: 1) Sinalize imediatamente (triângulo 30m atrás, pisca-alerta ligado). 2) Ligue para a central de operações da Scapini. 3) Em caso de acidente com vítima: ligue 192 (SAMU) ou 193 (Bombeiros) e 190 (Polícia). 4) Não mova o veículo antes da perícia. 5) Fotografe tudo — veículo, carga, local, placas envolvidas.',
+      'Quebra em estrada: acione o socorro da transportadora (central de operações Scapini), sinalize o veículo com triângulo e use colete refletivo antes de sair do veículo. Nunca permaneça na faixa de rodagem. Para rebocar: aguarde autorização da Scapini — rebocador não autorizado pode causar problemas no seguro. Registre quilometragem, local (BR/km) e horário.',
+    ]},
+
+  // Roubo de carga
+  { re: /roubo.*carga|roubo.*caminhao|carga.*roubada|assalto.*caminhao|sequestro.*motorista|carga.*sequestro/,
+    r: [
+      'Em caso de roubo de carga ou veículo: 1) Prioridade absoluta: segurança do motorista — não reaja. 2) Assim que possível em local seguro: ligue para Polícia (190) e para a central da Scapini. 3) Registre BO imediatamente — sem BO, o seguro não cobre. 4) Ative o rastreador se possível remotamente (via central). 5) Preserve todas as informações sobre os assaltantes para o BO.',
+      'Roubo de carga é infelizmente uma realidade no Brasil. O seguro RCTA cobre roubo e extravio — mas exige BO registrado e comunicação ao seguro em até 24h. O motorista NÃO deve ser responsabilizado se seguiu os protocolos de segurança. Qualquer rota de alto risco (SP interior, rodovias federais à noite) deve ser discutida previamente com a operação da Scapini.',
+    ]},
+
+  // ── BLOCO GLOSSÁRIO: Termos de transporte ─────────────────────────────────────
+
+  { re: /o que (e|eh|é|significa|quer dizer) (o |a )?(romaneio|manifesto de carga|borderô|bordereau|conhecimento de carga|lacre|nf|cfe|dfe|sefaz|danfe|nfse|dae|tac|tat\b|tat )/,
+    r: [
+      'Romaneio: lista detalhada de volumes/caixas em uma carga — identifica cada item para conferência na entrega. Borderô: relação de CT-es emitidos em um período, usada para cobrança ou relatório. DANFE: representação gráfica da NF-e que acompanha a carga (não é a NF-e, é o espelho). SEFAZ: Secretaria da Fazenda estadual — autoriza NF-e e CT-e.',
+      'TAC: Transportador Autônomo de Cargas — motorista pessoa física (caminhoneiro autônomo). TAT: Transportador Autônomo de Turismo. Lacre: dispositivo de segurança colocado no baú ou container — se chegou violado, registre na entrega. DFe: Documento Fiscal Eletrônico (família que inclui NF-e, CT-e, MDFe, NFS-e).',
+    ]},
+
+  { re: /o que (e|eh|é|significa) (o |a )?(frete tabelado|tabela.*frete|tac.*frete|piso.*frete|piso.*caminhao|frete minimo|frete.*piso)/,
+    r: [
+      'Piso mínimo de frete (Lei 13.703/2018): lei que estabelece valores mínimos para fretes rodoviários de carga, calculados por eixo e tipo de carga. A ANTT divulga a tabela periodicamente. Transportadoras não podem contratar fretes abaixo desse piso — sujeito a multa. Para motoristas autônomos (TAC), o piso é calculado pelo CIOT.',
+      'Tabela ANTT de fretes: define valores mínimos por eixo, tipo de carga e distância. Por exemplo: carga geral em carreta com 5 eixos = X reais por km. A Scapini usa essa tabela como referência de base — o frete real pode ser maior dependendo do cliente e do mercado. A tabela atual está no site da ANTT (gov.br/antt).',
+    ]},
+
+  { re: /o que (e|eh|é|significa) (o |a )?(subcontratacao|subcontratado|agregado|motorista.*agregado|veiculo.*agregado)/,
+    r: [
+      'Agregado: motorista que tem seu próprio veículo mas trabalha exclusivamente para uma transportadora (vínculo formal, mas sem ser CLT). A Scapini paga o frete ao agregado e o agrega à sua operação. Diferente do TAC (autônomo avulso): o agregado tem contrato de exclusividade.',
+      'Subcontratação no transporte: quando a transportadora principal (Scapini) repassa uma carga para outra transportadora ou TAC executar. É legal mas deve estar documentada (CT-e com destaque de subcontratação). A responsabilidade perante o cliente continua sendo da Scapini — se o subcontratado errar, a Scapini responde.',
     ]},
 
   // ── Capacidades gerais ────────────────────────────────────────────────────────
