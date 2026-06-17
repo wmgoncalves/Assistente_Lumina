@@ -3035,9 +3035,9 @@ const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reini
 const _thinkingBudget = (msg) => {
   const t = msg.toLowerCase();
   // Análise pesada — raciocínio profundo (2048)
-  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia/.test(t)) return 2048;
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -3298,6 +3298,16 @@ const detectLocalInfo = async (text) => {
     return pick([
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
+
+  // ── Emergências operacionais (detecção por urgência) ──
+  if (/caminhao.*quebrou|quebrou.*na.*estrada|pane.*veiculo|acidente.*agora|bateu.*caminhao|socorro.*estrada|emergencia.*rota|motorista.*acidente|ocorrencia.*agora|urgente/.test(t)) {
+    const h = new Date().getHours();
+    const prefix = (h >= 22 || h < 6) ? 'Madrugada — operação de emergência. ' : '';
+    return `${prefix}Protocolo de emergência na estrada: 1) Ligue para o motorista — confirme o estado físico dele e de terceiros. 2) Se houver feridos: SAMU 192 ou Bombeiros 193. 3) Se acidente com outros veículos: PRF 191. 4) Se pane mecânica: acione a seguradora (reboque) e o gestor de frota. 5) Registre ocorrência no TMS com hora, km e placa. 6) Comunique o cliente se a carga será impactada. Você quer que eu ajude a redigir alguma comunicação agora?`;
+  }
+
+  if (/roubo.*carga|carga.*roubada|assaltaram.*motorista|sequestro.*relampago.*motorista|cargo.*theft/.test(t))
+    return `Protocolo de roubo de carga: 1) Certifique-se que o motorista está em segurança — só então pense na carga. 2) Polícia Civil (delegacia local) + Boletim de Ocorrência imediato. 3) Avise a seguradora RCTA em até 24h — sem BO o sinistro pode ser negado. 4) Informe o embarcador/cliente. 5) Se houver rastreador ativo: compartilhe localização com a polícia, mas NÃO tente recuperar pessoalmente. 6) Registre tudo no TMS. Precisa de apoio na comunicação com o cliente ou seguradora?`;
 
   // ── RH avançado — perguntas de gestão ──
   if (/rotatividade|turnover|retencao.*motorista|motorista.*fica.*pouco|motorista.*saindo|fidelizar.*motorista/.test(t))
