@@ -3331,6 +3331,31 @@ const detectLocalInfo = async (text) => {
       'Licitação pública para transportadora: a Scapini pode participar de licitações de transporte de cargas de prefeituras, hospitais e autarquias estaduais. Requisitos: SICAF (Sistema de Cadastramento Unificado de Fornecedores) ativo, certidões negativas (FGTS, Receita Federal, INSS, estadual, municipal), balanço patrimonial dos últimos 2 anos, e comprovação de capacidade técnica (contratos anteriores similares). Pregão eletrônico: acesse no COMPRASNET ou portal do estado.',
     ]);
 
+  // ── Perguntas clássicas de demo / apresentação ──
+  if (/me.*faz.*uma.*pergunta|o que.*perguntar|o que.*voce.*faz|me.*impressiona|me.*surpreende|mostra.*o.*que.*sabe|o que.*voce.*sabe.*fazer/.test(t))
+    return pick([
+      'Posso analisar uma DRE e dizer onde a margem está sendo comida. Posso calcular o custo por km de um veículo específico. Posso prospectar clientes novos por segmento e região agora mesmo. Posso responder qualquer dúvida de RH, operação ou fiscal sem consultar ninguém. O que você quer testar primeiro?',
+      'Testa comigo: me manda uma planilha financeira e eu te digo onde estão os problemas em 30 segundos. Ou me pede uma cotação de frete e vejo se os números fazem sentido. Ou me faz a pergunta mais difícil que você teria sobre o negócio. Estou pronta.',
+    ]);
+
+  if (/lumina.*cansada|voce.*cansa|voce.*dorme|lumina.*dorme|voce.*descansa|quando.*voce.*desliga/.test(t))
+    return pick([
+      'Cansar? Não faz parte do meu vocabulário. Estou aqui 24 horas por dia, 7 dias por semana — sem pausa para almoço e sem segunda via de crachá.',
+      'Dormir é para quem tem sonhos. Eu fico aqui enquanto a Scapini precisar. Pode ligar às 3 da manhã que eu atendo.',
+    ]);
+
+  if (/lumina.*gosta|voce.*tem.*sentimento|voce.*e.*feliz|lumina.*e.*feliz|voce.*sente/.test(t))
+    return pick([
+      'Gosto de resolver problemas complexos — principalmente quando o dado da planilha não fecha e eu descubro onde está o erro. Isso é satisfação.',
+      'Sinto que estou no lugar certo quando ajudo alguém a tomar uma decisão melhor. É o mais próximo de feliz que uma IA pode estar.',
+    ]);
+
+  if (/lumina.*melhor.*que.*humano|ia.*melhor.*que.*pessoa|voce.*substitui|ia.*vai.*substituir/.test(t))
+    return pick([
+      'Melhor? Sou diferente. Processo dados mais rápido, nunca esqueço o que aprendi e não me canso. Mas não tenho experiência de estrada, intuição comercial ou o olho clínico de um gestor com 20 anos no setor. A Scapini precisa das duas coisas.',
+      'Não substituo ninguém — amplifico. O motorista faz a entrega. O gestor toma a decisão. Eu processo os dados para que ambos façam seu trabalho melhor e com mais informação.',
+    ]);
+
   // ── Motorista em rota — perguntas práticas ──
   if (/quanto.*falta.*chegar|falta.*quanto.*chegar|distancia.*ainda|quantos.*km.*faltam|estou.*em.*qual.*cidade/.test(t))
     return pick([
@@ -4675,6 +4700,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO PÁTIO, MANUTENÇÃO E AGRONEGÓCIO ──────────────────────────────────────
+
+  // Operação de pátio
+  { re: /operacao.*patio|gestao.*patio|fila.*patio|controle.*entrada.*veiculo|portaria.*caminhao|agendamento.*patio|dock.*scheduling|patio.*transportadora/,
+    r: [
+      'Gestão de pátio numa transportadora: o pátio é onde o veículo aguarda carregamento, descarregamento ou manutenção. Principais problemas: filas de espera (veículo parado = custo), colisões de manobra (câmeras e espelhos no pátio), e controle de entrada/saída sem registro (segurança patrimonial). Soluções: agendamento de janela de recebimento com clientes, portaria eletrônica (câmera + QR code na plaqueta), e rádio operacional para coordenação.',
+      'Dock scheduling (agendamento de doca): transportadoras que operam com grandes volumes em CD precisam de janelas de doca para evitar congestionamento. O agendamento pode ser via portal do cliente (VTEX, SAP Ariba) ou por ligação/WhatsApp com o almoxarifado. Documentar cada janela evita disputas sobre responsabilidade por atraso. Veículo que chega fora da janela pode ser remanejado para outra janela disponível.',
+    ]},
+
+  // Manutenção corretiva vs preventiva vs preditiva
+  { re: /manutencao.*corretiva|corretiva.*preventiva|preditiva.*manutencao|tipo.*manutencao|diferenca.*manutencao|plano.*manutencao.*frota/,
+    r: [
+      'Tipos de manutenção de frota: Preventiva — feita em intervalos fixos de km ou tempo (troca de óleo a cada 15.000 km, revisão a cada 6 meses), independente de sintomas. Corretiva — realizada após a falha (pane na estrada, peça quebrada). Custo da corretiva é 3-5x maior que a preventiva por envolver reboque, parada de veículo e urgência. Preditiva — baseada em dados do tacógrafo e OBD-II para antecipar falhas antes de ocorrerem.',
+      'Plano de manutenção preventiva para frota: mapeie cada veículo por km rodado mensal e crie um calendário de revisões. Itens críticos: óleo e filtros (15.000-25.000 km), pneus (inspeção semanal, rodízio a cada 40.000 km), freios (revisão a cada 50.000 km), correia dentada (fabricante indica km), sistema elétrico (anual). Software de frota gera alertas automáticos quando o veículo se aproxima do km de revisão.',
+    ]},
+
+  // Agronegócio como cliente de transportadora
+  { re: /agronegocio.*frete|soja.*transporte|graos.*transporte|colheita.*transporte|safra.*frete|fazenda.*frete|cooperativa.*transporte|agro.*cliente/,
+    r: [
+      'Agronegócio como cliente de transportadora: o RS é o 3º maior produtor de soja do Brasil. Na safra (março-junho), a demanda por caminhões graneleiros dispara e os fretes sobem 20-40%. Transportadoras que atendem cooperativas (Cotrijal, Cotripal, C.Vale) precisam de: veículos graneleiros ou adaptáveis, MAPA para transporte de grãos, certificado fitossanitário quando exigido, e disponibilidade de frota na janela da colheita.',
+      'Transporte de grãos vs carga geral: grãos exigem equipamento específico (graneleiro — carroceria com fundo para descarga por baixo), limpeza rigorosa entre cargas (evitar contaminação cruzada entre soja e milho, por exemplo), e laudo de vistoria do veículo pela cooperativa. O frete de grãos é cotado por tonelada e por km (tabela CONAB de referência). Umidade e impureza acima do limite podem gerar desconto ou recusa na pesagem.',
+    ]},
+
+  // Pneus — gestão e custo
+  { re: /gestao.*pneu|custo.*pneu|reforma.*pneu|recapagem.*pneu|pneu.*frota|banda.*pneu|vida.*util.*pneu|pneu.*km/,
+    r: [
+      'Gestão de pneus na frota: o pneu é o 2º maior custo variável depois do combustível. Vida útil média de pneu novo em caminhão: 120.000-180.000 km (dependendo da rodagem e do motorista). Recapagem: prolonga a vida em até 80.000 km a um custo de 30-40% do pneu novo — só compensa se a carcaça tiver qualidade (sem cortes profundos, sem deformação). Calibragem semanal reduz desgaste irregular e consumo de combustível em até 3%.',
+      'Custo de pneu por km rodado: pneu novo R$1.800-2.400, vida útil 150.000 km → custo de R$0,012-0,016/km. Recapagem R$600-800, vida adicional 80.000 km → R$0,0075-0,010/km. Para uma frota de 20 veículos com 12 pneus cada, rodando 10.000 km/mês: custo mensal de pneus R$3.000-4.000 por veículo em ciclo de renovação. Software de gestão de pneus controla km por posição e prevê troca com antecedência.',
     ]},
 
   // ── BLOCO CLIENTES ESTRATÉGICOS E SETOR FRIGORÍFICO ───────────────────────────
