@@ -936,17 +936,57 @@ const speak = (text, onEnd) => {
   _chunkStopped = false;
   const clean = cleanForTTS(text);
   const chunks = _splitTTSChunks(clean);
-  if (chunks.length <= 1) {
+
+  // ElevenLabs ou texto curto: caminho único (sem chunking)
+  if (cfg.elevenLabsKey || chunks.length <= 1) {
     return cfg.elevenLabsKey ? speakElevenLabs(clean, onEnd) : speakLocal(clean, onEnd);
   }
-  let i = 0;
-  const next = () => {
-    if (_chunkStopped || i >= chunks.length) { onEnd?.(); return; }
-    const chunk = chunks[i++];
-    const cb = (i >= chunks.length) ? onEnd : next;
-    cfg.elevenLabsKey ? speakElevenLabs(chunk, cb) : speakLocal(chunk, cb);
+
+  // Edge TTS com pré-fetch paralelo: todos os chunks buscados ao mesmo tempo,
+  // tocados em ordem — elimina pausa entre chunks sem soar robótico
+  const voice = app.voiceGender === 'male' ? 'pt-BR-AntonioNeural' : 'pt-BR-ThalitaNeural';
+  const urls = chunks.map(() => null); // null=pendente, ''=erro, string=objectURL
+  app.isSpeaking = true; setFace('speaking'); setStopBtn(true);
+  let playIdx = 0, isPlaying = false;
+
+  const tryPlay = () => {
+    if (isPlaying || _chunkStopped || playIdx >= chunks.length) return;
+    const url = urls[playIdx];
+    if (url === null) return;        // chunk ainda não chegou
+    if (url === '') { playIdx++; tryPlay(); return; } // erro, pula
+    isPlaying = true;
+    const audio = new Audio(url);
+    currentAudio = audio;
+    const done = () => {
+      currentAudio = null; URL.revokeObjectURL(url);
+      isPlaying = false; playIdx++;
+      if (_chunkStopped || playIdx >= chunks.length) {
+        app.isSpeaking = false; setFace('idle'); setStopBtn(false);
+        if (app.continuous && !app.isListening) setTimeout(startListening, 250);
+        onEnd?.();
+      } else { tryPlay(); }
+    };
+    audio.onended = done;
+    audio.onerror = () => { currentAudio = null; isPlaying = false; playIdx++; tryPlay(); };
+    audio.play().catch(() => {
+      currentAudio = null; isPlaying = false;
+      app.isSpeaking = false; setFace('idle'); onEnd?.();
+    });
   };
-  next();
+
+  // Inicia todos os fetches em paralelo
+  const abort = new AbortController();
+  ttsAbort = abort;
+  chunks.forEach((chunk, i) => {
+    fetch('/api/tts-edge', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanForSpeech(chunk), voice }),
+      signal: abort.signal,
+    })
+      .then(r => r.ok ? r.blob() : null)
+      .then(blob => { urls[i] = blob ? URL.createObjectURL(blob) : ''; tryPlay(); })
+      .catch(() => { urls[i] = ''; tryPlay(); });
+  });
 };
 
 // ── Speech Recognition ─────────────────────────────────────────────────────────
