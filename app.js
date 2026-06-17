@@ -5127,10 +5127,31 @@ const localFallback = (text) => {
       'Isso eu saberia responder com a IA completa. No momento estou em modo offline — tente novamente em instantes.',
     ]);
 
+  // Fallback inteligente por área detectada
+  if (/motorista|habilitacao|jornada|cnh|clt.*motor|tac.*motor|salario.*motor/.test(t2))
+    return pick([
+      'Sobre motoristas: posso responder sobre jornada, CNH, CLT vs TAC, admissão, DDS e onboarding. Me faça uma pergunta mais específica.',
+      'Para dados de motoristas específicos da Scapini (folha, escala, disponibilidade), preciso da integração com o CGI. Posso ajudar com regras gerais da categoria.',
+    ]);
+  if (/veiculo|caminhao|frota|manutencao|pneu|motor|borracheiro|mecanico|combustivel/.test(t2))
+    return pick([
+      'Para frota: posso ajudar com manutenção preventiva, custo por km, pneus, consumo e programação de revisões. O que precisa?',
+      'Dados de veículos específicos (placa, hodômetro, histórico) ficam no CGI. Posso responder sobre gestão de frota em geral — qual aspecto?',
+    ]);
+  if (/cliente|contrato.*cliente|faturamento.*cliente|inadimplente|cobranca/.test(t2))
+    return pick([
+      'Para dados de clientes da Scapini (contatos, contratos, histórico de faturamento), preciso da integração com o CRM/CGI. Posso ajudar com estratégias de relacionamento, cobrança ou prospecção.',
+      'Quer prospectar clientes novos? Posso buscar leads no momento. Ou me pergunte sobre gestão do relacionamento com a carteira atual.',
+    ]);
+  if (/rota|entrega|prazo|viagem|carga|frete/.test(t2))
+    return pick([
+      'Para status de cargas em trânsito e posição de veículos, preciso da integração com rastreamento e CGI. Posso responder sobre prazos por rota, documentação e procedimentos de entrega.',
+    ]);
+
   return pick([
-    'Boa pergunta. Quando integrada ao CGI da Scapini, consulto isso em segundos.',
-    'Ainda não tenho esse dado disponível. Me pergunte sobre procedimentos, documentos ou como a IA pode ajudar cada setor.',
-    'No momento estou em modo demonstração. Com a conexão ativa, respondo isso em segundos.',
+    'Boa pergunta — essa vai pra análise completa com IA. Com o Gemini ativo, respondo em segundos.',
+    'Ainda não tenho esse dado no modo demonstração. Me pergunte sobre procedimentos, documentos, rotas ou como posso ajudar cada setor da Scapini.',
+    'Para dados internos em tempo real, preciso da integração com o CGI. No modo atual, cubro 150+ tópicos de transporte, RH e financeiro.',
   ]);
 };
 
