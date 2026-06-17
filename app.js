@@ -3716,6 +3716,50 @@ const DEMO_QA = [
       'A Scapini fornece uniformes padronizados por função. Motoristas e pessoal de pátio recebem também os EPIs necessários. Guarde bem — perda ou dano por mau uso pode gerar desconto proporcional. Para solicitar peças ou relatar problema, procure o RH.',
     ]},
 
+  // ── BLOCO FISCAL/CONTÁBIL: NF-e, ICMS, impostos no transporte ────────────────
+
+  // NF-e
+  { re: /\bnfe\b|nota fiscal eletron|nota fiscal.*emissao|emitir nota|nota.*transporte|danfe/,
+    r: [
+      'A NF-e (Nota Fiscal Eletrônica) documenta a operação de venda da mercadoria — é emitida pelo remetente, não pela transportadora. A Scapini emite o CT-e (documento do serviço de transporte) que acompanha a NF-e. O DANFE é a representação gráfica da NF-e que circula junto com a carga. Sempre confira se o número da NF no CT-e corresponde ao da NF-e física.',
+      'NF-e: emitida pelo vendedor/remetente da mercadoria. CT-e: emitido pela transportadora para documentar o frete. Ambos devem acompanhar a carga. Em caso de divergência entre NF-e e CT-e (valor, destinatário, descrição), o CT-e deve ser cancelado e reemitido antes de carregar o veículo — divergência pode gerar apreensão em fiscalização.',
+    ]},
+
+  // ICMS no transporte
+  { re: /\bicms\b.*frete|frete.*\bicms\b|imposto.*transporte|tributacao.*frete|aliquota.*frete|icms.*transporte/,
+    r: [
+      'O ICMS sobre frete rodoviário varia por estado: em geral, a alíquota interestadual é de 12% para operações entre estados do Sul/Sudeste. O transporte é tributado no estado de origem do serviço. A base de cálculo é o valor do frete. Transportadoras optantes pelo Simples Nacional pagam ICMS de forma diferenciada — consulte o contador da Scapini para a situação específica.',
+      'ICMS no transporte: incide sobre prestações de serviço de transporte interestadual e intermunicipal. A transportadora recolhe o ICMS ao estado onde está registrada (RS). Para cada estado destino, há regras de diferencial de alíquota. O CTe já tem o ICMS calculado automaticamente. Em caso de dúvida sobre uma operação específica, acione o financeiro.',
+    ]},
+
+  // Substituição tributária
+  { re: /substituicao tributaria|st\b.*fiscal|fiscal.*\bst\b|icms.*\bst\b/,
+    r: [
+      'Substituição Tributária (ST) é quando um participante da cadeia (geralmente o fabricante) recolhe o ICMS por antecipação para toda a cadeia até o consumidor final. Na prática para transportadoras: quando a mercadoria já tem ST paga, o transporte não gera nova incidência de ICMS na mercadoria. Mas o frete em si ainda tem seu próprio ICMS (sobre o valor do frete).',
+      'ST no transporte: a Scapini deve verificar se as mercadorias transportadas estão sujeitas à ST, pois isso afeta o cálculo da base de ICMS no CT-e. Mercadorias com ST já paga: o ICMS da mercadoria não entra na base do frete. Para casos complexos, o financeiro ou contador orienta.',
+    ]},
+
+  // PIS/COFINS no transporte
+  { re: /pis|cofins|contribuicao.*social|lucro presumido|simples.*nacional.*transporte|regime tributario/,
+    r: [
+      'Transportadoras no Lucro Presumido recolhem PIS (0,65%) e COFINS (3%) pelo regime cumulativo — base é a receita bruta de fretes. No Lucro Real: PIS (1,65%) e COFINS (7,6%) com direito a créditos. No Simples Nacional: tudo em uma guia (DAS). O regime tributário da Scapini define como esses impostos são calculados — o financeiro ou contador é quem orienta sobre o enquadramento atual.',
+      'PIS e COFINS incidem sobre a receita de fretes. Empresas do Lucro Presumido pagam 0,65% PIS + 3% COFINS (cumulativo, sem créditos). Empresas do Lucro Real pagam mais por alíquota mas têm direito a créditos sobre insumos. O planejamento tributário define qual regime é mais vantajoso para a Scapini no contexto atual.',
+    ]},
+
+  // ISS (para transporte municipal)
+  { re: /\biss\b|imposto.*servico|transporte.*municipal|frete.*municipal|dentro.*municipio/,
+    r: [
+      'ISS (Imposto Sobre Serviços) incide sobre transporte EXCLUSIVAMENTE MUNICIPAL — dentro dos limites do município. Transporte que cruza fronteiras municipais é ICMS, não ISS. A alíquota de ISS varia por município (de 2% a 5%). Para a Scapini, a maioria das operações é interestadual ou intermunicipal = ICMS. Transporte local dentro de Lajeado/RS = ISS.',
+      'ISS x ICMS no transporte: ISS = transporte dentro de um único município. ICMS = transporte entre municípios ou estados. É comum confundir, mas a definição do imposto correto é fundamental para o CT-e. Emitir CT-e errado (usando ICMS para frete municipal) pode gerar autuação fiscal.',
+    ]},
+
+  // Faturamento / contas a receber
+  { re: /faturamento|contas a receber|titulo.*receber|recebimento.*cliente|inadimplencia|cliente.*atraso|vencimento.*titulo/,
+    r: [
+      'Faturamento da Scapini: cada CT-e emitido gera uma conta a receber. O prazo de pagamento é definido em contrato com o cliente (à vista, 15, 30, 60 dias). O acompanhamento de títulos vencidos e a inadimplência são controlados pelo financeiro via CGI. Quando integrada, posso responder "quais clientes estão em atraso?" em tempo real.',
+      'Contas a receber: clientes com prazo vencido devem ser acionados pelo financeiro. O processo padrão: aviso amigável (e-mail/WhatsApp), ligação, e se necessário, protesto ou cobrança jurídica. A análise de crédito antes de liberar crédito a um cliente novo é fundamental — evita inadimplência futura.',
+    ]},
+
   // ── Capacidades gerais ────────────────────────────────────────────────────────
   { re: /o que voce (faz|pode|consegue)|para que (voce )?(serve|foi criada|existe|nasceu)|sua funcao|suas capacidades|qual.*proposito|qual.*objetivo/,
     r: [
