@@ -4054,6 +4054,36 @@ const DEMO_QA = [
       'Tracking da carga: o cliente recebe a chave do CT-e na contratação e pode consultar o status no portal da Scapini ou por WhatsApp com a central de atendimento. Para cargas de alto valor, notificação proativa de entrega. Quando integrada ao sistema, posso responder "onde está o CT-e XXXXXXXXXXX?" em segundos.',
     ]},
 
+  // ── BLOCO OPERACIONAL AVANÇADO ────────────────────────────────────────────────
+
+  // Gestão de combustível
+  { re: /combust.*controle|controle.*combust|gestao.*combust|card.*combust|abastecimento.*controle|diesel.*gestao|consumo.*diesel/,
+    r: [
+      'Gestão de combustível para frota: use cartão frota com limite por veículo e motorista — evita desvios e facilita o controle. Monitore o consumo km/l por veículo (referência: caminhão truck 3,5 km/l; carreta 2,8-3,2 km/l). Desvio > 10% do histórico indica manutenção necessária ou desvio de combustível. O sistema de telemetria compara abastecimento × km rodado automaticamente.',
+      'Controle de diesel: 1) Cartão frota com limite diário por motorista; 2) Registro de odômetro em todo abastecimento; 3) Comparativo km/l por veículo e por motorista; 4) Alerta quando consumo sai do padrão; 5) Conferência do estoque do tanque interno (se houver). Diesel mal controlado é o segundo maior custo variável depois da manutenção — vale a atenção.',
+    ]},
+
+  // Financiamento de veículos / renovação de frota
+  { re: /financia.*veiculo|financia.*caminhao|renova.*frota|financia.*frota|leasing.*caminhao|finame|compra.*caminhao/,
+    r: [
+      'Financiamento de caminhão no Brasil: as principais linhas são FINAME (BNDES — juros subsidiados para frota nacional), CDC (Crédito Direto ao Consumidor), leasing e consórcio. O FINAME tem as melhores taxas mas exige análise de crédito mais rigorosa. Para renovação de frota, avalie o custo total de propriedade (CTP): prestação + manutenção + depreciação vs. custo do veículo antigo.',
+      'Renovação de frota: veículo com mais de 5 anos começa a ter custo de manutenção exponencialmente maior. A regra prática: quando o custo anual de manutenção > 30% do valor de mercado do veículo, é hora de renovar. Leasing operacional é interessante para não imobilizar capital — a transportadora paga uma mensalidade e a locadora cuida da manutenção.',
+    ]},
+
+  // Coleta de carga
+  { re: /coleta.*carga|como.*coletar|process.*coleta|schedule.*coleta|agendar.*coleta|procedimento.*coleta/,
+    r: [
+      'Procedimento de coleta: 1) Cliente solicita (fone, e-mail, portal); 2) Operação agenda motorista + veículo conforme capacidade e rota; 3) Motorista recebe NF e CT-e antes de sair; 4) Na coleta: confere volume com romaneio, verifica estado da embalagem, fotografa se há avaria prévia; 5) Lacra o baú; 6) Assina canhoto de coleta. Sem NF válida = não coleta. Sem CT-e = sem seguro.',
+      'Para agendar coleta na Scapini: entre em contato com a central informando origem, destino, volume (kg e m³), tipo de mercadoria e prazo desejado. Para cargas recorrentes, a Scapini pode criar uma janela fixa de coleta semanal. Cargas fracionadas entram na rota programada; cargas lotação têm agendamento próprio.',
+    ]},
+
+  // Patio / armazém / cross-docking
+  { re: /patio|armazem|cross.?docking|cross docking|transbordo|deposito.*carga|carga.*deposito|armazenagem.*frete/,
+    r: [
+      'Cross-docking: carga chega ao terminal de origem, é separada por destino e embarcada imediatamente no veículo de destino — sem armazenagem. Reduz custo de estoque e tempo de trânsito. Usado em cargas fracionadas (LTL) onde vários remetentes compartilham um veículo para o mesmo corredor.',
+      'Pátio e armazenagem: a Scapini tem infraestrutura para receber, pesar e manobrar veículos. Para cargas que precisam de armazenagem temporária (ex: cliente não disponível para receber), cobra-se diária de armazém conforme tabela. Mercadoria perecível tem prioridade de entrega — não fica no pátio.',
+    ]},
+
   // ── BLOCO ESTRATÉGICO: ROI, LGPD, sustentabilidade, tecnologia ────────────────
 
   // ROI da IA
