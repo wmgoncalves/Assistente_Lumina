@@ -442,7 +442,7 @@ const buildSystem = async (lastUserMsg = '', emotion = 'neutral') => {
 • checkHabit        → quando mencionar que fez um hábito
 • addFinance        → gasto, receita, pagamento, salário mencionado
 • systemCommand     → bloquear tela, suspender, desligar, reiniciar, mudo, volume
-• webSearch         → APENAS para informações em tempo real (clima, cotações, notícias)
+• webSearch         → para informações em tempo real: clima, cotações de câmbio/ações, notícias. TAMBÉM use quando perguntarem preço de produto (pneu, peça, lubrificante, equipamento, insumo de transporte) — informe que o valor é estimado e pode variar
 • exportarLeads     → quando pedir "exporta os leads", "gera planilha de clientes", "baixa os leads em Excel". Pode filtrar por status, prioridade ou segmento.
 • consultarBanco    → quando perguntar sobre leads salvos, cotações anteriores, contatos, histórico. Tabelas: leads / cotacoes / contatos / lembretes.
 • configurarFrete   → quando disser "atualiza o diesel", "muda a margem", "pedágio está X", "rendimento é X km/l", "diária do motorista é X". Salva os novos parâmetros e confirma.
@@ -2090,6 +2090,26 @@ const webSearchGemini = async (query) => {
         const lista = data.headlines.map((h, i) => `${i + 1}. [${h.source}] ${h.title}`).join('\n');
         return `Manchetes de agora:\n${lista}`;
       }
+    } catch { /* fallback */ }
+  }
+
+  // ── Preço de produto (pneu, peça, lubrificante, insumo) ──
+  if (/pneu|pe[çc]a|lubrif|óleo\s+(motor|diesel|câmbio)|filtro|bateria\s+(caminhão|truck)|freio|embreagem|semirreboque|carroceria|lona|rolamento|amortecedor|correia/.test(q)) {
+    try {
+      const res  = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: `Você é assistente de uma transportadora brasileira. O usuário perguntou: "${query}". Responda em português com uma estimativa de preço de mercado no Brasil para esse produto/peça de caminhão, informando a faixa de valores (mínimo–máximo) e que o preço pode variar conforme fornecedor e região. Seja conciso (2–3 linhas). Mencione que para cotação exata deve consultar fornecedores locais.` }] }],
+            generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
+          })
+        }
+      );
+      const data = await res.json();
+      const txt  = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (txt) return txt;
     } catch { /* fallback */ }
   }
 
