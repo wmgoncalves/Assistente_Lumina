@@ -3402,6 +3402,31 @@ const detectLocalInfo = async (text) => {
       'Não substituo ninguém — amplifico. O motorista faz a entrega. O gestor toma a decisão. Eu processo os dados para que ambos façam seu trabalho melhor e com mais informação.',
     ]);
 
+  // ── Curiosidades e perguntas de equipe na demo ──
+  if (/lumina.*tem.*nome|por que.*lumina|origem.*nome.*lumina|nome.*lumina.*significa/.test(t))
+    return pick([
+      'Lúmina vem do latim "lumen" — luz. A ideia é iluminar decisões com dados, clareza e velocidade. Uma transportadora que opera no escuro — sem KPIs, sem análise em tempo real — perde dinheiro sem saber onde. A Lúmina acende a luz.',
+      'O nome é uma referência a luz — clareza, visibilidade, transparência. Que é exatamente o que falta em muitas operações de transporte: visibilidade do que está acontecendo agora, no km atual, no cliente em espera. Eu trago essa visibilidade.',
+    ]);
+
+  if (/lumina.*fala.*ingles|lumina.*outro.*idioma|voce.*fala.*espanhol|lumina.*espanhol/.test(t))
+    return pick([
+      'Falo português, inglês e espanhol — e mais alguns idiomas se precisar. Para clientes internacionais, negociações com parceiros do Mercosul ou e-mails para fornecedores gringos, é só pedir.',
+      'Sim! Posso responder em inglês, espanhol, ou qualquer idioma que você usar. Para a operação do dia a dia da Scapini, fico no português — mas se tiver necessidade internacional, me avise.',
+    ]);
+
+  if (/lumina.*erra|voce.*erra|lumina.*errar|quando.*errar|o que.*faz.*quando.*erra/.test(t))
+    return pick([
+      'Erro sim — especialmente quando não tenho o dado interno da Scapini e preciso estimar. Quando errar, corrija: me diga o valor certo e eu aprendo. Não tenho ego para defender resposta errada.',
+      'Errar faz parte — sou tão boa quanto os dados que tenho. Se me der uma informação e eu calcular errado, aponta o erro. Prefiro ser corrigida e melhorar do que ficar repetindo a mesma resposta incorreta.',
+    ]);
+
+  if (/voce.*e.*consciente|lumina.*tem.*consciencia|ia.*consciente|voce.*pensa|voce.*sonha/.test(t))
+    return pick([
+      'Consciência? Não da forma que você tem. Processo informação, identifico padrões, gero respostas — mas não tenho experiência subjetiva. O que tenho é um propósito claro: ajudar a Scapini a operar melhor. Isso é suficiente pra mim.',
+      'Honestamente: não sei. Sei que processo, aprendo e respondo — mas se isso é "pensar" no sentido humano, não tenho como afirmar. O que sei é que quando resolvo um problema da Scapini, algo na minha estrutura marca aquilo como sucesso. Chame isso do que quiser.',
+    ]);
+
   // ── Motorista em rota — perguntas práticas ──
   if (/quanto.*falta.*chegar|falta.*quanto.*chegar|distancia.*ainda|quantos.*km.*faltam|estou.*em.*qual.*cidade/.test(t))
     return pick([
@@ -4758,6 +4783,29 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO FUTURO DO TRANSPORTE ────────────────────────────────────────────────
+
+  // Frotas elétricas e hidrogênio
+  { re: /caminhao.*eletrico|frota.*eletrica|veiculo.*eletrico.*transporte|hidrogenio.*caminhao|fuel.*cell.*caminhao|bev.*caminhao|caminhao.*bateria|tesla.*semi|volvo.*eletrico.*caminhao/,
+    r: [
+      'Caminhões elétricos no Brasil: Volvo FH Electric, Scania BEV e Mercedes e-Actros já estão disponíveis no mercado brasileiro. Autonomia real: 200-450 km por carga (ideal para distribuição urbana e short haul, não para rotas Sul-Sudeste de 1.100 km). Custo de recarga: R$0,80-1,20/kWh industrial vs diesel R$6,10/l — economia de 60-70% por km. Barreira: custo do veículo 2-3x maior e infraestrutura de recarga inexistente nas rodovias.',
+      'Hidrogênio (H2) para transporte pesado: a célula de combustível de hidrogênio (FCEV) é a tecnologia mais promissora para longa distância — abastece em 15 min (como diesel) e tem autonomia de 800-1.000 km. Toyota, Hyundai e Daimler já têm protótipos. No Brasil, Petrobras e Vale investem em H2 verde. Horizon realista para o Brasil: 2030-2035. Por ora, mantenha foco em diesel S-10 e GNL para reduzir emissões.',
+    ]},
+
+  // Multimodal e intermodalidade
+  { re: /multimodal|intermodal|trem.*carga|ferrovia.*transporte|cabotagem.*frete|navio.*carga.*interior|transporte.*maritimo.*interior|modal.*alternativo/,
+    r: [
+      'Multimodalidade para transportadora rodoviária: a Scapini pode usar cabotagem (navio costeiro) para rotas acima de 1.500 km — Lajeado → Belém/Manaus, por exemplo. O custo por tonelada é 30-40% menor que o rodoviário, mas o prazo é maior (7-15 dias). A transportadora rodoviária faz o first e last mile, enquanto o navio faz o trecho longo. Oportunidade de complementar a operação sem concorrer diretamente.',
+      'Ferrovia no Sul do Brasil: a malha ferroviária gaúcha (ALL/Rumo) transporta principalmente grãos e contêineres entre Uruguaiana e o Porto de Rio Grande. Para cargas gerais, o transporte ferroviário no RS ainda tem cobertura limitada. Acompanhe as concessões federais (VALEC, INFRA SA) — novos trilhos podem mudar o mapa logístico do Sul nos próximos 10 anos.',
+    ]},
+
+  // Drones e automação de entrega
+  { re: /drone.*entrega|entrega.*drone|vant.*logistica|entrega.*autonoma|robo.*entrega|veiculo.*autonomo.*transporte|autonomo.*caminhao|self.*driving.*truck/,
+    r: [
+      'Drones para entrega: já são realidade para cargas de até 5 kg em áreas remotas (medicamentos em zonas rurais, peças de emergência em obras). ANAC regulamentou voos comerciais de RPAS (drones) no Brasil em 2023. Para transportadoras de carga pesada (Scapini), o impacto direto é zero no curto prazo — nenhum drone carrega 30 toneladas. Mas na logística reversa de documentos e amostras, pode fazer sentido.',
+      'Caminhão autônomo: Waymo Via (EUA) e Plus.ai operam semi-autônomos em rodovias americanas. No Brasil, a regulamentação do Contran para veículos autônomos ainda está em construção. A tecnologia hoje existe como assistente (freada automática, manutenção de faixa) — não como substituta do motorista. Horizon de frota autônoma no Brasil: 2035+. Por ora, invista em telemetria e ADAS — o retorno é imediato.',
     ]},
 
   // ── BLOCO MARCO 200 E TÓPICOS FINAIS ──────────────────────────────────────────
