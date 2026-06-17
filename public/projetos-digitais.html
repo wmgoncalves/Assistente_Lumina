@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projetos Digitais — Scapini</title>
+  <style>
+    :root {
+      --bg: #0b0505;
+      --panel: rgba(255,255,255,0.045);
+      --panel-strong: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.1);
+      --text: rgba(255,255,255,0.9);
+      --muted: rgba(255,255,255,0.56);
+      --soft: rgba(255,255,255,0.36);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,0.14);
+      --green: #86efac;
+      --green-bg: rgba(34,197,94,0.12);
+      --yellow: #fde68a;
+      --yellow-bg: rgba(250,204,21,0.12);
+      --blue: #7dd3fc;
+      --blue-bg: rgba(56,189,248,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(239,68,68,0.14), transparent 32rem),
+        linear-gradient(135deg, #0b0505 0%, #120606 50%, #070303 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 32px;
+    }
+
+    main {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .kicker {
+      color: var(--red);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .count {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      white-space: nowrap;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.065), rgba(239,68,68,0.07));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .intro-text {
+      color: rgba(255,255,255,0.76);
+      font-size: clamp(1rem, 1.7vw, 1.22rem);
+      line-height: 1.65;
+      max-width: 800px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    .dev { background: var(--green-bg); border: 1px solid rgba(34,197,94,0.38); color: var(--green); }
+    .waiting { background: var(--yellow-bg); border: 1px solid rgba(250,204,21,0.34); color: var(--yellow); }
+    .future { background: var(--blue-bg); border: 1px solid rgba(56,189,248,0.34); color: var(--blue); }
+
+    .tree {
+      border-left: 1px solid rgba(255,255,255,0.1);
+      padding-left: 18px;
+    }
+
+    .tree-title {
+      color: rgba(255,255,255,0.82);
+      font-size: 0.74rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      margin-bottom: 8px;
+    }
+
+    .tree-list {
+      display: grid;
+      gap: 3px;
+    }
+
+    .tree-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.055);
+      padding: 4px 0;
+      align-items: baseline;
+    }
+
+    .tree-item span {
+      color: rgba(255,255,255,0.68);
+      font-size: 0.82rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tree-item em {
+      color: var(--soft);
+      font-size: 0.72rem;
+      font-style: normal;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      min-height: 190px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      background: var(--panel-strong);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .icon svg {
+      width: 21px;
+      height: 21px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .icon.dev { background: var(--green-bg); }
+    .icon.waiting { background: var(--yellow-bg); }
+    .icon.future { background: var(--blue-bg); }
+
+    h2 {
+      font-size: 1rem;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.87rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 760px) {
+      body { padding: 18px; }
+      .header { grid-template-columns: 1fr; align-items: start; }
+      .count { justify-self: start; }
+      .intro { grid-template-columns: 1fr; padding: 18px; }
+      .tree { border-left: 0; border-top: 1px solid rgba(255,255,255,0.1); padding-left: 0; padding-top: 16px; }
+    }
+
+    @media (max-width: 520px) {
+      .tree-item { grid-template-columns: 1fr; gap: 1px; }
+      .tree-item span { white-space: normal; }
+      .grid { grid-template-columns: 1fr; }
+      .card { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="header">
+      <div>
+        <div class="kicker">SCAPINI DIGITAL</div>
+        <h1>Projetos Digitais — Scapini</h1>
+      </div>
+      <div class="count">9 projetos</div>
+    </header>
+
+    <section class="intro" aria-labelledby="intro-title">
+      <div>
+        <p class="intro-text" id="intro-title">
+          A Scapini está construindo um ecossistema digital próprio, conectando operação, manutenção, automação, inteligência artificial, treinamentos e prospecção comercial em uma estrutura mais moderna, integrada e eficiente.
+        </p>
+        <div class="legend" aria-label="Legenda de status">
+          <span class="badge dev">Em desenvolvimento</span>
+          <span class="badge waiting">Não iniciado</span>
+          <span class="badge future">Futuro</span>
+        </div>
+      </div>
+
+      <aside class="tree" aria-label="Resumo dos projetos digitais">
+        <div class="tree-title">SCAPINI DIGITAL</div>
+        <div class="tree-list">
+          <div class="tree-item"><span>APP Motoristas</span><em>Em desenvolvimento</em></div>
+          <div class="tree-item"><span>APP Manutenção</span><em>Em desenvolvimento</em></div>
+          <div class="tree-item"><span>APP Automação</span><em>Em desenvolvimento</em></div>
+          <div class="tree-item"><span>Lúmina IA Interna</span><em>Em desenvolvimento</em></div>
+          <div class="tree-item"><span>Portal de Treinamentos</span><em>Não iniciado</em></div>
+          <div class="tree-item"><span>Prospecção de Clientes</span><em>Não iniciado</em></div>
+          <div class="tree-item"><span>Dashboard Gerencial / BI</span><em>Futuro</em></div>
+          <div class="tree-item"><span>Central de Dados</span><em>Futuro</em></div>
+          <div class="tree-item"><span>CRM Interno</span><em>Futuro</em></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid" aria-label="Projetos digitais da Scapini">
+      <article class="card">
+        <div class="card-top">
+          <div class="icon dev" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 7h10v9H3z"/><path d="M13 10h4l4 4v2h-8z"/><path d="M6.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M17.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          </div>
+          <span class="badge dev">Em desenvolvimento</span>
+        </div>
+        <h2>APP Motoristas</h2>
+        <p>Sistema para apoiar os motoristas no dia a dia, com checklists, registros de ocorrências, viagens e comunicação com a empresa.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon dev" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.8 2.8-3-3z"/></svg>
+          </div>
+          <span class="badge dev">Em desenvolvimento</span>
+        </div>
+        <h2>APP Manutenção</h2>
+        <p>Aplicativo para controle da frota, pendências, manutenções preventivas, histórico dos veículos e acompanhamento dos serviços.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon dev" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1-2.9 2.9-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1-2.9-2.9.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1 2.9-2.9.1.1a1.7 1.7 0 0 0 1.8.3 1.7 1.7 0 0 0 1-1.5V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1 2.9 2.9-.1.1a1.7 1.7 0 0 0-.3 1.8 1.7 1.7 0 0 0 1.5 1h.1v4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </div>
+          <span class="badge dev">Em desenvolvimento</span>
+        </div>
+        <h2>APP Automação</h2>
+        <p>Projeto voltado para automatizar processos internos da empresa, reduzindo tarefas manuais e melhorando a produtividade dos setores.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon dev" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 16h6"/><path d="M3 12h2"/><path d="M19 12h2"/></svg>
+          </div>
+          <span class="badge dev">Em desenvolvimento</span>
+        </div>
+        <h2>Lúmina — IA Interna Scapini</h2>
+        <p>Assistente de inteligência artificial para auxiliar nas rotinas administrativas, responder perguntas, analisar planilhas, gerar relatórios e apoiar decisões.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon waiting" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5z"/><path d="M6 12v4c0 1 2.7 3 6 3s6-2 6-3v-4"/><path d="M22 10v6"/></svg>
+          </div>
+          <span class="badge waiting">Não iniciado</span>
+        </div>
+        <h2>Portal de Treinamentos Scapini</h2>
+        <p>Plataforma para centralizar treinamentos, vídeos, documentos, provas, certificados e integração de novos colaboradores.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon waiting" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-4 3 3 5-7"/><path d="M17 7h2v2"/></svg>
+          </div>
+          <span class="badge waiting">Não iniciado</span>
+        </div>
+        <h2>Plataforma de Prospecção de Clientes</h2>
+        <p>Sistema para organizar leads, oportunidades comerciais, histórico de contatos, funil de vendas e acompanhamento de novos clientes.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon future" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-6"/></svg>
+          </div>
+          <span class="badge future">Futuro</span>
+        </div>
+        <h2>Dashboard Gerencial / BI</h2>
+        <p>Painel com indicadores para diretoria, mostrando dados da operação, manutenção, frota, financeiro e produtividade.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon future" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          </div>
+          <span class="badge future">Futuro</span>
+        </div>
+        <h2>Central de Dados Scapini</h2>
+        <p>Base única para conectar informações dos apps, planilhas, sistemas internos e relatórios da empresa.</p>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <div class="icon future" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
+          </div>
+          <span class="badge future">Futuro</span>
+        </div>
+        <h2>CRM Interno de Atendimento</h2>
+        <p>Sistema para solicitações internas, atendimento de setores, recebimento de currículos e organização dos chamados.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
