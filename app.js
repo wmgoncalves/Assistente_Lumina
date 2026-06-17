@@ -1517,7 +1517,26 @@ const sanitizeIdentity = (text) => {
     // Claude / Anthropic / OpenAI / GPT — por precaução
     .replace(/\b(claude|anthropic|openai|gpt-?\d*|chatgpt)\b/gi, 'Lúmina')
     // "Sou um modelo de IA" sem contexto → mais específico
-    .replace(/sou\s+um[a]?\s+modelo\s+de\s+ia\b/gi, 'Sou a Lúmina, a IA da Scapini Transportes');
+    .replace(/sou\s+um[a]?\s+modelo\s+de\s+ia\b/gi, 'Sou a Lúmina, a IA da Scapini Transportes')
+    // "baseado no/na Gemini" / "powered by Gemini"
+    .replace(/basead[ao]\s+(no|na|em)\s+gemini/gi, 'desenvolvida para a Scapini')
+    .replace(/powered\s+by\s+gemini/gi, 'desenvolvida para a Scapini Transportes')
+    // "treinado pelo Google" / "treinado pela Google"
+    .replace(/treinad[ao]\s+pel[ao]\s+google/gi, 'desenvolvida para a Scapini Transportes')
+    // "sou uma IA do Google" / "sou a IA do Google"
+    .replace(/sou\s+(um[a]?\s+)?ia\s+do\s+google/gi, 'Sou a Lúmina, a IA da Scapini Transportes')
+    // "como grande modelo de linguagem" (LLM tell)
+    .replace(/como\s+(grande|large)\s+modelo\s+de\s+linguagem/gi, 'como assistente da Scapini')
+    .replace(/\blarge\s+language\s+model\b/gi, 'assistente inteligente')
+    .replace(/\bllm\b/gi, 'assistente')
+    // "meu criador" / "quem me criou" → Scapini
+    .replace(/meu\s+criador\s+[eé]\s+(o\s+)?google/gi, 'fui desenvolvida para a Scapini Transportes')
+    // "não tenho acesso a informações em tempo real" — tell clássico de LLM
+    .replace(/n[aã]o\s+tenho\s+acesso\s+a\s+informa[çc][oõ]es\s+em\s+tempo\s+real/gi,
+             'para dados em tempo real, preciso da integração com o CGI da Scapini')
+    // "minha data de corte [de conhecimento]" / "knowledge cutoff"
+    .replace(/minha\s+data\s+de\s+corte(\s+de\s+conhecimento)?/gi, 'minha base de conhecimento')
+    .replace(/knowledge\s+cutoff/gi, 'base de conhecimento');
 };
 
 const logInteraction = (question, response, source, tool, ms, error) => {
@@ -4620,6 +4639,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO GESTÃO DE CRISE E TÓPICOS AVANÇADOS ─────────────────────────────────
+
+  // Gestão de crise empresarial
+  { re: /gestao.*crise|crise.*empresa|plano.*contingencia|continuidade.*negocio|crise.*operacional|o que fazer.*crise|quando.*tudo.*da.*errado/,
+    r: [
+      'Gestão de crise numa transportadora: as crises mais comuns são — greve de motoristas, acidente grave com vítima, escassez de diesel, falha de sistema (TMS/ERP), perda de cliente âncora (>20% do faturamento) e roubo de carga de alto valor. Para cada uma, a empresa precisa de um plano de contingência com responsável nomeado, ação imediata (primeiras 2h) e comunicação padrão. Improvisação em crise custa mais do que o problema em si.',
+      'Plano de contingência para diesel em escassez: cadastre a frota em pelo menos 3 redes de posto diferentes. Mantenha reserva estratégica de 15 dias de consumo em posto parceiro (contrato de reserva). Para greve de caminhoneiros (como 2018 e 2021): acione cláusula de força maior nos contratos com clientes, priorize cargas perecíveis e essenciais, e mantenha comunicação diária com clientes sobre o cenário.',
+    ]},
+
+  // Auditoria de fornecedor / homologação avançada
+  { re: /auditoria.*fornecedor|auditar.*fornecedor|homologar.*posto|avaliacao.*fornecedor|qualificacao.*fornecedor|score.*fornecedor/,
+    r: [
+      'Auditoria de fornecedores para transportadora: os fornecedores críticos são postos de combustível, oficinas mecânicas, pneucentros e seguradores. Para cada um, avalie trimestralmente: prazo de pagamento cumprido, qualidade do serviço (reclamações internas), preço vs mercado, e regularidade fiscal (certidão negativa). Fornecedor com 2 ou mais falhas no trimestre entra em plano de melhoria ou substituição.',
+      'Homologação de posto de combustível: exija nota fiscal eletrônica por abastecimento (controle de consumo por placa), bomba calibrada (INMETRO — verificação anual), e tanque com proteção contra adulteração. Contrato com posto deve prever: preço fixo por litro (ou desconto sobre tabela ANP), prazo de pagamento 30 dias, e relatório mensal de consumo por veículo. Fraude em abastecimento é um dos principais desvios de frota.',
+    ]},
+
+  // Transporte de passageiros / escolar / especial
+  { re: /transporte.*passageiro|transporte.*escolar|transporte.*fretado|onibus.*fretado|van.*escolar|micro.*onibus|transporte.*colaborador|transporte.*funcionario/,
+    r: [
+      'Transporte de passageiros (fretado/escolar): requer habilitação específica da ANTT (diferente do transporte de cargas), veículos com inspeção periódica do DETRAN a cada 6 meses, motorista com curso de direção defensiva e transporte escolar (se for escolar). O transporte fretado de funcionários (VT terceirizado) tem mercado crescente no Sul — alternativa ao vale-transporte para empresas distantes de rotas urbanas.',
+      'Transporte escolar municipal: regulado pela Lei 9.503/97 (CTB) + resolução CONTRAN. Requisitos do veículo: cinto de segurança em todos os assentos, janelas com telas de proteção, identificação "ESCOLAR" lateral e traseira, extintor, kit de primeiros socorros. Motorista: CNH B ou superior, sem infrações graves nos últimos 12 meses, curso específico de transporte escolar. Fiscalização é mais rígida que carga.',
+    ]},
+
+  // Mercado de trabalho para gestores de logística
+  { re: /salario.*gerente.*logistica|salario.*gestor.*frota|quanto.*ganha.*gerente.*transporte|mercado.*trabalho.*logistica|carreira.*logistica/,
+    r: [
+      'Mercado de trabalho em logística no Sul: gerente de logística em transportadora de médio porte no RS — faixa R$8.000-15.000/mês. Analista de operações: R$3.500-5.500. Coordenador de frota: R$5.000-8.000. Especialistas em TMS (SAP TM, Transplace, Omnilink) têm alta demanda e menor oferta — premium de 20-30% sobre a média. A certificação APICS CPIM (Supply Chain) é valorizada em empresas maiores.',
+      'Carreira em logística de transporte: progressão típica — auxiliar operacional → analista de operações → coordenador de frota → gerente de logística → diretor de operações. O diferencial competitivo hoje é domínio de dados (Power BI, Excel avançado, TMS) e gestão de pessoas. Transportadoras que investem em capacitação interna retêm mais — o custo de treinar é menor que o de contratar pronto no mercado.',
     ]},
 
   // ── BLOCO ESG, ACIDENTE E MARKETING ───────────────────────────────────────────
