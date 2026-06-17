@@ -3191,6 +3191,37 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
+  // ── Perguntas do administrativo / financeiro do dia a dia ──
+  if (/como (cobrar|cobranca|receber).*(cliente|devedor|inadimplente)|inadimplencia|cliente.*n[aã]o.*pagou|cliente.*atrasado|titulo.*vencido/.test(t))
+    return pick([
+      'Protocolo de cobrança: 1) D+1 do vencimento: e-mail/WhatsApp amigável com o boleto; 2) D+5: ligação do financeiro; 3) D+15: carta formal com prazo final; 4) D+30: negativação Serasa/SPC ou envio a escritório de cobrança; 5) D+60+: ação judicial se o valor justificar. Nunca suspenda o serviço antes de notificar formalmente — pode gerar dano à empresa se o cliente contestar.',
+      'Inadimplência no transporte: o CT-e é título executivo extrajudicial — facilita a cobrança judicial. Para clientes com histórico de atraso, exija pagamento antecipado ou reduza o prazo de crédito. Consulte CNPJ no Serasa antes de abrir crédito para cliente novo. Clientes que devem acima de 60 dias têm o serviço suspenso — é justo e legal comunicar antes.',
+    ]);
+
+  if (/boleto|gerar.*boleto|segunda.*via|2a.*via|vencimento.*boleto|pagar.*frete|pagamento.*frete/.test(t))
+    return pick([
+      'Para segunda via de boleto ou fatura de frete, o financeiro da Scapini emite pelo sistema de faturamento. Para clientes com acesso ao portal, a segunda via fica disponível on-line. Informe o número do CT-e ou o período de referência para localizar a fatura rapidamente.',
+      'Boleto de frete: emitido após a entrega confirmada (canhoto assinado). Prazo padrão: conforme contrato do cliente (7, 14, 28 dias). Para antecipação ou renegociação, o financeiro precisa de autorização do gestor. O CT-e é o comprovante do serviço — boleto sem CT-e não deve ser emitido.',
+    ]);
+
+  if (/como calcular (o )?frete|calculo.*frete|quanto.*cobrar.*frete|preco.*frete|formar.*preco/.test(t))
+    return pick([
+      'Formação do preço de frete: custo operacional por km (diesel + pedágio + pneu + manutenção + depreciação + motorista) ÷ km rodado = custo/km. Some overhead fixo (gestão, seguro, financiamento) e margem desejada (15-25% para LTL, 10-18% para FTL). Compare com o piso ANTT para não praticar frete abaixo do mínimo legal. Carga perigosa, alto valor ou refrigerada tem adicional.',
+      'Para calcular frete: 1) Identifique origem e destino (km); 2) Calcule o maior entre peso real e peso cubado; 3) Multiplique pelo valor por kg/km da tabela; 4) Some ad valorem se o valor da carga for alto (% sobre o valor da NF para seguro); 5) Some pedágio estimado; 6) Aplique desconto comercial se houver. O resultado deve estar acima do piso ANTT.',
+    ]);
+
+  if (/conciliacao.*bancaria|conciliacao.*conta|extrato.*banco.*batendo|conta.*banc.*conferir/.test(t))
+    return pick([
+      'Conciliação bancária: compare os lançamentos do extrato bancário com os registros no ERP/CGI. Toda entrada deve ter um CT-e ou outro documento de origem; toda saída deve ter nota fiscal, recibo ou autorização. Diferenças de centavos: verifique IOF, tarifas bancárias. Diferenças maiores: aponte ao contador imediatamente. Faça diária ou semanal — quanto mais atrasada, mais difícil de resolver.',
+      'Rotina de conciliação na transportadora: as entradas principais são pagamentos de CT-e dos clientes. Compare o valor recebido com o que foi faturado — descontos não autorizados geram discussão. As saídas são fornecedores (diesel, peças, pneus), folha e tributos. Qualquer lançamento sem documento de suporte é risco fiscal e de auditoria.',
+    ]);
+
+  if (/fluxo.*(caixa|financeiro)|caixa.*semana|previsao.*caixa|caixa.*previsao|quanto.*tem.*caixa/.test(t))
+    return pick([
+      'Fluxo de caixa semanal básico: liste todos os recebimentos previstos (CT-es vencendo na semana × % de pontualidade dos clientes) e todos os pagamentos programados (folha, diesel, fornecedores, tributos). A diferença é a posição de caixa ao final da semana. Se negativo: decida o que antecipar e o que negociar prazo. Para análise detalhada, suba a planilha de caixa e faço a projeção.',
+      'Posição de caixa para transportadora: a receita vem de CT-es com prazo 7-28 dias; as despesas (diesel, motorista, manutenção) são mais imediatas. Esse descasamento é normal no setor — exige capital de giro. Linha de crédito rotativo no banco é comum para cobrir os picos. Quando quiser analisar o fluxo real, suba a planilha.',
+    ]);
+
   // ── Perguntas estratégicas da diretoria ──
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
