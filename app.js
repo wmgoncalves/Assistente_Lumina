@@ -4089,21 +4089,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
     const briefingKey = 'lumina_last_briefing';
     const todayBrief  = new Date().toISOString().split('T')[0];
+    let greetingText;
     if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
       localStorage.setItem(briefingKey, todayBrief);
       const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
       const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
-      let briefing = `${gr}. ${returning}Sou Lúmina. `;
+      greetingText = `${gr}. ${returning}Sou Lúmina. `;
       if (pendingCount || habitCount) {
-        if (pendingCount) briefing += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
-        if (habitCount)   briefing += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
+        if (pendingCount) greetingText += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
+        if (habitCount)   greetingText += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
       } else {
-        briefing += 'Dando vida aos dados e luz às decisões.';
+        greetingText += 'Dando vida aos dados e luz às decisões.';
       }
-      speak(briefing);
     } else {
-      speak(`${gr}. ${returning}Sou Lúmina. ${ready}`);
+      greetingText = `${gr}. ${returning}Sou Lúmina. ${ready}`;
     }
+    // Mostra texto imediatamente; voz toca se Chrome permitir (Electron: sempre ok)
+    setRespText(greetingText);
+    speak(greetingText);
 
     // ── Banner: sem chave Gemini ──
     const existingBanner = document.getElementById('no-key-banner');
