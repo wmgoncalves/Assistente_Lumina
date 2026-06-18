@@ -2354,6 +2354,33 @@ app.get('/api/sports', async (req, res) => {
   }
 });
 
+// ── Consulta CNPJ via BrasilAPI ──────────────────────────────────────────────
+app.get('/api/cnpj/:cnpj', async (req, res) => {
+  const cnpj = req.params.cnpj.replace(/\D/g, '');
+  if (cnpj.length !== 14) return res.status(400).json({ error: 'CNPJ inválido' });
+  try {
+    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+    if (!r.ok) return res.status(r.status).json({ error: 'CNPJ não encontrado' });
+    const d = await r.json();
+    res.json({
+      cnpj: d.cnpj,
+      razaoSocial: d.razao_social,
+      nomeFantasia: d.nome_fantasia || d.razao_social,
+      situacao: d.descricao_situacao_cadastral,
+      atividade: d.cnae_fiscal_descricao,
+      cidade: d.municipio,
+      estado: d.uf,
+      telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.substring(2)}` : null,
+      email: d.email || null,
+      abertura: d.data_inicio_atividade,
+      porte: d.porte,
+      socios: (d.qsa || []).slice(0, 3).map(s => s.nome_socio),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Modo Proativo — SSE + Scheduler ──────────────────────────────────────────
 const sseClients = new Set();
 

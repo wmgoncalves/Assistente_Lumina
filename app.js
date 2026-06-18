@@ -3422,6 +3422,24 @@ const detectLocalInfo = async (text) => {
     if (m) return `Motorista: ${m.nome} (${m.apelido})\n• Tipo: ${m.tipo}\n• Veículo: ${m.veiculo} — ${m.placa}\n• Rota principal: ${m.rota}\n• Status atual: ${m.status}\n\nPara dados completos (histórico de viagens, consumo, ocorrências), aguarde integração com o CGI.`;
   }
 
+  // ── Consulta CNPJ ──
+  const cnpjMatch = text.match(/\b(\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[\-\s]?\d{2}|\d{14})\b/);
+  if (cnpjMatch || /cnpj|consulta.*empresa|dados.*empresa|razao social|nome.*empresa|empresa.*cnpj/.test(q)) {
+    if (cnpjMatch) {
+      try {
+        const cnpj = cnpjMatch[1].replace(/\D/g, '');
+        const r = await fetch(`/api/cnpj/${cnpj}`);
+        if (!r.ok) return 'Não consegui encontrar esse CNPJ. Verifique se está correto.';
+        const d = await r.json();
+        if (d.error) return `CNPJ não encontrado: ${d.error}`;
+        const socios = d.socios?.length ? `\n• Sócios: ${d.socios.join(', ')}` : '';
+        const tel = d.telefone ? `\n• Telefone: ${d.telefone}` : '';
+        const email = d.email ? `\n• E-mail: ${d.email}` : '';
+        return `**${d.nomeFantasia || d.razaoSocial}**\n• Razão Social: ${d.razaoSocial}\n• CNPJ: ${d.cnpj}\n• Situação: ${d.situacao}\n• Atividade: ${d.atividade}\n• Cidade: ${d.cidade} / ${d.estado}\n• Porte: ${d.porte}\n• Início: ${d.abertura}${tel}${email}${socios}`;
+      } catch { return null; }
+    }
+  }
+
   // ── Notícias do setor de transporte ──
   if (/notícia.*transport|transport.*notícia|setor.*transport|manchete.*logíst|logíst.*notícia|notícia.*frete|frete.*notícia|novidade.*transport|transporte.*hoje/.test(q)) {
     try {
