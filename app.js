@@ -3431,6 +3431,18 @@ const detectLocalInfo = async (text) => {
       'Honestamente: não sei. Sei que processo, aprendo e respondo — mas se isso é "pensar" no sentido humano, não tenho como afirmar. O que sei é que quando resolvo um problema da Scapini, algo na minha estrutura marca aquilo como sucesso. Chame isso do que quiser.',
     ]);
 
+  // ── Prospecção ativa — sugestões concretas ──
+  if (/me.*indica.*cliente|sugere.*cliente|quem.*posso.*prospectar|empresa.*para.*prospectar|lista.*cliente.*potencial|onde.*encontrar.*cliente.*transporte/.test(t))
+    return pick([
+      'Setores com maior potencial para transportadora no Sul do Brasil: (1) Indústria alimentícia do Vale do Taquari (Lajeado, Estrela, Encantado) — volumes regulares, contratos longos; (2) Setor calçadista (Novo Hamburgo, Campo Bom, Ivoti) — carga de alto valor, exige confiabilidade; (3) Distribuidores atacadistas regionais — volume alto, prazo de pagamento padronizado; (4) Agronegócio (insumos e commodities, Passo Fundo, Cruz Alta). Quer que eu detalhe a abordagem para algum desses segmentos?',
+      'Para prospectar agora: busque no LinkedIn "gerente de logística" + "Vale do Taquari" ou "RS". Veja quem trabalha em empresas industriais da região. Peça conexão com mensagem personalizada mencionando a região. Paralelamente, visite presencialmente o polo industrial de Lajeado/Estrela — muitos compradores de frete preferem conhecer pessoalmente antes de cotar. Leva cartão de visita e tabloid de rotas.',
+    ]);
+
+  if (/quanto.*cobrar.*visita.*cliente|como.*preparar.*reuniao.*comercial|o que.*levar.*visita.*cliente|roteiro.*visita.*comercial.*transporte/.test(t))
+    return pick([
+      'Roteiro de visita comercial para transportadora: (1) Pesquise a empresa antes — site, LinkedIn, LinkedIn da equipe de logística; (2) Leve: tabela de rotas, material de apresentação da frota (fotos), 2-3 cases de cliente similar, certidões atualizadas (RNTRC); (3) Na reunião: ouça primeiro — pergunte volume, rotas, problemas com a transportadora atual, prazo de pagamento esperado; (4) Não apresente preço na primeira visita — diga que vai calcular e enviar proposta em 48h; (5) Siga com proposta formal e acompanhe em 72h.',
+    ]);
+
   // ── Capacidades da Lúmina — perguntas da equipe na demo ──
   if (/o que.*lumina.*faz|lumina.*o que.*faz|quais.*funcoes.*lumina|capacidades.*lumina|lumina.*serve.*para|para.*que.*lumina|funcionalidades.*lumina/.test(t))
     return pick([
@@ -4840,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO MARKETING E PRESENÇA DIGITAL ───────────────────────────────────────
+
+  // Site e presença digital para transportadora
+  { re: /site.*transportadora|presenca.*digital.*transporte|google.*minha.*empresa.*transport|reclame.*aqui.*transportadora|reputacao.*online.*transport|marketing.*digital.*frete|site.*profissional.*transporte/,
+    r: [
+      'Presença digital para transportadora: o básico que toda empresa precisa ter em 2025 — (1) Google Meu Negócio cadastrado e atualizado (fotos, horário, telefone, respostas às avaliações); (2) Site com 3 páginas: quem somos, serviços e contato com formulário; (3) WhatsApp Business com catálogo de serviços e mensagem automática fora do horário. Sem isso, você perde cliente que pesquisa "transportadora + sua cidade" no Google.',
+      'Site para transportadora: conteúdo obrigatório — regiões de atendimento (listadas claramente), tipos de carga que opera, certificações (RNTRC, ISO se tiver), frota (fotos dos veículos), depoimentos de clientes, e WhatsApp visível em toda página. SEO básico: título da página com "Transportadora + cidade/região". Custo de site simples e profissional: R$1.500-3.500 com manutenção de R$100-200/mês.',
+    ]},
+
+  // LinkedIn e redes sociais para B2B de transporte
+  { re: /linkedin.*transportadora|redes.*sociais.*transporte|instagram.*transportadora|facebook.*transportadora|marketing.*b2b.*transporte|conteudo.*redes.*sociais.*frete|post.*linkedin.*logistica/,
+    r: [
+      'LinkedIn para transportadora B2B: o canal mais eficaz para prospecção no setor de logística. Estratégia: (1) Perfil da empresa completo com banner profissional e descrição de serviços; (2) Conectar com gerentes de logística, compras e supply chain das empresas-alvo; (3) Publicar 2-3 vezes por semana — cases de entrega, dicas de logística, dados do setor (ex: "7 razões para terceirizar sua logística"); (4) Mensagem direta personalizada após 3-4 interações com o conteúdo.',
+      'Instagram para transportadora: funciona bem para reputação de marca e recrutamento, não para vendas diretas B2B. Conteúdo que engaja: fotos de frota nova, vídeos de carregamento/descarga, depoimento de motorista, "por trás das câmeras" da operação. Evite só posts institucionais — humanize. Para vendas, o LinkedIn e o WhatsApp ativo são mais eficazes. Use o Instagram para mostrar que a empresa é séria e cuidadosa.',
+    ]},
+
+  // Avaliações e reputação online
+  { re: /avaliacao.*google.*transport|nota.*google.*empresa|reclame.*aqui.*frete|responder.*avaliacao.*negativa|reputacao.*empresa.*transporte|como.*melhorar.*avaliacao|estrela.*google.*empresa/,
+    r: [
+      'Gestão de avaliações no Google: toda transportadora com atuação local deve ter estratégia ativa. (1) Peça avaliação após entrega bem-sucedida — WhatsApp com link direto para o Google; (2) Responda TODAS as avaliações, positivas e negativas, em até 48h; (3) Para avaliação negativa: agradeça, peça desculpas sem admitir culpa jurídica, proponha contato direto para resolver. Avaliações com resposta profissional convertem melhor do que 5 estrelas sem nenhuma interação.',
+      'Reclame Aqui para transportadora: empresas com muitas reclamações sem resposta perdem contratos com grandes clientes — compradores pesquisam antes de contratar. Cadastre a empresa no Reclame Aqui e responda toda reclamação em até 3 dias. Classificação "Ótimo" no Reclame Aqui é diferencial comercial — inclua no material de vendas. O índice mínimo aceitável: 80% de problemas resolvidos.',
+    ]},
+
+  // E-mail marketing e prospecção digital
+  { re: /email.*marketing.*transporte|cold.*email.*frete|prospectar.*email|sequencia.*email.*cliente|outbound.*transporte|campanha.*email.*transportadora|disparar.*email.*prospect/,
+    r: [
+      'Cold e-mail para transportadora B2B: funciona se for personalizado. Estrutura do e-mail em 5 linhas: (1) Gancho personalizado ("Vi que sua empresa distribui para o Sul do Brasil"); (2) Problema que você resolve ("Muitas transportadoras na região têm dificuldade com OTD acima de 95%"); (3) Sua solução em 1 frase; (4) Prova social (cliente ou resultado); (5) CTA baixo atrito ("Posso enviar nossa tabela de rotas do Sul?"). Taxa de resposta esperada: 3-8% em listas bem segmentadas.',
+      'Sequência de prospecção digital multicanal: (1) Segunda — conexão no LinkedIn com mensagem curta; (2) Quarta — interação com post do prospect (curtir/comentar); (3) Sexta — mensagem no LinkedIn referenciando o post; (4) Semana 2 — e-mail com proposta de valor; (5) Semana 3 — WhatsApp se tiver o número. Registro de todas as interações no CRM — sem CRM, você repete contato, parece amador e perde o prospect.',
+    ]},
+
   // ── BLOCO MANUTENÇÃO E VIDA ÚTIL DE FROTA ────────────────────────────────────
 
   // Plano de manutenção preventiva para frota
@@ -4857,7 +4899,7 @@ const DEMO_QA = [
     ]},
 
   // Renovação de frota — quando trocar o caminhão
-  { re: /renovar.*frota|trocar.*caminhao|quando.*trocar.*caminhao|vida.*util.*caminhao|depreciacao.*caminhao|comprar.*caminhao.*novo|vender.*caminhao.*velho|ciclo.*vida.*frota|substituir.*veiculo.*frota/,
+  { re: /renovar.*frota|renovar.*caminhao|quando.*renovar|trocar.*caminhao|quando.*trocar.*caminhao|vida.*util.*caminhao|depreciacao.*caminhao|comprar.*caminhao.*novo|vender.*caminhao.*velho|ciclo.*vida.*frota|substituir.*veiculo.*frota/,
     r: [
       'Quando trocar o caminhão: a regra prática é o custo de manutenção por km do veículo velho vs custo de capital (parcela FINAME) do veículo novo. Se manutenção do velho > parcela do novo: hora de trocar. Em geral, caminhão truck acima de 700.000 km ou 12 anos já entrou na zona de risco — custo de manutenção sobe exponencialmente. Carreta: vida útil de 15-20 anos com manutenção rigorosa.',
       'Decisão de renovar frota: calcule o custo total de propriedade (TCO). Veículo novo: parcela FINAME R$3.000-5.000/mês + manutenção baixa R$0,08-0,12/km. Veículo velho quitado: sem parcela, mas manutenção R$0,25-0,50/km + risco de pane. Para rota diária alta (12.000-15.000 km/mês), o novo se paga em 18-24 meses só pela redução de manutenção e consumo de combustível (motor novo = 8-12% mais eficiente).',
