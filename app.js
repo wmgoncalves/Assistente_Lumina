@@ -3435,6 +3435,7 @@ const detectLocalInfo = async (text) => {
         const socios = d.socios?.length ? `\n• Sócios: ${d.socios.join(', ')}` : '';
         const tel = d.telefone ? `\n• Telefone: ${d.telefone}` : '';
         const email = d.email ? `\n• E-mail: ${d.email}` : '';
+        setTimeout(() => document.getElementById('history-panel')?.classList.add('open'), 600);
         return `**${d.nomeFantasia || d.razaoSocial}**\n• Razão Social: ${d.razaoSocial}\n• CNPJ: ${d.cnpj}\n• Situação: ${d.situacao}\n• Atividade: ${d.atividade}\n• Cidade: ${d.cidade} / ${d.estado}\n• Porte: ${d.porte}\n• Início: ${d.abertura}${tel}${email}${socios}`;
       } catch { return null; }
     }
