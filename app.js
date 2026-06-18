@@ -3625,10 +3625,10 @@ const detectLocalInfo = async (text) => {
       'Boleto de frete: emitido após a entrega confirmada (canhoto assinado). Prazo padrão: conforme contrato do cliente (7, 14, 28 dias). Para antecipação ou renegociação, o financeiro precisa de autorização do gestor. O CT-e é o comprovante do serviço — boleto sem CT-e não deve ser emitido.',
     ]);
 
-  if (/como calcular (o )?frete|calculo.*frete|quanto.*cobrar.*frete|preco.*frete|formar.*preco/.test(t))
+  if (/como calcular (o )?frete|calculo.*frete|quanto.*cobrar.*frete|preco.*frete|formar.*preco|composicao.*frete|componentes.*frete/.test(t))
     return pick([
-      'Formação do preço de frete: custo operacional por km (diesel + pedágio + pneu + manutenção + depreciação + motorista) ÷ km rodado = custo/km. Some overhead fixo (gestão, seguro, financiamento) e margem desejada (15-25% para LTL, 10-18% para FTL). Compare com o piso ANTT para não praticar frete abaixo do mínimo legal. Carga perigosa, alto valor ou refrigerada tem adicional.',
-      'Para calcular frete: 1) Identifique origem e destino (km); 2) Calcule o maior entre peso real e peso cubado; 3) Multiplique pelo valor por kg/km da tabela; 4) Some ad valorem se o valor da carga for alto (% sobre o valor da NF para seguro); 5) Some pedágio estimado; 6) Aplique desconto comercial se houver. O resultado deve estar acima do piso ANTT.',
+      'Composição do preço de frete (7 componentes): (1) Custo diesel: km × consumo l/km × preço diesel; (2) Pedágio: valor real da rota ou estimativa R$0,08-0,15/km; (3) Pneus: R$0,03-0,06/km; (4) Manutenção: R$0,10-0,20/km; (5) Depreciação: valor veículo ÷ 60 meses ÷ km/mês; (6) Motorista: salário + encargos ÷ km/mês; (7) Overhead fixo rateado. Some tudo = custo/km. Preço = custo/km × km × (1 + margem desejada 15-25%). Não pratique abaixo do piso ANTT.',
+      'Calculando frete passo a passo: 1) Origem→Destino = distância (use Google Maps ou tabela DNIT); 2) Peso real vs cubado (maior vence — cubagem: C×L×A em cm ÷ 6.000 = kg equivalente); 3) Valor da NF → ad valorem para seguro (0,08-0,15% sobre NF); 4) Pedágio estimado pela rota; 5) Adicional para carga perigosa (+20-40%), refrigerada (+15-25%) ou escolta (+R$800-2.000). Total deve estar acima do piso ANTT — consulte tabela atual em gov.br/antt.',
     ]);
 
   if (/conciliacao.*bancaria|conciliacao.*conta|extrato.*banco.*batendo|conta.*banc.*conferir/.test(t))
@@ -4826,6 +4826,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO CARGAS ESPECIAIS ────────────────────────────────────────────────────
+
+  // Transporte de carga frigorificada (temperatura controlada)
+  { re: /carga.*frigorif|frigorifico.*transporte|carga.*temperatura|transporte.*frio|caminhao.*frio|bau.*refrigerado|cadeia.*frio|cold.*chain.*transporte|haccp.*transporte|alimento.*temperatura.*transporte/,
+    r: [
+      'Transporte de carga frigorificada: exige veículo com baú isotérmico + unidade de refrigeração (ThermoKing, Carrier). Temperaturas: alimentos resfriados 0-4°C, congelados -18°C ou menos, sorvetes -25°C, medicamentos 2-8°C (cadeia do frio farmacêutica). Obrigações: registrador de temperatura contínuo (datalogger), procedimentos HACCP documentados, motorista treinado em boas práticas. Carga avariada por falha de temperatura é responsabilidade do transportador.',
+      'Carga frigorificada — precificação: adicional de 20-35% sobre o frete seco pela mesma rota, porque o custo de refrigeração (diesel para o baú), manutenção do equipamento e risco são maiores. Para carga farmacêutica (RDC 430 ANVISA), exige validação do processo de transporte e documentação de temperatura para cada remessa — custo ainda maior. Nicho lucrativo para quem tem a operação certificada.',
+    ]},
+
+  // Transporte de produtos perigosos (ONU/MOPP)
+  { re: /produto.*perigoso|carga.*perigosa|transporte.*quimico|substancia.*perigosa|mopp.*transporte|numero.*onu.*carga|classe.*risco.*transporte|ficha.*emergencia.*carga|envelope.*emergencia/,
+    r: [
+      'Transporte de produtos perigosos (PPRO): regulamentado pela Resolução ANTT 5.232/2016 e normas ABNT. Motorista deve ter certificado MOPP válido (5 anos). Veículo precisa de: kit de emergência específico para a classe de risco, painel de segurança (número ONU + rótulo de risco), ficha de emergência e envelope de emergência na cabine. Fiscalização PRF é rigorosa — multa e apreensão imediata para quem não estiver regular.',
+      'Classes de risco de produtos perigosos (ONU): Classe 1 (explosivos), 2 (gases), 3 (líquidos inflamáveis — mais comum em transporte rodoviário: etanol, solventes), 4 (sólidos inflamáveis), 5 (oxidantes), 6 (tóxicos), 7 (radioativos), 8 (corrosivos), 9 (miscelânea). Cada classe tem requisitos específicos de embalagem, rotulagem, quantidade máxima por veículo e restrições de rota (evitar zonas urbanas densas para classes 1, 2 e 3).',
+    ]},
+
+  // Transporte a granel (líquido e sólido)
+  { re: /transporte.*granel|granel.*liquido|granel.*solido|tanque.*transporte|silo.*transporte|carga.*granel.*caminhao|graneleiro|transliquido|produto.*liquido.*transporte/,
+    r: [
+      'Transporte a granel líquido: exige caminhão-tanque homologado pelo INMETRO, com compartimentos calibrados e certificado de aferição anual. Para produtos alimentícios (leite, óleo, sucos): tanque de aço inox com certificado de higienização a cada carga. Para combustíveis: licença ANTT específica + MOPP + tanque certificado. Granel líquido químico: ficha de segurança (FISPQ) obrigatória na cabine.',
+      'Transporte a granel sólido (graneleiro): soja, milho, fertilizantes, minério. Equipamentos: caminhão graneleiro (caçamba), bitrem ou tritrem graneleiro. Atenção ao peso — granel distribui mal e pode ultrapassar o limite por eixo mesmo dentro do PBTC total. Pese na balança do pátio antes de sair. Para grãos: respeite o prazo de entrega (carga viva deteriora) e documente a temperatura de armazenagem no conhecimento.',
+    ]},
+
+  // Carga especial com escolta (AET / PSO)
+  { re: /carga.*especial.*escolta|escolta.*carga|aet.*escolta|carga.*indivisivel|escolta.*policia|escolta.*viagem|excesso.*dimensao.*escolta|carga.*pesada.*especial|licenca.*transporte.*especial/,
+    r: [
+      'Carga especial com escolta: AET (Autorização Especial de Trânsito) emitida pelo DNIT para cargas acima dos limites legais de dimensão (4,4m de altura, 2,6m de largura, 19,8m de comprimento, ou peso acima do permitido). Acima de 4,5m de largura: escolta obrigatória da PRF. Acima de 3,2m de largura: escolta privada certificada obrigatória. AET deve ser solicitada com antecedência mínima de 5 dias úteis. Rota deve ser aprovada e horário de deslocamento restrito (geralmente noturno ou madrugada).',
+      'PSO (Permissão para Serviço de Operações especiais): para cargas que excedem os limites em rodovias estaduais, cada estado emite sua própria autorização. No RS: DAER emite o PSO estadual. Combine AET federal + PSO estadual para rotas que cruzam rodovias federais e estaduais. Custo de AET: R$150-450 por autorização. Escolta privada: R$800-2.500 por viagem dependendo da distância.',
     ]},
 
   // ── BLOCO LEGISLAÇÃO E SUBCONTRATAÇÃO ─────────────────────────────────────────
