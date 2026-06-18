@@ -4852,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO TRIBUTÁRIO AVANÇADO ─────────────────────────────────────────────────
+
+  // Simples Nacional vs Lucro Presumido para transportadora
+  { re: /simples.*nacional.*transporte|lucro.*presumido.*transporte|regime.*tributario.*transportadora|simples.*lucro.*presumido.*comparar|qual.*regime.*tributario.*melhor.*transporte|mudar.*regime.*tributario/,
+    r: [
+      'Simples Nacional para transportadora: CNAE de transporte rodoviário de cargas está no Anexo III do Simples (alíquota inicial 6% sobre receita bruta, chegando a 33% acima de R$3,6M/ano). Desvantagem: teto de R$4,8M/ano de receita bruta — acima disso, é obrigatório mudar. Vantagem: menor burocracia contábil e unificação de impostos em uma só guia (DAS). Ideal para transportadoras com receita até R$2M/ano.',
+      'Lucro Presumido para transportadora: alíquota presumida de 8% sobre receita para IRPJ e 12% para CSLL (transporte de cargas). Total de impostos federais: IRPJ 15% + CSLL 9% + PIS 0,65% + COFINS 3% = média 11-13% sobre receita. Mais vantajoso que Simples quando a margem real for superior a 32%. Para transportadora com receita acima de R$2M/ano e margem EBITDA >14%, Lucro Presumido geralmente paga menos imposto.',
+    ]},
+
+  // ISS vs ICMS no frete — qual incide e quando
+  { re: /iss.*frete|icms.*frete|imposto.*frete|tributacao.*servico.*transporte|iss.*ou.*icms.*transporte|imposto.*ct.?e|nota.*fiscal.*frete.*imposto|tributar.*frete/,
+    r: [
+      'ICMS no frete: incide sobre o transporte rodoviário intermunicipal e interestadual de cargas. Alíquota interna RS: 12%. Interestadual: 7% (Sul/Sudeste para Norte/Nordeste) ou 12% (entre estados do Sul/Sudeste). O ICMS aparece no CT-e e é recolhido pela transportadora. ISS não incide sobre frete rodoviário — é tributo municipal para serviços que não são tributados pelo ICMS.',
+      'ICMS sobre frete: responsabilidade tributária é da transportadora, não do cliente. O cliente paga o frete + ICMS embutido. Para transportadoras no Simples Nacional, o ICMS está dentro do DAS (não há destaque em nota). Para Lucro Presumido e Lucro Real, o ICMS é destacado no CT-e e recolhido separadamente via GNRE para transporte interestadual.',
+    ]},
+
+  // DIFAL — diferencial de alíquota no transporte interestadual
+  { re: /difal.*transporte|diferencial.*aliquota.*frete|difal.*ct.?e|icms.*interestadual.*diferencial|gnre.*frete|guia.*icms.*transporte.*interestadual/,
+    r: [
+      'DIFAL no transporte de cargas: quando a transportadora faz frete interestadual e o destinatário final é consumidor (pessoa física ou empresa não contribuinte de ICMS), pode ser necessário recolher o DIFAL (diferencial de alíquota entre o estado de origem e destino). Desde 2022 (EC 87/2015 regulamentada), o DIFAL é dividido entre origem e destino. Para a maioria dos fretes B2B onde o destinatário é contribuinte, o próprio destinatário recolhe — verifique com seu contador a operação específica.',
+      'GNRE (Guia Nacional de Recolhimento de Tributos Estaduais): usada para recolher ICMS em operações interestaduais quando a transportadora não tem inscrição estadual no estado de destino. Gerada para cada viagem/CT-e em alguns estados — São Paulo e Minas Gerais são os mais exigentes. Transportadora sem GNRE na blitz é retida e multada. Integre a emissão de GNRE ao processo de emissão de CT-e para não esquecer.',
+    ]},
+
+  // Retenção de ISS e IR sobre serviços de transporte
+  { re: /retencao.*iss.*transporte|ir.*retencao.*frete|inss.*retencao.*transporte|pcc.*retencao|retencao.*imposto.*servico.*transporte|imposto.*retido.*frete|csll.*pis.*cofins.*retencao/,
+    r: [
+      'Retenções sobre serviços de transporte: clientes grandes (pessoa jurídica) podem reter na fonte ao pagar o frete — (1) IRRF: 1,5% sobre o valor bruto do CT-e acima de R$666; (2) CSLL/PIS/COFINS: 4,65% para Lucro Presumido/Real; (3) INSS: 11% sobre mão de obra — não se aplica ao frete em si, apenas a contratos de prestação de serviço com cessão de mão de obra. Transportadoras no Simples Nacional têm retenções diferentes — consulte contador.',
+      'Como tratar retenções no fluxo de caixa: o cliente paga o frete deduzido das retenções e emite um comprovante de retenção. Esses valores são compensados na apuração do imposto da transportadora. O problema prático: o caixa recebe menos, mas o faturamento contábil é o total. Controle isso separadamente para não confundir receita com recebimento. Atraso de GNRE ou DARF gera multa e juros Selic.',
+    ]},
+
   // ── BLOCO SEGURANÇA NO TRABALHO E RELATÓRIO GERENCIAL ────────────────────────
 
   // Segurança no trabalho — prevenção de acidentes em transporte
