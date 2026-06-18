@@ -3324,6 +3324,7 @@ const callGeminiVision = async (images, prompt) => {
 // ── Info em tempo real local (câmbio, clima, notícias — sem Gemini) ───────────
 const detectLocalInfo = async (text) => {
   const q = text.toLowerCase();
+  const t = q;
 
   // Câmbio — exclui "cotação de frete" para não confundir
   if (!/(frete|transporte|rota|km|quilômetro|carga|entrega)/.test(q) && /dólar|dollar|usd|euro|eur|câmbio|cotação\s+(do\s+)?(dólar|euro|bitcoin|btc|eth|doge)|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|cad\b|dólar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
