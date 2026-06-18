@@ -4852,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO PÁTIO, CROSS-DOCKING E OPERAÇÕES DE TERMINAL ───────────────────────
+
+  // Gestão de pátio — controle de entrada e saída de veículos
+  { re: /gestao.*patio|controle.*patio|entrada.*saida.*veiculo|patio.*transportadora|check.?in.*veiculo|portaria.*controle|agenda.*patio|fila.*patio|tempo.*patio|veiculo.*parado.*patio/,
+    r: [
+      'Gestão de pátio: controle de todas as movimentações de veículos no terreno da transportadora. Indicadores essenciais: (1) Tempo médio no pátio por operação (carga/descarga/manutenção/parado); (2) Giro de veículos — movimentos/dia; (3) Veículos parados >24h (imobilização = custo sem receita). Sistema mínimo: planilha entrada/saída com hora + motorista + motivo + destino. Sistema ideal: RFID ou QR na portaria com app para o porteiro que alimenta o TMS automaticamente.',
+      'Controle de portaria eficiente: motorista informa placa + CPF + destino. Sistema registra hora de entrada. Ao sair: saída + km (controle de uso interno). Alerta para veículo parado >4h sem motivo registrado. Para frotas com 10+ veículos, tempo não controlado no pátio representa 5-12% de capacidade produtiva perdida por mês.',
+    ]},
+
+  // Cross-docking e terminal de carga
+  { re: /cross.?docking|cross.?dock|terminal.*carga|hub.*logistico|transbordo.*carga|consolidacao.*carga|carga.*fracionada|fracionado.*carga|ltl.*hub|carga.*ltl/,
+    r: [
+      'Cross-docking: carga chega no terminal e é imediatamente redistribuída para os caminhões de entrega — sem armazenagem. Reduz custo de armazém e tempo de ciclo. Exige: dock sincronizado (horários planejados de chegada + saída), etiquetagem correta na origem, rastreamento em tempo real. Para transportadora: permite atender mais destinos sem base própria em cada cidade.',
+      'Terminal de carga fracionada (LTL): recebe volumes de vários remetentes, consolida por destino e despacha carretas cheias para o hub de destino. Vantagem: frete menor para o cliente vs carga exclusiva. Crítico: pesagem e cubagem precisas — subestimar 10% = 10% de receita perdida. Sistema de etiquetagem com código de barras por volume é obrigatório acima de 50 volumes/dia.',
+    ]},
+
+  // Roteirização de entregas — eficiência de rota
+  { re: /roteirizacao|roteirizar.*entrega|otimizacao.*rota|rota.*(otima|otimizada)|software.*rota|menor.*rota.*entrega|sequencia.*entrega|rota.*eficiente|paradas.*otimizar/,
+    r: [
+      'Roteirização de entregas: sequência ótima de paradas para minimizar km total e tempo. Ganho médio com roteirização automática vs manual: 15-25% menos km e 20-30% menos tempo de entrega. Ferramentas: Google Maps (gratuito, básico), Routific, OptimoRoute, ou módulo do TMS. Para 5+ veículos com 20+ entregas/dia, o investimento se paga em 1-3 meses.',
+      'Roteirização para transportadora de carga: considera PBTC, janelas de entrega do cliente, restrições de acesso (hora de circulação, peso por eixo), tempo de descarga por cliente. Dado essencial: custo real por km (diesel + manutenção + motorista) — com isso a ferramenta mostra o custo real de cada rota e você decide qual é viável aceitar.',
+    ]},
+
+  // Checklist pré-viagem e inspeção de veículo
+  { re: /checklist.*veiculo|checklist.*caminhao|pre.?viagem.*checklist|vistoria.*caminhao|inspecao.*veiculo|lista.*verificacao.*frota|checklist.*frota|verificacao.*pneu.*freio|laudo.*veiculo.*viagem/,
+    r: [
+      'Checklist pré-viagem obrigatório: (1) Documentos — CNH válida, CRLV, RNTRC, seguro RCTR-C vigente, MDF-e emitido; (2) Mecânica — óleo motor + caixa + diferencial, água radiador, freios (pedal firme), pneus (sulco mín 1,6mm, calibragem, sem dano no step), iluminação (faróis, setas, lanternas, retrorrefletores); (3) Carga — amarração correta, peso ≤ PBTC, distribuição adequada, lacre no baú.',
+      'App de checklist digital para frota: motorista preenche no celular antes de cada viagem com foto por item. Benefícios: (1) Prova de que o veículo saiu em boas condições — defesa em acidente; (2) Histórico de falhas por veículo; (3) Alerta ao gestor quando item crítico reprovado; (4) Reduz acidentes por falha mecânica 40-60%. Ferramentas: Checklist Fácil, Operand, ou Google Forms + planilha (gratuito para até 5 veículos).',
+    ]},
+
   // ── BLOCO LOGÍSTICA REVERSA E E-COMMERCE ─────────────────────────────────────
 
   // Logística reversa — devolução e retorno de mercadoria
