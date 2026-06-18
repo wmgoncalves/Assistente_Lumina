@@ -2392,13 +2392,13 @@ app.get('/api/cnpj/:cnpj', async (req, res) => {
   const cnpj = req.params.cnpj.replace(/\D/g, '');
   if (cnpj.length !== 14) return res.status(400).json({ error: 'CNPJ inválido' });
   const sources = [
-    { url: `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, src: 'brasilapi' },
-    { url: `https://publica.cnpj.ws/cnpj/${cnpj}`, src: 'cnpjws' },
-    { url: `https://receitaws.com.br/v1/cnpj/${cnpj}`, src: 'receitaws' },
+    { url: `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, src: 'brasilapi', ms: 5000 },
+    { url: `https://receitaws.com.br/v1/cnpj/${cnpj}`, src: 'receitaws', ms: 6000 },
+    { url: `https://publica.cnpj.ws/cnpj/${cnpj}`, src: 'cnpjws', ms: 6000 },
   ];
-  for (const { url, src } of sources) {
+  for (const { url, src, ms } of sources) {
     try {
-      const r = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(8000) });
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(ms) });
       if (!r.ok) continue;
       const d = await r.json();
       if (d.status === 'ERROR' || d.error) continue;
