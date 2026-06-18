@@ -3212,7 +3212,7 @@ const callOllama = async (customHistory = null) => {
 let geminiBlockedUntil = 0;
 const geminiBlocked     = () => Date.now() < geminiBlockedUntil;
 const blockGemini       = (ms = 60 * 1000) => { geminiBlockedUntil = Date.now() + ms; }; // 1 min padrão
-const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reiniciar
+const blockGeminiForever = () => blockGemini(30 * 1000); // 30s — não bloqueia para sempre
 
 // ── Agentic loop ───────────────────────────────────────────────────────────────
 // Retorna thinkingBudget adequado para a query:
