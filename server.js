@@ -2204,6 +2204,34 @@ const RSS_FEEDS = [
   { url: 'https://www.uol.com.br/rss.xml',                   source: 'UOL'      },
 ];
 
+const RSS_TRANSPORTE = [
+  { url: 'https://logweb.com.br/feed/',                      source: 'Logweb'   },
+  { url: 'https://www.transportabrasil.com.br/feed/',        source: 'TransBR'  },
+  { url: 'https://g1.globo.com/economia/rss/feed.xml',       source: 'G1 Econ'  },
+];
+
+app.get('/api/news/transporte', async (_, res) => {
+  const headlines = [];
+  const TRANSPORT_KW = /transporte|logística|logistica|frete|caminhão|caminhao|frota|rodovia|diesel|combustível|combustivel|antt|motorista|carga|br-|km \d|pedágio|pedagio|exportação|exportacao|agronegócio|agronegocio/i;
+  for (const feed of [...RSS_TRANSPORTE, ...RSS_FEEDS]) {
+    try {
+      const r = await fetch(feed.url, { signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LuminaBot/1.0)' } });
+      if (!r.ok) continue;
+      const xml   = await r.text();
+      const items = [...xml.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 15);
+      for (const m of items) {
+        const titleMatch = m[0].match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/);
+        const title = titleMatch ? titleMatch[1].trim() : null;
+        if (title && TRANSPORT_KW.test(title)) headlines.push({ title, source: feed.source });
+        if (headlines.length >= 8) break;
+      }
+      if (headlines.length >= 8) break;
+    } catch { continue; }
+  }
+  if (!headlines.length) return res.status(503).json({ error: 'Sem notícias de transporte no momento.' });
+  res.json({ headlines: headlines.slice(0, 8) });
+});
+
 const parseRssTitles = (xml) => {
   const items = [...xml.matchAll(/<item[\s\S]*?<\/item>/g)].slice(0, 6);
   return items.map(m => {

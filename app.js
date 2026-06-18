@@ -1584,6 +1584,24 @@ const renderMemoryPanel = () => {
 // ── AI Processing ──────────────────────────────────────────────────────────────
 const MAX_HIST = 200;
 
+// ── Roster de motoristas para demo (substitui integração CGI na fase 1) ────────
+const MOTORISTAS_DEMO = [
+  { nome: 'Carlos Eduardo Souza',   apelido: 'Carlão',  tipo: 'CLT',      rota: 'Lajeado–Porto Alegre',         status: 'Em rota',      placa: 'IXM-4821', veiculo: 'Truck VW Constellation' },
+  { nome: 'Marcos Antonio Pereira', apelido: 'Marquinhos', tipo: 'TAC',   rota: 'Lajeado–Caxias do Sul',        status: 'Disponível',   placa: 'RST-2290', veiculo: 'Carreta Scania R450'     },
+  { nome: 'João Batista Lima',      apelido: 'JB',      tipo: 'Agregado', rota: 'Vale do Taquari–Florianópolis', status: 'Em manutenção', placa: 'QWE-9934', veiculo: 'Truck Mercedes Actros'   },
+  { nome: 'Roberto Carlos Mendes',  apelido: 'Beto',    tipo: 'CLT',      rota: 'Lajeado–Santa Maria',          status: 'Em rota',      placa: 'ABC-1147', veiculo: 'Carreta Volvo FH'        },
+  { nome: 'Anderson Rodrigues',     apelido: 'Andinho', tipo: 'TAC',      rota: 'Lajeado–Curitiba',             status: 'Disponível',   placa: 'DEF-5523', veiculo: 'Truck DAF XF'            },
+];
+
+const _findMotorista = (q) => {
+  const n = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  return MOTORISTAS_DEMO.find(m => {
+    const nome = m.nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const apelido = m.apelido.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return nome.split(' ').some(p => p.length > 2 && n.includes(p)) || n.includes(apelido);
+  }) || null;
+};
+
 // ── Fallback helpers (módulo) ──────────────────────────────────────────────────
 const _demoBadge = () => document.getElementById('demo-badge');
 const _showDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = 'block'; };
@@ -3397,7 +3415,26 @@ const detectLocalInfo = async (text) => {
     } catch { return null; }
   }
 
-  // Notícias
+  // ── Motorista por nome ──
+  if (/motorista|condutor|chofer/.test(q)) {
+    const m = _findMotorista(q);
+    if (m) return `Motorista: ${m.nome} (${m.apelido})\n• Tipo: ${m.tipo}\n• Veículo: ${m.veiculo} — ${m.placa}\n• Rota principal: ${m.rota}\n• Status atual: ${m.status}\n\nPara dados completos (histórico de viagens, consumo, ocorrências), aguarde integração com o CGI.`;
+  }
+
+  // ── Notícias do setor de transporte ──
+  if (/notícia.*transport|transport.*notícia|setor.*transport|manchete.*logíst|logíst.*notícia|notícia.*frete|frete.*notícia|novidade.*transport|transporte.*hoje/.test(q)) {
+    try {
+      const r = await fetch('/api/news/transporte');
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      if (data.headlines?.length) {
+        const lista = data.headlines.map((h, i) => `${i + 1}. [${h.source}] ${h.title}`).join('\n');
+        return `Notícias do setor de transporte:\n${lista}`;
+      }
+    } catch { return null; }
+  }
+
+  // ── Notícias gerais ──
   if (/notícia|manchete|hoje no mundo|o que (aconteceu|rolou)|últimas|novidade|atualidade/.test(q)) {
     try {
       const r = await fetch('/api/news');
@@ -7005,25 +7042,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
     const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
 
-    const dowCtx = '';
 
     const briefingKey = 'lumina_last_briefing';
     const todayBrief  = now.toISOString().split('T')[0];
     let greetingText;
     if (cfg.geminiKey && localStorage.getItem(briefingKey) !== todayBrief) {
       localStorage.setItem(briefingKey, todayBrief);
-      const pendingCount = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done).length : 0;
-      const habitCount   = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)).length : 0;
+      const pendingTasks = typeof getTasks  === 'function' ? getTasks().filter(t => !t.done) : [];
+      const pendingHabits = typeof getHabits === 'function' ? getHabits().filter(h => !(h.dates||[]).includes(todayBrief)) : [];
       greetingText = `${gr}. ${returning}Sou Lúmina. `;
-      if (dowCtx) greetingText += dowCtx + ' ';
-      if (pendingCount || habitCount) {
-        if (pendingCount) greetingText += `Você tem ${pendingCount} tarefa${pendingCount > 1 ? 's' : ''} pendente${pendingCount > 1 ? 's' : ''}. `;
-        if (habitCount)   greetingText += `${habitCount} hábito${habitCount > 1 ? 's' : ''} por fazer hoje. `;
-      } else if (!dowCtx) {
-        greetingText += 'Dando vida aos dados e luz às decisões.';
+      const partes = [];
+      if (pendingTasks.length) {
+        const nomes = pendingTasks.slice(0, 2).map(t => t.text || t.title || t.name).filter(Boolean);
+        partes.push(`${pendingTasks.length} tarefa${pendingTasks.length > 1 ? 's' : ''} pendente${pendingTasks.length > 1 ? 's' : ''}${nomes.length ? `: ${nomes.join(', ')}${pendingTasks.length > 2 ? ' e mais' : ''}` : ''}`);
       }
+      if (pendingHabits.length) {
+        partes.push(`${pendingHabits.length} hábito${pendingHabits.length > 1 ? 's' : ''} por fazer hoje`);
+      }
+      if (partes.length) greetingText += partes.join(' • ') + '. ';
+      else greetingText += 'Dando vida aos dados e luz às decisões.';
     } else {
-      greetingText = `${gr}. ${returning}Sou Lúmina.${dowCtx ? ' ' + dowCtx : ' ' + ready}`;
+      greetingText = `${gr}. ${returning}Sou Lúmina. ${ready}`;
     }
     // Mostra texto imediatamente; voz toca se Chrome permitir (Electron: sempre ok)
     setRespText(greetingText);
