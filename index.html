@@ -191,27 +191,6 @@
       </div>
       </main>
 
-      <!-- ── Botões de ação rápida (inspirado no Marvis) ── -->
-      <div class="quick-actions" id="quick-actions">
-        <button class="qa-btn" data-msg="Qual é o ponto de equilíbrio da Scapini?">
-          <span class="qa-icon">⚖️</span><span>Ponto de Equilíbrio</span>
-        </button>
-        <button class="qa-btn" data-msg="Gera um relatório de KPIs de Junho/2026">
-          <span class="qa-icon">📊</span><span>Relatório de KPIs</span>
-        </button>
-        <button class="qa-btn" data-msg="Como está a gestão de frota da Scapini?">
-          <span class="qa-icon">🚛</span><span>Gestão de Frota</span>
-        </button>
-        <button class="qa-btn" data-msg="Quais são os principais clientes da Scapini?">
-          <span class="qa-icon">🤝</span><span>Clientes Scapini</span>
-        </button>
-        <button class="qa-btn" data-msg="Como calcular o preço de frete?">
-          <span class="qa-icon">💰</span><span>Precificação de Frete</span>
-        </button>
-        <button class="qa-btn" data-msg="Quem são os gestores da Scapini?">
-          <span class="qa-icon">👥</span><span>Liderança</span>
-        </button>
-      </div>
 
       <footer class="bottombar">
         <div class="mic-row">
@@ -233,7 +212,7 @@
           <button id="img-cancel-all" style="background:none;border:1px solid rgba(255,255,255,0.18);border-radius:4px;color:rgba(255,255,255,0.45);cursor:pointer;font-size:0.68rem;padding:2px 7px;line-height:1.5;white-space:nowrap;" title="Remover todas">Limpar</button>
         </div>
         <div class="text-input-row" id="text-input-row">
-          <input type="text" id="text-input" class="text-fld" placeholder="Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)" autocomplete="off">
+          <input type="text" id="text-input" class="text-fld" placeholder="Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
           <button class="send-btn" id="btn-send">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>

@@ -7000,23 +7000,12 @@ document.addEventListener('DOMContentLoaded', () => {
   serverCfgReady.then(() => {
     const now  = new Date();
     const hr   = now.getHours();
-    const dow  = now.getDay(); // 0=dom, 1=seg, ..., 6=sab
     const gr   = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
     const name = mem.userName || cfg.username;
     const returning = mem.sessions > 1 && name ? `Bem-vindo de volta, ${name}. ` : '';
     const ready = cfg.geminiKey ? 'Dando vida aos dados e luz às decisões.' : 'Configure a chave Gemini API para capacidades completas.';
 
-    // Contexto do dia da semana + hora — personalidade contextualizada
-    const dowCtx = (() => {
-      if (dow === 1) return pick(['Segunda-feira — começo de semana, vamos com tudo.', 'Segunda! A semana começa agora. O que está na fila?']);
-      if (dow === 2) return pick(['Terça — semana em ritmo. O que precisa hoje?', '']);
-      if (dow === 3) return pick(['Quarta — meio da semana, bom para fazer o balanço do que está pendente.', '']);
-      if (dow === 4) return pick(['Quinta — sprint final antes da sexta. O que está em aberto?', '']);
-      if (dow === 5) return pick(['Sexta-feira — quase lá! Boa hora para fechar a semana com chave de ouro.', 'Sexta! Última chance de resolver o que ficou pendente.']);
-      if (dow === 6) return pick(['Sábado de operação. Quem trabalha hoje merece dobrado.', 'Sábado — estou aqui se precisar.']);
-      if (dow === 0) return pick(['Domingo de plantão? Deve ser urgente — o que precisa?', 'Domingo. Aqui estou.']);
-      return '';
-    })();
+    const dowCtx = '';
 
     const briefingKey = 'lumina_last_briefing';
     const todayBrief  = now.toISOString().split('T')[0];
@@ -7053,7 +7042,7 @@ document.addEventListener('DOMContentLoaded', () => {
         padding:'8px 16px', fontSize:'13px', lineHeight:'1.4',
       });
       document.body.appendChild(banner);
-      document.getElementById('no-key-link').addEventListener('click', (e) => {
+      document.getElementById('no-key-link')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('[data-panel="integracoes"]')?.click() ||
         document.querySelector('.nav-item[data-tab="integracoes"]')?.click();
@@ -7186,7 +7175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = btn.dataset.msg;
         if (!msg) return;
         hideQA();
-        processInput(msg);
+        processInput(msg, { typed: true });
       });
     });
     // Esconde quando o usuário digita ou fala

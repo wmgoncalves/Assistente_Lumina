@@ -693,6 +693,12 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
 }
 .text-fld:focus { border-color: rgba(239,68,68,0.4); }
 .text-fld::placeholder { color: var(--text-dim); }
+.text-fld:-webkit-autofill,
+.text-fld:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #0d0000 inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
 
 .send-btn {
   width: 38px; height: 38px;
@@ -993,41 +999,6 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
 }
 
 /* ── Botões de Ação Rápida (estilo Marvis) ── */
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  padding: 0.6rem 1rem 0.2rem;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-.quick-actions.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(6px);
-}
-.qa-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.38rem 0.75rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 8px;
-  color: rgba(255,255,255,0.65);
-  font-size: 0.72rem;
-  cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.12s;
-  white-space: nowrap;
-}
-.qa-btn:hover {
-  background: rgba(239,68,68,0.12);
-  border-color: rgba(239,68,68,0.35);
-  color: #fca5a5;
-  transform: translateY(-1px);
-}
-.qa-btn:active { transform: translateY(0); }
-.qa-icon { font-size: 0.85rem; }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
