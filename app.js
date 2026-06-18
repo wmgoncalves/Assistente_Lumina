@@ -3740,6 +3740,30 @@ const detectLocalInfo = async (text) => {
       'A Scapini compete num mercado com muitos players regionais e algumas transportadoras de grande porte. Os diferenciais que pesam na decisão do cliente: confiança (mais de 30 anos), disponibilidade (frota própria), atendimento (você fala com quem decide) e agora tecnologia (IA interna, rastreamento, portal do cliente).',
     ]);
 
+  if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
+    return pick([
+      'O Grupo Scapini é composto por várias empresas: Scapini Transportes (carga geral, a principal), ScapiniSul, Translíquidos/Scasul (transporte de líquidos a granel), Scapini Motors e LS Tech. Um grupo familiar de mais de 30 anos fundado por Diamantino Scapini, hoje com Lucas Scapini como CEO.',
+      'A Scapini não é só uma empresa — é um grupo. Principais unidades: transporte geral (Scapini Transportes), líquidos (Translíquidos/Scasul), ScapiniSul para operações regionais, e Scapini Motors para gestão de frota.',
+    ]);
+
+  if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini/.test(t))
+    return pick([
+      'A Scapini opera em todo o Brasil com foco no Sul e Sudeste. Unidades: matriz em Estrela/RS, filiais em Canoas/RS, Carazinho/RS, Santa Cruz do Sul/RS, Ponta Grossa/PR, Itajaí/SC, São Paulo/SP e Resende/RJ. Operações também no Mercosul.',
+      'Presença geográfica: matriz Estrela/RS, filiais em RS (Canoas, Carazinho, Santa Cruz), PR (Ponta Grossa), SC (Itajaí), SP e RJ (Resende). Cobertura nacional com foco no corredor Sul-Sudeste.',
+    ]);
+
+  if (/clientes.*scapini|carteira.*clientes.*scapini|quem.*scapini.*atende|jti|souza cruz.*scapini|nestle.*scapini|fruki|braskem.*scapini|continental.*scapini/.test(t))
+    return pick([
+      'A carteira de clientes da Scapini inclui grandes indústrias: JTI (Japan Tobacco), Souza Cruz/BAT, Philip Morris, Nestlé, Fruki, Braskem, Continental, CMPC, Suzano, LD Celulose, WestRock, Gen Mills, Saint-Gobain, Leroy Merlin, Unilever e JBS, entre outros. Setores predominantes: tabaco, celulose/papel, alimentos e bebidas.',
+      'Scapini atende clientes premium de grande porte — tabaco (JTI, Souza Cruz, Philip Morris), celulose/papel (CMPC, Suzano, LD Celulose, WestRock), alimentos (Nestlé, Fruki, Gen Mills, JBS) e indústria geral (Braskem, Continental). Relacionamentos de longa data com exigências rigorosas de qualidade e SASSMAQ.',
+    ]);
+
+  if (/sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*frota|consultors|progress.*scapini|software.*operacional.*scapini/.test(t))
+    return pick([
+      'O sistema operacional da Scapini é o CGI (Consultors), que roda em banco Progress/OpenEdge. É o TMS central: emissão de CT-e, controle de viagens, faturamento, DRE e frota. Acesso via desktop remoto. A Lúmina futuramente se integra ao CGI para consultas em tempo real.',
+      'CGI Consultors é o TMS da Scapini — emite CT-e, controla frota, gera DRE e relatórios financeiros. Banco Progress/OpenEdge. Os arquivos exportados do CGI (DREs, balancetes) são exatamente o que a Lúmina já analisa quando você sobe uma planilha.',
+    ]);
+
   if (/quanto.*fatura|faturamento.*scapini|receita.*anual|revenue.*scapini/.test(t))
     return pick([
       'O faturamento da Scapini é informação estratégica — não compartilho publicamente. Para análise interna, suba uma planilha DRE e faço o fechamento completo com variações, margens e alertas. O que posso dizer: transportadoras regionais de médio porte no Sul faturam entre R$ 20M e R$ 100M/ano dependendo da frota e das rotas.',
@@ -4912,6 +4936,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO SCAPINI — EMPRESA, GRUPO, FILIAIS E CLIENTES ──────────────────────
+
+  // Grupo Scapini — empresas do grupo
+  { re: /grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|scapini motors|ls tech|quantas empresas.*scapini|divisoes.*scapini/,
+    r: [
+      'O Grupo Scapini é composto por: Scapini Transportes (matriz, transporte rodoviário geral), ScapiniSul (operações sul), Scasul/Translíquidos (transporte de líquidos a granel), Scapini Motors (gestão de frota/veículos) e LS Tech (tecnologia). Um grupo familiar com mais de 30 anos de história no RS, fundado por Diamantino Scapini e hoje liderado por Lucas Scapini como CEO.',
+      'Scapini não é uma empresa — é um grupo. As principais unidades: Scapini Transportes (carga geral), Translíquidos/Scasul (líquidos a granel), ScapiniSul (filial sul), Scapini Motors e LS Tech. Cada empresa tem operação própria mas compartilha estrutura administrativa, TMS (CGI) e políticas do grupo.',
+    ]},
+
+  // Filiais e abrangência geográfica
+  { re: /filiais.*scapini|onde.*scapini.*opera|cidades.*scapini|regioes.*scapini|abrangencia.*scapini|ag estrela|ag ponta grossa|filial.*canoas|filial.*itajai|filial.*resende|filial.*sp/,
+    r: [
+      'A Scapini opera em múltiplas praças: matriz em Estrela/RS (AG Estrela), filiais em Ponta Grossa/PR, Canoas/RS, Carazinho/RS, Santa Cruz do Sul/RS, Itajaí/SC, São Paulo/SP e Resende/RJ. Abrangência nacional com foco no Sul e Sudeste do Brasil, atendendo clientes de grande porte em todo o território.',
+      'Unidades operacionais Scapini: AG Estrela (sede/RS), AG Ponta Grossa (PR), filiais em Canoas, Carazinho e Santa Cruz do Sul (RS), Itajaí (SC), SP e Resende (RJ). Operações também no Mercosul (Argentina/Uruguai). Estrutura multi-filial com indicadores de desempenho por unidade.',
+    ]},
+
+  // Clientes da Scapini
+  { re: /clientes.*scapini|quem.*scapini.*atende|carteira.*clientes.*scapini|jti|souza cruz|nestle.*scapini|fruki.*scapini|bat.*scapini|braskem|suzano.*scapini|continental.*scapini|jbs.*scapini/,
+    r: [
+      'A Scapini atende clientes de grande porte, principalmente indústrias do Sul e Sudeste. Entre os principais: JTI (Japan Tobacco International), Souza Cruz/BAT, Philip Morris, Nestlé, Fruki, Braskem, Continental, CMPC, Suzano, LD Celulose, WestRock, Gen Mills, Saint-Gobain, Leroy Merlin, Unilever e JBS. Carteira diversificada entre fumo/tabaco, papel/celulose, alimentos, bebidas e materiais de construção.',
+      'Portfólio de clientes Scapini: predominância em tabaco (JTI, Souza Cruz, Philip Morris — setor de alta complexidade e rigor), celulose/papel (CMPC, Suzano, LD Celulose, WestRock), alimentos e bebidas (Nestlé, Fruki, Gen Mills, JBS) e indústria geral (Braskem, Continental, Saint-Gobain). Relacionamentos de longa data — alguns clientes há mais de 15 anos.',
+    ]},
+
+  // Sistema CGI — TMS da Scapini
+  { re: /sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*transporte.*scapini|software.*scapini|sistema.*frota.*cgi|progress.*cgi|consultors.*cgi/,
+    r: [
+      'O TMS da Scapini é o CGI (sistema Consultors), rodando em banco Progress/OpenEdge. É o sistema central de gestão de fretes, CT-e, MDFe, controle de frota e financeiro. Acesso via desktop remoto (RDP) da X:\\. A Lúmina futuramente se integrará ao CGI para consultas em tempo real de fretes, motoristas e indicadores — por ora trabalha com dados exportados do CGI (planilhas, DRE).',
+      'CGI Consultors é o sistema operacional e financeiro da Scapini: emissão de CT-e, controle de viagens, relatórios de faturamento, DRE automatizada e controle de frota. Base de dados Progress/OpenEdge. Os relatórios exportados do CGI (DREs, balancetes) são exatamente os arquivos que a Lúmina já sabe analisar.',
     ]},
 
   // ── BLOCO MOTORISTAS AUTÔNOMOS, JORNADA E BENEFÍCIOS ─────────────────────────
