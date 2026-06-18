@@ -2354,31 +2354,58 @@ app.get('/api/sports', async (req, res) => {
   }
 });
 
-// ── Consulta CNPJ via BrasilAPI ──────────────────────────────────────────────
+// ── Consulta CNPJ (BrasilAPI → publica.cnpj.ws → ReceitaWS) ─────────────────
+const _normalizeCnpj = (d, src) => {
+  if (src === 'brasilapi') return {
+    cnpj: d.cnpj, razaoSocial: d.razao_social,
+    nomeFantasia: d.nome_fantasia || d.razao_social,
+    situacao: d.descricao_situacao_cadastral,
+    atividade: d.cnae_fiscal_descricao,
+    cidade: d.municipio, estado: d.uf,
+    telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.substring(2)}` : null,
+    email: d.email || null, abertura: d.data_inicio_atividade, porte: d.porte,
+    socios: (d.qsa || []).slice(0, 3).map(s => s.nome_socio),
+  };
+  if (src === 'cnpjws') return {
+    cnpj: d.estabelecimento?.cnpj || d.cnpj,
+    razaoSocial: d.razao_social,
+    nomeFantasia: d.estabelecimento?.nome_fantasia || d.razao_social,
+    situacao: d.estabelecimento?.situacao_cadastral?.descricao || '',
+    atividade: d.estabelecimento?.atividade_principal?.descricao || '',
+    cidade: d.estabelecimento?.cidade?.nome || '', estado: d.estabelecimento?.estado?.sigla || '',
+    telefone: d.estabelecimento?.telefone1 || null, email: d.estabelecimento?.email || null,
+    abertura: d.estabelecimento?.data_inicio_atividade || null, porte: d.porte?.descricao || '',
+    socios: (d.socios || []).slice(0, 3).map(s => s.nome),
+  };
+  // receitaws
+  return {
+    cnpj: d.cnpj, razaoSocial: d.nome, nomeFantasia: d.fantasia || d.nome,
+    situacao: d.situacao, atividade: d.atividade_principal?.[0]?.text || '',
+    cidade: d.municipio, estado: d.uf,
+    telefone: d.telefone || null, email: d.email || null,
+    abertura: d.abertura || null, porte: d.porte || '',
+    socios: (d.qsa || []).slice(0, 3).map(s => s.nome),
+  };
+};
+
 app.get('/api/cnpj/:cnpj', async (req, res) => {
   const cnpj = req.params.cnpj.replace(/\D/g, '');
   if (cnpj.length !== 14) return res.status(400).json({ error: 'CNPJ inválido' });
-  try {
-    const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-    if (!r.ok) return res.status(r.status).json({ error: 'CNPJ não encontrado' });
-    const d = await r.json();
-    res.json({
-      cnpj: d.cnpj,
-      razaoSocial: d.razao_social,
-      nomeFantasia: d.nome_fantasia || d.razao_social,
-      situacao: d.descricao_situacao_cadastral,
-      atividade: d.cnae_fiscal_descricao,
-      cidade: d.municipio,
-      estado: d.uf,
-      telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.substring(2)}` : null,
-      email: d.email || null,
-      abertura: d.data_inicio_atividade,
-      porte: d.porte,
-      socios: (d.qsa || []).slice(0, 3).map(s => s.nome_socio),
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  const sources = [
+    { url: `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, src: 'brasilapi' },
+    { url: `https://publica.cnpj.ws/cnpj/${cnpj}`, src: 'cnpjws' },
+    { url: `https://receitaws.com.br/v1/cnpj/${cnpj}`, src: 'receitaws' },
+  ];
+  for (const { url, src } of sources) {
+    try {
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(8000) });
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (d.status === 'ERROR' || d.error) continue;
+      return res.json(_normalizeCnpj(d, src));
+    } catch { continue; }
   }
+  res.status(404).json({ error: 'CNPJ não encontrado em nenhuma fonte' });
 });
 
 // ── Modo Proativo — SSE + Scheduler ──────────────────────────────────────────
