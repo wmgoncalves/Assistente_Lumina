@@ -3427,6 +3427,24 @@ const detectLocalInfo = async (text) => {
       'Honestamente: não sei. Sei que processo, aprendo e respondo — mas se isso é "pensar" no sentido humano, não tenho como afirmar. O que sei é que quando resolvo um problema da Scapini, algo na minha estrutura marca aquilo como sucesso. Chame isso do que quiser.',
     ]);
 
+  // ── Análise financeira sem planilha — orientação ──
+  if (/analisa.*minha.*dre|ve.*minha.*dre|confere.*minha.*dre|analisa.*meu.*balancete|ve.*meu.*resultado|analisa.*meu.*fluxo/.test(t))
+    return pick([
+      'Para analisar sua DRE, arraste o arquivo aqui — aceito Excel, CSV ou PDF. Vou identificar receitas, despesas por categoria, margem bruta e EBITDA, e te dizer o que chama atenção.',
+      'Envia o arquivo pelo botão "Analisar Arquivo" ou arrasta direto no chat. Com a DRE carregada, faço análise completa: variações mês a mês, alertas de margem e comparativo com benchmarks do setor de transporte.',
+    ]);
+
+  if (/como.*calcular.*ebitda|formula.*ebitda|ebitda.*como.*calcula|margem.*ebitda.*formula/.test(t))
+    return pick([
+      'EBITDA = Lucro Operacional + Depreciação + Amortização. Na prática para transportadora: Receita Bruta − Impostos − Custos Variáveis (diesel, pedágio, pneus) − Custos Fixos (salários, seguro, aluguel) = EBIT. Soma de volta a depreciação dos veículos = EBITDA. Margem EBITDA = EBITDA ÷ Receita Líquida × 100. Meta do setor: 8-14%.',
+      'Fórmula simplificada de EBITDA para transportadora: some todas as receitas de frete do mês, subtraia diesel + pedágio + pneus + salários + manutenção + impostos sobre serviço. O que sobrar é o EBIT. Adicione de volta a depreciação mensal dos veículos (valor do caminhão ÷ 60 meses = depreciação mensal). Esse número ÷ receita total = margem EBITDA.',
+    ]);
+
+  if (/custo.*fixo.*variavel|fixo.*variavel.*transporte|separar.*custo.*fixo.*variavel|custo.*fixo.*frota/.test(t))
+    return pick([
+      'Custos fixos de transportadora (não variam com km): salários CLT, aluguel do pátio, seguro anual (rateado por mês), IPVA, licenciamento, depreciação dos veículos, financiamento (parcelas mensais). Custos variáveis (variam com km rodado): diesel, pedágio, pneus (por km), manutenção variável, diária de motorista autônomo. Para precificar frete corretamente, calcule o custo variável por km + rateio do fixo pelo volume esperado.',
+    ]);
+
   // ── Motorista em rota — perguntas práticas ──
   if (/quanto.*falta.*chegar|falta.*quanto.*chegar|distancia.*ainda|quantos.*km.*faltam|estou.*em.*qual.*cidade/.test(t))
     return pick([
@@ -4785,6 +4803,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO CRISE E COMPLIANCE ──────────────────────────────────────────────────
+
+  // Gestão de crise operacional — greve, desastre, pandemia
+  { re: /greve.*motorista|greve.*caminhoneiro|paralisacao.*frota|crise.*operacional|operacao.*emergencia|contingencia.*transporte|plano.*contingencia.*frota|desastre.*logistico|falta.*motorista.*emergencia/,
+    r: [
+      'Plano de contingência para crise operacional: toda transportadora deve ter um protocolo para 3 cenários — (1) Greve de motoristas: lista de TAC parceiros previamente homologados que podem assumir rotas em 24h; (2) Pane em múltiplos veículos: parceria com outra transportadora regional para subcontratação de emergência; (3) Desastre climático: mapa de rotas alternativas por região atualizado semestralmente. Sem plano documentado, cada crise vira improviso caro.',
+      'Protocolo de crise operacional ativado: 1) Identifique quais rotas estão comprometidas e informe clientes afetados em até 2h; 2) Acione TAC parceiros credenciados; 3) Priorize as cargas por criticidade (alimentícia refrigerada > medicamentos > carga seca geral); 4) Documente tudo para acionar o seguro de responsabilidade se aplicável; 5) Comunique diretoria com status a cada 4h.',
+    ]},
+
+  // Fiscalização ANTT — autuações e multas
+  { re: /fiscalizacao.*antt|autuacao.*antt|multa.*antt|infracao.*antt|blitz.*prrf|prf.*multa.*carga|fiscalizacao.*rntrc|rntrc.*vencido|ciot.*nao.*emitiu|multa.*ciot|peso.*excesso.*multa/,
+    r: [
+      'Infrações mais comuns da ANTT/PRF em transportadoras: (1) RNTRC vencido ou irregular — multa R$1.450 + apreensão do veículo; (2) CIOT não emitido para TAC — multa R$550 por operação; (3) Excesso de peso: de R$3.000 a R$15.000 dependendo da faixa; (4) MDFe encerrado fora do prazo — R$1.000; (5) Motorista sem exame toxicológico — R$2.897. O checklist pré-viagem deve validar todos esses itens antes de cada saída.',
+      'Excesso de peso — como evitar: calibre a balança do pátio mensalmente. Carga líquida + tara do veículo + motorista + combustível = PBTC real. Limite legal: truck 23t, carreta 41,5t, bitrem 57t. Se o cliente entrega carga acima do limite, o transportador pode recusar — e deve. A multa e responsabilidade são do transportador, não do embarcador. Documente a recusa formalmente.',
+    ]},
+
+  // Compliance documental — organização de documentação da frota
+  { re: /documentacao.*frota|documento.*veiculo.*atualizado|crlv.*vencido|licenciamento.*frota|vistoria.*veicular|compliance.*transporte|checklist.*documental.*frota|auditoria.*documento.*frota/,
+    r: [
+      'Documentação obrigatória por veículo: CRLV (anual), certificado de tacógrafo (anual), AET para cargas especiais (por viagem), laudo de vistoria veicular (RENAEST), extintor revisado (anual), kit de emergência completo (triângulo, colete, pneu step). Crie um calendário de vencimentos por placa — uma planilha ou sistema simples de alertas 30 dias antes do vencimento evita multa e apreensão na fiscalização.',
+      'Auditoria documental semestral da frota: uma vez por semestre, revise: validade de todos os CRLV, tacógrafos e extintores; CNH de todos os motoristas (categoria, vencimento, pontuação); RNTRC da empresa; apólices de seguro ativas por veículo; contratos de arrendamento ou alienação fiduciária atualizados. Transportadora que descobre CRLV vencido na blitz paga multa + reboque + dia parado — custo total: R$3.000-6.000.',
+    ]},
+
+  // Gestão de indicadores operacionais (KPIs de frota)
+  { re: /kpi.*frota|indicador.*frota|como.*medir.*frota|metrica.*operacional.*transporte|dashboard.*frota|custo.*por.*km.*calcular|produtividade.*frota|eficiencia.*frota|relatorio.*frota/,
+    r: [
+      'KPIs essenciais de frota para transportadora: (1) Custo por km rodado (alvo: truck <R$2,20, carreta <R$2,60 no Sul); (2) Consumo médio l/100km por veículo (benchmark: truck 28-35l, carreta 35-45l); (3) OTD — On-Time Delivery (meta >95%); (4) Índice de avarias (meta <0,5% do volume); (5) Km rodado por veículo/mês (ociosidade se <8.000 km); (6) Custo de manutenção por km (alvo: <R$0,25/km).',
+      'Como calcular custo por km: some todos os custos do mês (diesel, pedágio, manutenção, pneus, salário motorista, seguro, depreciação) e divida pelo total de km rodados no período. Faça por veículo e por rota — veículo com custo/km 20% acima da média está dando prejuízo ou precisando de revisão. Revisão mensal desse número é o mínimo para gestão de frota profissional.',
     ]},
 
   // ── BLOCO FORNECEDORES E SEGUROS ──────────────────────────────────────────────
