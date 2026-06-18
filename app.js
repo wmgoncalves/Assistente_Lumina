@@ -4109,9 +4109,21 @@ const tryLocalResponse = (text) => {
   if (/que dia|qual a data|hoje é|data de hoje/.test(t) && t.length < 20)
     return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
 
-  // ── Liderança da Scapini ──
-  if (/ceo|president[ae]|vice.?president[ae]|fundador|lucas scapini|ernani scapini|rosangela scapini|diamantino|quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
-    return 'A liderança da Scapini Transportes: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
+  // ── Liderança da Scapini — resposta específica por cargo ──
+  if (/\bceo\b|quem.*ceo|ceo.*scapini/.test(t))
+    return 'O CEO da Scapini Transportes é Lucas Scapini.';
+  if (/\bfundador\b|quem.*fundou|quem.*criou.*scapini|fundador.*scapini/.test(t))
+    return 'A Scapini Transportes foi fundada por Diamantino Scapini.';
+  if (/vice.?president[ae]|rosangela/.test(t))
+    return 'A Vice-Presidente da Scapini Transportes é Rosangela Scapini.';
+  if (/\bpresidente\b(?!.*vice)|ernani/.test(t))
+    return 'O Presidente da Scapini Transportes é Ernani Scapini.';
+  if (/lucas scapini/.test(t))
+    return 'Lucas Scapini é o CEO da Scapini Transportes — responsável pela estratégia e gestão da empresa.';
+  if (/diamantino/.test(t))
+    return 'Diamantino Scapini é o fundador da Scapini Transportes, que construiu a empresa no Rio Grande do Sul.';
+  if (/quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
+    return 'A liderança da Scapini: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
 
   // ── O que é margem bruta / EBITDA / ML (financeiro básico) ──
   if (/o que (é|e|significa) (a |o )?(margem bruta|mb\b|ebitda|margem (líquida|liquida)|ml\b|lucro bruto|resultado|ebit\b)/.test(t))
@@ -4282,10 +4294,25 @@ const DEMO_QA = [
     ]},
 
   // 1b. Liderança da Scapini
-  { re: /quem (e|eh|é|sao|são) (o |a )?(lucas|ernani|rosangela|diamantino|ceo|dono|fundador|diretor|presidente|lideranca|liderança|familia scapini|familia)|ceo|presidente|fundador|lideranca da scapini/,
+  { re: /quem.*ceo|o ceo|ceo da scapini/,
+    r: ['O CEO da Scapini Transportes é Lucas Scapini.']},
+
+  { re: /quem.*fundou|quem.*criou.*scapini|o fundador|fundador da scapini|diamantino/,
+    r: ['A Scapini Transportes foi fundada por Diamantino Scapini, no Rio Grande do Sul.']},
+
+  { re: /quem.*presidente(?!.*vice)|o presidente da scapini|ernani/,
+    r: ['O Presidente da Scapini Transportes é Ernani Scapini.']},
+
+  { re: /quem.*vice.?president[ae]|a vice|rosangela/,
+    r: ['A Vice-Presidente da Scapini Transportes é Rosangela Scapini.']},
+
+  { re: /quem.*lucas scapini|o que faz.*lucas|lucas scapini/,
+    r: ['Lucas Scapini é o CEO da Scapini Transportes — lidera a estratégia e a gestão da empresa.']},
+
+  { re: /lideranca da scapini|familia scapini|diretoria da scapini|quem (manda|lidera|comanda)/,
     r: [
-      'A liderança da Scapini: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini. Uma família que construiu uma das transportadoras de referência do Sul do Brasil.',
-      'Lucas Scapini é o CEO, quem conduz a estratégia hoje. Ernani Scapini é o Presidente. Rosangela Scapini é Vice-Presidente. E tudo começou com Diamantino Scapini, o fundador da empresa.',
+      'A liderança da Scapini: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.',
+      'Lucas Scapini conduz a estratégia como CEO. Ernani Scapini é Presidente, Rosangela Scapini Vice-Presidente, e tudo foi construído pelo fundador Diamantino Scapini.',
     ]},
 
   // 2. Lúmina, como você pode ajudar a Scapini?
