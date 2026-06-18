@@ -3427,6 +3427,25 @@ const detectLocalInfo = async (text) => {
       'Honestamente: não sei. Sei que processo, aprendo e respondo — mas se isso é "pensar" no sentido humano, não tenho como afirmar. O que sei é que quando resolvo um problema da Scapini, algo na minha estrutura marca aquilo como sucesso. Chame isso do que quiser.',
     ]);
 
+  // ── Capacidades da Lúmina — perguntas da equipe na demo ──
+  if (/o que.*lumina.*faz|lumina.*o que.*faz|quais.*funcoes.*lumina|capacidades.*lumina|lumina.*serve.*para|para.*que.*lumina|funcionalidades.*lumina/.test(t))
+    return pick([
+      'Posso fazer: análise de DRE, balancete e fluxo de caixa (arraste o arquivo), fechamento mensal automatizado, auditoria contábil com alertas, responder dúvidas operacionais de transporte (CT-e, MDFe, CIOT, ANTT), KPIs de frota, suporte a RH (motoristas), orientação comercial B2B e muito mais. Tudo por voz ou texto, em português, dentro da Scapini. O que quer explorar primeiro?',
+      'Sou especialista em transporte de cargas e financeiro da Scapini. Análise de planilhas, cálculo de frete, KPIs de frota, compliance ANTT, gestão de motoristas, prospecção de clientes — tudo que a operação precisa resolver rápido. Pode me testar: faz uma pergunta que você perguntaria para um consultor caro.',
+    ]);
+
+  if (/lumina.*acessa.*internet|lumina.*pesquisa.*online|lumina.*tempo.*real|lumina.*dados.*atuais|lumina.*preco.*diesel.*hoje|lumina.*cotacao.*atual/.test(t))
+    return pick([
+      'Não acesso a internet em tempo real — trabalho com a base de conhecimento que tenho e com os arquivos que você me envia. Para dados que mudam diariamente (preço do diesel, dólar, cotações de bolsa), recomendo consultar diretamente o site da ANP, Banco Central ou sua distribuidora. O que posso fazer é analisar os dados quando você me traz.',
+      'Meus dados são atualizados até a data da minha última atualização, não em tempo real. Para preço atual do diesel, o site da ANP (anp.gov.br) tem a pesquisa semanal por estado. Quer que eu calcule o impacto de uma variação de preço no custo da sua frota? É só me dizer o valor atual.',
+    ]);
+
+  if (/lumina.*lembra|lumina.*memoriza|lumina.*guarda|lumina.*sabe.*historico|historico.*conversa.*lumina|lumina.*esquece/.test(t))
+    return pick([
+      'Dentro da mesma conversa, lembro de tudo que você me disse. Entre sessões diferentes, começo do zero — a menos que você salve uma nota ou me envie um arquivo de contexto. Para histórico financeiro persistente, o ideal é manter o sistema de notas ativo e me enviar os arquivos relevantes no início de cada sessão.',
+      'Minha memória é da sessão atual. Se fechar e abrir de novo, não lembro da conversa anterior. Por isso as notas e arquivos são importantes — eles são minha memória de longo prazo. Você pode salvar decisões, dados da empresa e contratos como notas no sistema e eu uso como contexto toda vez que você me enviar.',
+    ]);
+
   // ── Análise financeira sem planilha — orientação ──
   if (/analisa.*minha.*dre|ve.*minha.*dre|confere.*minha.*dre|analisa.*meu.*balancete|ve.*meu.*resultado|analisa.*meu.*fluxo/.test(t))
     return pick([
@@ -4803,6 +4822,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO RELACIONAMENTO COM CLIENTE ─────────────────────────────────────────
+
+  // NPS — Net Promoter Score para transportadora
+  { re: /nps.*transport|net.*promoter.*transport|satisfacao.*cliente.*medir|pesquisa.*satisfacao.*frete|como.*medir.*satisfacao.*cliente|nota.*cliente.*pesquisa|avaliacao.*cliente.*entrega/,
+    r: [
+      'NPS para transportadora: envie uma pesquisa simples pós-entrega — "De 0 a 10, quanto você indicaria a Scapini para um colega?" + campo de comentário aberto. Promotores (9-10): peça indicação ativa. Neutros (7-8): pergunte o que faltou para ser 10. Detratores (0-6): ligue pessoalmente em até 48h — esses são os que falam mal. NPS do setor de transporte: média 35-50. Acima de 60 é excelência.',
+      'Como implementar NPS de entrega: disparo automático de WhatsApp 2h após confirmação de entrega, com link Google Forms ou TypeForm. Mantenha curto — máximo 3 perguntas. Meça mensalmente e compartilhe o resultado com a equipe operacional. Motorista que tem NPS acima de 8,5 consistentemente merece reconhecimento — é ele quem garante a reputação da empresa no ponto final.',
+    ]},
+
+  // Gestão de reclamações de cliente
+  { re: /reclamacao.*cliente|cliente.*reclamando|cliente.*insatisfeito|como.*responder.*reclamacao|gestao.*reclamacao|atender.*reclamacao.*frete|cliente.*irritado.*entrega|cliente.*bravo.*atraso/,
+    r: [
+      'Protocolo de gestão de reclamações: 1) Responda em até 2h — cliente sem resposta vai para o reclame.aqui; 2) Ouça sem interromper e anote os fatos (data, NF, rota, problema); 3) Assuma o erro se for seu — não transfira culpa para o motorista ou o trânsito; 4) Proponha solução concreta com prazo (reembolso, reentrega, desconto na próxima NF); 5) Confirme a resolução em até 48h. Reclamação bem resolvida fideliza mais do que entrega perfeita.',
+      'Cliente reclamando de atraso: primeiro verifique no sistema se houve comunicação prévia do atraso — se não houve, a falha é dupla (atraso + falta de aviso). Apresente os dados (horário previsto, horário real, causa do atraso) e uma proposta: desconto de 3-5% na próxima operação ou crédito em conta. Não prometa o que não pode cumprir — melhor proposta menor e cumprida do que proposta grande e não cumprida.',
+    ]},
+
+  // Relacionamento de longo prazo — fidelização de cliente B2B
+  { re: /fidelizar.*cliente|retencao.*cliente.*b2b|cliente.*longo.*prazo|parceria.*cliente.*transporte|como.*manter.*cliente|churn.*cliente.*transporte|perder.*cliente.*evitar|cliente.*indo.*concorrente/,
+    r: [
+      'Fidelização de cliente B2B em transporte: os 3 pilares que seguram cliente — (1) Confiabilidade (OTD >95% consistente — o cliente precisa poder contar); (2) Comunicação proativa (avisar atraso antes de o cliente perguntar); (3) Relatório mensal de desempenho (mostra dados, não só promessas). Cliente que recebe relatório mensal com KPIs comparados ao SLA fica, porque troca de transportadora tem custo e risco.',
+      'Quando o cliente está indo para o concorrente: antes de baixar o preço, descubra o real motivo. Na maioria dos casos é comunicação falha ou problema operacional não resolvido, não preço. Peça uma reunião presencial, apresente histórico de desempenho, e pergunte o que precisa melhorar. Se for preço mesmo, calcule se consegue igualar mantendo margem — cliente a qualquer preço vira passivo.',
+    ]},
+
+  // Relatório de desempenho para cliente (Business Review)
+  { re: /relatorio.*cliente|business.*review.*transporte|qbr.*transporte|apresentacao.*cliente.*desempenho|reuniao.*cliente.*resultado|relatorio.*mensal.*cliente.*frete|dashboard.*cliente.*transportadora/,
+    r: [
+      'Relatório mensal de desempenho para cliente: inclua — OTD do período (% de entregas no prazo), volume total transportado (kg e NFs), ocorrências (avarias, atrasos, extravios) com status de resolução, custo médio por NF comparado ao período anterior, e 1 ação de melhoria proposta para o próximo mês. Uma página, objetivo, com gráfico simples. Clientes que recebem esse relatório têm churn 40% menor.',
+      'QBR (Quarterly Business Review) com cliente âncora: a cada trimestre, reúna presencialmente com o gerente de logística do cliente. Apresente: resultado vs SLA (OTD, avarias, NPS), benchmarks do setor, iniciativas de melhoria implementadas no trimestre, e proposta para o próximo. Empresas que fazem QBR fecham renovações de contrato sem concorrência — o cliente não quer abrir processo seletivo se o fornecedor está performando.',
     ]},
 
   // ── BLOCO CRISE E COMPLIANCE ──────────────────────────────────────────────────
