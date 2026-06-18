@@ -3450,6 +3450,18 @@ const detectLocalInfo = async (text) => {
       'Minha memória é da sessão atual. Se fechar e abrir de novo, não lembro da conversa anterior. Por isso as notas e arquivos são importantes — eles são minha memória de longo prazo. Você pode salvar decisões, dados da empresa e contratos como notas no sistema e eu uso como contexto toda vez que você me enviar.',
     ]);
 
+  // ── Combustível — perguntas rápidas ──
+  if (/qual.*preco.*diesel.*hoje|diesel.*quanto.*hoje|litro.*diesel.*preco|diesel.*rs.*preco|diesel.*s.?10.*preco/.test(t))
+    return pick([
+      'Não tenho acesso ao preço em tempo real, mas a referência atual para RS (2025): diesel S-10 em posto R$5,90-6,30/l; na distribuidora (volume) R$5,50-5,80/l. Para o preço exato do dia, consulte anp.gov.br — a pesquisa semanal sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
+      'Preço de referência diesel S-10 RS (2025): R$5,90-6,30/l em posto, R$5,50-5,80/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
+    ]);
+
+  if (/consumo.*caminhao.*litros|quantos.*litros.*caminhao|media.*combustivel.*caminhao|consumo.*carreta|consumo.*truck/.test(t))
+    return pick([
+      'Consumo médio de referência (Sul do Brasil, rodovia plana, carga cheia): truck 2 eixos = 9-12 km/l; carreta 3 eixos = 7-9 km/l; bitrem = 6-8 km/l. Com subida de serra (SP/MG): reduz 20-30%. Se o seu veículo está muito abaixo dessas médias, pode ser motor, filtros, pneus ou motorista com estilo agressivo. Quer que eu ajude a calcular o consumo da sua frota com os dados reais?',
+    ]);
+
   // ── Análise financeira sem planilha — orientação ──
   if (/analisa.*minha.*dre|ve.*minha.*dre|confere.*minha.*dre|analisa.*meu.*balancete|ve.*meu.*resultado|analisa.*meu.*fluxo/.test(t))
     return pick([
@@ -4826,6 +4838,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO COMBUSTÍVEL E ABASTECIMENTO ────────────────────────────────────────
+
+  // Controle de abastecimento e fraude de combustível
+  { re: /controle.*combustivel|fraude.*combustivel|desvio.*combustivel|motorista.*coloca.*menos|tanque.*fraude|abastecimento.*controlar|sistema.*abastecimento|como.*controlar.*diesel|roubo.*combustivel/,
+    r: [
+      'Controle de combustível para frota: o básico é cruzar litros abastecidos × km rodados = consumo real (l/100km). Se o consumo de um veículo está 15% acima da média da frota, investigue: excesso de velocidade (tacógrafo), motor com problema, ou desvio. Sistema de gestão de abastecimento (cartão frota corporativo com limite por placa + relatório de cada abastecimento) reduz fraude em até 80% — motorista sabe que cada lançamento é rastreado.',
+      'Prevenção de fraude de combustível: (1) Cartão combustível corporativo por veículo, nunca por motorista — limite por tanque cheio; (2) Abastecimento somente em postos credenciados com nota fiscal por placa; (3) Cruzamento automático: litros abastecidos vs capacidade do tanque (alerta se ultrapassar); (4) Odômetro no abastecimento vs odômetro no tacógrafo — diferença acima de 5% é suspeita; (5) Câmera no tanque ou sensor de nível de combustível (telemetria).',
+    ]},
+
+  // Consumo médio — benchmark e otimização
+  { re: /consumo.*combustivel.*benchmark|consumo.*medio.*caminhao|litros.*km.*benchmark|media.*consumo.*frota|consumo.*alto.*caminhao|reducao.*consumo.*combustivel|economizar.*diesel|otimizar.*consumo/,
+    r: [
+      'Benchmarks de consumo para frota (Sul do Brasil): truck 2 eixos = 9-12 km/l (rodovia plana, carga cheia). Carreta 3 eixos = 7-9 km/l. Bitrem = 6-8 km/l. Subida de serra (Minas, SP): reduz 20-30%. Consumo abaixo do benchmark indica motor desgastado, filtros entupidos ou pneus murchos. Acima: veículo novo ou motorista econômico — identifique e reconheça publicamente.',
+      'Como reduzir consumo de combustível: (1) Programa de direção econômica (telemetria mostra rpm, frenagem brusca, velocidade — motorista que pratica eco-driving economiza 12-18%); (2) Calibragem de pneus semanal (pneu 20% abaixo da pressão ideal = 3-5% a mais de consumo); (3) Revisão de filtros de ar e diesel a cada 30.000 km; (4) Bloqueio de marcha lenta prolongada (idle >5 min = desperdício); (5) Rota otimizada (evita km vazio e congestionamento urbano).',
+    ]},
+
+  // Gestão de frota em rodovias com pedágio
+  { re: /pedagio.*gestao|controle.*pedagio|custo.*pedagio.*frota|tag.*pedagio.*frota|sem parar.*frota|cartao.*pedagio|pedagio.*rota.*calcular|pedagio.*sp|pedagio.*rs.*sc/,
+    r: [
+      'Gestão de pedágio para frota: use sistema de tag (Sem Parar Empresas, ConectCar Frota, Move Mais) com relatório por placa e rota. Negocie isenção parcial para volume alto — frotas acima de 50 tags têm desconto de 5-15% com as concessionárias. Compare o custo por rota real vs estimado mensalmente — mudança de rota pode reduzir pedágio em 20-30% com pouco impacto no km total.',
+      'Pedágio no RS e rotas para SP: rota Lajeado→Porto Alegre→São Paulo pela BR-116 tem em média R$280-380 por viagem truck (valores 2025). Alternativa pela BR-386→RS-130→SC→SP pode ser 15-20% mais barata em pedágio mas 40-60 km mais longa — calcule o custo total (pedágio + diesel extra) antes de mudar. Tabela de pedágios por rota é insumo obrigatório na planilha de precificação de frete.',
+    ]},
+
+  // Diesel — variação de preço e impacto no custo
+  { re: /variacao.*diesel|aumento.*diesel|diesel.*subiu|impacto.*diesel.*custo|reajuste.*frete.*diesel|como.*repassar.*diesel|clausula.*diesel.*contrato|gatilho.*diesel/,
+    r: [
+      'Cláusula de reajuste de diesel em contrato: inclua em todo contrato de transporte uma cláusula de reajuste automático vinculado ao preço da ANP. Modelo: "O frete será reajustado proporcionalmente toda vez que o preço médio do diesel S-10 na pesquisa semanal da ANP variar mais de 5% em relação ao valor base de contratação (R$ X,XX/l)". Isso protege a margem sem precisar renegociar a tabela inteira.',
+      'Impacto do diesel no custo do frete: diesel representa 35-45% do custo operacional de uma transportadora. Cada R$0,10 de aumento no litro = aumento de R$0,004-0,006 por km (truck com consumo 10 km/l). Para uma rota de 1.100 km (Lajeado-SP), isso é R$4,40-6,60 por viagem. Parece pouco, mas em 200 viagens/mês = R$880-1.320 de custo extra não repassado. Monitore a tabela ANP semanalmente.',
     ]},
 
   // ── BLOCO CARGAS ESPECIAIS ────────────────────────────────────────────────────
