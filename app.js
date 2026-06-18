@@ -4852,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO SEGURANÇA NO TRABALHO E RELATÓRIO GERENCIAL ────────────────────────
+
+  // Segurança no trabalho — prevenção de acidentes em transporte
+  { re: /seguranca.*trabalho.*transporte|acidente.*trabalho.*prevenir|nr.*transporte|ppra.*transporte|pcmso.*transportadora|cat.*acidente.*trabalho|epi.*motorista|treinamento.*seguranca.*motorista|dds.*seguranca/,
+    r: [
+      'Segurança do trabalho na transportadora: obrigações legais mínimas — (1) PPRA anual (Programa de Prevenção de Riscos Ambientais) — mapeia riscos por função; (2) PCMSO anual (Programa de Controle Médico de Saúde Ocupacional) — exames médicos periódicos por função; (3) CIPA para empresas acima de 20 empregados no mesmo estabelecimento; (4) EPI fornecido, assinado e registrado (colete, calçado de segurança, extintor no veículo); (5) DDS semanal (Diálogo Diário de Segurança) — 5-10 minutos antes da jornada.',
+      'CAT (Comunicação de Acidente de Trabalho): deve ser emitida em até 24h do acidente — inclusive acidentes de trânsito no trajeto trabalho-casa. Não emitir CAT é infração e pode gerar multa do MTE. Acidente com afastamento: custo médio R$40.000-150.000 (direto + indireto: substituto, treinamento, impacto no FAP/RAT do seguro). Prevenção é sempre mais barata — DDS consistente reduz acidente em 30-50%.',
+    ]},
+
+  // FAP e RAT — impacto no custo previdenciário
+  { re: /fap.*transporte|rat.*acidentes|fator.*acidentario|bonus.*fap|multa.*fap|seguro.*acidente.*trabalho.*custo|previdencia.*acidente.*empresa/,
+    r: [
+      'FAP (Fator Acidentário de Prevenção): multiplicador que ajusta o RAT (Risco Acidentário do Trabalho) da empresa de 0,5x a 2x, baseado no histórico de acidentes do CNPJ. Transportadoras têm RAT-base de 3% sobre a folha (atividade de risco). Se o FAP da sua empresa for 2,0 (pior), você paga 6% da folha só de seguro acidente. Se FAP for 0,5 (melhor), paga 1,5%. Diferença: R$4.500/ano para cada R$100.000 de folha.',
+      'Como melhorar o FAP: zero acidentes registrados no NTEP (Nexo Técnico Epidemiológico) nos últimos 2 anos é o caminho. Isso significa: emitir CAT em todo acidente (paradoxal — não emitir não ajuda e ainda é infração), investir em PPRA e DDS, e controlar afastamentos por doença relacionada ao trabalho. Consulte o FAP atual da sua empresa em previdencia.gov.br — é publicado anualmente em setembro.',
+    ]},
+
+  // Relatório gerencial mensal — como montar
+  { re: /relatorio.*gerencial|dashboard.*gerencial|relatorio.*mensal.*gestao|como.*montar.*relatorio|relatorio.*diretoria|kpi.*relatorio.*mensal|apresentacao.*resultado.*mensal|board.*resultado.*transportadora/,
+    r: [
+      'Relatório gerencial mensal para transportadora (1 página, 15 minutos de leitura): (1) Financeiro: receita bruta, receita líquida, EBITDA, margem — com variação vs mês anterior e vs meta; (2) Operacional: OTD, km rodado total, custo/km médio, ocorrências (avarias/atrasos); (3) Frota: veículos ativos/parados, km médio por veículo, custo manutenção; (4) RH: headcount, turnover do mês, absenteísmo; (5) Comercial: novos clientes, receita por cliente top-5, inadimplência. Cor de semáforo: verde/amarelo/vermelho por KPI.',
+      'Como montar o dashboard gerencial: use Google Data Studio (gratuito) ou Power BI conectado à planilha de faturamento. A Lúmina pode ajudar a analisar os dados se você trouxer a planilha aqui. Para reunião de diretoria, mantenha 1 slide por área com o KPI principal em destaque — se precisar de mais de 3 slides para explicar o resultado, os dados não estão bem organizados.',
+    ]},
+
+  // Programa de participação nos resultados — PLR para motoristas
+  { re: /plr.*motorista|participacao.*resultados.*motorista|bonus.*resultado.*motorista|premio.*motorista|programa.*bonus.*frota|incentivo.*motorista.*resultado|meta.*bonus.*motorista/,
+    r: [
+      'PLR (Participação nos Lucros e Resultados) para motoristas: programa negociado com sindicato (CCT/ACT) ou instituído unilateralmente pela empresa. Modelo eficaz para transporte: bonus semestral vinculado a 3 indicadores — (1) OTD individual (entregas no prazo); (2) Consumo de combustível (abaixo da média da frota = bonus); (3) Zero ocorrências (acidentes, avarias, multas). Valor sugerido: R$500-1.500 por semestre para quem bate todos os três.',
+      'Como estruturar o PLR sem virar custo fixo: vincule ao resultado da empresa — se a empresa não bater a meta de EBITDA, o PLR não é pago. Isso alinha o motorista ao resultado do negócio. Documente as regras por escrito no início do período — mudança de regra no meio do jogo gera desconfiança e desmotivação. PLR bem estruturado reduz turnover em 20-35% e melhora OTD em 5-8 pontos percentuais.',
+    ]},
+
   // ── BLOCO MARKETING E PRESENÇA DIGITAL ───────────────────────────────────────
 
   // Site e presença digital para transportadora
@@ -4906,7 +4936,7 @@ const DEMO_QA = [
     ]},
 
   // Gestão de pneus — vida útil e economia
-  { re: /gestao.*pneu|controle.*pneu|vida.*util.*pneu|pneu.*km.*durar|recapagem.*vale|pneu.*calibragem|pressao.*pneu.*consumo|pneu.*sulco|rodizio.*pneu|custo.*pneu.*frota/,
+  { re: /gestao.*pneu|pneu.*gestao|controle.*pneu|vida.*util.*pneu|pneu.*vida.*util|pneu.*km.*durar|recapagem.*vale|recapagem.*pneu|pneu.*calibragem|pressao.*pneu.*consumo|pneu.*sulco|rodizio.*pneu|custo.*pneu.*frota/,
     r: [
       'Gestão de pneus para frota: custo médio R$1.800-2.400 por pneu novo, vida útil 120.000-180.000 km (direcional/tração). Ações para maximizar vida útil: (1) Calibragem semanal — pneu 20% abaixo = 20% menos vida; (2) Rodízio a cada 30.000 km — tração desgasta mais rápido que posição; (3) Alinhamento e balanceamento a cada 30.000 km — desalinhamento consome 15-20% a mais de pneu; (4) Controle de sulco mínimo — 1,6 mm legal, mas troque com 3 mm para segurança.',
       'Recapagem: pneu recapado custa 40-50% do novo (R$720-1.200) com vida útil de 80-120.000 km — excelente custo-benefício para eixo traseiro e reboque. Nunca recape pneu com dano estrutural na carcaça ou bolha. Recapagem de qualidade: use carcaça do fabricante original (code na lateral do pneu). Economia por veículo com gestão de pneus bem feita: R$8.000-15.000/ano vs gestão descuidada.',
