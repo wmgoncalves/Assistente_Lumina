@@ -4852,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO LOGÍSTICA REVERSA E E-COMMERCE ─────────────────────────────────────
+
+  // Logística reversa — devolução e retorno de mercadoria
+  { re: /logistica.*reversa|devolucao.*mercadoria|retorno.*carga|mercadoria.*devolvida|como.*fazer.*devolucao|nota.*fiscal.*devolucao|transporte.*devolucao|reversa.*ecommerce|coleta.*devolucao/,
+    r: [
+      'Logística reversa: o transporte de mercadoria do destinatário de volta ao remetente (devolução, recall, retorno de embalagem). Exige NF de devolução ou NF de retorno emitida pelo destinatário. O CT-e de retorno tem CFOP específico (5201/6201 para devolução de venda). Custo: 40-60% do frete original porque o veículo volta vazio ou com carga menor. Para e-commerce: ofereça logística reversa pré-paga como diferencial — cliente que não se preocupa com devolução compra mais.',
+      'Processo de devolução de carga: 1) Recusa na entrega — motorista retorna com a mercadoria e registra no sistema (foto, motivo, assinatura do remetente na recoleta); 2) Devolução posterior — cliente solicita, transportadora emite CT-e de retorno, agenda coleta; 3) Rastreamento do retorno igual ao frete original — cliente e remetente rastreiam o produto até a chegada. Documentação: NF de devolução + CT-e retorno + CTRC original.',
+    ]},
+
+  // E-commerce e last-mile para transportadora
+  { re: /ecommerce.*transporte|last.*mile|ultima.*milha|entrega.*domiciliar|delivery.*transportadora|entrega.*residencial.*empresa|transportadora.*ecommerce|entregar.*consumidor.*final|b2c.*entrega/,
+    r: [
+      'Last-mile (última milha) para transportadora B2B entrando no e-commerce: maior diferença vs frete B2B — (1) Volume de notas: centenas de NFs pequenas vs poucas NFs grandes; (2) Endereços residenciais: 30-40% de tentativas frustradas (ninguém em casa); (3) Janela de entrega: cliente quer agendar horário; (4) Devolução: taxa 15-30% no e-commerce vs 2-5% no B2B. Custo por entrega domiciliar: R$8-25 vs R$150-800 por carga B2B. Margens menores, volume maior.',
+      'Como transportadora B2B pode entrar no last-mile: parceria com plataformas (Mercado Envios, Shopee Entregas, VTEX Fulfillment) ou contrato direto com varejistas/e-commerces regionais. Exige TMS com roteirização dinâmica, app para motorista com comprovante digital e sistema de tentativas/reagendamento. Não é só "entregar menor" — é uma operação diferente. Recomendação: comece com 1 cliente B2C de e-commerce regional para aprender antes de escalar.',
+    ]},
+
+  // Rastreamento de carga — o que o cliente espera
+  { re: /rastreamento.*cliente|tracking.*carga.*cliente|onde.*minha.*carga|status.*entrega.*cliente|link.*rastreamento|compartilhar.*rastreamento|cliente.*quer.*saber.*carga|tracking.*link/,
+    r: [
+      'Rastreamento para o cliente final: o básico esperado em 2025 é link de tracking com atualização automática — similar ao iFood ou Rappi. O cliente não liga para a central, ele abre o link. Implementação: TMS com portal do cliente ou integração via API (webhook notificação no WhatsApp a cada status). Custo de implementar tracking para cliente: R$0 se o TMS já tem portal; R$200-500/mês para solução dedicada. ROI: reduz ligações de "onde está minha carga" em 70-80%.',
+      'O que o tracking deve mostrar: status (coletado, em trânsito, saiu para entrega, entregue), nome do motorista com foto (humaniza), previsão de entrega atualizada, mapa com posição em tempo real se houver telemetria. Ao entregar: foto da assinatura + geolocalização como comprovante automático no link. Cliente que tem isso não liga, não reclama de atraso antes de acontecer, e avalia melhor no NPS.',
+    ]},
+
+  // Agregadores de frete e marketplace de cargas
+  { re: /agregador.*frete|marketplace.*carga|plataforma.*frete|frenet.*transporte|melhor.*envio|intelipost|kangu|jadlog.*parceria|transportadora.*plataforma.*digital|comparador.*frete/,
+    r: [
+      'Agregadores de frete (Frenet, Melhor Envio, Intelipost): plataformas que conectam e-commerces a transportadoras — o lojista coteja e escolhe o melhor frete no momento do checkout. Para a transportadora, significa volume garantido com menos esforço comercial, mas com margens menores (a plataforma fica com 8-15% do frete). Ideal para transportadora que quer entrar no e-commerce sem ter time comercial dedicado a pequenos lojistas.',
+      'Marketplaces de carga (Cargo X, Fretebras, Loadsmart): conectam embarcadores com transportadoras para cargas FTL (caminhão cheio). Transportadora cadastra veículos e disponibilidade, e recebe ofertas de carga. Útil para preencher km vazio no retorno de uma viagem. Comissão: 5-10% do frete. Atenção: leia os termos de cobrança em caso de cancelamento — algumas plataformas cobram multa por recusa de carga após aceite.',
+    ]},
+
   // ── BLOCO PONTO DE EQUILÍBRIO E PRECIFICAÇÃO ──────────────────────────────────
 
   // Ponto de equilíbrio da transportadora
