@@ -1494,6 +1494,69 @@ const addMsgUI = (role, text) => {
   list.scrollTop = list.scrollHeight;
 };
 
+// Bolinhas animadas de "pensando" — retorna o elemento para remover depois
+const _addThinkingDots = () => {
+  const list = document.getElementById('history-msgs');
+  if (!list) return null;
+  const el = document.createElement('div');
+  el.className = 'hmsg lumina hmsg-thinking';
+  const roleSpan = document.createElement('span');
+  roleSpan.className = 'hmsg-role';
+  roleSpan.textContent = 'lúmina';
+  const bubble = document.createElement('div');
+  bubble.className = 'hmsg-bubble';
+  bubble.innerHTML = '<div class="lumina-thinking-dots"><span></span><span></span><span></span></div>';
+  el.appendChild(roleSpan);
+  el.appendChild(bubble);
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+  return el;
+};
+
+// Digita a resposta palavra a palavra — efeito typewriter
+const _streamMsgUI = (text, speed = 28) => new Promise(resolve => {
+  const list = document.getElementById('history-msgs');
+  if (!list) { addMsgUI('lumina', text); resolve(); return; }
+
+  const el = document.createElement('div');
+  el.className = 'hmsg lumina';
+  const roleSpan = document.createElement('span');
+  roleSpan.className = 'hmsg-role';
+  roleSpan.textContent = 'lúmina';
+  const bubble = document.createElement('div');
+  bubble.className = 'hmsg-bubble';
+
+  // Cursor piscante
+  const cursor = document.createElement('span');
+  cursor.className = 'lumina-cursor';
+
+  el.appendChild(roleSpan);
+  el.appendChild(bubble);
+  list.appendChild(el);
+
+  const words = text.split(/(\s+)/);  // preserva espaços
+  let idx = 0;
+  let accumulated = '';
+
+  const tick = () => {
+    if (idx >= words.length) {
+      // Fim: aplica markdown completo e remove cursor
+      bubble.innerHTML = _renderLuminaText(text);
+      list.scrollTop = list.scrollHeight;
+      resolve();
+      return;
+    }
+    // Adiciona até 3 tokens por tick para ser mais fluido
+    const batch = Math.min(3, words.length - idx);
+    for (let i = 0; i < batch; i++) accumulated += (words[idx++] || '');
+    bubble.textContent = accumulated;
+    bubble.appendChild(cursor);
+    list.scrollTop = list.scrollHeight;
+    setTimeout(tick, speed);
+  };
+  tick();
+});
+
 const renderMemoryPanel = () => {
   const mem  = getMem();
   const list = document.getElementById('memory-list');
@@ -1593,7 +1656,14 @@ const _finalize = (raw, source = 'unknown') => {
   const finalResponse = sanitizeIdentity(response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']));
   app.history.push({ role: 'model', content: finalResponse });
   app.lastResponseTime = Date.now();
-  addMsgUI('lumina', finalResponse);
+  // Remove bolinhas de "pensando" se existirem
+  document.querySelector('.hmsg-thinking')?.remove();
+  // Typewriter: texto curto (<120 chars) aparece direto; longo digita palavra a palavra
+  if (finalResponse.length > 120) {
+    _streamMsgUI(finalResponse);
+  } else {
+    addMsgUI('lumina', finalResponse);
+  }
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
@@ -1653,10 +1723,14 @@ const processInput = async (rawText, opts = {}) => {
   addMsgUI('user', rawText); // mostra o original na UI, manda normalizado ao modelo
   if (app.history.length > MAX_HIST) app.history = app.history.slice(-MAX_HIST);
 
+  // Bolinhas de "pensando" aparecem imediatamente após mensagem do usuário
+  let _thinkingEl = _addThinkingDots();
+
   try {
     // ── Respostas locais imediatas — sem precisar de IA ────────────────────────
     const dlResp = await detectLocalDownload(text);
     if (dlResp) {
+      _thinkingEl?.remove(); _thinkingEl = null;
       app.history.push({ role: 'model', content: dlResp });
       app.lastResponseTime = Date.now();
       addMsgUI('lumina', dlResp);
@@ -1669,12 +1743,12 @@ const processInput = async (rawText, opts = {}) => {
     // ── DEMO_QA — respostas preparadas para o workshop (PRIMEIRO — sem async) ───
     const stripped = stripAccents(text.toLowerCase());
     for (const { re, r } of DEMO_QA) {
-      if (re.test(stripped)) { _hideDemoMode(); _finalize(pick(r), 'local'); return; }
+      if (re.test(stripped)) { _thinkingEl?.remove(); _thinkingEl = null; _hideDemoMode(); _finalize(pick(r), 'local'); return; }
     }
 
     const infoResp  = await detectLocalInfo(text);
     const localResp = infoResp ?? tryLocalResponse(text);
-    if (localResp) { _hideDemoMode(); _finalize(localResp, 'local'); return; }
+    if (localResp) { _thinkingEl?.remove(); _thinkingEl = null; _hideDemoMode(); _finalize(localResp, 'local'); return; }
 
     // ── Auto-chart: agenda exibição de gráfico DRE após resposta de mês ────────
     if (app.lastSheet?.analysis && !app._afterSpeak) {
