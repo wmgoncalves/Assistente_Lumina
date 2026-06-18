@@ -4440,7 +4440,7 @@ const DEMO_QA = [
     ]},
 
   // Emergência em viagem — acidente/quebra
-  { re: /caminh.*quebrou|quebrei.*estrada|acidente.*viagem|sinistro.*estrada|pane.*estrada|socorro.*viagem|emergencia.*viagem|o que faz.*quebr/,
+  { re: /caminh.*quebrou|quebrei.*estrada|acidente.*viagem|sinistro.*estrada|pane.*estrada|socorro.*viagem|emergencia.*viagem|o que faz.*quebr|pneu.*furou|furou.*pneu|socorro.*caminhao|acidente.*estrada|motorista.*acidente|bati.*caminhao|caminhao.*bati|colisao.*caminhao/,
     r: [
       'Procedimento em caso de pane ou acidente na estrada: 1) Sinalize imediatamente (triângulo 30m atrás, pisca-alerta ligado). 2) Ligue para a central de operações da Scapini. 3) Em caso de acidente com vítima: ligue 192 (SAMU) ou 193 (Bombeiros) e 190 (Polícia). 4) Não mova o veículo antes da perícia. 5) Fotografe tudo — veículo, carga, local, placas envolvidas.',
       'Quebra em estrada: acione o socorro da transportadora (central de operações Scapini), sinalize o veículo com triângulo e use colete refletivo antes de sair do veículo. Nunca permaneça na faixa de rodagem. Para rebocar: aguarde autorização da Scapini — rebocador não autorizado pode causar problemas no seguro. Registre quilometragem, local (BR/km) e horário.',
@@ -4783,6 +4783,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO COMERCIAL B2B AVANÇADO ─────────────────────────────────────────────
+
+  // Como fechar contrato de frete com grande empresa
+  { re: /como.*fechar.*contrato|fechar.*grande.*(cliente|empresa)|contrato.*frete.*empresa|como.*vender.*frete|proposta.*comercial.*frete|como.*apresentar.*proposta.*transporte|negociacao.*contrato.*frete|contrato.*grande.*cliente/,
+    r: [
+      'Para fechar contrato de frete com uma grande empresa: 1) Mapeie a necessidade real — volume mensal, rotas, tipo de carga, prazo de pagamento esperado. 2) Calcule seu custo real por rota (diesel + pedágio + motorista + depreciação) antes de propor qualquer preço. 3) Apresente diferencial além do preço: rastreamento em tempo real, histórico de OTD >95%, seguro RCTR-C incluso, relatórios mensais. 4) Peça o contrato mínimo de 12 meses — abaixo disso, o custo de aquisição do cliente não se paga.',
+      'Proposta comercial de frete para B2B: estruture em 3 partes — (1) Resumo executivo: quem é a Scapini, volume que você atende, região de cobertura; (2) Proposta de valor: o que o cliente ganha além do caminhão (tecnologia, segurança, relatórios); (3) Precificação: tabela por faixa de peso/distância com validade de 30 dias e cláusula de reajuste mensal diesel. Nunca envie tabela sem contraproposta de volume mínimo.',
+    ]},
+
+  // Negociação de preço / pressão do cliente
+  { re: /cliente.*(pede|pedindo|quer|exige).*desconto|desconto.*frete|pressao.*preco.*frete|concorrente.*mais.*barato|como.*responder.*preco.*baixo|frete.*caro.*cliente|tabela.*frete.*negociar|negociar.*preco.*frete/,
+    r: [
+      'Cliente pedindo desconto de frete: primeiro entenda SE ele vai ou não fechar sem o desconto — às vezes é só negociação de rotina. Se for real, ofereça contrapartida: desconto de 3-5% em troca de contrato de 12 meses com volume mínimo garantido. Nunca dê desconto sem contrapartida — isso desvaloriza seu serviço e cria precedente ruim.',
+      'Quando o concorrente é mais barato: pergunte ao cliente o que exatamente inclui a proposta do concorrente — seguro, rastreamento, prazo de pagamento, suporte 24h? Muitas vezes o "mais barato" não tem RCTR-C incluso ou cobra pedágio separado. Se mesmo assim ele for mais barato e você não conseguir igualar, deixe o cliente ir — cliente só por preço é o primeiro a trocar de volta.',
+    ]},
+
+  // Como prospectar clientes novos para transportadora
+  { re: /como.*prospectar.*cliente|prospectar.*frete|novo.*cliente.*transportadora|onde.*achar.*cliente.*transporte|como.*captar.*cliente.*frete|leads.*transporte|cliente.*potencial.*transporte|listar.*empresas.*cliente/,
+    r: [
+      'Prospecção para transportadora: os melhores canais são: (1) Associações empresariais regionais (ACIL, FIERGS, FACSUL) — participar dá acesso a decisores de logística; (2) LinkedIn — filtro por "gerente de logística" + região; (3) Indicação de clientes atuais — ofereça desconto ou brinde para quem indicar; (4) Visita presencial ao polo industrial da região (Lajeado, Estrela, Encantado) — muitas empresas não buscam ativamente, esperam o fornecedor chegar; (5) Monitorar editais de licitação de frete (ComprasNet, BEC/RS).',
+      'Segmentos com maior potencial para a Scapini na região Sul: (1) Indústria alimentícia do Vale do Taquari — volumes regulares, contratos longos; (2) Setor calçadista (Novo Hamburgo, Ivoti) — cargas de alto valor, exige confiabilidade; (3) Distribuidores atacadistas (Atacadão, Makro regionais) — volume alto, margens menores mas contratos estáveis; (4) Construtoras e mineração — cargas pesadas, rotas fixas.',
+    ]},
+
+  // SLA de transporte — o que é e como definir
+  { re: /sla.*transporte|nivel.*servico.*frete|acordo.*nivel.*servico.*logistica|otd.*meta|prazo.*entrega.*meta.*contrato|penalidade.*prazo.*entrega|multa.*atraso.*entrega/,
+    r: [
+      'SLA de transporte (Service Level Agreement): contrato de nível de serviço que define OTD mínimo, prazo de aviso de ocorrência, tempo de resposta a reclamações e penalidades por descumprimento. Padrão de mercado: OTD >95%, aviso de atraso em até 2h, solução de divergência em até 48h. Penalidade típica: 1-3% do valor do frete por entrega com atraso não comunicado.',
+      'Como definir SLA com cliente novo: comece conservador — OTD de 93% e prazo 3h para avisar atraso. À medida que a operação amadurece e você tem dados reais (3-6 meses de histórico), renegocie para metas mais agressivas. Nunca assine SLA de 99% sem ter histórico real — um mês ruim e você estará pagando multa toda semana.',
     ]},
 
   // ── BLOCO FUTURO DO TRANSPORTE ────────────────────────────────────────────────
