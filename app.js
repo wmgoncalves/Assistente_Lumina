@@ -3095,9 +3095,9 @@ const blockGeminiForever = () => blockGemini(24 * 60 * 60 * 1000); // até reini
 const _thinkingBudget = (msg) => {
   const t = msg.toLowerCase();
   // Análise pesada — raciocínio profundo (2048)
-  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete/.test(t)) return 2048;
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -4850,6 +4850,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO PONTO DE EQUILÍBRIO E PRECIFICAÇÃO ──────────────────────────────────
+
+  // Ponto de equilíbrio da transportadora
+  { re: /ponto.*equilibrio.*transport|break.*even.*frota|ponto.*equilibrio.*frete|quantos.*km.*(preciso.*)?rodar|rodar.*sem.*prejuizo|receita.*minima.*cobrir.*custo|quando.*transportadora.*lucra|equilibrio.*operacional.*transport|km.*minimo.*frota/,
+    r: [
+      'Ponto de equilíbrio para transportadora: Custos Fixos Mensais ÷ (Preço por km − Custo Variável por km) = km mínimo para cobrir todos os custos. Exemplo: custo fixo R$30.000/mês (salários, seguro, financiamento, aluguel), preço médio R$2,80/km, custo variável R$1,90/km (diesel + pedágio + pneu) → R$30.000 ÷ R$0,90 = 33.333 km/mês mínimo para não perder dinheiro. Abaixo disso: prejuízo. Calcule o seu e cole aqui para eu analisar.',
+      'Break-even por veículo: cada caminhão precisa cobrir seus próprios custos antes de contribuir para o lucro. Custos fixos por veículo (financiamento R$3.500 + motorista R$5.500 + seguro R$800 + depreciação R$1.000) = R$10.800/mês. Custo variável R$1,90/km. Se o frete médio for R$2,60/km: (R$10.800) ÷ (R$2,60 − R$1,90) = 15.428 km/mês de break-even. Veículo rodando menos está dando prejuízo.',
+    ]},
+
+  // Precificação de frete — formação completa de preço
+  { re: /precificacao.*frete|formacao.*preco.*frete|como.*precificar.*frete|calculo.*preco.*frete|tabela.*preco.*frete|politica.*preco.*frete|markup.*frete|margem.*frete.*calcular/,
+    r: [
+      'Formação de preço de frete em 6 passos: (1) Custo variável por km (diesel + pedágio + pneu + manutenção variável) = R$1,60-2,00/km; (2) Rateio do custo fixo por km rodado (fixo mensal ÷ km/mês planejado) = R$0,50-0,90/km; (3) Custo total por km = R$2,10-2,90/km; (4) Adicional de carga (escolta, refrigeração, produto perigoso); (5) Ad valorem (0,08-0,15% do valor da NF para seguro); (6) Margem desejada 15-25%. Resultado = Preço mínimo aceitável.',
+      'Tabela de frete por rota: construa uma tabela com custo real por rota (não por km médio genérico — Serra Gaúcha≠Planície do RS). Para cada rota frequente: km real, pedágio exato, tempo de deslocamento (custo de oportunidade), tipo de carga habitual, PBTC necessário. Revise a tabela mensalmente quando o diesel variar mais de 5%. Transportadora que não tem tabela por rota cobra no feeling e sempre fica abaixo do custo em alguma operação.',
+    ]},
+
+  // Capital de giro — gestão do fluxo de caixa operacional
+  { re: /capital.*giro.*transport|fluxo.*caixa.*operacional|prazo.*pagamento.*cliente.*frete|antecipacao.*recebiveis.*transport|factoring.*frete|desconto.*duplicata.*transporte|caixa.*negativo.*transportadora/,
+    r: [
+      'Capital de giro é o maior problema de transportadora: você paga diesel, motorista e pedágio hoje, mas recebe o frete em 30-60 dias. Para cada R$100k de faturamento mensal com prazo de 45 dias, precisa de R$150k de capital de giro. Soluções: (1) Negociar prazo menor com clientes (28 dias vs 45); (2) Antecipação de recebíveis de CT-e (factoring ou banco — custo 1,5-3%/mês); (3) Limite de crédito pré-aprovado no banco para capital de giro emergencial.',
+      'Gestão do fluxo de caixa em transportadora: mapeie entradas e saídas nos próximos 30 dias toda segunda-feira. Entradas: CT-es vencendo (cliente vai pagar?). Saídas: folha (dia X), diesel (semanal), fornecedores (vencimento). Se entradas < saídas na semana: antecipe um recebível ou acione a linha de crédito. Nunca deixe cheque pré-datado de fornecedor devolver — o custo reputacional é maior do que o custo do crédito emergencial.',
+    ]},
+
+  // ROI de investimentos em frota e tecnologia
+  { re: /roi.*investimento.*(frota|caminhao)|retorno.*investimento.*(caminhao|frota)|roi.*telemetria|vale.*pena.*investir.*(frota|caminhao|tms)|roi.*tms|retorno.*tecnologia.*transporte|calcular.*roi.*(frota|caminhao)/,
+    r: [
+      'ROI de caminhão novo: (Receita adicional gerada − Custo total de propriedade) ÷ Investimento inicial. Para truck novo R$400k em 60 meses de FINAME: parcela R$8.000/mês. Se o veículo gera receita líquida de R$15.000/mês após diesel/motorista/manutenção → margem de contribuição R$7.000/mês → ROI positivo a partir do 1º mês. Valide com sua margem real, não com benchmarks.',
+      'ROI de telemetria de frota: investimento R$80-150/veículo/mês. Retorno típico: economia de 12-15% em combustível (R$600-900/veículo/mês com consumo médio de R$6.000), redução de 30-40% em acidentes (custo médio acidente R$40.000), redução de 15% em manutenção corretiva. Total: R$1.200-2.000/veículo/mês de economia vs R$120/mês de custo → ROI de 10-16x. Payback: menos de 30 dias.',
     ]},
 
   // ── BLOCO TRIBUTÁRIO AVANÇADO ─────────────────────────────────────────────────
