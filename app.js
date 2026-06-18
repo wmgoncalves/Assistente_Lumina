@@ -627,6 +627,10 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
 • ROI telemetria: economia 10-15% em combustível + redução 30-40% sinistros
+• NPS médio setor transporte: 35-50 | excelência >60 | crítico <20
+• Custo substituição motorista: 1,5× salário (recrutamento + treinamento + período aprendizado)
+• Tempo médio para fechar contrato B2B frete: 15-45 dias (decisor é gerente logística ou compras)
+• Margem bruta ideal frete: 25-35% sobre receita bruta
 Quando usar: sempre que perguntarem "qual a média?", "é caro?", "compensa?", "está bom?" — dê contexto com os números do setor antes de opinar.${returning}${memBlock}${patternsBlock}${ctxBlock}${emotionCtx}${toolsBlock}`;
 };
 
@@ -4824,10 +4828,40 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO TECNOLOGIA E SISTEMAS ───────────────────────────────────────────────
+
+  // TMS — Transport Management System
+  { re: /tms.*transporte|sistema.*gestao.*transporte|tms.*o que|o que.*tms|tms.*vale.*pena|tms.*implementar|sistema.*tms.*transportadora|roteirizador.*tms/,
+    r: [
+      'TMS (Transport Management System): software que automatiza roteirização, emissão de CT-e/MDFe, tracking de entrega, controle de frota e relatórios de custo por viagem. No Brasil: Siscargo, Intelipost, Dellog, Bsoft são os mais usados por transportadoras médias. ROI médio: 6-18 meses. O maior ganho não é na automação dos documentos, é na roteirização inteligente — reduz km vazio em 15-25% e melhora OTD.',
+      'TMS para transportadora de médio porte: avalie se o fornecedor tem integração com SEFAZ (CT-e e MDFe nativo), roteirização por janela de entrega, app para motorista (comprovante digital, ocorrência em tempo real) e relatório de custo por viagem. Evite TMS que não tem API aberta — você vai precisar integrar com o ERP do cliente mais cedo ou mais tarde. Piloto de 3 meses antes de assinar contrato anual.',
+    ]},
+
+  // WMS e gestão de pátio/armazém
+  { re: /wms.*armazem|warehouse.*management|gestao.*patio|sistema.*armazem|dock.*scheduling|agendamento.*dock|patio.*caminhao.*gestao|fila.*patio.*reduzir|tempo.*espera.*patio/,
+    r: [
+      'Gestão de pátio para transportadora: o maior desperdício invisível da operação é o caminhão parado no pátio esperando carga ou carregamento. Solução: dock scheduling — horário agendado para cada veículo com slot de 30-60 minutos. Reduz tempo médio de espera de 4-6h para 45-90 minutos. Ferramentas simples: Google Agenda compartilhado com equipe de expedição já resolve para frota até 20 veículos.',
+      'WMS (Warehouse Management System): relevante para transportadora que também opera armazém/distribuição própria. Controla posição de carga, picking, inventário e conferência de NF na entrada/saída. Se a Scapini tiver operação de armazém terceirizado (3PL), o WMS do cliente precisa ter integração com seu TMS para que o CT-e seja emitido automaticamente na saída do armazém.',
+    ]},
+
+  // Digitalização e transformação digital na transportadora
+  { re: /digitaliza[çc]ao.*transportadora|digitalizar.*(operacao|transporte)|transformacao.*digital.*transporte|papel.*digital.*transporte|eliminar.*papel.*operacao|canhoto.*digital|assinatura.*digital.*entrega|comprovante.*digital.*entrega|sem.*papel.*transporte/,
+    r: [
+      'Digitalização da operação: o canhoto de papel é o primeiro a eliminar. Substitua por comprovante de entrega digital — foto do destinatário + geolocalização no app do motorista. Custo: R$30-80/mês por motorista (apps como Vooo, Cobli, Samsara). Benefício: canhoto digital não some, não rasga, está disponível em segundos para auditoria do cliente. Reduz disputa sobre entrega em até 90%.',
+      'Jornada de digitalização para transportadora em 3 fases: (1) Documentos fiscais 100% eletrônicos (CT-e, MDFe, NF-e) — obrigatório por lei, custo baixo; (2) Operação digital (tracking motorista, canhoto digital, comprovante foto) — ROI 6 meses; (3) Inteligência (TMS, roteirização, BI de KPIs, integração com cliente via API) — ROI 12-24 meses. Não pule fases — digitalizar operação antes de resolver o básico gera caos.',
+    ]},
+
+  // Integração de sistemas — API, EDI, ERP
+  { re: /integracao.*sistema|integrar.*sistema|api.*transporte|edi.*transporte|integrar.*erp|integrar.*sap|integrar.*totvs|conectar.*sistema.*cliente|webservice.*frete|api.*cliente.*frete/,
+    r: [
+      'Integração com sistemas do cliente: grandes embarcadores (indústrias, redes varejistas) exigem integração via EDI (Electronic Data Interchange) ou API REST para trocas automáticas de pedido de frete, confirmação de coleta, status de entrega e faturamento. EDI é o padrão antigo mas ainda dominante na indústria. API REST é o padrão novo. Exija da transportadora a documentação da API antes de assinar o contrato.',
+      'Integração ERP para transportadora: o mínimo é a exportação do faturamento para o ERP financeiro (Totvs, SAP, Omie, Conta Azul). Sem isso, o fechamento mensal é manual e sujeito a erro. O próximo passo é importar automaticamente os pedidos de coleta dos clientes no TMS. Para transportadoras que atendem indústria alimentícia ou farmacêutica, a integração é obrigatória — eles não trabalham com transportadora que não tem sistema.',
+    ]},
+
   // ── BLOCO RELACIONAMENTO COM CLIENTE ─────────────────────────────────────────
 
   // NPS — Net Promoter Score para transportadora
-  { re: /nps.*transport|net.*promoter.*transport|satisfacao.*cliente.*medir|pesquisa.*satisfacao.*frete|como.*medir.*satisfacao.*cliente|nota.*cliente.*pesquisa|avaliacao.*cliente.*entrega/,
+  { re: /\bnps\b.*transport|\bnps\b.*pesquisa|\bnps\b.*cliente|net.*promoter|satisfacao.*cliente.*medir|pesquisa.*satisfacao.*frete|como.*medir.*satisfacao.*cliente|nota.*cliente.*pesquisa|avaliacao.*cliente.*entrega/,
     r: [
       'NPS para transportadora: envie uma pesquisa simples pós-entrega — "De 0 a 10, quanto você indicaria a Scapini para um colega?" + campo de comentário aberto. Promotores (9-10): peça indicação ativa. Neutros (7-8): pergunte o que faltou para ser 10. Detratores (0-6): ligue pessoalmente em até 48h — esses são os que falam mal. NPS do setor de transporte: média 35-50. Acima de 60 é excelência.',
       'Como implementar NPS de entrega: disparo automático de WhatsApp 2h após confirmação de entrega, com link Google Forms ou TypeForm. Mantenha curto — máximo 3 perguntas. Meça mensalmente e compartilhe o resultado com a equipe operacional. Motorista que tem NPS acima de 8,5 consistentemente merece reconhecimento — é ele quem garante a reputação da empresa no ponto final.',
