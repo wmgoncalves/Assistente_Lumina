@@ -3908,7 +3908,9 @@ const tryLocalResponse = (text) => {
     const WAKE = /^((lúmina|lumina|lu)|ei (lúmina|lumina|lu)|oi (lúmina|lumina|lu)|hey (lúmina|lumina|lu)|ok (lúmina|lumina|lu))[\s,!.]*$/i;
     const resto = (saudacaoM[3] || '').trim().replace(WAKE, '').trim();
     if (!resto || isBemEstar) {
-      const greeting = pick(['Oi', 'Olá', 'Ei']);
+      const hr = new Date().getHours();
+      const periodo = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
+      const greeting = isBemEstar ? pick(['Oi', 'Olá', 'Ei']) : pick([periodo, 'Oi', 'Olá']);
       const followUp = isBemEstar ? ` Estou ${luminaMood()}. E você?` : ' Pode falar.';
       return `${greeting}${name}!${followUp}`;
     }
@@ -4783,6 +4785,36 @@ const DEMO_QA = [
     r: [
       'Logística reversa é o processo de retorno da mercadoria do destinatário ao remetente — devoluções, recalls, embalagens retornáveis. Para a Scapini: exige emissão de CT-e de retorno (com CFOP específico), e o frete do retorno pode ser cobrado normalmente. A NF de devolução emitida pelo destinatário acompanha a carga no retorno.',
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
+    ]},
+
+  // ── BLOCO RH AVANÇADO — MOTORISTAS ───────────────────────────────────────────
+
+  // Recrutamento de motoristas — onde e como contratar
+  { re: /contratar.*motorista|recrutar.*motorista|onde.*achar.*motorista|como.*selecionar.*motorista|processo.*seletivo.*motorista|vaga.*motorista|anuncio.*motorista|buscar.*motorista/,
+    r: [
+      'Recrutamento de motoristas em 2025: os melhores canais são (1) Indicação interna — ofereça bônus de R$300-500 para funcionário que indicar motorista aprovado e que ficar 90 dias; (2) SINE/Agência de Emprego estadual — gratuito e com motoristas cadastrados da região; (3) Grupos de WhatsApp de motoristas por região (ex: "Motoristas RS", "Caminhoneiros Sul"); (4) Catho/InfoJobs com filtro "motorista cargas" + habilitação E; (5) SEST SENAT — tem banco de profissionais treinados.',
+      'Processo seletivo para motorista: 1) Triagem de CNH (validade, categoria, pontos — máximo 15 pontos); 2) Entrevista comportamental (histórico de acidentes, estabilidade empregados anteriores, tempo nas empresas); 3) Teste prático de direção (manobras, encaixe de semirreboque, comportamento em rodovia); 4) Exame toxicológico obrigatório (Lei 13.103); 5) Consulta ao CISA e CredCheck para histórico de dívidas/inadimplência — motorista com dívida alta é fator de risco para desvio.',
+    ]},
+
+  // Retenção e rotatividade de motoristas
+  { re: /retencao.*motorista|fidelizar.*motorista|reduzir.*turnover.*motorista|turnover.*motorista.*alto|motorista.*saindo|por que.*motorista.*sai|segurar.*motorista|beneficio.*motorista.*reter/,
+    r: [
+      'Os 3 motivos reais de turnover em motoristas (pesquisa CNT 2024): (1) Remuneração abaixo da CCT ou tabela regional — 48% dos casos; (2) Relação ruim com supervisor direto / falta de reconhecimento — 31%; (3) Veículo em mau estado — 21%. Resolver esses três antes de qualquer benefício extra. Um programa de fidelização caro não segura motorista com caminhão quebrado.',
+      'Estratégias de retenção que funcionam para motoristas: (1) Bônus por produtividade + segurança (OTD, zero acidentes, consumo abaixo da meta); (2) Previsibilidade de rota — motorista que sabe onde vai planejar a vida pessoal; (3) Comunicação direta: WhatsApp com a central 24h; (4) Manutenção em dia — motorista envergonha de veículo sujo ou quebrado; (5) Plano de carreira: ajudante → motorista auxiliar → motorista sênior → líder de frota.',
+    ]},
+
+  // Onboarding de motorista novo
+  { re: /integrar.*motorista|integracao.*motorista|onboarding.*motorista|motorista.*novo.*integrar|primeiro.*dia.*motorista|receber.*motorista.*novo|processo.*integracao.*motorista/,
+    r: [
+      'Onboarding de motorista novo: nos primeiros 3 dias, não coloque na estrada sozinho — faça uma viagem acompanhado com motorista sênior. Checklist de integração: entrega de EPI (colete, calçado, extintor), apresentação do sistema de rastreamento, treinamento DDS da semana, visita ao pátio e apresentação da equipe de manutenção, explicação da política de abastecimento e despesas, contato do gestor de frota e da central de operações.',
+      'Período de experiência para motoristas: use os 90 dias legais para avaliação estruturada. Avalie: (1) Pontualidade nas saídas (hora marcada vs hora real); (2) Comportamento no rastreamento (velocidade, frenagem brusca, desvio de rota); (3) Conservação do veículo (entrega o caminhão como recebeu?); (4) Relacionamento com cliente na entrega; (5) Comunicação com a central. Documente tudo — facilita desligamento se necessário e reconhecimento se merecido.',
+    ]},
+
+  // Gestão de jornada e horas extras motorista
+  { re: /jornada.*motorista|hora.*extra.*motorista|descanso.*motorista|lei.*13103.*jornada|controle.*jornada.*motorista|tacografo.*jornada|banco.*horas.*motorista/,
+    r: [
+      'Jornada de motorista (Lei 13.103/2015): máximo 8h/dia e 44h/semana. Hora extra permitida: até 4h/dia com adicional mínimo de 50%. Descanso interjornada: 11h contínuas. Pausa obrigatória a cada 4h de direção (30 minutos — pode ser fracionado em 2x15min). O tacógrafo registra tudo e a PRF fiscaliza — multa grave por descumprimento (R$2.897).',
+      'Banco de horas para motorista: é permitido por CCT/ACT desde que registrado em sistema e compensado no mesmo período (geralmente 1 ano). Para evitar passivo trabalhista, use sistema de ponto eletrônico integrado ao tacógrafo — toda hora extra fica documentada e pode ser compensada ou paga. Cuidado: banco de horas não pode ser usado para "zerar" horas extras acima do limite legal.',
     ]},
 
   // ── BLOCO COMERCIAL B2B AVANÇADO ─────────────────────────────────────────────
