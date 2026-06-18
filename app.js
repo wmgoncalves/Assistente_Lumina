@@ -4828,6 +4828,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO LEGISLAÇÃO E SUBCONTRATAÇÃO ─────────────────────────────────────────
+
+  // CLT vs TAC — quando usar cada um
+  { re: /clt.*tac|tac.*clt|contratar.*clt.*tac|diferenca.*clt.*tac|motorista.*autonomo.*clt|quando.*contratar.*clt|quando.*contratar.*tac|motorista.*pj.*transporte/,
+    r: [
+      'CLT vs TAC para motorista: CLT — motorista empregado, com vínculo, FGTS, férias, 13º, INSS, aviso prévio. Custo real: salário × 1,7 a 1,8 (encargos). Ideal para rotas fixas diárias — previsibilidade e lealdade. TAC (Transportador Autônomo de Cargas) — pessoa física com veículo próprio, pago por frete, sem vínculo empregatício. Obrigatório emitir CIOT e pagar alíquota do INSS (11% retido pelo contratante). Ideal para picos de demanda e rotas esporádicas.',
+      'Quando o TAC vira risco trabalhista: se o motorista TAC trabalha exclusivamente para a Scapini, em horário fixo, com exclusividade e subordinação operacional — mesmo sendo "autônomo" no papel, a Justiça do Trabalho pode reconhecer vínculo empregatício. Proteção: diversifique os TAC (não use o mesmo exclusivamente), emita CIOT em toda operação, documente que ele tem outros clientes. Dúvida: consulte advogado trabalhista antes de formalizar.',
+    ]},
+
+  // Terceirização de serviços na transportadora
+  { re: /terceirizacao.*transporte|terceirizar.*operacao|subcontratar.*frete|terceirizar.*motorista|terceirizar.*frota|terceiro.*faz.*frete|outro.*transportadora.*fazer|subcontratacao.*frete/,
+    r: [
+      'Subcontratação de frete: quando a Scapini não tem capacidade para uma rota ou carga específica, pode subcontratar outra transportadora. Obrigações: emitir CT-e de subcontratação (CFOP 5360/6360), registrar o CIOT se o subcontratado for TAC, e verificar se a transportadora parceira tem RNTRC ativo. A responsabilidade perante o cliente continua sendo da Scapini — o subcontratado é seu risco.',
+      'Gestão de transportadoras parceiras para subcontratação: crie uma lista de parceiros homologados (RNTRC verificado, seguro ativo, referências checadas). Nunca subcontrate quem você não conhece para carga de alto valor — roubo por transportadora fantoche é crime organizado. Para fretes esporádicos de até R$5.000, pague na entrega (contra-recibo). Para contratos recorrentes, negocie tabela e prazo de pagamento de 15-30 dias.',
+    ]},
+
+  // Rescisão de motorista — procedimentos
+  { re: /demitir.*motorista|desligar.*motorista|rescisao.*motorista|motorista.*demissao|calculo.*rescisao.*motorista|aviso.*previo.*motorista|motorista.*pediu.*demissao|justa.*causa.*motorista/,
+    r: [
+      'Rescisão sem justa causa de motorista CLT: pague — saldo de salário, férias proporcionais + 1/3, 13º proporcional, aviso prévio (trabalhado ou indenizado — 30 dias + 3 dias por ano de empresa), multa de 40% do FGTS e FGTS do período. Prazo para pagamento: 10 dias após o término do contrato (ou 1 dia se o aviso for indenizado). Atraso gera multa diária.',
+      'Justa causa para motorista — situações válidas: acidente por embriaguez (comprovado em bafômetro), abandono de emprego (mais de 30 dias sem justificativa), agressão a colega ou cliente, desvio de carga documentado, uso de substâncias proibidas (exame toxicológico reagente). Documente tudo com testemunhas e notificação formal antes de aplicar — justa causa revertida na Justiça custa caro.',
+    ]},
+
+  // Adicional de periculosidade e insalubridade no transporte
+  { re: /periculosidade.*motorista|insalubridade.*transporte|adicional.*perigo|adicional.*insalub|nr.*transporte|nr-11.*nr-17|tanque.*periculosidade|carga.*perigosa.*adicional/,
+    r: [
+      'Adicional de periculosidade no transporte: motorista que transporta cargas explosivas, inflamáveis (combustível, gás) ou radioativas tem direito a 30% sobre o salário base (NR-16). Para configurar a periculosidade, a empresa precisa fazer laudo técnico assinado por engenheiro de segurança do trabalho. Eliminar a periculosidade (substituir por outro modal ou produto) elimina o adicional — sem laudo, é risco de passivo.',
+      'Insalubridade no transporte: motoristas de longa distância geralmente não têm insalubridade. Exceção: motorista que carrega lixo ou resíduo hospitalar (insalubridade máxima — 40%), carga química corrosiva ou agentes biológicos. Verifique com SESMT (Serviço Especializado em Engenharia de Segurança) — exige PPRA atualizado e PCMSO anual. Cada 5 anos de contrato sem revisão é passivo trabalhista acumulando.',
+    ]},
+
   // ── BLOCO ESTRATÉGIA E PLANEJAMENTO ───────────────────────────────────────────
 
   // Planejamento estratégico anual para transportadora
@@ -5980,12 +6010,32 @@ const localFallback = (text) => {
   if (/rota|entrega|prazo|viagem|carga|frete/.test(t2))
     return pick([
       'Para status de cargas em trânsito e posição de veículos, preciso da integração com rastreamento e CGI. Posso responder sobre prazos por rota, documentação e procedimentos de entrega.',
+      'Sobre rotas e entregas: cubro tabelas de prazo, documentação (CT-e, MDFe), procedimentos de coleta e entrega, e gestão de ocorrências. Me faça uma pergunta específica.',
+    ]);
+  if (/seguro|rctr|sinistro|avaria|roubo.*carga|acidente/.test(t2))
+    return pick([
+      'Sobre seguros: cubro RCTR-C, RCF-DC (roubo), procedimento de sinistro, documentos necessários e prazos de comunicação. O que precisa saber?',
+      'Para acionar seguro ou consultar apólice específica da Scapini, preciso da integração com o sistema financeiro. Posso orientar sobre procedimentos e coberturas em geral.',
+    ]);
+  if (/estrategia|planejamento|okr|meta|swot|crescimento|expansao/.test(t2))
+    return pick([
+      'Para planejamento estratégico: cubro OKRs, análise SWOT, definição de metas, valuation e preparação para crédito. Me faça uma pergunta mais específica sobre o que quer planejar.',
+      'Boa área para explorar. Posso ajudar com metas anuais, OKRs por área, análise de mercado ou preparação de business review com clientes. Por onde quer começar?',
+    ]);
+  if (/tecnologia|sistema|tms|integra|api|digital|automatiz/.test(t2))
+    return pick([
+      'Sobre tecnologia e sistemas: cubro TMS, digitalização de operação, canhoto digital, integração com ERPs e APIs de clientes. Me faça uma pergunta mais específica.',
+      'Para conectar a Lúmina com sistemas externos (CGI, ERP, TMS), precisamos configurar a integração. Posso orientar sobre o que avaliar em cada tipo de sistema.',
+    ]);
+  if (/cliente.*b2b|prospeccao|vendas|comercial|contrato.*cliente|proposta/.test(t2))
+    return pick([
+      'Área comercial: cubro prospecção de clientes, proposta de frete, negociação de contrato, SLA, NPS e gestão de relacionamento. O que precisa?',
     ]);
 
   return pick([
     'Boa pergunta — essa vai pra análise completa com IA. Com o Gemini ativo, respondo em segundos.',
     'Ainda não tenho esse dado no modo demonstração. Me pergunte sobre procedimentos, documentos, rotas ou como posso ajudar cada setor da Scapini.',
-    'Para dados internos em tempo real, preciso da integração com o CGI. No modo atual, cubro 150+ tópicos de transporte, RH e financeiro.',
+    'Para dados internos em tempo real, preciso da integração com o CGI. No modo atual, cubro 230+ tópicos de transporte, RH, financeiro, estratégia e tecnologia.',
   ]);
 };
 
