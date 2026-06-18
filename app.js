@@ -4828,6 +4828,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO ESTRATÉGIA E PLANEJAMENTO ───────────────────────────────────────────
+
+  // Planejamento estratégico anual para transportadora
+  { re: /planejamento.*estrategico|plano.*anual.*empresa|plano.*negocio.*transport|como.*planejar.*ano|metas.*anuais.*empresa|revisao.*estrategica|reuniao.*planejamento.*anual|planejar.*proximo.*ano/,
+    r: [
+      'Planejamento estratégico anual para transportadora: faça em novembro/dezembro para o ano seguinte. Estrutura mínima: (1) Diagnóstico atual — receita, EBITDA, OTD, frota ativa, headcount; (2) Análise de mercado — novos clientes potenciais, concorrentes, tendências (combustível, legislação); (3) Metas numéricas por área (receita, margem, frota, motoristas, OTD); (4) Iniciativas prioritárias (máximo 5 — mais que isso não executa); (5) Budget por iniciativa e dono de cada meta.',
+      'Como definir metas anuais realistas para transporte: use a regra 10-20-70. 10% das metas são aspiracionais (stretch — se bater, comemora muito); 20% são desafiadoras mas alcançáveis com esforço; 70% são base — se não bater isso, tem problema. Para receita, use o crescimento real dos últimos 3 anos como linha de base. Para margem, identifique onde está perdendo dinheiro hoje e defina recuperação de 30-50% no ano.',
+    ]},
+
+  // OKRs para transportadora
+  { re: /okr.*transport|objetivo.*resultado.*chave|okr.*empresa|como.*usar.*okr|okr.*o que|o que.*okr|metas.*okr|implementar.*okr/,
+    r: [
+      'OKR (Objectives and Key Results) para transportadora: Objetivo = "Ser a transportadora mais confiável do Vale do Taquari". Key Results = (1) OTD >97% no 4º trimestre; (2) NPS >65 com pesquisa mensal; (3) Zero acidentes com afastamento no semestre; (4) Faturamento crescer 18% vs ano anterior. Trimestrais, revisados a cada 3 meses — não anuais. OKR que ninguém revisa vira papelada.',
+      'Implementação de OKR em transportadora pequena: comece com 3 OKRs corporativos máximo. Um financeiro (crescer receita X%), um operacional (melhorar OTD para Y%) e um de pessoas (reduzir turnover de motoristas para Z%). Cada diretoria ou setor define seus próprios OKRs alinhados aos corporativos. Revise mensalmente em 30 minutos — o que avançou, o que travou, o que precisa de ajuda.',
+    ]},
+
+  // Análise SWOT para transportadora
+  { re: /swot.*transport|analise.*swot|forcas.*fraquezas.*transporte|oportunidades.*ameacas.*transport|pontos.*fortes.*fracos.*empresa|matriz.*swot/,
+    r: [
+      'SWOT para transportadora regional (exemplo Scapini/RS): Forças — conhecimento da região Sul, relacionamento com clientes locais, frota própria sem dependência de TAC, tecnologia Lúmina integrada. Fraquezas — concentração geográfica, dependência de poucos clientes âncora, custo diesel RS acima da média nacional. Oportunidades — crescimento do e-commerce exigindo last-mile, expansão para SP/SC/PR, digitalização de clientes que precisam de transportadora integrada. Ameaças — concorrência de grandes operadores nacionais, alta do diesel, legislação de jornada mais restritiva.',
+      'Como usar a SWOT para tomar decisões: não faça SWOT por obrigação — use para priorizar. Cruzamentos: Forças + Oportunidades = iniciativas de crescimento prioritário; Forças + Ameaças = como suas forças protegem contra riscos; Fraquezas + Oportunidades = o que você precisa melhorar para aproveitar a oportunidade; Fraquezas + Ameaças = riscos que podem quebrar a empresa — prioridade máxima para mitigar.',
+    ]},
+
+  // Valuation e preparação para crédito bancário
+  { re: /valuation.*transportadora|quanto.*vale.*empresa.*transporte|valor.*empresa.*transporte|multiplo.*ebitda.*transport|preparar.*credito.*banco|credito.*bndes.*transporte|finame.*caminhao.*banco|financiamento.*frota.*banco/,
+    r: [
+      'Valuation de transportadora: o método mais usado é múltiplo de EBITDA. Transportadoras regionais negociam entre 3,5x e 6x EBITDA. Com tecnologia, operação digitalizada e contratos de longo prazo (mais de 12 meses), o múltiplo sobe para 5x-7x. Exemplo: EBITDA anual de R$1,2 milhão → empresa vale entre R$4,2 mi e R$7,2 mi dependendo dos ativos e da carteira de clientes.',
+      'Preparação para crédito bancário: banco avalia capacidade de pagamento, não só patrimônio. Organize: últimos 3 balanços assinados pelo contador, DRE dos últimos 12 meses, certidões negativas (SEFAZ, Receita, FGTS, Trabalho), relação de frota com CRLV e valor de mercado, contratos de clientes ativos (prova de receita futura). FINAME para caminhão novo: taxa Selic + spread 2-4% ao ano, carência de até 6 meses, prazo até 60 meses.',
+    ]},
+
   // ── BLOCO TECNOLOGIA E SISTEMAS ───────────────────────────────────────────────
 
   // TMS — Transport Management System
