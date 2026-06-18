@@ -4840,6 +4840,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO MANUTENÇÃO E VIDA ÚTIL DE FROTA ────────────────────────────────────
+
+  // Plano de manutenção preventiva para frota
+  { re: /plano.*manutencao.*preventiva|manutencao.*preventiva.*frota|preventiva.*caminhao|intervalo.*manutencao.*frota|programa.*manutencao.*veiculo|checklist.*manutencao|revisao.*preventiva.*caminhao/,
+    r: [
+      'Plano de manutenção preventiva para frota de caminhão: (1) A cada 5.000 km — filtro de óleo, nível de fluidos, lubrificação geral; (2) A cada 15.000 km — troca de óleo motor + filtro, filtro de ar, calibragem de pneus, freios; (3) A cada 30.000 km — filtro de combustível, filtro de ar de cabine, verificação de correia; (4) A cada 60.000 km — troca de pneus (avaliar), revisão de embreagem, injetores, rolamentos; (5) Anual — vistoria completa, tacógrafo, extintor, calibração freios.',
+      'Como montar o plano de manutenção: crie uma planilha com placa, modelo, km atual e data da última revisão de cada componente. Agende alertas 1.000 km antes do vencimento — veículo que chega na data exata de revisão geralmente já está com problema. Custo de manutenção preventiva bem feita: R$0,10-0,18/km. Corretiva (pane na estrada): R$0,35-0,60/km contando reboque, peça urgente e dia parado.',
+    ]},
+
+  // Manutenção preditiva — telemetria e dados OBD
+  { re: /manutencao.*preditiva|obd.*manutencao|telemetria.*manutencao|sensor.*falha.*caminhao|diagnostico.*eletronico.*caminhao|prever.*falha.*frota|dados.*caminhao.*manutencao|iot.*frota.*manutencao/,
+    r: [
+      'Manutenção preditiva por telemetria/OBD-II: o caminhão moderno transmite centenas de parâmetros em tempo real — temperatura do motor, pressão de óleo, consumo instantâneo, código de falha (DTC), freio motor. Sistemas como Cobli, Samsara e Mix Telematics cruzam esses dados e alertam antes da falha. ROI: redução de 25-40% em quebras na estrada. Custo: R$80-150/mês por veículo — se paga em 2-3 eventos de pane evitados.',
+      'Alertas preditivos mais valiosos em frota: (1) Temperatura acima do normal no motor = radiador ou bomba d\'água com problema; (2) Pressão de óleo baixa = vazamento ou bomba; (3) DTC de injetor = consumo vai subir 10-15% antes de aparecer outro sintoma; (4) Freio com resposta lenta = pastilha ou fluido; (5) Km acima da capacidade sem manutenção registrada = agendamento urgente. Cada alerta antecipado vale R$2.000-15.000 de reparo evitado.',
+    ]},
+
+  // Renovação de frota — quando trocar o caminhão
+  { re: /renovar.*frota|trocar.*caminhao|quando.*trocar.*caminhao|vida.*util.*caminhao|depreciacao.*caminhao|comprar.*caminhao.*novo|vender.*caminhao.*velho|ciclo.*vida.*frota|substituir.*veiculo.*frota/,
+    r: [
+      'Quando trocar o caminhão: a regra prática é o custo de manutenção por km do veículo velho vs custo de capital (parcela FINAME) do veículo novo. Se manutenção do velho > parcela do novo: hora de trocar. Em geral, caminhão truck acima de 700.000 km ou 12 anos já entrou na zona de risco — custo de manutenção sobe exponencialmente. Carreta: vida útil de 15-20 anos com manutenção rigorosa.',
+      'Decisão de renovar frota: calcule o custo total de propriedade (TCO). Veículo novo: parcela FINAME R$3.000-5.000/mês + manutenção baixa R$0,08-0,12/km. Veículo velho quitado: sem parcela, mas manutenção R$0,25-0,50/km + risco de pane. Para rota diária alta (12.000-15.000 km/mês), o novo se paga em 18-24 meses só pela redução de manutenção e consumo de combustível (motor novo = 8-12% mais eficiente).',
+    ]},
+
+  // Gestão de pneus — vida útil e economia
+  { re: /gestao.*pneu|controle.*pneu|vida.*util.*pneu|pneu.*km.*durar|recapagem.*vale|pneu.*calibragem|pressao.*pneu.*consumo|pneu.*sulco|rodizio.*pneu|custo.*pneu.*frota/,
+    r: [
+      'Gestão de pneus para frota: custo médio R$1.800-2.400 por pneu novo, vida útil 120.000-180.000 km (direcional/tração). Ações para maximizar vida útil: (1) Calibragem semanal — pneu 20% abaixo = 20% menos vida; (2) Rodízio a cada 30.000 km — tração desgasta mais rápido que posição; (3) Alinhamento e balanceamento a cada 30.000 km — desalinhamento consome 15-20% a mais de pneu; (4) Controle de sulco mínimo — 1,6 mm legal, mas troque com 3 mm para segurança.',
+      'Recapagem: pneu recapado custa 40-50% do novo (R$720-1.200) com vida útil de 80-120.000 km — excelente custo-benefício para eixo traseiro e reboque. Nunca recape pneu com dano estrutural na carcaça ou bolha. Recapagem de qualidade: use carcaça do fabricante original (code na lateral do pneu). Economia por veículo com gestão de pneus bem feita: R$8.000-15.000/ano vs gestão descuidada.',
+    ]},
+
   // ── BLOCO COMBUSTÍVEL E ABASTECIMENTO ────────────────────────────────────────
 
   // Controle de abastecimento e fraude de combustível
