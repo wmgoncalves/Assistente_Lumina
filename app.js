@@ -4852,6 +4852,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO MOTORISTAS AUTÔNOMOS, JORNADA E BENEFÍCIOS ─────────────────────────
+
+  // TAC — Transportador Autônomo de Cargas
+  { re: /tac.*motorista|motorista.*autonomo|autonomo.*frete|agregado.*transportadora|contratar.*autonomo|tac.*contrato|frete.*tac|motorista.*tac|cadastro.*tac.*antt/,
+    r: [
+      'TAC (Transportador Autônomo de Cargas): pessoa física com caminhão próprio que presta serviço para a transportadora sem vínculo empregatício. Obrigações da transportadora: (1) Verificar cadastro do TAC na ANTT (www.antt.gov.br/rntrc) antes de contratar; (2) Emitir CIOT (Código Identificador de Operação de Transporte) obrigatório para cada viagem acima de R$500; (3) Vale-pedágio obrigatório — pago antes da viagem; (4) Reter IRRF de 1,5% sobre o valor do frete se acima do limite.',
+      'Vantagens e riscos de usar TAC: Vantagens — sem encargo trabalhista (INSS, FGTS, férias), frota variável conforme demanda, custo por viagem. Riscos — reconhecimento de vínculo empregatício se houver pessoalidade + subordinação + habitualidade + onerosidade; multa ANTT por CIOT não emitido (R$1.000-5.000 por ocorrência); responsabilidade solidária em acidente com carga ou terceiros. Recomendação: jamais use o mesmo TAC exclusivamente por >6 meses sem documentação formal robusta.',
+    ]},
+
+  // Jornada de motorista — Lei 13.103/2015
+  { re: /jornada.*motorista|lei.*13103|13\.103.*motorista|hora.*extra.*motorista|descanso.*motorista|interjornada.*motorista|direcao.*continua|pausa.*motorista|tacografo.*jornada|folga.*motorista/,
+    r: [
+      'Lei 13.103/2015 — jornada do motorista: Jornada máxima 8h/dia, podendo chegar a 12h com 4h extras (pagamento diferenciado obrigatório). Direção contínua: máximo 4h30min, depois pausa mínima de 30min. Intervalo para refeição: mínimo 1h. Interjornada: mínimo 11h de descanso entre jornadas. Descanso semanal: 35h mínimas (incluindo 11h interjornada). Tacógrafo: obrigatório para veículos de carga >4,5t — registro automático de jornada e velocidade.',
+      'Horas extras e adicional noturno para motorista: horas extras acima de 8h/dia = 50% de adicional (ou 75% em domingos e feriados). Adicional noturno: 20% para trabalho entre 22h e 5h. Atenção: motorista que aguarda carga no cliente (espera documentação, fila para descarregar) conta como tempo de trabalho se a empresa não provar que ele estava em descanso. Controle de ponto eletrônico ou tacógrafo digital é a prova mais robusta em reclamação trabalhista.',
+    ]},
+
+  // Benefícios obrigatórios e opcionais para motoristas
+  { re: /beneficios.*motorista|vale.*alimentacao.*motorista|diaria.*motorista|ajuda.*custo.*motorista|vt.*motorista|ticket.*refeicao.*motorista|cesta.*basica.*frota|plano.*saude.*motorista|beneficio.*atrair.*motorista/,
+    r: [
+      'Benefícios obrigatórios para motorista CLT: Vale-transporte (se deslocamento >1km e não usa o próprio veículo), seguro de vida em grupo (CCT da categoria — verificar sindicato), adicional de periculosidade se aplicável (30% salário). Benefícios fortemente praticados pelo setor: vale-alimentação/refeição R$25-40/dia, diária de viagem R$60-120/dia fora da base, cesta básica mensal.',
+      'Benefícios que mais retêm motoristas segundo pesquisas do setor: (1) Plano de saúde — motorista valoriza para a família; (2) Programa de bonificação por viagem sem infração/acidente; (3) Diária sem burocracia — paga antes de viajar; (4) Comunicação humanizada — gestor que retorna mensagem e resolve problema; (5) Reconhecimento público (motorista do mês). Custo estimado pacote completo: R$800-1.500/motorista/mês além do salário. Custo de substituir um motorista: R$6-9k.',
+    ]},
+
+  // Gestão de equipe administrativa — escritório da transportadora
+  { re: /equipe.*administrativa.*transport|gestao.*equipe.*escritorio|funcionario.*administrativo.*frota|cargos.*transportadora|organograma.*transportadora|assistente.*operacional|despachante.*interno|gerente.*operacoes|gerente.*frota/,
+    r: [
+      'Estrutura mínima de equipe para transportadora de médio porte (10-30 veículos): (1) Gerente de Operações — controla agenda de veículos, motoristas e clientes; (2) Assistente/Auxiliar Operacional — emissão de CT-e, MDF-e, agendamento; (3) Financeiro — contas a pagar/receber, faturamento, cobrança; (4) RH/DP — folha, admissão/demissão, exames; (5) Comercial — prospecção e gestão de carteira. Motoristas são o maior grupo e precisam de um líder operacional dedicado a partir de 15 veículos.',
+      'KPIs de equipe administrativa: (1) SLA de emissão de CT-e — tempo médio entre coleta e emissão (meta <2h); (2) Taxa de erro em documentos fiscais — acima de 3% exige revisão de processo; (3) Índice de cobrança efetiva — duplicatas vencidas ÷ total a receber (meta <5%); (4) NPS interno — motoristas satisfeitos com suporte da equipe. Equipe administrativa ruim causa mais problemas operacionais do que frota ruim: motorista sem suporte erra mais e pedê mais.',
+    ]},
+
   // ── BLOCO PÁTIO, CROSS-DOCKING E OPERAÇÕES DE TERMINAL ───────────────────────
 
   // Gestão de pátio — controle de entrada e saída de veículos
