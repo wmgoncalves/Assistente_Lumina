@@ -7177,6 +7177,26 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-send').addEventListener('click', sendText);
   textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(); });
 
+  // ── Botões de ação rápida (estilo Marvis) ──
+  const qaWrap = document.getElementById('quick-actions');
+  const hideQA = () => { if (qaWrap) qaWrap.classList.add('hidden'); };
+  if (qaWrap) {
+    qaWrap.querySelectorAll('.qa-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msg = btn.dataset.msg;
+        if (!msg) return;
+        hideQA();
+        processInput(msg);
+      });
+    });
+    // Esconde quando o usuário digita ou fala
+    textInput.addEventListener('input', () => { if (textInput.value.trim()) hideQA(); });
+    // Volta a mostrar se chat reiniciar (novo histórico vazio)
+    document.getElementById('btn-new-chat')?.addEventListener('click', () => {
+      qaWrap.classList.remove('hidden');
+    });
+  }
+
   // ── Voice gender ──
   document.getElementById('btn-voice-male').addEventListener('click', () => {
     app.voiceGender = 'male';
