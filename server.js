@@ -2019,6 +2019,157 @@ Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem 
   }
 });
 
+// ── Relatório de KPIs — PDF institucional Scapini ────────────────────────────
+app.post('/api/relatorio-kpi', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+
+  const { periodo, areas, kpisExtra, sheetContext } = req.body;
+  const areasAlvo = (areas && areas.length) ? areas : ['Operacional', 'Financeiro', 'Frota', 'RH'];
+
+  const prompt = `Você é um analista sênior de transportadoras gerando um relatório executivo de KPIs para a Scapini Transportes.
+
+Período: ${periodo}
+Áreas solicitadas: ${areasAlvo.join(', ')}
+${kpisExtra ? `Dados/KPIs adicionais mencionados: ${kpisExtra}` : ''}
+${sheetContext ? `Dados da planilha carregada:\n${sheetContext.substring(0, 3000)}` : ''}
+
+Gere um relatório executivo completo em JSON com a seguinte estrutura:
+{
+  "titulo": "Relatório de KPIs — Scapini Transportes",
+  "periodo": "${periodo}",
+  "secoes": [
+    {
+      "nome": "NomeÁrea",
+      "kpis": [
+        { "indicador": "Nome do KPI", "valor": "valor real ou referência", "meta": "meta ideal", "status": "ok|atencao|critico", "comentario": "1 linha de contexto" }
+      ],
+      "parecer": "2-3 linhas de análise executiva da área"
+    }
+  ],
+  "conclusao": "Parágrafo executivo de 3-4 linhas com os pontos mais críticos e próximos passos."
+}
+
+Use KPIs reais do setor de transporte rodoviário brasileiro. Se não houver dados da planilha, use benchmarks do setor como referência. Retorne APENAS o JSON válido.`;
+
+  let estrutura;
+  try {
+    const gr = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.3 } }) }
+    );
+    if (!gr.ok) throw new Error(`Gemini HTTP ${gr.status}`);
+    const gd  = await gr.json();
+    const raw = gd.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('JSON inválido');
+    estrutura = JSON.parse(match[0]);
+  } catch (e) {
+    return res.status(500).json({ error: `Erro ao gerar conteúdo: ${e.message}` });
+  }
+
+  try {
+    const PDFDocument = require('pdfkit');
+    const buffer = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const chunks = [];
+      doc.on('data', c => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const AZUL   = '#1a3d6e';
+      const CINZA  = '#5a5a5a';
+      const VERDE  = '#1a7a3e';
+      const AMARELO= '#b87a00';
+      const VERMELHO='#8b1a1a';
+      const LINHA  = '#d0d8e4';
+
+      // ── Cabeçalho institucional ──
+      doc.rect(0, 0, 595, 80).fill(AZUL);
+      doc.fillColor('white').fontSize(22).font('Helvetica-Bold')
+         .text('SCAPINI TRANSPORTES', 50, 22, { align: 'left' });
+      doc.fontSize(11).font('Helvetica')
+         .text('Relatório Executivo de KPIs — ' + (estrutura.periodo || periodo), 50, 50, { align: 'left' });
+      doc.fontSize(9).text('Gerado por Lúmina IA  •  ' + new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' }), 50, 65);
+
+      doc.fillColor('#333').moveDown(3);
+
+      // ── Seções por área ──
+      for (const sec of (estrutura.secoes || [])) {
+        // Verifica espaço para a seção (estimativa simples)
+        if (doc.y > 680) doc.addPage();
+
+        // Título da área
+        doc.rect(50, doc.y, 495, 24).fill(AZUL);
+        doc.fillColor('white').fontSize(13).font('Helvetica-Bold')
+           .text(sec.nome || '', 58, doc.y - 19);
+        doc.moveDown(0.8);
+
+        // Tabela de KPIs
+        const colX = [50, 180, 290, 360, 430];
+        const headers = ['Indicador', 'Valor', 'Meta', 'Status', 'Comentário'];
+        // Header da tabela
+        doc.fillColor(CINZA).fontSize(8.5).font('Helvetica-Bold');
+        headers.forEach((h, i) => doc.text(h, colX[i], doc.y, { width: colX[i+1] ? colX[i+1]-colX[i]-4 : 115, continued: i < 4 }));
+        doc.moveDown(0.3);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(LINHA).stroke();
+        doc.moveDown(0.2);
+
+        for (const kpi of (sec.kpis || [])) {
+          const statusColor = kpi.status === 'ok' ? VERDE : kpi.status === 'critico' ? VERMELHO : AMARELO;
+          const statusLabel = kpi.status === 'ok' ? '● OK' : kpi.status === 'critico' ? '● Crítico' : '● Atenção';
+          const rowY = doc.y;
+          doc.fillColor('#222').fontSize(8).font('Helvetica')
+             .text(kpi.indicador || '', colX[0], rowY, { width: 126 });
+          doc.text(kpi.valor || '—', colX[1], rowY, { width: 106 });
+          doc.text(kpi.meta || '—', colX[2], rowY, { width: 66 });
+          doc.fillColor(statusColor).font('Helvetica-Bold')
+             .text(statusLabel, colX[3], rowY, { width: 66 });
+          doc.fillColor(CINZA).font('Helvetica').fontSize(7.5)
+             .text(kpi.comentario || '', colX[4], rowY, { width: 115 });
+          doc.moveDown(0.15);
+          doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(LINHA).lineWidth(0.3).stroke();
+          doc.moveDown(0.15);
+        }
+
+        // Parecer da área
+        if (sec.parecer) {
+          doc.moveDown(0.3);
+          doc.fillColor(CINZA).fontSize(8).font('Helvetica-Bold').text('Análise: ', { continued: true });
+          doc.font('Helvetica').fillColor('#333').text(sec.parecer);
+        }
+        doc.moveDown(1.2);
+      }
+
+      // ── Conclusão ──
+      if (estrutura.conclusao) {
+        if (doc.y > 680) doc.addPage();
+        doc.rect(50, doc.y, 495, 20).fill('#eef2f8');
+        doc.fillColor(AZUL).fontSize(11).font('Helvetica-Bold').text('Conclusão Executiva', 58, doc.y - 15);
+        doc.moveDown(0.6);
+        doc.fillColor('#222').fontSize(9.5).font('Helvetica').text(estrutura.conclusao, { width: 495 });
+      }
+
+      // ── Rodapé ──
+      const pages = doc.bufferedPageRange ? doc.bufferedPageRange().count : 1;
+      doc.rect(0, 800, 595, 42).fill(AZUL);
+      doc.fillColor('white').fontSize(8).font('Helvetica')
+         .text('Scapini Transportes  •  Confidencial  •  Gerado por Lúmina IA', 50, 812, { align: 'center', width: 495 });
+
+      doc.end();
+    });
+
+    const safePeriodo = (periodo || 'relatorio').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+    const filename = `KPIs_Scapini_${safePeriodo}.pdf`;
+    res.json({ ok: true, filename, data: buffer.toString('base64') });
+  } catch (e) {
+    console.error('[relatorio-kpi]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── VS Code Integration ───────────────────────────────────────────────────────
 app.post('/api/vscode', (req, res) => {
   const { file = '', line } = req.body;

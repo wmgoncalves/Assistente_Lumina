@@ -467,6 +467,7 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • auditarContabilidade → USE quando pedir para conferir/questionar/auditar lançamentos, suspeitar do contador, verificar inconsistências contábeis, revisar planilha financeira criticamente
 • fechamentoMensal → USE quando pedir fechamento do mês, variação mensal, resultado do mês, comparar com mês anterior, accruals
 • conferirDemonstrativo → USE quando pedir para conferir se os números fecham, verificar se a matemática está certa, validar totais, checar se DRE ou balancete fecha
+• relatorioKPI → USE quando pedir "gera relatório", "relatório de KPIs", "resumo do mês", "relatório gerencial", "exporta indicadores", "gera PDF dos KPIs". Passa o período e as áreas desejadas.
 
 PLANILHA / DRE — REGRAS OBRIGATÓRIAS:
 • Se perguntarem sobre um mês específico (ex: "janeiro", "março", "dados de fev"), responda SOMENTE com os dados desse mês. Nunca liste todos os meses juntos.
@@ -2183,6 +2184,19 @@ const TOOL_DECLARATIONS = {
           tipo: { type: 'string', description: 'Tipo do demonstrativo, ex: "DRE", "Balancete", "Fluxo de Caixa"' }
         }
       }
+    },
+    {
+      name: 'relatorioKPI',
+      description: 'Gera um relatório PDF profissional de KPIs da Scapini Transportes com cabeçalho institucional, seções por área (Operacional, Financeiro, Frota, RH) e download automático. Use quando pedir "gera relatório", "relatório de KPIs", "resumo do mês", "relatório gerencial", "exporta os indicadores", "gera PDF dos KPIs".',
+      parameters: {
+        type: 'object',
+        properties: {
+          periodo:   { type: 'string', description: 'Período do relatório, ex: "Junho/2026", "Q2 2026", "Semana 25"' },
+          areas:     { type: 'array', items: { type: 'string' }, description: 'Áreas a incluir: ["Operacional","Financeiro","Frota","RH"]. Se vazio, inclui todas.' },
+          kpisExtra: { type: 'string', description: 'KPIs ou dados específicos mencionados na conversa que devem constar no relatório.' }
+        },
+        required: ['periodo']
+      }
     }
   ]
 };
@@ -2222,7 +2236,8 @@ const TOOL_LABELS = {
   financialReport:      'Gerando relatório…',
   auditarContabilidade:  'Auditando planilha…',
   fechamentoMensal:      'Fazendo fechamento do mês…',
-  conferirDemonstrativo: 'Conferindo demonstrativo…'
+  conferirDemonstrativo: 'Conferindo demonstrativo…',
+  relatorioKPI:          'Gerando relatório de KPIs…'
 };
 
 // Busca usando APIs gratuitas reais por categoria, fallback para Gemini
@@ -3013,6 +3028,26 @@ const executeTool = async (name, args) => {
         if (!r.ok) return `Erro na conferência: ${d.error}`;
         return d.conferencia;
       } catch (e) { return `Erro ao conferir demonstrativo: ${e.message}`; }
+    }
+
+    case 'relatorioKPI': {
+      try {
+        const { periodo, areas, kpisExtra } = args;
+        const sheetCtx = app.lastSheet?.context || '';
+        const r = await fetch('/api/relatorio-kpi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ periodo, areas: areas || [], kpisExtra: kpisExtra || '', sheetContext: sheetCtx })
+        });
+        const d = await r.json();
+        if (!r.ok) return `Erro ao gerar relatório: ${d.error}`;
+        // Download automático
+        const link = document.createElement('a');
+        link.href = `data:application/pdf;base64,${d.data}`;
+        link.download = d.filename;
+        link.click();
+        return `Relatório de KPIs gerado com sucesso! O arquivo **${d.filename}** foi baixado automaticamente. Período: ${periodo}. Páginas: seções de ${(areas?.length ? areas : ['Operacional','Financeiro','Frota','RH']).join(', ')}.`;
+      } catch (e) { return `Erro ao gerar relatório de KPIs: ${e.message}`; }
     }
 
     default:
