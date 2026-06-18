@@ -6395,7 +6395,7 @@ const DEMO_QA = [
     ]},
 
   // ── Sobre a Scapini ───────────────────────────────────────────────────────────
-  { re: /scapini|transportadora|sobre a empresa/,
+  { re: /\bme (fala|conta|explica|diz) (da|sobre|da empresa|sobre a) scapini\b|o que e a scapini|quem e a scapini|historia.*scapini|scapini.*historia|sobre a empresa scapini|o que faz a scapini|\btransportadora scapini\b/,
     r: [
       'A Scapini é uma transportadora com mais de 30 anos de história em Lajeado, RS — referência no transporte de cargas fracionadas e lotação para todo o Brasil, com foco no Sul e Sudeste. Quando integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
       'A Scapini tem frota moderna, rastreamento, sistemas próprios como o CGI, App Motorista e muito mais. É exatamente por isso que faz sentido ter IA aqui — o potencial de dados é enorme.',
