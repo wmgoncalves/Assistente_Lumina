@@ -4787,6 +4787,36 @@ const DEMO_QA = [
       'No retorno de carga, a responsabilidade da transportadora continua até a entrega de volta ao remetente. O seguro cobre o retorno se o CT-e for emitido corretamente. Logística reversa de e-commerce está crescendo — pode ser uma oportunidade de negócio para a Scapini com clientes do varejo online.',
     ]},
 
+  // ── BLOCO FORNECEDORES E SEGUROS ──────────────────────────────────────────────
+
+  // Gestão de fornecedores de pneus, combustível e manutenção
+  { re: /fornecedor.*pneu|negociar.*pneu|contrato.*pneu|custo.*pneu.*negociar|fornecedor.*combustivel|contrato.*posto|credenciamento.*posto|fornecedor.*manutencao|oficina.*contrato|parceria.*oficina/,
+    r: [
+      'Gestão de fornecedores para frota: para pneus, negocie contrato de fornecimento com Bridgestone, Michelin ou Pirelli diretamente (volume anual garante desconto de 8-15% vs varejo). Inclua recapagem: pneu recapado custa 40-50% do novo e tem vida útil de 80-120k km — ideal para eixo traseiro. Para combustível, credenciamento em rede (Ipiranga Frotas, Shell Box Empresa) garante preço fixo + relatório de abastecimento por veículo.',
+      'Oficina própria vs terceirizada: para frotas acima de 15 veículos, oficina própria com mecânico CLT se paga em 18-24 meses vs custo de terceirização. Para frotas menores, parceria com uma oficina de referência (preço tabelado, prioridade de atendimento, relatório mensal de serviços) é mais eficiente. Nunca use oficina única sem segunda opção — se fechar, a frota para.',
+    ]},
+
+  // Seguro RCTR-C completo — cobertura e contratação
+  { re: /seguro.*rctr|rctr.*c.*seguro|seguro.*carga.*obrigatorio|seguro.*transporte.*completo|cobertura.*seguro.*frete|contratar.*seguro.*carga|seguro.*frota.*carga|sinistro.*seguro.*carga/,
+    r: [
+      'RCTR-C (Responsabilidade Civil do Transportador Rodoviário de Cargas): seguro obrigatório que cobre danos à carga durante o transporte por culpa do transportador. Não cobre: roubo (precisa de RCF-DC específico), avaria por embalagem inadequada, danos por vício próprio da mercadoria. Franquia típica: 10-15% do prejuízo. Contrate pela SUSEP e exija apólice por cliente ou por frota — apólice frota é mais barata.',
+      'Seguro de carga completo: além do RCTR-C obrigatório, contrate RC Facultativo + RCF-DC (roubo/furto) — essencial para cargas de alto valor (eletrônicos, medicamentos, alimentos processados). Custo médio: 0,08-0,15% do valor da carga por viagem. Para carga de baixo valor (areia, brita, grãos), o RCTR-C básico já é suficiente. Sempre preencha o conhecimento de carga com o valor correto — seguro paga proporcionalmente ao declarado.',
+    ]},
+
+  // Avaria de carga — procedimento e responsabilidade
+  { re: /avaria.*carga|carga.*avariada|dano.*carga|mercadoria.*danificada|carga.*chegou.*danificada|quem.*paga.*avaria|responsabilidade.*avaria.*carga|ressarcir.*carga.*danificada/,
+    r: [
+      'Procedimento em caso de avaria: 1) Fotografe tudo antes de assinar o recibo de entrega — caixas amassadas, lacres violados, umidade; 2) Registre a ressalva no Canhoto do CT-e ("recebido com avaria — aguarda vistoria"); 3) Solicite vistoria do seguro em até 48h; 4) Guarde todos os documentos: CT-e, NF-e, fotos, laudo de vistoria. Sem ressalva no canhoto, a transportadora pode alegar que a avaria ocorreu após entrega.',
+      'Responsabilidade por avaria: o transportador responde pelos danos ocorridos durante o transporte (Código Civil art. 750). Exceções: embalagem inadequada fornecida pelo remetente, vício próprio da mercadoria, caso fortuito ou força maior documentado. Para se defender, documente o estado da carga na coleta (fotos) e no recebimento. CIOT e manifesto devem estar em ordem — transpor sem documentação invalida defesas.',
+    ]},
+
+  // Seguradoras e gestão de sinistros
+  { re: /sinistro.*abrir|como.*abrir.*sinistro|seguradora.*contato|prazo.*sinistro|sinistro.*prazo.*comunicar|quanto.*tempo.*sinistro|documentos.*sinistro|sinistro.*carga.*roubo/,
+    r: [
+      'Abertura de sinistro de carga: comunique à seguradora em até 24h do evento (roubo imediato, avaria em até 48h). Documentos necessários: boletim de ocorrência (roubo obrigatório), CT-e, NF-e da mercadoria, fotos, laudo de vistoria, manifesto de carga, CRLV do veículo. Seguradora tem até 30 dias para se manifestar (SUSEP resolução 434). Guarde todos os documentos por 5 anos — prescrição trabalhista e cível do setor.',
+      'Roubo de carga — protocolo: 1) NÃO tente recuperar o veículo sem a polícia; 2) Ligue 190 e registre BO imediatamente; 3) Acione o rastreamento para localização; 4) Comunique a seguradora e o cliente dentro de 2h; 5) Acione o RCTF-DC da apólice; 6) Segure o motorista para depoimento (Delegacia de Roubos de Cargas quando disponível). Roubo sem BO dentro de 12h compromete o pagamento do seguro.',
+    ]},
+
   // ── BLOCO RH AVANÇADO — MOTORISTAS ───────────────────────────────────────────
 
   // Recrutamento de motoristas — onde e como contratar
