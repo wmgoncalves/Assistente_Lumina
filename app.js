@@ -3871,28 +3871,70 @@ const detectLocalInfo = async (text) => {
       'A Scapini compete num mercado com muitos players regionais e algumas transportadoras de grande porte. Os diferenciais que pesam na decisão do cliente: confiança (mais de 30 anos), disponibilidade (frota própria), atendimento (você fala com quem decide) e agora tecnologia (IA interna, rastreamento, portal do cliente).',
     ]);
 
+  if (/reuniao.*diaria|reuniao.*logistica|reuniao.*manutencao|programacao.*diaria.*scapini|como.*scapini.*programa.*viagem/.test(t))
+    return pick([
+      'A Scapini faz uma reunião diária entre três setores: Manutenção, Gestão de Motoristas (GDM) e Logística. Nessa reunião se define quais veículos estão disponíveis (baseado no levantamento de posições da frota — documento ALO 01 I05), quais motoristas estão alocados, e as programações do dia. Só após essa reunião a logística abre as viagens no CGI.',
+    ]);
+
+  if (/tipo.*veiculo.*scapini|frota.*tipo|sider|rodotrem|bau.*scapini|grade baixa|carreta.*scapini|truck.*scapini/.test(t))
+    return pick([
+      'Tipos de veículos da frota Scapini: Carreta SIDER (mais comum — lona lateral, uso em Souza Cruz, JTI, Continental, Fruki), Rodotrem SIDER (bitrem, para cargas maiores), Baú fechado (uso em alguns clientes como BAT e Unilever), Grade baixa (Braskem e cargas especiais), Truck (operações menores e distribuição regional). Frota é mista: própria, agregada (motorista com veículo próprio vinculado) e terceiro (TAC).',
+    ]);
+
+  if (/checklist.*motorista|checklist.*veiculo|procedimento.*saida|preparacao.*viagem|o que.*motorista.*faz.*antes/.test(t))
+    return pick([
+      'Antes de cada viagem, o motorista faz o check-list do veículo: parte elétrica, pneus, rastreador, CFTV (câmeras), travessas do SIDER montadas, carreta limpa. Para clientes como Braskem há check-list específico do cliente. Para Souza Cruz em Uberlândia, o veículo vai para carregamento no SUPPORTE no dia anterior — o motorista de viagem descansa no alojamento da filial enquanto manobristas carregam.',
+    ]);
+
   if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
     return pick([
       'O Grupo Scapini é composto por várias empresas: Scapini Transportes (carga geral, a principal), ScapiniSul, Translíquidos/Scasul (transporte de líquidos a granel), Scapini Motors e LS Tech. Um grupo familiar de mais de 30 anos fundado por Diamantino Scapini, hoje com Lucas Scapini como CEO.',
       'A Scapini não é só uma empresa — é um grupo. Principais unidades: transporte geral (Scapini Transportes), líquidos (Translíquidos/Scasul), ScapiniSul para operações regionais, e Scapini Motors para gestão de frota.',
     ]);
 
-  if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini/.test(t))
+  if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini|uberlandia.*scapini|triunfo.*scapini|camacari.*scapini/.test(t))
     return pick([
-      'A Scapini opera em todo o Brasil com foco no Sul e Sudeste. Unidades: matriz em Estrela/RS, filiais em Canoas/RS, Carazinho/RS, Santa Cruz do Sul/RS, Ponta Grossa/PR, Itajaí/SC, São Paulo/SP e Resende/RJ. Operações também no Mercosul.',
-      'Presença geográfica: matriz Estrela/RS, filiais em RS (Canoas, Carazinho, Santa Cruz), PR (Ponta Grossa), SC (Itajaí), SP e RJ (Resende). Cobertura nacional com foco no corredor Sul-Sudeste.',
+      'Filiais ativas da Scapini (código CGI): Lajeado/RS (1 — matriz operacional), Canoas/RS (2), Santa Cruz do Sul/RS (4), Curitiba/PR (5), São Paulo/SP (7), Duque de Caxias/RJ (9), Uberlândia/MG (11 — base Souza Cruz/BAT), Itajaí/SC (12), Triunfo/RS (17), Passo Fundo/RS (22), Pouso Alegre/MG (25 — base Unilever), Camaçari/BA (26 — base Braskem/Continental). Também opera no Mercosul (Argentina, Uruguai).',
+      'A Scapini tem filiais estratégicas perto dos grandes clientes: Uberlândia (fábrica Souza Cruz), Camaçari (Braskem e Continental), Pouso Alegre e Itajaí (Unilever), Santa Cruz do Sul (JTI Tabaco). Isso reduz custo de posicionamento de frota e melhora o SLA de entrega.',
     ]);
 
-  if (/clientes.*scapini|carteira.*clientes.*scapini|quem.*scapini.*atende|jti|souza cruz.*scapini|nestle.*scapini|fruki|braskem.*scapini|continental.*scapini/.test(t))
+  if (/clientes.*scapini|carteira.*clientes.*scapini|quem.*scapini.*atende|jti|souza cruz.*scapini|nestle.*scapini|fruki|braskem.*scapini|continental.*scapini|unilever.*scapini/.test(t))
     return pick([
-      'A carteira de clientes da Scapini inclui grandes indústrias: JTI (Japan Tobacco), Souza Cruz/BAT, Philip Morris, Nestlé, Fruki, Braskem, Continental, CMPC, Suzano, LD Celulose, WestRock, Gen Mills, Saint-Gobain, Leroy Merlin, Unilever e JBS, entre outros. Setores predominantes: tabaco, celulose/papel, alimentos e bebidas.',
-      'Scapini atende clientes premium de grande porte — tabaco (JTI, Souza Cruz, Philip Morris), celulose/papel (CMPC, Suzano, LD Celulose, WestRock), alimentos (Nestlé, Fruki, Gen Mills, JBS) e indústria geral (Braskem, Continental). Relacionamentos de longa data com exigências rigorosas de qualidade e SASSMAQ.',
+      'Principais clientes da Scapini e como operam: Souza Cruz/BAT (tabaco, base Uberlândia — comboio com APISUL, inbound de fumo e outbound de cigarros para todo Brasil e Mercosul), JTI Tabaco (base Santa Cruz do Sul — pesquisa prévia de motorista na Mundial Risk, janela 05h-19h), Braskem (portal próprio, carregamento com check-list específico, base Camaçari), Fruki (4 veículos fixos RS, motoristas às 07h via WhatsApp), Continental (pneus, SIDER ou baú, base Camaçari via APISUL), Unilever (Pouso Alegre e Indaiatuba, Brasil Risk define rota).',
+      'Carteira completa: tabaco (JTI, Souza Cruz/BAT, Philip Morris), celulose/papel (CMPC, Suzano, LD Celulose, WestRock, Klabin), alimentos (Nestlé, Fruki, Gen Mills, JBS, Batavia/Perdigão, BRF), indústria (Braskem, Continental, Amcor, Avon, Unilever, Altenburg, AVON). São clientes com SASSMAQ e exigências rígidas — a Scapini mantém esses contratos há anos por confiabilidade.',
     ]);
 
-  if (/sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*frota|consultors|progress.*scapini|software.*operacional.*scapini/.test(t))
+  if (/souza cruz|bat.*tabaco|cigarro.*scapini|inbound.*fumo|outbound.*cigarro|uberlandia.*bat/.test(t))
     return pick([
-      'O sistema operacional da Scapini é o CGI (Consultors), que roda em banco Progress/OpenEdge. É o TMS central: emissão de CT-e, controle de viagens, faturamento, DRE e frota. Acesso via desktop remoto. A Lúmina futuramente se integra ao CGI para consultas em tempo real.',
-      'CGI Consultors é o TMS da Scapini — emite CT-e, controla frota, gera DRE e relatórios financeiros. Banco Progress/OpenEdge. Os arquivos exportados do CGI (DREs, balancetes) são exatamente o que a Lúmina já analisa quando você sobe uma planilha.',
+      'Souza Cruz/BAT é o maior cliente da Scapini. Duas operações: INBOUND (fumo e matérias-primas para a fábrica em Uberlândia/MG — programação toda sexta via APISUL, armazéns em Itajaí/SC e Santa Cruz do Sul/RS, veículos SIDER) e OUTBOUND (cigarros prontos saindo de Uberlândia para todo Brasil e Mercosul — comboio diário com briefing, grupo WhatsApp por comboio, monitoramento 100% APISUL). Carregamento no armazém SUPPORTE em Uberlândia, motoristas de viagem descansam no alojamento da filial.',
+    ]);
+
+  if (/jti.*tabaco|japan tobacco|santa cruz.*sul.*jti|mundial.*risk.*jti/.test(t))
+    return pick([
+      'JTI (Japan Tobacco International) — programação por e-mail, carga com origem em Santa Cruz do Sul/RS, Nova Andradina/MS e Cariacica/ES. Antes de cada viagem, motorista passa por pesquisa na Mundial Risk. Horário autorizado: 05h às 19h, pernoite só com autorização da GR. O email de monitoramento (catalogoscapinimonitoramento@scapini.com.br) envia os dados do motorista para pesquisa quando ele for novo.',
+    ]);
+
+  if (/fruki.*rota|fruki.*motorista|fruki.*programacao|fruki.*carga/.test(t))
+    return pick([
+      'Fruki: 4 veículos fixos — rotas Farroupilha, Santo Ângelo, Pelotas e Extra (qualquer CD no RS). Motoristas se apresentam todo dia às 07h via WhatsApp para (51 9 9191-8013). Entram na fila e são chamados conforme disponibilidade. Veículos entram com 2 travessas de altura padrão. Não precisa manifesto (dispensa). Scapini também atende rotas extras de Blumenau e Canoas esporadicamente.',
+    ]);
+
+  if (/sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*frota|consultors|progress.*scapini|software.*operacional.*scapini|portal.*webcgi|webcgi/.test(t))
+    return pick([
+      'O CGI (Consultors) é o TMS/ERP da Scapini, rodando em banco Progress/OpenEdge. Módulos ativos: emissão de CT-e e MDFe, controle de viagens (abertura → embarque → trânsito → entrega → encerramento), CIOT, gestão de frota própria/agregada/terceiro, manutenção, financeiro e DRE por filial. O portal web é http://scapini.webcgi.com.br/ — acesso por filial com login próprio.',
+      'CGI Consultors cobre toda a operação: emite CT-e, gera CIOT antes de cada viagem TAC, controla o ciclo completo de cada carga (programação → carregamento → entrega → encerramento), apura resultado por filial (empresa 12 no sistema) e exporta DREs que a Lúmina já consegue analisar. Quando integrada ao CGI via API, vou consultar qualquer dado operacional em tempo real.',
+      'No CGI, cada empresa tem código (Scapini = 12) e cada filial tem número: 1-Lajeado, 2-Canoas, 4-Santa Cruz do Sul, 5-Curitiba, 7-São Paulo, 9-Duque de Caxias, 11-Uberlândia, 12-Itajaí, 17-Triunfo, 22-Passo Fundo, 25-Pouso Alegre, 26-Camaçari. Os indicadores do CGI cobrem: faturamento, combustível, manutenção, inadimplência, peso transportado, tipo de frota.',
+    ]);
+
+  if (/ciclo.*viagem.*cgi|abertura.*viagem|como.*funciona.*viagem.*sistema|fluxo.*operacional.*cgi|viagem.*cgi/.test(t))
+    return pick([
+      'Ciclo de uma viagem no CGI: 1) Programação — logística define veículo e motorista na reunião diária (manutenção + GDM + logística); 2) Abertura da viagem — operacional cria no CGI com origem/destino/cliente/peso; 3) Emissão CT-e — faturamento emite o conhecimento de transporte; 4) CIOT — gerado antes do embarque para motoristas TAC; 5) Embarque — motorista assina, recebe NFs e manifesto; 6) Trânsito — monitorado pela gerenciadora de risco (APISUL, Brasil Risk ou Mundial Risk); 7) Entrega — motorista assina canhoto; 8) Encerramento — operacional fecha a viagem no CGI e faturamento processa.',
+    ]);
+
+  if (/gerenciadora.*risco|apisul|brasil.?risk|mundial.?risk|monitoramento.*carga|seguradora.*carga/.test(t))
+    return pick([
+      'A Scapini trabalha com três gerenciadoras de risco conforme o cliente: APISUL (Souza Cruz/BAT e Continental — faz o comboio de Uberlândia, planilha INBOUND, contato diário), Brasil Risk (Unilever) e Mundial Risk (JTI — faz pesquisa de motorista antes de cada viagem JTI). O monitoramento da frota própria vai para catalogoscapinimonitoramento@scapini.com.br.',
+      'Cada cliente exige sua gerenciadora: JTI → Mundial Risk (pesquisa prévia do motorista, janela 05h-19h), Souza Cruz → APISUL (comboio, briefing pré-saída, grupo WhatsApp por comboio), Unilever → Brasil Risk (rota e pernoite autorizados). A gerenciadora define rota, pontos de parada e pernoite — o motorista não decide sozinho.',
     ]);
 
   if (/quanto.*fatura|faturamento.*scapini|receita.*anual|revenue.*scapini/.test(t))
