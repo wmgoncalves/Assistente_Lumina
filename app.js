@@ -1796,6 +1796,20 @@ const processInput = async (rawText, opts = {}) => {
       } catch(e) { /* fallthrough */ }
     }
 
+    // ── Intercept: abrir projetos Scapini ────────────────────────────────────────
+    const _PROJETOS = [
+      { re: /comercial|crm|vendas|sistema.*comercial|comercial.*sistema/i,    url: 'http://localhost:5173/login',                          nome: 'Sistema Comercial' },
+      { re: /motorista|app.*motorista|motorista.*app|aplicativo.*motorista/i, url: 'https://projeto-scapini-api.onrender.com/',            nome: 'App Motoristas'    },
+      { re: /manuten[çc][aã]o|plataforma.*manuten|manuten.*plataforma/i,      url: 'http://localhost:4001/',                               nome: 'Plataforma de Manutenção' },
+    ];
+    const _abrirMatch = /\b(abre|abrir|mostra|mostrar|acessa|acessar|exibe|exibir|vai\s+para?|abre\s+o\s+sistema|l[ae]va.*sistema)\b/i.test(text)
+      ? _PROJETOS.find(p => p.re.test(text)) : null;
+    if (_abrirMatch) {
+      window.open(_abrirMatch.url, '_blank');
+      _finalize(`Abrindo **${_abrirMatch.nome}** agora. 🚀`, 'local');
+      return;
+    }
+
     // ── DEMO_QA — respostas preparadas para o workshop (sem async) ───────────────
     const stripped = stripAccents(text.toLowerCase());
     for (const { re, r } of DEMO_QA) {
