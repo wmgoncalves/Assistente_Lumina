@@ -1700,6 +1700,7 @@ const _finalize = (raw, source = 'unknown') => {
     }, 900);
   } : null);
   setFace('idle');
+  setRespText(finalResponse.length > 200 ? finalResponse.slice(0, 197) + '…' : finalResponse);
   const ms = app._reqStart ? Date.now() - app._reqStart : 0;
   logInteraction(app._lastQuestion || '', finalResponse, source, null, ms);
 };
