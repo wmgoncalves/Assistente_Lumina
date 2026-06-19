@@ -1472,7 +1472,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.7, responseMimeType: 'application/json' },
           thinkingConfig: { thinkingBudget: 0 }
         }),
         signal: AbortSignal.timeout(45000)
