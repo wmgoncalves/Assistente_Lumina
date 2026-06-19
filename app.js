@@ -6730,7 +6730,7 @@ const localFallback = (text) => {
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
     'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 230+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
-    'Para dados em tempo real do CGI, preciso da integração com o sistema. Mas sobre procedimentos, regras da categoria, documentação e operação — pode perguntar.',
+    'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
   ]);
