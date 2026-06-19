@@ -1613,10 +1613,10 @@ const _hideDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = '
 
 const _handleGeminiErr = (msg) => {
   const s = String(msg);
-  if (/expired|401|API_KEY_INVALID|not valid/.test(s)) blockGeminiForever(); // chave inválida → bloqueia para sempre
-  else if (/INVALID_ARGUMENT|400/.test(s))             blockGemini(3 * 60 * 1000); // prompt grande → 3 min e tenta de novo
-  else if (/429/.test(s))                              blockGemini(2 * 60 * 1000); // cota → 2 min
-  else if (/timed out|timeout|AbortError|fetch/.test(s)) blockGemini(30 * 1000);   // timeout → 30s
+  if (/expired|401|API_KEY_INVALID|not valid/.test(s)) blockGemini(30 * 1000);    // chave inválida → 30s (demo segura)
+  else if (/INVALID_ARGUMENT|400/.test(s))             blockGemini(30 * 1000);    // prompt grande → 30s
+  else if (/429/.test(s))                              blockGemini(30 * 1000);    // cota → 30s
+  else if (/timed out|timeout|AbortError|fetch/.test(s)) blockGemini(15 * 1000); // timeout → 15s
 };
 
 // Sanitiza vazamento de identidade antes de exibir qualquer resposta
