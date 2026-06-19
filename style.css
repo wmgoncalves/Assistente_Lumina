@@ -1004,7 +1004,31 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 
+/* ── ACESSIBILIDADE: focus-visible outline ── */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-hi);
+  outline-offset: 2px;
+}
+/* Remove outline do mouse mas mantém para teclado */
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── RESPONSIVIDADE ── */
+@media (max-width: 768px) {
+  .sidebar { width: 180px; }
+  .topbar { flex-direction: column; align-items: flex-start; padding: 0.8rem 1rem; gap: 0.5rem; }
+  .feat-group { flex-wrap: wrap; }
+  .view-body { padding: 1rem; }
+  .stat-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
 @media (max-width: 640px) {
+  .sidebar { display: none; }
   .topbar { flex-direction: column; align-items: flex-start; padding: 0.9rem 1rem; gap: 0.55rem; }
   .feat-group { flex-wrap: wrap; }
 }
