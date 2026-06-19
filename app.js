@@ -1012,7 +1012,7 @@ const speakLocal = async (text, onEnd) => {
 
 // Remove markdown e formata texto para ser falado naturalmente
 const cleanForTTS = (raw) => {
-  let t = raw
+  let t = String(raw ?? '')
     .replace(/\*\*([^*]+)\*\*/g, '$1')           // **negrito** → texto puro
     .replace(/\*([^*]+)\*/g,     '$1')            // *itálico* → texto puro
     .replace(/\*/g,              '')              // asteriscos soltos
@@ -1674,7 +1674,7 @@ const logInteraction = (question, response, source, tool, ms, error) => {
 };
 
 const _finalize = (raw, source = 'unknown') => {
-  const { clean: response, learned } = extractLearn(raw);
+  const { clean: response, learned } = extractLearn(raw ?? '');
   applyInlineLearn(learned);
   const finalResponse = sanitizeIdentity(response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']));
   app.history.push({ role: 'model', content: finalResponse });
@@ -8536,7 +8536,8 @@ const consolidateMemory = async () => {
     );
     if (!res.ok) return;
     const data   = await res.json();
-    const parsed = JSON.parse(data.candidates[0].content.parts[0].text.trim());
+    const rawFatos = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '{}';
+    const parsed = JSON.parse(rawFatos);
     if (Array.isArray(parsed.fatos) && parsed.fatos.length > 0) {
       mem.facts = parsed.fatos;
       saveMem(mem);
