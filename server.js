@@ -1509,7 +1509,11 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     const start = cleaned.indexOf('[');
     const end   = cleaned.lastIndexOf(']');
     if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
-    const list = JSON.parse(cleaned.slice(start, end + 1));
+    const jsonStr = cleaned.slice(start, end + 1)
+      .replace(/,\s*([}\]])/g, '$1')          // trailing commas
+      .replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":')  // chaves com aspas simples
+      .replace(/:\s*'([^']*)'/g, ': "$1"');   // valores com aspas simples
+    const list = JSON.parse(jsonStr);
 
     // Salva cada lead no banco (evita duplicatas por nome+segmento+cidade)
     for (const c of list) {
