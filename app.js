@@ -1763,7 +1763,25 @@ const processInput = async (rawText, opts = {}) => {
       logInteraction(text, dlResp, 'local', 'download', Date.now() - app._reqStart);
       return;
     }
-    // ── DEMO_QA — respostas preparadas para o workshop (PRIMEIRO — sem async) ───
+    // ── Intercept: prospecção — ANTES do DEMO_QA para não confundir com lista de clientes existentes
+    const _NUM_PT = '(um|dois|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|\\d+)';
+    const PROSPECT_CMD = new RegExp(`\\b(prospec[a-z]*|busca\\s+(clientes?|empresa|leads?)|encontra\\s+(clientes?|empresa|leads?)|consig[ao]\\s+\\d*\\s*(clientes?|empresa|leads?)|arruma\\s+\\d*\\s*(clientes?|empresa|leads?)|preciso\\s+de\\s+\\d*\\s*(clientes?|empresa|leads?)|quero\\s+\\d*\\s*(clientes?|empresa|leads?)|list[ae]\\s+${_NUM_PT}?\\s*(possív|potenci|clientes?|empresas?|leads?)|me\\s+(d[áae]|mostra|list[ae]|traz|conseg[ue]|arruma)\\s+${_NUM_PT}?\\s*(cliente|empresa|lead|prospect)|quem\\s+pode\\s+ser\\s+cliente|\\d+\\s+clientes?\\s+para\\b)\\b`, 'i');
+    if (PROSPECT_CMD.test(text)) {
+      try {
+        const qtdMatch = text.match(/\b(\d+)\b/);
+        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 5;
+        const segMatch = text.match(/\b(?:de|do|da|no|na|em|setor|segmento|ramo|área)\s+([a-záàâãéèêíìîóòôõúùûçñ\s]{3,30}?)(?:\s+(?:em|para|de|pra)\b|$)/i);
+        const segmento = segMatch ? segMatch[1].trim() : '';
+        const regiaoMatch = text.match(/\b(?:em|na|no|pra|para)\s+([a-záàâãéèêíìîóòôõúùûç\s\/]{3,30}?)(?:\s*$|,)/i);
+        const regiao = regiaoMatch ? regiaoMatch[1].trim() : 'Vale do Taquari/RS';
+        setRespText('⚡ Buscando empresas para prospectar…');
+        const result = await executeTool('prospectClients', { segmento, regiao, quantidade, para: 'Scapini Transportes' });
+        _finalize(result, 'local');
+        return;
+      } catch(e) { /* fallthrough para Gemini */ }
+    }
+
+    // ── DEMO_QA — respostas preparadas para o workshop (sem async) ───────────────
     const stripped = stripAccents(text.toLowerCase());
     for (const { re, r } of DEMO_QA) {
       if (re.test(stripped)) { _thinkingEl?.remove(); _thinkingEl = null; _hideDemoMode(); _finalize(pick(r), 'local'); return; }
@@ -1799,24 +1817,6 @@ const processInput = async (rawText, opts = {}) => {
       ];
       _finalize(pick(identityResps), 'local');
       return;
-    }
-
-    // ── Intercept: prospecção — Gemini responde sobre a empresa em vez de chamar a tool
-    const _NUM_PT = '(um|dois|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|\\d+)';
-    const PROSPECT_CMD = new RegExp(`\\b(prospec[a-z]*|busca\\s+(clientes?|empresa|leads?)|encontra\\s+(clientes?|empresa|leads?)|consig[ao]\\s+\\d*\\s*(clientes?|empresa|leads?)|arruma\\s+\\d*\\s*(clientes?|empresa|leads?)|preciso\\s+de\\s+\\d*\\s*(clientes?|empresa|leads?)|quero\\s+\\d*\\s*(clientes?|empresa|leads?)|list[ae]\\s+${_NUM_PT}?\\s*(possív|potenci|clientes?|empresas?|leads?)|me\\s+(d[áae]|mostra|list[ae]|traz|conseg[ue]|arruma)\\s+${_NUM_PT}?\\s*(cliente|empresa|lead|prospect)|quem\\s+pode\\s+ser\\s+cliente|\\d+\\s+clientes?\\s+para\\b)\\b`, 'i');
-    if (PROSPECT_CMD.test(text)) {
-      try {
-        const qtdMatch = text.match(/\b(\d+)\b/);
-        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 5;
-        const segMatch = text.match(/\b(?:de|do|da|no|na|em|setor|segmento|ramo|área)\s+([a-záàâãéèêíìîóòôõúùûçñ\s]{3,30}?)(?:\s+(?:em|para|de|pra)\b|$)/i);
-        const segmento = segMatch ? segMatch[1].trim() : '';
-        const regiaoMatch = text.match(/\b(?:em|na|no|pra|para)\s+([a-záàâãéèêíìîóòôõúùûç\s\/]{3,30}?)(?:\s*$|,)/i);
-        const regiao = regiaoMatch ? regiaoMatch[1].trim() : 'Vale do Taquari/RS';
-        setRespText('⚡ Buscando empresas para prospectar…');
-        const result = await executeTool('prospectClients', { segmento, regiao, quantidade, para: 'Scapini Transportes' });
-        _finalize(result, 'local');
-        return;
-      } catch(e) { /* fallthrough para Gemini */ }
     }
 
     // ── Intercept: cotação de frete — Gemini nem sempre chama estimarFrete
