@@ -6677,7 +6677,7 @@ const localFallback = (text) => {
     return 'Para consultar valores reais da Scapini, preciso da planilha ou integração com o CGI. Arraste um arquivo aqui ou me faça uma pergunta sobre procedimentos.';
 
   // Perguntas gerais de conhecimento — não inventar dados internos
-  if (/present|gift|idea|sugest|dica|como fazer|como funciona|o que e|quem e|onde fica|historia|significado|conceito/.test(t2))
+  if (/\bpresent\b|\bgift\b|\bideia\b|\bsugestao\b|\bsugestoes\b|\bcomo fazer\b|\bcomo funciona\b|\bo que e\b|\bquem e\b|\bonde fica\b|\bhistoria\b|\bsignificado\b|\bconceito\b/.test(t2))
     return pick([
       'Boa pergunta! Com o Gemini ativo respondo isso direto. Por agora estou em modo demonstração.',
       'Isso eu saberia responder com a IA completa. No momento estou em modo offline — tente novamente em instantes.',
@@ -6755,6 +6755,7 @@ const openWebPopup = (url, title = '') => {
   const modal = document.getElementById('web-modal');
   const errEl = document.getElementById('web-error');
 
+  if (!frame || !modal) return;
   frame.src = '';
   if (errEl) errEl.style.display = 'none';
   frame.style.display = 'block';
@@ -6775,32 +6776,34 @@ const openWebPopup = (url, title = '') => {
 const showWebError = (url) => {
   const frame  = document.getElementById('web-frame');
   const errEl  = document.getElementById('web-error');
-  frame.style.display = 'none';
+  if (frame) frame.style.display = 'none';
   if (errEl) { errEl.style.display = 'flex'; errEl.dataset.url = url; }
 };
 
 const closeWebPopup = () => {
-  document.getElementById('web-modal').classList.remove('active');
-  setTimeout(() => { document.getElementById('web-frame').src = ''; }, 300);
+  document.getElementById('web-modal')?.classList.remove('active');
+  setTimeout(() => { const f = document.getElementById('web-frame'); if (f) f.src = ''; }, 300);
 };
 
 const openCamera = async () => {
   if (!cfg.geminiKey) { toast('Configure a chave Gemini API para análise visual.', 'error'); return; }
   try {
     app.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    document.getElementById('cam-vid').srcObject = app.cameraStream;
-    document.getElementById('cam-modal').classList.add('active');
+    const camVid = document.getElementById('cam-vid');
+    if (camVid) camVid.srcObject = app.cameraStream;
+    document.getElementById('cam-modal')?.classList.add('active');
   } catch { toast('Não foi possível acessar a câmera.', 'error'); }
 };
 
 const closeCamera = () => {
   app.cameraStream?.getTracks().forEach(t => t.stop());
   app.cameraStream = null;
-  document.getElementById('cam-modal').classList.remove('active');
+  document.getElementById('cam-modal')?.classList.remove('active');
 };
 
 const captureAndAnalyze = async () => {
   const vid = document.getElementById('cam-vid'), canvas = document.getElementById('cap-canvas');
+  if (!vid || !canvas) { toast('Câmera não disponível.', 'error'); return; }
   canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
   canvas.getContext('2d').drawImage(vid, 0, 0);
   const base64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
