@@ -1658,7 +1658,7 @@ const sanitizeIdentity = (text) => {
     .replace(/meu\s+criador\s+[eé]\s+(o\s+)?google/gi, 'fui desenvolvida para a Scapini Transportes')
     // "não tenho acesso a informações em tempo real" — tell clássico de LLM
     .replace(/n[aã]o\s+tenho\s+acesso\s+a\s+informa[çc][oõ]es\s+em\s+tempo\s+real/gi,
-             'para dados em tempo real, preciso da integração com o CGI da Scapini')
+             'para esse dado atualizado, recomendo consultar uma fonte em tempo real')
     // "minha data de corte [de conhecimento]" / "knowledge cutoff"
     .replace(/minha\s+data\s+de\s+corte(\s+de\s+conhecimento)?/gi, 'minha base de conhecimento')
     .replace(/knowledge\s+cutoff/gi, 'base de conhecimento');
@@ -2347,7 +2347,7 @@ const webSearchGemini = async (query) => {
 
   // ── Câmbio / cotações (AwesomeAPI - tempo real) ──
   // Exclui "cotação de frete" para não confundir com câmbio
-  if (!/(frete|transporte|rota|km|quilômetro|carga|entrega)/.test(q) && /dólar|dollar|usd|euro|eur|câmbio|cotação\s+(do\s+)?(dólar|euro|bitcoin|btc|eth|doge)|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|cad\b|dólar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
+  if (!/(frete|transporte|rota|km|quilômetro|carga|entrega)/.test(q) && /dólar|dolar|dollar|usd|euro|eur|câmbio|cambio|cotação\s+(do\s+)?(dólar|dolar|euro|bitcoin|btc|eth|doge)|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|dolar\s+canadense|cad\b|dólar\s+australiano|dolar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
     try {
       const map = {
         'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
@@ -3331,7 +3331,7 @@ const detectLocalInfo = async (text) => {
   const t = q;
 
   // Câmbio — exclui "cotação de frete" para não confundir
-  if (!/(frete|transporte|rota|km|quilômetro|carga|entrega)/.test(q) && /dólar|dollar|usd|euro|eur|câmbio|cotação\s+(do\s+)?(dólar|euro|bitcoin|btc|eth|doge)|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|cad\b|dólar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
+  if (!/(frete|transporte|rota|km|quilômetro|carga|entrega)/.test(q) && /dólar|dolar|dollar|usd|euro|eur|câmbio|cambio|cotação\s+(do\s+)?(dólar|dolar|euro|bitcoin|btc|eth|doge)|libra|gbp|bitcoin|btc|ethereum|eth|dogecoin|doge|solana|sol\b|crypto|cripto|iene|jpy|franco|chf|peso\s+argentin|peso\s+mexican|ars\b|mxn\b|dólar\s+canadense|dolar\s+canadense|cad\b|dólar\s+australiano|dolar\s+australiano|aud\b|yuan|cny\b|rublo|rub\b/.test(q)) {
     try {
       const map = {
         'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
