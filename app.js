@@ -3859,6 +3859,8 @@ const detectLocalInfo = async (text) => {
     ]);
 
   // ── Perguntas estratégicas da diretoria ──
+  if (/^(o que (e|é|eh) a?|me fala (da?|sobre a?)|fala (da?|sobre a?)|quem (e|é|eh) a?|me apresenta a?)\s*(scapini|scapini transportes)\s*[?.!]?$/.test(t.trim()) || /^scapini transportes\s*[?.!]?$/.test(t.trim()))
+    return 'A Scapini Transportes é uma transportadora com mais de 30 anos, sediada em Lajeado/RS. Especializada em transporte rodoviário de cargas no Sul e Sudeste do Brasil. Liderança: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). Fundada por Diamantino Scapini. Frota moderna, múltiplas filiais e clientes de grande porte como JTI, Souza Cruz, Nestlé, CMPC e Suzano.';
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
       'A Scapini Transportes tem mais de 30 anos de história no transporte rodoviário de cargas. Fundada por Diamantino Scapini em Lajeado/RS, hoje é liderada por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Mais de três décadas construindo credibilidade no Sul do Brasil.',
