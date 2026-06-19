@@ -1472,7 +1472,8 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.7 }
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.7 },
+          thinkingConfig: { thinkingBudget: 0 }
         }),
         signal: AbortSignal.timeout(45000)
       }
@@ -1504,9 +1505,11 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
       raw = await callOllama();
     }
 
-    const match = raw.replace(/```json|```/g, '').match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('Resposta não contém array JSON válido');
-    const list = JSON.parse(match[0]);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const start = cleaned.indexOf('[');
+    const end   = cleaned.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
+    const list = JSON.parse(cleaned.slice(start, end + 1));
 
     // Salva cada lead no banco (evita duplicatas por nome+segmento+cidade)
     for (const c of list) {
