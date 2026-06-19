@@ -1802,7 +1802,8 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Intercept: prospecção — Gemini responde sobre a empresa em vez de chamar a tool
-    const PROSPECT_CMD = /\b(prospec[a-z]*|busca\s+(clientes?|empresa|leads?)|encontra\s+(clientes?|empresa|leads?)|consig[ao]\s+\d*\s*(clientes?|empresa|leads?)|arruma\s+\d*\s*(clientes?|empresa|leads?)|preciso\s+de\s+\d*\s*(clientes?|empresa|leads?)|quero\s+\d*\s*(clientes?|empresa|leads?)|lista\s+\d*\s*(possív|potenci|cliente|empresa|lead)|me\s+(d[áa]|mostra|lista|traz|conseg[ue]|arruma)\s+\d*\s*(cliente|empresa|lead|prospect)|quem\s+pode\s+ser\s+cliente|\d+\s+clientes?\s+para\b)\b/i;
+    const _NUM_PT = '(um|dois|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|\\d+)';
+    const PROSPECT_CMD = new RegExp(`\\b(prospec[a-z]*|busca\\s+(clientes?|empresa|leads?)|encontra\\s+(clientes?|empresa|leads?)|consig[ao]\\s+\\d*\\s*(clientes?|empresa|leads?)|arruma\\s+\\d*\\s*(clientes?|empresa|leads?)|preciso\\s+de\\s+\\d*\\s*(clientes?|empresa|leads?)|quero\\s+\\d*\\s*(clientes?|empresa|leads?)|list[ae]\\s+${_NUM_PT}?\\s*(possív|potenci|clientes?|empresas?|leads?)|me\\s+(d[áae]|mostra|list[ae]|traz|conseg[ue]|arruma)\\s+${_NUM_PT}?\\s*(cliente|empresa|lead|prospect)|quem\\s+pode\\s+ser\\s+cliente|\\d+\\s+clientes?\\s+para\\b)\\b`, 'i');
     if (PROSPECT_CMD.test(text)) {
       try {
         const qtdMatch = text.match(/\b(\d+)\b/);
@@ -2702,7 +2703,7 @@ const executeTool = async (name, args) => {
                `\n   💬 **WhatsApp:**\n${c.whatsapp}`;
       }).join('\n\n---\n\n');
 
-      return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa`;
+      return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa\n\nQuer que eu gere um **PDF** ou **Excel** com esses leads para você salvar?`;
     }
 
     case 'generateFile': {
