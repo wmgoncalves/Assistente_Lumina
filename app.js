@@ -2364,7 +2364,7 @@ const webSearchGemini = async (query) => {
         'australiano':'AUD-BRL', 'aud':'AUD-BRL',
         'yuan':'CNY-BRL', 'cny':'CNY-BRL',
         'rublo':'RUB-BRL', 'rub':'RUB-BRL',
-        'dólar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
+        'dólar':'USD-BRL', 'dolar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
         'euro':'EUR-BRL', 'eur':'EUR-BRL',
         'libra':'GBP-BRL', 'gbp':'GBP-BRL',
       };
@@ -3348,7 +3348,7 @@ const detectLocalInfo = async (text) => {
         'australiano':'AUD-BRL', 'aud':'AUD-BRL',
         'yuan':'CNY-BRL', 'cny':'CNY-BRL',
         'rublo':'RUB-BRL', 'rub':'RUB-BRL',
-        'dólar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
+        'dólar':'USD-BRL', 'dolar':'USD-BRL', 'dollar':'USD-BRL', 'usd':'USD-BRL',
         'euro':'EUR-BRL', 'eur':'EUR-BRL',
         'libra':'GBP-BRL', 'gbp':'GBP-BRL',
       };
