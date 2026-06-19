@@ -1320,8 +1320,8 @@ const stopWakeWord = () => {
   if (wakeMR?.state === 'recording') try { wakeMR.stop(); } catch {}
   if (wakeStream) { wakeStream.getTracks().forEach(t => t.stop()); wakeStream = null; }
   if (wakeAudioCtx) { wakeAudioCtx.close(); wakeAudioCtx = null; }
-  document.getElementById('wake-label').textContent = 'CHAMAR: OFF';
-  document.getElementById('btn-wake').classList.remove('on');
+  if (document.getElementById('wake-label')) document.getElementById('wake-label').textContent = 'CHAMAR: OFF';
+  document.getElementById('btn-wake')?.classList.remove('on');
 };
 
 const processWakeChunks = async () => {
@@ -1396,8 +1396,8 @@ const startWakeWord = async () => {
     wakeAnalyser.fftSize = 256;
     wakeAudioCtx.createMediaStreamSource(wakeStream).connect(wakeAnalyser);
     wakeActive = true;
-    document.getElementById('wake-label').textContent = 'CHAMAR: ON';
-    document.getElementById('btn-wake').classList.add('on');
+    if (document.getElementById('wake-label')) document.getElementById('wake-label').textContent = 'CHAMAR: ON';
+    document.getElementById('btn-wake')?.classList.add('on');
     monitorWake();
     toast('Diga "Lúmina" para ativar.', 'info');
   } catch (err) {
@@ -4794,7 +4794,7 @@ const DEMO_QA = [
     ]},
 
   // PIS/COFINS no transporte
-  { re: /pis|cofins|contribuicao.*social|lucro presumido|simples.*nacional.*transporte|regime tributario/,
+  { re: /\bpis\b|cofins|contribuicao.*social|lucro presumido|simples.*nacional.*transporte|regime tributario/,
     r: [
       'Transportadoras no Lucro Presumido recolhem PIS (0,65%) e COFINS (3%) pelo regime cumulativo — base é a receita bruta de fretes. No Lucro Real: PIS (1,65%) e COFINS (7,6%) com direito a créditos. No Simples Nacional: tudo em uma guia (DAS). O regime tributário da Scapini define como esses impostos são calculados — o financeiro ou contador é quem orienta sobre o enquadramento atual.',
       'PIS e COFINS incidem sobre a receita de fretes. Empresas do Lucro Presumido pagam 0,65% PIS + 3% COFINS (cumulativo, sem créditos). Empresas do Lucro Real pagam mais por alíquota mas têm direito a créditos sobre insumos. O planejamento tributário define qual regime é mais vantajoso para a Scapini no contexto atual.',
