@@ -7171,10 +7171,13 @@ const analyzeFile = async (file) => {
       fdIngest.append('file', file);
       fetch('/api/ingest-doc', { method: 'POST', body: fdIngest }).catch(() => {});
 
-      app.history.push({ role: 'user', content:
-        `Recebi o documento "${file.name}"${pageInfo}. Conteúdo:\n\n${trecho}\n\n` +
-        `Explique o passo a passo deste processo de forma clara e didática, como se fosse ensinar um colaborador que nunca viu isso antes. Use passos numerados e linguagem simples.`
-      });
+      const isCurriculo = /curriculo|currículo|cv\b|resume|candidato/i.test(file.name) ||
+        /curriculo|currículo|\bCV\b|formação|experiência profissional|objetivo profissional/i.test(trecho.substring(0, 500));
+      const vaга = (app.history.slice(-3).map(h => h.content).join(' ').match(/vaga de (.+?)(?:\.|,|$)/i) || [])[1] || '';
+      const docPrompt = isCurriculo
+        ? `Você é especialista em RH de uma transportadora (Scapini Transportes, Lajeado/RS). Analise o currículo abaixo${vaga ? ` para a vaga de **${vaga}**` : ''} e retorne:\n1. **Resumo do candidato** (nome, cargo atual, anos de experiência)\n2. **Pontos fortes** (top 3)\n3. **Pontos de atenção** (top 2)\n4. **Fit para a vaga** (🟢 Recomendado / 🟡 Com ressalvas / 🔴 Não recomendado) com justificativa\n5. **Pergunta-chave para entrevista** (1 pergunta específica)\n\nCurrículo:\n\n${trecho}`
+        : `Recebi o documento "${file.name}"${pageInfo}. Conteúdo:\n\n${trecho}\n\nExplique o passo a passo deste processo de forma clara e didática, como se fosse ensinar um colaborador que nunca viu isso antes. Use passos numerados e linguagem simples.`;
+      app.history.push({ role: 'user', content: docPrompt });
       response = await callGemini();
       app.history.push({ role: 'model', content: response });
       addMsgUI('user', `[Documento: ${file.name}]`); addMsgUI('lumina', response);
