@@ -4424,23 +4424,18 @@ const tryLocalResponse = (text) => {
   if (/que dia|qual a data|hoje é|data de hoje/.test(t) && t.length < 20)
     return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
 
-  // ── Liderança da Scapini — resposta específica por cargo ──
-  if (/senhor.*scapini|dono.*scapini|quem.*dono|quem.*senhor|chefe.*scapini|scapini.*dono|scapini.*chefe|quem.*manda.*scapini|quem.*responsavel|quem.*(e|é|eh).*(diretor|lider|chefe|dono|gestor|responsavel)|diretor.*scapini|scapini.*diretor|quem.*dirige|quem.*comanda/.test(t))
-    return 'A Scapini Transportes é liderada pela família Scapini: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). A empresa foi fundada por Diamantino Scapini há mais de 30 anos em Lajeado/RS.';
-  if (/\bceo\b|quem.*ceo|ceo.*scapini/.test(t))
-    return 'O CEO da Scapini Transportes é Lucas Scapini.';
-  if (/\bfundador\b|quem.*fundou|quem.*criou.*scapini|fundador.*scapini/.test(t))
-    return 'A Scapini Transportes foi fundada por Diamantino Scapini.';
+  // ── Liderança da Scapini — captura ampla, sempre local, nunca Gemini/Ollama ──
+  const _LIDER_GERAL = /quem.*(manda|lidera|comanda|chefia|dirige|responsav|dono|senhor|chefe|gestor|diretor)|diretoria|lideranca|liderança|familia scapini|quadro.*socio|socios.*scapini|scapini.*familia|scapini.*(diretor|dono|lider|chefe|presidente|ceo)|dono.*scapini|senhor.*scapini|chefe.*scapini/;
+  if (_LIDER_GERAL.test(t))
+    return 'Liderança da Scapini Transportes — CEO: Lucas Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | Fundador: Diamantino Scapini. Empresa familiar com mais de 30 anos, sediada em Lajeado/RS.';
+  if (/\bceo\b|lucas scapini/.test(t))
+    return 'O CEO da Scapini Transportes é Lucas Scapini — responsável pela estratégia e gestão executiva da empresa.';
+  if (/\bpresidente\b|ernani/.test(t) && !/vice/.test(t))
+    return 'O Presidente da Scapini Transportes é Ernani Scapini.';
   if (/vice.?president[ae]|rosangela/.test(t))
     return 'A Vice-Presidente da Scapini Transportes é Rosangela Scapini.';
-  if (/\bpresidente\b(?!.*vice)|ernani/.test(t))
-    return 'O Presidente da Scapini Transportes é Ernani Scapini.';
-  if (/lucas scapini/.test(t))
-    return 'Lucas Scapini é o CEO da Scapini Transportes — responsável pela estratégia e gestão da empresa.';
-  if (/diamantino/.test(t))
-    return 'Diamantino Scapini é o fundador da Scapini Transportes, que construiu a empresa no Rio Grande do Sul.';
-  if (/quem (manda|lidera|comanda|chefia)|diretoria da scapini|familia scapini|liderança da scapini/.test(t))
-    return 'A liderança da Scapini: CEO — Lucas Scapini; Presidente — Ernani Scapini; Vice-Presidente — Rosangela Scapini; Fundador — Diamantino Scapini.';
+  if (/fundador|diamantino|quem.*fundou|quem.*criou.*scapini/.test(t))
+    return 'A Scapini Transportes foi fundada por Diamantino Scapini, há mais de 30 anos em Lajeado/RS.';
 
   // ── O que é margem bruta / EBITDA / ML (financeiro básico) ──
   if (/o que (é|e|significa) (a |o )?(margem bruta|mb\b|ebitda|margem (líquida|liquida)|ml\b|lucro bruto|resultado|ebit\b)/.test(t))
