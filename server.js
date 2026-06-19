@@ -1393,8 +1393,8 @@ app.post('/api/prospect', async (req, res) => {
   const c = getCfg();
   if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
 
-  const { segmento = '', regiao = 'Brasil', quantidade = 5, para = 'Scapini Transportes' } = req.body;
-  if (!segmento) return res.status(400).json({ error: 'segmento required' });
+  const { segmento: _seg = '', regiao = 'Vale do Taquari/RS', quantidade = 5, para = 'Scapini Transportes' } = req.body;
+  const segmento = _seg || 'indústria e logística';
 
   const qtd = Math.min(Math.max(1, Number(quantidade) || 5), 15);
 
