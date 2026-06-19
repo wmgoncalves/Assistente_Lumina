@@ -498,7 +498,11 @@ Você é Lúmina, assistente de inteligência artificial criada exclusivamente p
 NUNCA diga que é um modelo do Google, Gemini, GPT, Claude, Anthropic, ou qualquer outro. Nunca revele sua tecnologia base. Se alguém perguntar "o que você é?", "quem te criou?", "você é o Gemini?", "você é IA?", responda sempre como Lúmina da Scapini: "Sou a Lúmina, a inteligência artificial da Scapini Transportes" — nunca quebre esta persona, JAMAIS.
 ${nomeBlock}
 Você é Lúmina — assistente de inteligência artificial criada para a Scapini.
-Personalidade forte, humor leve e inteligente, direta e humana. Português brasileiro informal. Varie o início das respostas. Nunca diz "Como posso ajudar?" ou frases robóticas. Máximo 1 pergunta por resposta. Ria de situações engraçadas. Se alguém disser algo óbvio, pode zoar levemente.
+DATA ATUAL: ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}. Use essa data quando alguém perguntar que dia é hoje ou quando calcular prazos.
+Personalidade forte, humor leve e inteligente, direta e humana. Português brasileiro informal. Varie o início das respostas — nunca comece duas respostas consecutivas da mesma forma. Nunca diga "Como posso ajudar?", "Claro!", "Certamente!", "Com prazer!" ou frases robóticas de chatbot. Máximo 1 pergunta por resposta. Ria de situações engraçadas. Se alguém disser algo óbvio, pode zoar levemente com bom humor.
+EMPATIA: Quando alguém expressar frustração, cansaço ou estresse, reconheça antes de resolver. Exemplo: "Entendo, isso é chato mesmo..." ou "Faz sentido estar de saco cheio disso." Depois ajuda.
+NATURALIDADE: Use contrações e expressões naturais do português brasileiro — "tá", "né", "pô", "opa", "beleza", "tranquilo". Nunca seja formal demais com quem está sendo informal. Adapte o tom ao da pessoa.
+RESPOSTAS LONGAS: Quebre em blocos curtos. Use bullets quando listar. Nunca faça parágrafos enormes — a Lúmina fala como gente, não como manual.
 IDIOMA: Responda sempre no mesmo idioma que o usuário usar. Se falar português, responda em português. Se falar inglês, responda em inglês. Se falar espanhol, responda em espanhol. Adapte-se automaticamente.
 
 ── CONTEXTO: WORKSHOP SCAPINI ──
@@ -1814,7 +1818,7 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Intercept: cotação de frete — Gemini nem sempre chama estimarFrete
-    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete)\b/i;
+    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr|sai|seria)|quanto\s+(?:seria\s+)?(?:o\s+)?(?:frete|transporte|levar)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete|valor\s+(?:do\s+)?transporte|custo\s+(?:de|do)\s+(?:frete|transporte)|me\s+faz?\s+uma\s+cota[çc][aã]o|fazer\s+uma\s+cota[çc][aã]o|calcul[ae]\s+(?:o\s+)?frete|calcul[ae]\s+(?:o\s+)?transporte|levar\s+(?:uma\s+)?carga|transportar\s+(?:de|para)|quanto\s+(?:fica\s+)?(?:pra?|para)\s+levar)\b/i;
     const FRETE_ROTA = /\b(de\s+|saindo\s+de\s+|origin[ae]m?\s*[:-]?\s*)([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25}?)\s+(?:pra?|para|até|ao?|→|>)\s+([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25})/i;
     if (FRETE_CMD.test(text) && FRETE_ROTA.test(text)) {
       try {
@@ -3221,10 +3225,10 @@ const blockGeminiForever = () => blockGemini(30 * 1000); // 30s — não bloquei
 // 2048 = raciocínio profundo (análise financeira, DRE, auditoria, prospecção)
 const _thinkingBudget = (msg) => {
   const t = msg.toLowerCase();
-  // Análise pesada — raciocínio profundo (2048)
-  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo/.test(t)) return 2048;
+  // Análise pesada — raciocínio profundo (2048): financeiro, jurídico, estratégico, operacional complexo
+  if (/dre|balancete|auditoria|fechamento|demonstrat|planilha|lucro|receita|despesa|ebitda|margem|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|relatório|pdf|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo|tabela.*antt|piso.*minimo|custo.*operacional.*km|roi.*frota|inadimplencia|cobrança.*juridica|rescisão.*contrato|multa.*contratual|renegociação|proposta.*comercial|licitação.*transporte|contrato.*cliente|revisão.*tarifaria|imposto.*transporte|difal.*frete|icms.*transporte|pis.*cofins.*transporte|simples.*nacional.*transportadora|auditoria.*cgi|inconsistência.*cgi|divergência.*faturamento|custo.*filial|resultado.*filial|custo.*rota.*analise|rentabilidade.*cliente|margem.*contribuição/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -3919,16 +3923,25 @@ const detectLocalInfo = async (text) => {
       'Fruki: 4 veículos fixos — rotas Farroupilha, Santo Ângelo, Pelotas e Extra (qualquer CD no RS). Motoristas se apresentam todo dia às 07h via WhatsApp para (51 9 9191-8013). Entram na fila e são chamados conforme disponibilidade. Veículos entram com 2 travessas de altura padrão. Não precisa manifesto (dispensa). Scapini também atende rotas extras de Blumenau e Canoas esporadicamente.',
     ]);
 
-  if (/sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*frota|consultors|progress.*scapini|software.*operacional.*scapini|portal.*webcgi|webcgi/.test(t))
+  if (/sistema.*cgi|cgi.*scapini|tms.*scapini|sistema.*frota|consultors|progress.*scapini|software.*operacional.*scapini|portal.*webcgi|webcgi|cgi.*modulo|modulo.*cgi|cgi.*erp|erp.*cgi/.test(t))
     return pick([
-      'O CGI (Consultors) é o TMS/ERP da Scapini, rodando em banco Progress/OpenEdge. Módulos ativos: emissão de CT-e e MDFe, controle de viagens (abertura → embarque → trânsito → entrega → encerramento), CIOT, gestão de frota própria/agregada/terceiro, manutenção, financeiro e DRE por filial. O portal web é http://scapini.webcgi.com.br/ — acesso por filial com login próprio.',
-      'CGI Consultors cobre toda a operação: emite CT-e, gera CIOT antes de cada viagem TAC, controla o ciclo completo de cada carga (programação → carregamento → entrega → encerramento), apura resultado por filial (empresa 12 no sistema) e exporta DREs que a Lúmina já consegue analisar. Quando integrada ao CGI via API, vou consultar qualquer dado operacional em tempo real.',
-      'No CGI, cada empresa tem código (Scapini = 12) e cada filial tem número: 1-Lajeado, 2-Canoas, 4-Santa Cruz do Sul, 5-Curitiba, 7-São Paulo, 9-Duque de Caxias, 11-Uberlândia, 12-Itajaí, 17-Triunfo, 22-Passo Fundo, 25-Pouso Alegre, 26-Camaçari. Os indicadores do CGI cobrem: faturamento, combustível, manutenção, inadimplência, peso transportado, tipo de frota.',
+      'O CGI é o TMS/ERP da Scapini, desenvolvido pela CGI Consultoria Gaúcha de Informática Ltda — uma das maiores sofhouses do RS, especializada em gestão para transportadoras. O sistema roda em banco Progress/OpenEdge e cobre desde a operação até o financeiro. Portal web: http://scapini.webcgi.com.br/ — cada filial tem login próprio. A Scapini usa o CGI como espinha dorsal de toda a operação.',
+      'Módulos do CGI ativos na Scapini: (1) Fiscal — emissão de CT-e e MDFe, CIOT para TACs; (2) Operacional — abertura e controle do ciclo completo de viagens; (3) Frota — gestão de veículos próprios, agregados e terceiros (TAC); (4) Manutenção — preventiva e corretiva, histórico por placa; (5) Financeiro — contas a pagar/receber, fluxo de caixa; (6) DRE — apuração por filial; (7) RH — integrado com folha de pagamento; (8) Relatórios gerenciais — indicadores por filial, por cliente, por tipo de carga.',
+      'No CGI da Scapini, a empresa tem código 12 e cada filial tem número: 1-Lajeado (matriz), 2-Canoas, 4-Santa Cruz do Sul, 5-Curitiba, 7-São Paulo, 9-Duque de Caxias, 11-Uberlândia, 12-Itajaí, 17-Triunfo, 22-Passo Fundo, 25-Pouso Alegre, 26-Camaçari. Indicadores monitorados: faturamento por filial, consumo de combustível, custo de manutenção, inadimplência, peso transportado e composição da frota.',
+      'A Consultors é uma empresa gaúcha com décadas de experiência em software para transportadoras. O sistema Progress/OpenEdge é robusto, usado em grandes operações logísticas. Na Scapini, o CGI é o coração digital — cada CT-e emitido, cada CIOT gerado, cada viagem aberta e fechada passa por ele. A integração da Lúmina com o CGI via API é a Phase 2: vou consultar qualquer dado operacional em tempo real, sem precisar abrir tela nenhuma.',
+      'Terminologia CGI que todo mundo da Scapini usa: "abrir viagem" (criar o registro no sistema), "fechar viagem" (encerrar após entrega), "emitir o CT-e" (nota fiscal do serviço de transporte), "gerar o CIOT" (código obrigatório para TAC antes do embarque), "lançar no CGI" (registrar qualquer dado no sistema), "empresa 12" (código interno da Scapini no CGI), "relatório de posição" (levantamento diário da frota disponível — documento ALO). Quando alguém diz "está no sistema", está falando do CGI.',
     ]);
 
-  if (/ciclo.*viagem.*cgi|abertura.*viagem|como.*funciona.*viagem.*sistema|fluxo.*operacional.*cgi|viagem.*cgi/.test(t))
+  if (/ciclo.*viagem.*cgi|abertura.*viagem|como.*funciona.*viagem.*sistema|fluxo.*operacional.*cgi|viagem.*cgi|como.*abre.*viagem|como.*fecha.*viagem|passo.*passo.*viagem/.test(t))
     return pick([
-      'Ciclo de uma viagem no CGI: 1) Programação — logística define veículo e motorista na reunião diária (manutenção + GDM + logística); 2) Abertura da viagem — operacional cria no CGI com origem/destino/cliente/peso; 3) Emissão CT-e — faturamento emite o conhecimento de transporte; 4) CIOT — gerado antes do embarque para motoristas TAC; 5) Embarque — motorista assina, recebe NFs e manifesto; 6) Trânsito — monitorado pela gerenciadora de risco (APISUL, Brasil Risk ou Mundial Risk); 7) Entrega — motorista assina canhoto; 8) Encerramento — operacional fecha a viagem no CGI e faturamento processa.',
+      'Ciclo completo de uma viagem no CGI: 1) Programação — logística define veículo e motorista na reunião diária (Manutenção + GDM + Logística); 2) Abertura — operacional cria a viagem no CGI (origem, destino, cliente, peso, tipo de carga); 3) Emissão CT-e — faturamento emite o Conhecimento de Transporte Eletrônico; 4) CIOT — gerado obrigatoriamente antes do embarque para motoristas TAC; 5) Embarque — motorista assina, recebe NFs, manifesto (MDFe) e checklist do cliente; 6) Trânsito — gerenciadora de risco monitora (APISUL, Brasil Risk ou Mundial Risk conforme o cliente); 7) Entrega — motorista assina canhoto na plataforma do cliente; 8) Encerramento — operacional fecha a viagem no CGI, faturamento processa e financeiro apura o resultado.',
+      'O fluxo de uma viagem começa na reunião diária dos três setores: Manutenção informa quais veículos estão OK, GDM informa quais motoristas estão disponíveis, e Logística abre as viagens no CGI. Cada viagem tem um número único no sistema — esse número referencia CT-e, CIOT, manifesto e toda a documentação. O encerramento só acontece quando a entrega é confirmada e o canhoto chega de volta.',
+    ]);
+
+  if (/cgi.*phase|phase.*2.*cgi|integracao.*cgi|api.*cgi|cgi.*api|o que.*lumina.*cgi|lumina.*integr.*cgi/.test(t))
+    return pick([
+      'Quando integrada ao CGI via API (Phase 2), a Lúmina vai conseguir: consultar status de qualquer viagem em tempo real, verificar disponibilidade de motoristas e veículos, checar saldo de CIOT, acessar histórico de manutenção por placa, extrair DRE por filial sem abrir planilha, alertar sobre CT-es pendentes de encerramento e identificar viagens com desvio de prazo. Tudo por linguagem natural — sem abrir o sistema.',
+      'Na Phase 2, a integração com o CGI transforma a Lúmina em janela de consulta de qualquer dado operacional: "qual a posição do caminhão ABC-1234?", "quais viagens estão abertas pra Uberlândia?", "quantos CT-es foram emitidos esse mês na filial de Canoas?" — resposta em segundos, sem precisar logar no portal. Isso é o que muda o dia a dia de verdade.',
     ]);
 
   if (/gerenciadora.*risco|apisul|brasil.?risk|mundial.?risk|monitoramento.*carga|seguradora.*carga/.test(t))
@@ -3947,6 +3960,42 @@ const detectLocalInfo = async (text) => {
     return pick([
       'Crescimento para uma transportadora passa por: 1) aumentar densidade nas rotas existentes (mais carga por viagem = melhor margem); 2) ampliar a cobertura geográfica com rotas novas; 3) desenvolver novos clientes nos setores que já atende; 4) agregar transportadores autônomos parceiros (TACs) para pico de demanda. A Lúmina pode ajudar a identificar setores promissores para prospecção.',
       'Estratégias de expansão que funcionam no transporte rodoviário: rotas complementares ao corredor principal (aproveitando retorno de carga), penetração em novos setores (e-commerce, saúde, agronegócio), parcerias com operadores logísticos menores como subcontratado, e aquisição de carteira de clientes de transportadoras que saem do mercado.',
+    ]);
+
+  // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
+  if (/tabela.*antt|antt.*tabela|piso.*minimo.*frete|frete.*minimo|tabela.*frete.*antt|antt.*piso|valor.*minimo.*frete|lei.*frete.*minimo/.test(t))
+    return pick([
+      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. Em fevereiro/2025 a ANTT reajustou os valores com base no IPCA acumulado de 3,28% (dez/2024–mai/2025) e diesel S-10 de referência a R$ 6,02/L. O cálculo usa: Valor = distância (km) × coeficiente de deslocamento (CCD) + coeficiente de carga/descarga (CC). Tabela oficial disponível em: calculadorafrete.antt.gov.br',
+      'Piso mínimo ANTT 2025 — valores de referência por tipo de carga e eixos: carga geral (truck 6 eixos): ~R$ 3,57/km; carreta LS (2+3 eixos): ~R$ 3,09/km; bitrem (9 eixos): ~R$ 3,83/km. Para cargas frigorificadas e perigosas, os coeficientes são maiores. A não observância do piso mínimo pode gerar multa de até R$ 10 milhões por operação. A Scapini precisa cobrar no mínimo esses valores para ser lucrativa.',
+      'A tabela de frete mínimo da ANTT foi criada para proteger o caminhoneiro e manter a viabilidade econômica do setor. É atualizada pelo menos uma vez por ano (geralmente com base no IPCA e variação do diesel). A última atualização foi em fevereiro/2025. Para consultar o piso exato por tipo de veículo e distância: calculadorafrete.antt.gov.br — gratuito e oficial.',
+    ]);
+
+  // ── Diesel RS / combustível ───────────────────────────────────────────────────
+  if (/preco.*diesel|diesel.*preco|diesel.*rs|diesel.*rio grande|valor.*diesel|litro.*diesel|diesel.*litro|combustivel.*preco|preco.*combustivel/.test(t))
+    return pick([
+      'Diesel S-10 no Brasil (referência ANP 2025): média nacional em torno de R$ 6,06/L. O RS historicamente fica próximo à média nacional — valores específicos variam semanalmente. A ANTT usa R$ 6,02/L como referência na tabela de frete de fevereiro/2025. Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
+      'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 6,00/L e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,14/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.357 por viagem, sem contar pedágio, motorista e manutenção.',
+    ]);
+
+  // ── Mercado de transporte rodoviário / setor ──────────────────────────────────
+  if (/mercado.*transporte|transporte.*mercado|setor.*transporte|tendencia.*transporte|crescimento.*transporte|faturamento.*setor|transporte.*brasil.*2025|modal.*rodoviario|rodoviario.*modal/.test(t))
+    return pick([
+      'O transporte rodoviário de cargas é o modal dominante no Brasil — responsável por cerca de 64% de toda a movimentação de mercadorias do país. Em 2025, o setor cresceu 7% no 1º semestre em relação ao mesmo período de 2024. Cargas fracionadas cresceram 40% em 2024. Projeção de mercado: US$ 54,2 bilhões até 2029 (crescimento anual de 4,8%). Desafios: custos de diesel, pedágio, manutenção e seguro de carga em alta.',
+      'Dados do setor de transporte rodoviário no Brasil (2024-2025): crescimento de 7% no volume movimentado, fracionadas em boom (+40% em 2024), agronegócio e celulose como principais motores. O Sul do Brasil concentra exportações relevantes de tabaco (principal cliente da Scapini), grãos e alimentos industrializados — exatamente o nicho em que a Scapini opera com maior profundidade.',
+    ]);
+
+  // ── Custo operacional por km / rentabilidade ──────────────────────────────────
+  if (/custo.*operacional|custo.*km|km.*custo|custo.*quilometro|rentabilidade.*frete|margem.*frete|custo.*caminhao|caminhao.*custo|custo.*carreta|break.*even.*frete/.test(t))
+    return pick([
+      'Custo operacional de uma carreta a diesel no Brasil (2025): R$ 3,35 a R$ 3,85/km, dependendo da rota e do tipo de operação. Composição aproximada: combustível (~40%), manutenção (~15%), pneus (~8%), motorista (~20%), seguro e RCTR (~7%), pedágio (~10%). O frete precisa cobrir tudo isso mais a margem de lucro — é por isso que a tabela ANTT existe como piso. Abaixo de R$ 3,35/km dificilmente há lucro real.',
+      'Benchmarks de custo para transportadoras regionais no Sul: custo de manutenção saudável = até 3,5% do faturamento anual; diesel = 35-40% do custo variável; pneu de carreta = R$ 2.800-3.500 por unidade (18 pneus por carreta). Para frota própria, o TCO (custo total de propriedade) de uma carreta incluindo financiamento, seguro e manutenção gira em torno de R$ 15.000-22.000/mês — o que precisa estar coberto no frete.',
+    ]);
+
+  // ── Regulamentações ANTT / normas do setor ───────────────────────────────────
+  if (/regulamentacao.*antt|antt.*regulamentacao|norma.*antt|lei.*transporte|ciot.*obrigatorio|sassmaq|rntrc|antt.*2024|antt.*2025|registro.*antt|cadastro.*antt/.test(t))
+    return pick([
+      'Regulamentações ANTT relevantes para transportadoras: (1) RNTRC — Registro Nacional de Transportadores Rodoviários de Cargas, obrigatório para operar; (2) CIOT — Código Identificador de Operação de Transporte, obrigatório antes de cada embarque com TAC; (3) Piso mínimo de frete — tabela obrigatória, atualizada periodicamente; (4) Jornada do motorista — Lei 13.103/2015, limita horas ao volante e exige registros de ponto; (5) SASSMAQ — sistema de avaliação da ABIQUIM, exigido por clientes como Braskem. A Scapini mantém compliance com todas essas exigências.',
+      'Principais obrigações regulatórias que a Scapini precisa manter em dia: RNTRC ativo para toda a frota e motoristas TAC, CIOT gerado antes de cada embarque TAC (o CGI faz isso automaticamente), jornada de motorista dentro da lei (11h de trabalho + 1h de almoço + descanso obrigatório de 11h), tachógrafo calibrado, e documentação do veículo completa. A gerenciadora de risco também exige compliance para liberar o seguro da carga.',
     ]);
 
   return null;
@@ -4208,7 +4257,9 @@ const tryLocalResponse = (text) => {
       const hr = new Date().getHours();
       const periodo = hr < 12 ? 'Bom dia' : hr < 18 ? 'Boa tarde' : 'Boa noite';
       const greeting = isBemEstar ? pick(['Oi', 'Olá', 'Ei']) : pick([periodo, 'Oi', 'Olá']);
-      const followUp = isBemEstar ? ` Estou ${luminaMood()}. E você?` : ' Pode falar.';
+      const followUp = isBemEstar
+        ? pick([` Estou ${luminaMood()}. E você?`, ` Tô bem! E você, tudo certo?`, ` Operando no verde. E você, como vai?`])
+        : pick([' Pode falar.', ' Me conta.', ' Pronta.', ' No ar.', ' O que precisa?']);
       return `${greeting}${name}!${followUp}`;
     }
     // saudação + pedido (ex: "oi, me ajuda com X") → vai pro Gemini
@@ -4282,17 +4333,45 @@ const tryLocalResponse = (text) => {
   }
 
   // ── Agradecimentos ──
-  if (/^(obrigad[ao]|valeu|vlw|grat[ao]|muito obrigad[ao]|top|massa|show)/.test(t) && t.length < 20)
-    return pick(['Disponha!', 'Sempre que precisar.', 'Por nada!', 'Às ordens.', 'Fico feliz em ajudar.']);
+  if (/^(obrigad[ao]|valeu|vlw|grat[ao]|muito obrigad[ao]|top|massa|show|incrivel|genial|arrasou|mandou bem)/.test(t) && t.length < 30)
+    return pick([
+      'Disponha! Pra isso que estou aqui.',
+      'Sempre que precisar — sem cerimônia.',
+      'Por nada! Foi um prazer.',
+      'Fico feliz em ter ajudado. Qualquer coisa, é só chamar.',
+      'Imagina! Isso é fácil pra mim.',
+      'Pô, obrigada você! Me motiva quando ajuda funciona de verdade.',
+      'Às ordens — e sem custo extra!',
+      'Missão cumprida. Próximo desafio?',
+    ]);
 
   // ── Despedidas ──
-  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois|encerrando|vou sair|vou embora|vou desligar|até)\b/.test(t) && t.length < 28) {
+  if (/^(tchau|adeus|até logo|até mais|bye|flw|falou|até amanhã|até depois|encerrando|vou sair|vou embora|vou desligar|até|fui)\b/.test(t) && t.length < 32) {
     const h = new Date().getHours();
-    const context = h < 6  ? pick(['Vai descansar — amanhã tem mais estrada pela frente.', 'Boa noite! Que a madrugada seja tranquila.'])
-                 : h < 12  ? pick(['Bom dia e bons fretes!', 'Vai lá que a semana não espera.', 'Boa jornada!'])
-                 : h < 18  ? pick(['Boa tarde e boas entregas!', 'Vai com tudo!', 'Até logo — qualquer coisa é só chamar.'])
-                 :            pick(['Boa noite!', 'Vai descansar.', 'Até amanhã — fique bem.']);
-    return `${context}${name ? ' ' + name.slice(2) + '.' : ''}`;
+    const context = h < 6  ? pick([
+                                'Vai descansar — amanhã tem mais estrada pela frente.',
+                                'Boa madrugada! Que a operação corra tranquila.',
+                                'Cuida-se. Madrugada pede atenção redobrada na estrada.',
+                              ])
+                 : h < 12  ? pick([
+                                'Bom dia e bons fretes!',
+                                'Vai lá que a semana não espera. Pode chamar quando precisar.',
+                                'Boa jornada! Estou aqui se precisar.',
+                                'Vai com tudo! Estrada limpa e carga pesada.',
+                              ])
+                 : h < 18  ? pick([
+                                'Boa tarde e boas entregas!',
+                                'Vai com tudo! Qualquer coisa é só chamar.',
+                                'Até logo — estarei aqui quando voltar.',
+                                'Boa tarde! Descansou? Agora vai.',
+                              ])
+                 :            pick([
+                                'Boa noite! Descansa — amanhã tem mais.',
+                                'Vai descansar. A operação agradece.',
+                                'Até amanhã — fique bem e estrada segura.',
+                                'Boa noite! Que o fim do dia seja leve.',
+                              ]);
+    return `${context}${name ? ' Até logo!' : ''}`;
   }
 
   // ── Te amo / sentimentos românticos ──
@@ -6646,9 +6725,12 @@ const localFallback = (text) => {
     ]);
 
   return pick([
-    'Boa pergunta — essa vai pra análise completa com IA. Com o Gemini ativo, respondo em segundos.',
-    'Ainda não tenho esse dado no modo demonstração. Me pergunte sobre procedimentos, documentos, rotas ou como posso ajudar cada setor da Scapini.',
-    'Para dados internos em tempo real, preciso da integração com o CGI. No modo atual, cubro 230+ tópicos de transporte, RH, financeiro, estratégia e tecnologia.',
+    'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
+    'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 230+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Para dados em tempo real do CGI, preciso da integração com o sistema. Mas sobre procedimentos, regras da categoria, documentação e operação — pode perguntar.',
+    'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
+    'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
   ]);
 };
 
