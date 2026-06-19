@@ -6638,7 +6638,7 @@ const DEMO_QA = [
     r: ['Para analisar uma planilha, arraste o arquivo Excel ou CSV direto aqui no chat e eu processo os dados automaticamente.', 'Arraste sua planilha aqui — aceito Excel e CSV. Assim que carregada, analiso totais, margens e variações.'] },
   { re: /base de conhecimento|base.*conhec|conhec.*base|documento.*base|colocar.*doc|adicionar.*doc|aprend.*doc|doc.*aprend/,
     r: ['Pode enviar! Use o botão "Analisar Arquivo" ou arraste o PDF aqui. Vou indexar o conteúdo e usar nas minhas respostas.', 'Perfeito! Envie o documento pelo botão "Analisar Arquivo" — processo PDFs, Word e texto. Assim passo a responder com base nesse conteúdo.'] },
-  { re: /oi lúmina$|^lúmina oi$|^lúmina$|^lu$|^oi$|^ola$|^ola lúmina$|^ei lúmina$|^hey lúmina$/,
+  { re: /oi lumina$|^lumina oi$|^lumina$|^lu$|^oi$|^ola$|^ola lumina$|^ei lumina$|^hey lumina$/,
     r: ['Oi! Pode falar.', 'Olá! Estou pronta.', 'Ei! O que precisa?'] },
 
   // ── Glossário básico — definições diretas ──────────────────────────────────
