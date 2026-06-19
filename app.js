@@ -4423,6 +4423,8 @@ const tryLocalResponse = (text) => {
     return `Hoje é ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}.`;
 
   // ── Liderança da Scapini — resposta específica por cargo ──
+  if (/senhor.*scapini|dono.*scapini|quem.*dono|quem.*senhor|chefe.*scapini|scapini.*dono|scapini.*chefe|quem.*manda.*scapini|quem.*responsavel/.test(t))
+    return 'A Scapini Transportes é liderada pela família Scapini: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). A empresa foi fundada por Diamantino Scapini há mais de 30 anos em Lajeado/RS.';
   if (/\bceo\b|quem.*ceo|ceo.*scapini/.test(t))
     return 'O CEO da Scapini Transportes é Lucas Scapini.';
   if (/\bfundador\b|quem.*fundou|quem.*criou.*scapini|fundador.*scapini/.test(t))
