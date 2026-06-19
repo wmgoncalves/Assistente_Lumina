@@ -329,7 +329,9 @@ app.post('/api/chat', async (req, res) => {
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); return res.status(r.status).json({ error: e.error?.message || `HTTP ${r.status}` }); }
     const d = await r.json();
-    res.json({ text: d.candidates[0].content.parts[0].text.trim() });
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    if (!text) return res.status(502).json({ error: 'Resposta vazia do Gemini' });
+    res.json({ text });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -353,7 +355,9 @@ app.post('/api/vision', async (req, res) => {
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d = await r.json();
-    res.json({ text: d.candidates[0].content.parts[0].text.trim() });
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    if (!text) return res.status(502).json({ error: 'Resposta vazia do Gemini Vision' });
+    res.json({ text });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1480,7 +1484,9 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
     const d = await r.json();
-    return d.candidates[0].content.parts[0].text;
+    const txt = d.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!txt) throw new Error('Resposta vazia do Gemini');
+    return txt;
   };
 
   const callOllama = async () => {
@@ -1590,7 +1596,8 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
     const d = await r.json();
-    const raw = d.candidates[0].content.parts[0].text;
+    const raw = d.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!raw) throw new Error('Resposta vazia do Gemini');
 
     const cleaned = raw.replace(/```json|```/g, '').trim();
     const start = cleaned.indexOf('[');
@@ -1688,7 +1695,7 @@ Se os dados forem insuficientes para alguma análise, aponte o que está faltand
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
     const d = await r.json();
-    res.json({ ok: true, audit: d.candidates[0].content.parts[0].text.trim() });
+    res.json({ ok: true, audit: d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1757,7 +1764,7 @@ Em 2-3 linhas: o fechamento está completo? Há pendências críticas? Pode ser 
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
     const d = await r.json();
-    res.json({ ok: true, fechamento: d.candidates[0].content.parts[0].text.trim() });
+    res.json({ ok: true, fechamento: d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -1828,7 +1835,7 @@ Verifique especialmente:
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
     const d = await r.json();
-    res.json({ ok: true, conferencia: d.candidates[0].content.parts[0].text.trim() });
+    res.json({ ok: true, conferencia: d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -2006,7 +2013,9 @@ Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem 
     );
     if (!gr.ok) { const e = await gr.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${gr.status}`); }
     const gd   = await gr.json();
-    const raw  = gd.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const rawText = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!rawText) throw new Error('Resposta vazia do Gemini');
+    const raw  = rawText.replace(/```json|```/g, '').trim();
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('Gemini não retornou JSON válido');
     estrutura = JSON.parse(match[0]);
@@ -2155,7 +2164,9 @@ Use KPIs reais do setor de transporte rodoviário brasileiro. Se não houver dad
     );
     if (!gr.ok) throw new Error(`Gemini HTTP ${gr.status}`);
     const gd  = await gr.json();
-    const raw = gd.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const rawText2 = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!rawText2) throw new Error('Resposta vazia do Gemini');
+    const raw = rawText2.replace(/```json|```/g, '').trim();
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('JSON inválido');
     estrutura = JSON.parse(match[0]);

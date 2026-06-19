@@ -716,6 +716,7 @@ const setFace = (state) => {
 
 const flashLearnBadge = () => {
   const b = document.getElementById('learn-badge');
+  if (!b) return;
   b.classList.add('show');
   setTimeout(() => b.classList.remove('show'), 2800);
 };
@@ -1457,8 +1458,8 @@ const applyInlineLearn = (learned) => {
 };
 
 // ── UI Helpers ─────────────────────────────────────────────────────────────────
-const setRespText = (t) => { document.getElementById('resp-text').textContent = t; };
-const setUserSaid = (t) => { document.getElementById('user-said').textContent = t; };
+const setRespText = (t) => { const el = document.getElementById('resp-text'); if (el) el.textContent = t; };
+const setUserSaid = (t) => { const el = document.getElementById('user-said'); if (el) el.textContent = t; };
 
 const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -2395,7 +2396,7 @@ const webSearchGemini = async (query) => {
     try {
       const map = {
         'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
-        'ethereum':'ETH-BRL', 'eth ':'ETH-BRL',
+        'ethereum':'ETH-BRL', 'eth':'ETH-BRL',
         'dogecoin':'DOGE-BRL', 'doge':'DOGE-BRL',
         'solana':'SOL-BRL',
         'iene':'JPY-BRL', 'jpy':'JPY-BRL',
@@ -3388,7 +3389,7 @@ const callGeminiVision = async (images, prompt) => {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
-  return data.candidates[0].content.parts[0].text.trim();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
 };
 
 // ── Info em tempo real local (câmbio, clima, notícias — sem Gemini) ───────────
@@ -3401,7 +3402,7 @@ const detectLocalInfo = async (text) => {
     try {
       const map = {
         'bitcoin':'BTC-BRL', 'btc':'BTC-BRL',
-        'ethereum':'ETH-BRL', 'eth ':'ETH-BRL',
+        'ethereum':'ETH-BRL', 'eth':'ETH-BRL',
         'dogecoin':'DOGE-BRL', 'doge':'DOGE-BRL',
         'solana':'SOL-BRL',
         'iene':'JPY-BRL', 'jpy':'JPY-BRL',
