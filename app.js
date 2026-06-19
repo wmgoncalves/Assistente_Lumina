@@ -1781,6 +1781,21 @@ const processInput = async (rawText, opts = {}) => {
       } catch(e) { /* fallthrough para Gemini */ }
     }
 
+    // ── Intercept: captação de candidatos/profissionais ──
+    const CANDIDATO_CMD = /\b(busca[r]?\s+(candidatos?|profissionais?|curriculos?)|procura[r]?\s+(candidatos?|profissionais?|curriculos?)|quero\s+contratar|preciso\s+(contratar|de\s+um[a]?\s+)|recrutar|selecionar\s+candidatos?|vaga\s+de|abrir\s+vaga|contratar\s+(um[a]?\s+)?[a-záàâãéèêíìîóòôõúùûç]{3,}|captar\s+(candidatos?|curriculos?|profissionais?))\b/i;
+    if (CANDIDATO_CMD.test(text)) {
+      try {
+        const cargoMatch = text.match(/\b(?:para|de|um[a]?\s+|vaga\s+de\s+)\s*([a-záàâãéèêíìîóòôõúùûç\s]{3,30}?)(?:\s*$|,|\.|em\b)/i);
+        const cargo = cargoMatch ? cargoMatch[1].trim() : '';
+        const qtdMatch = text.match(/\b(\d+)\b/);
+        const quantidade = qtdMatch ? parseInt(qtdMatch[1]) : 5;
+        setRespText('⚡ Buscando candidatos…');
+        const result = await executeTool('prospectCandidatos', { cargo, quantidade, para: 'Scapini Transportes' });
+        _finalize(result, 'local');
+        return;
+      } catch(e) { /* fallthrough */ }
+    }
+
     // ── DEMO_QA — respostas preparadas para o workshop (sem async) ───────────────
     const stripped = stripAccents(text.toLowerCase());
     for (const { re, r } of DEMO_QA) {
@@ -2068,6 +2083,19 @@ const TOOL_DECLARATIONS = {
           para:       { type: 'string', description: 'Nome da empresa que está prospectando. Ex: "Scapini Transportes", "Translíquidos". Padrão: "Scapini Transportes".' }
         },
         required: ['segmento']
+      }
+    },
+    {
+      name: 'prospectCandidatos',
+      description: 'Busca candidatos e profissionais para uma vaga. Use quando pedir para recrutar, contratar, buscar currículos ou profissionais para um cargo.',
+      parameters: {
+        type: 'object',
+        properties: {
+          cargo:      { type: 'string', description: 'Cargo ou função desejada. Ex: "motorista", "analista de RH", "auxiliar administrativo"' },
+          regiao:     { type: 'string', description: 'Região de busca. Padrão: Vale do Taquari/RS' },
+          quantidade: { type: 'integer', description: 'Número de candidatos. Padrão: 5' },
+          para:       { type: 'string', description: 'Empresa contratante. Padrão: Scapini Transportes' }
+        }
       }
     },
     {
@@ -2704,6 +2732,28 @@ const executeTool = async (name, args) => {
       }).join('\n\n---\n\n');
 
       return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa\n\nQuer que eu gere um **PDF** ou **Excel** com esses leads para você salvar?`;
+    }
+
+    case 'prospectCandidatos': {
+      const r = await fetch('/api/prospect-candidatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cargo:      args.cargo      || '',
+          regiao:     args.regiao     || 'Vale do Taquari/RS',
+          quantidade: args.quantidade || 5,
+          para:       args.para       || 'Scapini Transportes',
+        }),
+      });
+      if (!r.ok) return `Não consegui buscar candidatos: ${(await r.json().catch(() => ({}))).error || r.status}`;
+      const d = await r.json();
+      if (!d.candidatos?.length) return 'Nenhum candidato encontrado para esse cargo.';
+      const linhas = d.candidatos.map((c, i) => {
+        const fit = c.fit_score >= 8 ? '🟢' : c.fit_score >= 6 ? '🟡' : '🔴';
+        const contato = [c.telefone && `📞 ${c.telefone}`, c.email && `✉️ ${c.email}`, c.linkedin && `🔗 ${c.linkedin}`].filter(Boolean).join('  ');
+        return `${fit} **${i+1}. ${c.nome}** — ${c.cargo_atual} | ${c.experiencia_anos} anos | ${c.cidade}\n   Pontos fortes: ${c.pontos_fortes}\n${contato ? `   ${contato}\n` : ''}   💬 **Contato:** ${c.mensagem_contato}`;
+      }).join('\n\n---\n\n');
+      return `Encontrei **${d.total} candidatos** para **${d.cargo || 'a vaga'}** em ${d.regiao}:\n\n${linhas}\n\nQuer que eu gere um **PDF** ou **Excel** com esses candidatos?`;
     }
 
     case 'generateFile': {
@@ -3709,6 +3759,9 @@ const detectLocalInfo = async (text) => {
       'PPRA e PCMSO para transportadora: o PPRA (Programa de Prevenção de Riscos Ambientais) e o PCMSO (Programa de Controle Médico de Saúde Ocupacional) são obrigatórios para empresas com CLT. O SESMT (Serviço Especializado em Engenharia de Segurança) é obrigatório conforme o grau de risco e número de funcionários. Transportadoras são grau de risco 3 (alto) — exigências maiores. Consulte a NR-4 para dimensionamento.',
       'CIPA em transportadora: a Comissão Interna de Prevenção de Acidentes é obrigatória a partir de 20 funcionários. O CIPAMO (Motoristas) foca em riscos específicos da estrada: ergonomia, fadiga, condições de estrada, cargas perigosas. Membros são eleitos pelos funcionários + designados pela empresa. A CIPA deve se reunir mensalmente e fazer inspeções periódicas nos veículos e instalações.',
     ]);
+
+  if (/analisa[r]?\s+(esse|este|o|um)\s+curriculo|curriculo.*analisa|revisa[r]?\s+curriculo|avaliar?\s+curriculo|o que acha.*curriculo|curriculo.*bom|curriculo.*ruim/.test(t))
+    return 'Para analisar um currículo, suba o arquivo PDF ou DOCX pelo botão "Analisar Arquivo" e me diga: "analise esse currículo para a vaga de [cargo]". Avalio fit cultural, experiência, pontos fortes e recomendação de contratação.';
 
   if (/home.*office.*administrativo|trabalho.*remoto.*scapini|hibrido.*trabalho|escritorio.*administrativo/.test(t))
     return pick([
@@ -6590,6 +6643,14 @@ const DEMO_QA = [
   { re: /o que.*rntrc|rntrc.*significa|rntrc.*pra que|registro.*nacional.*transportador/,
     r: [
       'RNTRC (Registro Nacional de Transportadores Rodoviários de Cargas): cadastro obrigatório na ANTT para toda empresa ou autônomo que transporta carga profissionalmente. Tem validade de 5 anos e precisa ser renovado. Sem RNTRC, a operação é irregular e o veículo pode ser apreendido na fiscalização. Consulta: antt.gov.br.',
+    ]},
+  { re: /o que (voce|você|lumina) (faz|pode|consegue|sabe).*(rh|recurso|curriculo|candidato|contratar|vaga)|funcionalidade.*rh|capacidade.*rh/,
+    r: [
+      'No RH, posso: 1) Buscar candidatos para uma vaga por cargo e região — me diz "busca 5 candidatos para motorista"; 2) Analisar currículos — sobe o PDF e pede análise; 3) Gerar PDF/Excel com lista de candidatos; 4) Responder dúvidas de CLT, TAC, admissão, rescisão, sindicato.',
+    ]},
+  { re: /captar|buscar|encontrar|recrutar.*candidato|candidato.*vaga|profissional.*vaga|vaga.*profissional|buscar.*curriculo|curriculo.*buscar/,
+    r: [
+      'Posso buscar candidatos para qualquer cargo agora. Me diz: "busca candidatos para motorista" ou "quero contratar analista administrativo" — eu listo os perfis com contato e mensagem de abordagem pronta.',
     ]},
 ];
 

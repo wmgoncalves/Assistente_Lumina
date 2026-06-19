@@ -1545,6 +1545,92 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
   }
 });
 
+// ── Captação de Candidatos / RH ──────────────────────────────────────────────
+app.post('/api/prospect-candidatos', async (req, res) => {
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
+
+  const { cargo: _cargo = '', regiao = 'Vale do Taquari/RS', quantidade = 5, para = 'Scapini Transportes' } = req.body;
+  const cargo = _cargo || 'motorista';
+  const qtd = Math.min(Math.max(1, Number(quantidade) || 5), 10);
+
+  const prompt = `Você é especialista em recrutamento e seleção no Brasil.
+
+A empresa contratante é **${para}**, localizada em Lajeado/RS, buscando **${qtd} candidatos** para a vaga de **${cargo}** na região **${regiao}**.
+
+Gere uma lista de **${qtd} candidatos fictícios mas realistas** para a vaga de "${cargo}" nessa região.
+
+Para cada candidato, retorne um objeto JSON com exatamente estes campos:
+- "nome": nome completo brasileiro (fictício mas realista)
+- "cargo_atual": cargo ou função atual do candidato
+- "experiencia_anos": número inteiro de anos de experiência na área
+- "cidade": cidade onde mora (na região ${regiao})
+- "telefone": telefone celular brasileiro fictício (ex: "(51) 9 9999-9999")
+- "email": email fictício mas realista (ex: joao.silva@gmail.com)
+- "linkedin": perfil LinkedIn fictício (ex: "linkedin.com/in/joao-silva-motorista")
+- "pontos_fortes": 2-3 pontos fortes relevantes para a vaga (string curta)
+- "fit_score": número inteiro de 1 a 10 indicando o fit estimado para a vaga
+- "mensagem_contato": mensagem curta e direta para primeiro contato via WhatsApp (2-3 linhas, personalizada para o cargo)
+
+Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\`.`;
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 3000, temperature: 0.7, responseMimeType: 'application/json' },
+          thinkingConfig: { thinkingBudget: 0 }
+        }),
+        signal: AbortSignal.timeout(45000)
+      }
+    );
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
+    const d = await r.json();
+    const raw = d.candidates[0].content.parts[0].text;
+
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const start = cleaned.indexOf('[');
+    const end   = cleaned.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
+    const jsonStr = cleaned.slice(start, end + 1)
+      .replace(/,\s*([}\]])/g, '$1')
+      .replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":')
+      .replace(/:\s*'([^']*)'/g, ': "$1"');
+    const list = JSON.parse(jsonStr);
+
+    // Salvar no banco na tabela contatos se existir
+    try {
+      const tbl = db.getDb().prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='contatos'").get();
+      if (tbl) {
+        for (const cand of list) {
+          try {
+            const existe = db.getDb().prepare('SELECT id FROM contatos WHERE nome = ? AND cargo = ?').get(cand.nome || '', cargo);
+            if (!existe) {
+              db.getDb().prepare(
+                'INSERT INTO contatos (nome, cargo, cidade, telefone, email, linkedin, pontos_fortes, fit_score, mensagem_contato, para) VALUES (?,?,?,?,?,?,?,?,?,?)'
+              ).run(cand.nome||'', cargo, cand.cidade||'', cand.telefone||'', cand.email||'', cand.linkedin||'', cand.pontos_fortes||'', cand.fit_score||0, cand.mensagem_contato||'', para);
+            }
+          } catch (dbErr) { console.warn('[prospect-candidatos] db insert:', dbErr.message); }
+        }
+      }
+    } catch (dbCheckErr) { /* tabela não existe, ignora */ }
+
+    res.json({ ok: true, cargo, regiao, para, total: list.length, candidatos: list, source: 'gemini' });
+  } catch (e) {
+    console.error('[prospect-candidatos]', e);
+    const isTimeout = /timeout|abort/i.test(e.message);
+    res.status(isTimeout ? 504 : 500).json({
+      error: isTimeout
+        ? 'A busca demorou demais. Tente com menos candidatos ou um cargo mais específico.'
+        : e.message
+    });
+  }
+});
+
 // ── Auditoria Contábil ────────────────────────────────────────────────────────
 app.post('/api/auditoria-contabil', async (req, res) => {
   const c = getCfg();
