@@ -80,3 +80,59 @@ Sessão autônoma noturna com pesquisa web e implementação de melhorias em 5 f
 - Validar data dinâmica no system prompt do Gemini em sessão real
 - Implementar Phase 2: integração CGI via API de leitura
 - Revisar thinkingBudget 512 para `cgi` — não sobrecarregar chamadas simples
+
+---
+
+# Sessão de Auditoria — 19 de junho de 2026 (2ª sessão)
+
+## Resumo
+Sessão completa de leitura e auditoria de todos os arquivos (app.js, server.js) conforme protocolo de 6 fases. Total de 13 bugs corrigidos em 3 commits.
+
+## Bugs encontrados e corrigidos
+
+### Crashes — getElementById sem null-check
+- `flashLearnBadge()` linha 718 (app.js): `b.classList.add('show')` sem checar `b`. **Fix:** `if (!b) return`.
+- `setRespText` linha 1460 (app.js): `document.getElementById('resp-text').textContent = t` sem `?.`. **Fix:** `if(el) el.textContent = t`.
+- `setUserSaid` linha 1461 (app.js): idem. **Fix:** mesma correção.
+
+### Crashes — optional chaining ausente em candidates Gemini
+Todos os pontos onde `d.candidates[0].content.parts[0].text` era acessado sem `?.`:
+- `callGeminiVision()` (app.js, linha ~3391)
+- `/api/chat` (server.js, linha ~332): agora retorna 502 se resposta vazia
+- `/api/vision` (server.js, linha ~356): idem
+- `/api/auditoria-contabil` (server.js)
+- `/api/fechamento-mensal` (server.js)
+- `/api/conferir-demonstrativo` (server.js)
+- `/api/prospect` função `callGemini` (server.js)
+- `/api/prospect-candidatos` (server.js)
+- `/api/generate-file` (server.js)
+- `/api/relatorio-kpi` (server.js)
+- Consolidação de fatos — `consolidarMemoria()` (app.js, linha ~8539)
+
+### Crash — speak(undefined) / cleanForTTS(undefined)
+- `cleanForTTS(raw)` chamava `raw.replace(...)` sem guard. **Fix:** `String(raw ?? '')`.
+- `_finalize(raw)` chamava `extractLearn(raw)` onde `raw` pode ser undefined. **Fix:** `raw ?? ''`.
+
+### Bug — ETH (ethereum) nunca buscava cotação
+- Chave `'eth '` (espaço extra) em `webSearchGemini` (linha ~2398) e `detectLocalInfo` (linha ~3404). Nunca correspondia ao token 'eth' na query. **Fix:** `'eth':'ETH-BRL'` nas duas ocorrências.
+
+### Bug DEMO_QA — regex de saudação com acentos nunca disparava
+- Entrada passa por `stripAccents()` antes do teste: 'lúmina' → 'lumina'. Regex `/oi lúmina$|^lúmina oi$|^lúmina$|...` usava caracteres acentuados. **Fix:** removidos os acentos das strings no padrão.
+
+## Verificações de conformidade thinkingBudget
+- `/api/prospect`: `thinkingBudget: 0` + `responseMimeType: 'application/json'` ✓
+- `/api/prospect-candidatos`: `thinkingBudget: 0` + `responseMimeType: 'application/json'` ✓
+- `/api/generate-file`: `thinkingBudget: 0` + `responseMimeType: 'application/json'` ✓
+- `/api/relatorio-kpi`: `thinkingBudget: 0` + `responseMimeType: 'application/json'` ✓
+- `/api/auditoria-contabil`, `/api/fechamento-mensal`, `/api/conferir-demonstrativo`: retornam texto puro (sem JSON.parse) — thinkingBudget não obrigatório ✓
+
+## DEMO_QA — auditoria completa (~120 entradas lidas)
+- Todos os `r` arrays têm conteúdo
+- Padrões não usam flag `i` porque entrada já é `stripAccents(toLowerCase())` — correto
+- Único bug: regex de saudação com `lúmina` (acentuado) — corrigido acima
+- Padrão `\bpis\b` (adicionado na sessão anterior) confirmado como correto
+
+## Commits desta sessão
+- `7863535` — fix: crashes — getElementById null-safety, optional chaining Gemini, ETH sem espaço
+- `8fff192` — fix: crashes — speak(undefined), _finalize(undefined), consolidação de fatos Gemini
+- `ccbfdfc` — fix: DEMO_QA — regex de saudação tinha acentos que nunca batiam após stripAccents
