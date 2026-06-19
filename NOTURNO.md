@@ -136,3 +136,76 @@ Todos os pontos onde `d.candidates[0].content.parts[0].text` era acessado sem `?
 - `7863535` — fix: crashes — getElementById null-safety, optional chaining Gemini, ETH sem espaço
 - `8fff192` — fix: crashes — speak(undefined), _finalize(undefined), consolidação de fatos Gemini
 - `ccbfdfc` — fix: DEMO_QA — regex de saudação tinha acentos que nunca batiam após stripAccents
+
+---
+
+# Sessão de Refatoração Completa — 19 de junho de 2026 (3ª sessão)
+
+## Resumo
+Rodada de refatoração técnica, análise de segurança, acessibilidade e qualidade geral conforme protocolo de 8 fases. Auditados: package.json, main.js, preload.js, index.html, style.css, server.js, app.js, services/. Todos passaram em `node --check`. 2 commits de código feitos.
+
+## Arquivos alterados
+- `server.js` — refatoração + fix de 2 bugs
+- `index.html` — fix de indentação do botão #btn-settings
+- `style.css` — acessibilidade (focus-visible) + responsividade (breakpoint 768px)
+
+## Melhorias realizadas
+
+### server.js
+- **Extraída função `_parseGeminiJsonArray(raw)`** — o padrão de sanitização e parse de array JSON do Gemini estava duplicado em `/api/prospect` e `/api/prospect-candidatos` (8 linhas cada, idênticas). Agora centralizado em um helper documentado.
+- **Fix `/api/memory/consolidate`**: `d.candidates[0].content.parts[0].text` usava acesso direto sem `?.` — única ocorrência que escapou da auditoria anterior. Corrigido para `d.candidates?.[0]?.content?.parts?.[0]?.text` com guard para resposta vazia.
+- **Fix `parseRssTitles`**: função definida com 1 parâmetro `(xml)` mas chamada com 2 `(xml, feed.source)` — argumento supérfluo removido.
+
+### style.css
+- **Adicionadas regras `focus-visible`** para todos botões, inputs, links e elementos com tabindex — acessibilidade WCAG: outline de 2px com cor `--accent-hi` visível apenas na navegação por teclado, não no clique com mouse.
+- **Adicionado breakpoint `@media (max-width: 768px)`** (tablet): sidebar 180px, padding menor, stat-grid com minmax 130px.
+- **Breakpoint `max-width: 640px`** (mobile): agora esconde a sidebar completamente além de adaptar topbar.
+
+### index.html
+- **Corrigida indentação quebrada** do `<button id="btn-settings">` que estava na coluna 0 (fora do alinhamento da `.feat-group`), possivelmente resultado de edição manual anterior.
+
+## Problemas encontrados e corrigidos
+- Acesso direto a `candidates[0]` sem optional chaining em `/api/memory/consolidate`
+- Duplicação de 16 linhas de lógica de parse JSON em dois endpoints
+- Argumento desnecessário em chamada de função
+- Botão de configurações com indentação incorreta no HTML
+- Ausência de outline de acessibilidade em todos os botões e inputs
+
+## Problemas encontrados mas NÃO corrigidos (e por quê)
+- **Botões sem `type="button"`**: como não há `<form>` no HTML, não há risco de submit acidental. Adicionar 30+ atributos geraria diff grande sem valor funcional.
+- **Sidebar ausente em mobile (640px)**: a sidebar some mas não há menu hambúrguer substituto. Isso requer feature nova (não apenas CSS), deixado para próxima sessão.
+- **`parseRssTitles` não retorna `source`**: a função parse os títulos mas não adiciona o `source`. O `source` é adicionado manualmente no `forEach` da chamada. Funciona corretamente mas poderia ser mais elegante — não é um bug.
+- **Funções > 80 linhas**: `processInput`, `detectLocalInfo`, `tryLocalResponse` e `DEMO_QA` são enormes mas altamente coesas com lógica de domínio complexa. Dividir sem testes seria arriscado.
+
+## Testes executados
+- `node --check app.js`: OK
+- `node --check server.js`: OK
+- `node --check main.js`: OK
+- `node --check preload.js`: OK
+
+## Fluxos auditados (mentalmente)
+- Saudação local: `tryLocalResponse` → resposta imediata ✅
+- Câmbio dólar: `detectLocalInfo` → regex sem espaço fixo ✅
+- CEO Scapini: `detectLocalInfo` → blindado localmente ✅
+- PROSPECT_CMD: `/api/prospect` → `_parseGeminiJsonArray` ✅
+- CANDIDATO_CMD: `/api/prospect-candidatos` → `_parseGeminiJsonArray` ✅
+- Upload PDF: `/api/extract-doc` + `validateUpload` com magic bytes ✅
+- Multer limite: `limits: { fileSize: 20 * 1024 * 1024 }` configurado ✅
+- CORS: bloqueado por loopback + origin check + sec-fetch-site ✅
+- config.json: no `.gitignore` ✅
+- Segredos hardcoded: nenhum encontrado ✅
+- `/api/dev/exec`: protegido por `BLOCKED_CMDS` regex + `ensureDevToolsEnabled` ✅
+- Prepared statements: todas as queries SQLite usam `.prepare(...).get/run` ✅
+- XSS: todo conteúdo do usuário passa por `esc()` antes de innerHTML ✅
+
+## Commits desta sessão
+- `b2e43db` — refactor: extrair _parseGeminiJsonArray + fix optional chaining + argumento supérfluo
+- `873206b` — fix: acessibilidade + responsividade — focus-visible, breakpoint 768px, indentação HTML
+
+## Recomendações para próxima sessão
+1. **Menu hambúrguer mobile**: sidebar some em 640px mas não há alternativa. Adicionar botão de menu para mobile.
+2. **FRETE_CMD expandido**: testar com frases naturais ("quanto sai", "me faz uma cotação") em sessão real com usuário.
+3. **Mais motoristas no MOTORISTAS_DEMO**: atualmente apenas 5.
+4. **DEMO_QA**: enriquecer com perguntas por setor (RH, Manutenção, Logística, Financeiro).
+5. **Integração CGI Phase 2**: endpoints de leitura de dados reais via API.
+6. **thinkingBudget 512 para consultas CGI simples**: não sobrecarregar chamadas triviais.
