@@ -298,7 +298,9 @@ Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúd
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d   = await r.json();
-    const raw = d.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+    const rawTxt = d.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    if (!rawTxt) throw new Error('Resposta vazia do Gemini (consolidate)');
+    const raw = rawTxt.replace(/```json|```/g, '').trim();
     const enriched = JSON.parse(raw);
     m.facts         = enriched.facts?.length  ? enriched.facts  : m.facts;
     m.relationships = enriched.relationships?.length ? enriched.relationships : (m.relationships || []);
@@ -1392,6 +1394,20 @@ app.post('/api/frete-estimate', async (req, res) => {
   }
 });
 
+// ── Helper: extrai e sanitiza array JSON de resposta bruta do Gemini/Ollama ──
+// Usado em: /api/prospect, /api/prospect-candidatos
+function _parseGeminiJsonArray(raw) {
+  const cleaned = raw.replace(/```json|```/g, '').trim();
+  const start = cleaned.indexOf('[');
+  const end   = cleaned.lastIndexOf(']');
+  if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
+  const jsonStr = cleaned.slice(start, end + 1)
+    .replace(/,\s*([}\]])/g, '$1')               // trailing commas
+    .replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":') // chaves com aspas simples
+    .replace(/:\s*'([^']*)'/g, ': "$1"');         // valores com aspas simples
+  return JSON.parse(jsonStr);
+}
+
 // ── Prospecção de Clientes ────────────────────────────────────────────────────
 app.post('/api/prospect', async (req, res) => {
   const c = getCfg();
@@ -1511,15 +1527,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
       raw = await callOllama();
     }
 
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    const start = cleaned.indexOf('[');
-    const end   = cleaned.lastIndexOf(']');
-    if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
-    const jsonStr = cleaned.slice(start, end + 1)
-      .replace(/,\s*([}\]])/g, '$1')          // trailing commas
-      .replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":')  // chaves com aspas simples
-      .replace(/:\s*'([^']*)'/g, ': "$1"');   // valores com aspas simples
-    const list = JSON.parse(jsonStr);
+    const list = _parseGeminiJsonArray(raw);
 
     // Salva cada lead no banco (evita duplicatas por nome+segmento+cidade)
     for (const c of list) {
@@ -1599,15 +1607,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
     const raw = d.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     if (!raw) throw new Error('Resposta vazia do Gemini');
 
-    const cleaned = raw.replace(/```json|```/g, '').trim();
-    const start = cleaned.indexOf('[');
-    const end   = cleaned.lastIndexOf(']');
-    if (start === -1 || end === -1) throw new Error('Resposta não contém array JSON válido');
-    const jsonStr = cleaned.slice(start, end + 1)
-      .replace(/,\s*([}\]])/g, '$1')
-      .replace(/([{,]\s*)'([^']+)'\s*:/g, '$1"$2":')
-      .replace(/:\s*'([^']*)'/g, ': "$1"');
-    const list = JSON.parse(jsonStr);
+    const list = _parseGeminiJsonArray(raw);
 
     // Salvar no banco na tabela contatos se existir
     try {
@@ -2354,7 +2354,7 @@ app.get('/api/news', async (_, res) => {
       });
       if (!r.ok) continue;
       const xml    = await r.text();
-      const titles = parseRssTitles(xml, feed.source);
+      const titles = parseRssTitles(xml);
       titles.forEach(t => headlines.push({ title: t, source: feed.source }));
       if (headlines.length >= 10) break;
     } catch { continue; }
