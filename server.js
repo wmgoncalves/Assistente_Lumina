@@ -669,6 +669,8 @@ app.post('/api/log', (req, res) => {
     ms:       ms     || 0,
   });
   res.json({ ok: true });
+  // Após cada interação bem-sucedida, verifica se deve treinar o Ollama
+  if (!error && response) _checkAutoTrain();
 });
 
 app.get('/api/logs', (req, res) => {
@@ -2676,20 +2678,63 @@ app.get('/api/rebuild-ollama/status', (req, res) => {
   }
 });
 
-// Verifica a cada hora se tem interações suficientes para reconstruir automaticamente
-setInterval(async () => {
+// ── Auto-treino contínuo do Ollama ────────────────────────────────────────────
+// Roda silenciosamente após cada interação: a cada 5 conversas novas reconstrói o modelo.
+// Intervalo mínimo de 15 min entre rebuilds para não sobrecarregar.
+const TRAIN_INTERVAL_MS  = 15 * 60 * 1000; // mínimo 15 min entre rebuilds
+const TRAIN_EVERY_N      = 5;               // reconstrói a cada 5 novas interações
+
+let _trainLock = false;
+
+async function _doRebuildSilent() {
+  if (_trainLock) return;
+  _trainLock = true;
+  try {
+    const ping = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(3000) }).catch(() => null);
+    if (!ping?.ok) { _trainLock = false; return; } // Ollama offline, ignora
+
+    const exemplos = _coletarExemplos(150);
+    if (!exemplos.length) { _trainLock = false; return; }
+
+    const base  = fs.readFileSync(MODELFILE_BASE, 'utf8');
+    let blocos  = '';
+    for (const ex of exemplos) {
+      const p = ex.pergunta.replace(/"/g, "'").replace(/\n/g, ' ').trim();
+      const r = ex.resposta.replace(/"/g, "'").replace(/\n/g, ' ').trim();
+      if (p && r) blocos += `\nMESSAGE user "${p}"\nMESSAGE assistant "${r}"\n`;
+    }
+    fs.writeFileSync(MODELFILE_TRAIN, base + '\n# === Exemplos do histórico ===\n' + blocos);
+
+    const proc = spawn('ollama', ['create', OLLAMA_MODEL_NAME, '-f', MODELFILE_TRAIN], { stdio: 'pipe' });
+    proc.on('close', code => {
+      if (code === 0) {
+        saveTrainState({ lastBuilt: new Date().toISOString(), totalExemplos: exemplos.length, lastRowId: exemplos[0]?.id || 0 });
+        const cfg = getCfg();
+        if (cfg.ollamaModel !== OLLAMA_MODEL_NAME) { cfg.ollamaModel = OLLAMA_MODEL_NAME; saveCfg(cfg); }
+        console.log(`[Ollama] ✅ Modelo atualizado com ${exemplos.length} exemplos reais.`);
+      }
+      _trainLock = false;
+    });
+    proc.on('error', () => { _trainLock = false; });
+  } catch { _trainLock = false; }
+}
+
+function _checkAutoTrain() {
   try {
     const state  = readTrainState();
     const dbConn = db.getDb();
     const total  = dbConn.prepare(`SELECT COUNT(*) as n FROM historico WHERE role='user'`).get()?.n || 0;
-    const desde  = state.lastBuilt ? Math.floor((Date.now() - new Date(state.lastBuilt).getTime()) / 3600000) : 999;
-    // Reconstrói se: 20+ novas interações E mais de 2h desde último rebuild
-    if (total - (state.totalExemplos || 0) >= 20 && desde >= 2) {
-      console.log('[Ollama] Auto-rebuild: novas interações detectadas, reconstruindo modelo...');
-      await fetch(`http://127.0.0.1:${PORT}/api/rebuild-ollama`, { method: 'POST' }).catch(() => {});
+    const novos  = total - (state.totalExemplos || 0);
+    const desde  = state.lastBuilt ? Date.now() - new Date(state.lastBuilt).getTime() : Infinity;
+    if (novos >= TRAIN_EVERY_N && desde >= TRAIN_INTERVAL_MS) {
+      console.log(`[Ollama] ${novos} novas interações — iniciando treino silencioso…`);
+      _doRebuildSilent();
     }
   } catch (_) {}
-}, 60 * 60 * 1000);
+}
+
+// Também verifica 5 min após o servidor subir (capta o que ficou pendente)
+setTimeout(_checkAutoTrain, 5 * 60 * 1000);
 
 // ── Start — libera a porta antes de subir ─────────────────────────────────────
 const killPort = (port) => new Promise(resolve => {
