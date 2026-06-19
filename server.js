@@ -2582,6 +2582,115 @@ const checkProactive = () => {
 // Roda a cada 60 segundos
 setInterval(checkProactive, 60 * 1000);
 
+// ── Ollama: rebuild do modelo com exemplos reais do histórico ─────────────────
+const MODELFILE_BASE  = path.join(__dirname, 'Modelfile.lumina');
+const MODELFILE_TRAIN = path.join(__dirname, 'Modelfile.lumina.treinada');
+const TRAIN_STATE_FILE = path.join(__dirname, 'ollama-train-state.json');
+const OLLAMA_MODEL_NAME = 'lumina-treinada';
+
+const readTrainState = () => {
+  try { return JSON.parse(fs.readFileSync(TRAIN_STATE_FILE, 'utf8')); }
+  catch { return { lastRowId: 0, lastBuilt: null, totalExemplos: 0 }; }
+};
+const saveTrainState = (s) => fs.writeFileSync(TRAIN_STATE_FILE, JSON.stringify(s, null, 2));
+
+// Seleciona os melhores pares pergunta→resposta do histórico para usar como exemplos
+function _coletarExemplos(limit = 100) {
+  const dbConn = db.getDb();
+  // Busca mensagens user seguidas de mensagem Lúmina com source != error
+  const rows = dbConn.prepare(`
+    SELECT h1.id, h1.conteudo AS pergunta, h2.conteudo AS resposta, h2.source, h2.ms
+    FROM historico h1
+    JOIN historico h2 ON h2.id = h1.id + 1
+    WHERE h1.role = 'user'
+      AND h2.role = 'Lúmina'
+      AND h2.source NOT IN ('error', 'demo')
+      AND length(h1.conteudo) BETWEEN 10 AND 300
+      AND length(h2.conteudo) BETWEEN 30 AND 800
+      AND (h2.ms IS NULL OR h2.ms < 20000)
+    ORDER BY h1.id DESC
+    LIMIT ?
+  `).all(limit);
+  return rows;
+}
+
+app.post('/api/rebuild-ollama', async (req, res) => {
+  try {
+    // Verifica se Ollama está rodando
+    const ping = await fetch('http://localhost:11434/api/tags').catch(() => null);
+    if (!ping?.ok) return res.status(503).json({ error: 'Ollama não está rodando. Inicie o Ollama primeiro.' });
+
+    const exemplos = _coletarExemplos(100);
+    const state    = readTrainState();
+
+    // Lê o Modelfile base
+    const base = fs.readFileSync(MODELFILE_BASE, 'utf8');
+
+    // Monta blocos MESSAGE com os exemplos coletados
+    let exemplosBlocos = '';
+    const usados = [];
+    for (const ex of exemplos) {
+      const p = ex.pergunta.replace(/"/g, "'").trim();
+      const r = ex.resposta.replace(/"/g, "'").trim();
+      if (!p || !r) continue;
+      exemplosBlocos += `\nMESSAGE user "${p}"\nMESSAGE assistant "${r}"\n`;
+      usados.push(ex.id);
+    }
+
+    const modelfileContent = base + '\n# === Exemplos aprendidos do histórico ===\n' + exemplosBlocos;
+    fs.writeFileSync(MODELFILE_TRAIN, modelfileContent);
+
+    // Roda ollama create de forma assíncrona
+    res.json({ ok: true, status: 'treinando', exemplos: usados.length, modelo: OLLAMA_MODEL_NAME });
+
+    const proc = spawn('ollama', ['create', OLLAMA_MODEL_NAME, '-f', MODELFILE_TRAIN], { stdio: 'pipe' });
+    let log = '';
+    proc.stdout.on('data', d => { log += d.toString(); });
+    proc.stderr.on('data', d => { log += d.toString(); });
+    proc.on('close', code => {
+      if (code === 0) {
+        saveTrainState({ lastBuilt: new Date().toISOString(), totalExemplos: usados.length, lastRowId: usados[0] || state.lastRowId });
+        console.log(`[Ollama] Modelo ${OLLAMA_MODEL_NAME} reconstruído com ${usados.length} exemplos.`);
+        // Atualiza config para usar o modelo treinado
+        const cfg = getCfg();
+        cfg.ollamaModel = OLLAMA_MODEL_NAME;
+        saveCfg(cfg);
+      } else {
+        console.error(`[Ollama] Falha ao criar modelo (code ${code}):\n${log}`);
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/rebuild-ollama/status', (req, res) => {
+  try {
+    const state    = readTrainState();
+    const exemplos = _coletarExemplos(1);
+    const dbConn   = db.getDb();
+    const total    = dbConn.prepare(`SELECT COUNT(*) as n FROM historico WHERE role='user'`).get()?.n || 0;
+    res.json({ ok: true, state, totalInteracoes: total, prontoParaTreinar: total >= 10 });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Verifica a cada hora se tem interações suficientes para reconstruir automaticamente
+setInterval(async () => {
+  try {
+    const state  = readTrainState();
+    const dbConn = db.getDb();
+    const total  = dbConn.prepare(`SELECT COUNT(*) as n FROM historico WHERE role='user'`).get()?.n || 0;
+    const desde  = state.lastBuilt ? Math.floor((Date.now() - new Date(state.lastBuilt).getTime()) / 3600000) : 999;
+    // Reconstrói se: 20+ novas interações E mais de 2h desde último rebuild
+    if (total - (state.totalExemplos || 0) >= 20 && desde >= 2) {
+      console.log('[Ollama] Auto-rebuild: novas interações detectadas, reconstruindo modelo...');
+      await fetch(`http://127.0.0.1:${PORT}/api/rebuild-ollama`, { method: 'POST' }).catch(() => {});
+    }
+  } catch (_) {}
+}, 60 * 60 * 1000);
+
 // ── Start — libera a porta antes de subir ─────────────────────────────────────
 const killPort = (port) => new Promise(resolve => {
   exec(`powershell -c "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"`, () => resolve());

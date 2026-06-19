@@ -1797,6 +1797,27 @@ const processInput = async (rawText, opts = {}) => {
       } catch(e) { /* fallthrough */ }
     }
 
+    // ── Intercept: treinar Ollama com histórico real ──────────────────────────────
+    if (/\b(treina|trein[ae]r|atualiza|atualizar|reconstr[oó]i|reconstruir|aprende|aprender|ensina|ensinar)\b.*\b(ollama|lhama|llama|modelo|ia local|intelig[eê]ncia local)\b|\b(ollama|lhama|llama)\b.*\b(treina|aprende|atualiza)\b/i.test(text)) {
+      setRespText('🧠 Iniciando treinamento do Ollama com o histórico…');
+      try {
+        const r = await fetch('/api/rebuild-ollama', { method: 'POST' });
+        const d = await r.json();
+        if (!r.ok) { _finalize(`Não consegui treinar: ${d.error}`, 'local'); return; }
+        _finalize(`Treinamento iniciado! Usando **${d.exemplos} conversas reais** para ensinar o Ollama. O modelo \`${d.modelo}\` será atualizado em alguns minutos — sem precisar reiniciar. 🧠`, 'local');
+      } catch (e) { _finalize('Ollama não está rodando. Inicie o Ollama primeiro.', 'local'); }
+      return;
+    }
+    if (/status.*ollama|ollama.*status|quantas.*intera[çc][oõ]es|historico.*ollama|ollama.*historico/i.test(text)) {
+      try {
+        const r = await fetch('/api/rebuild-ollama/status');
+        const d = await r.json();
+        const ultimo = d.state?.lastBuilt ? new Date(d.state.lastBuilt).toLocaleString('pt-BR') : 'nunca';
+        _finalize(`Status Ollama: **${d.totalInteracoes} interações** no histórico | Último treino: ${ultimo} | Exemplos usados: ${d.state?.totalExemplos || 0} | ${d.prontoParaTreinar ? '✅ Pronto para treinar' : '⏳ Acumule mais 10 conversas'}`, 'local');
+      } catch { _finalize('Não consegui verificar o status do Ollama.', 'local'); }
+      return;
+    }
+
     // ── Intercept: abrir projetos Scapini ────────────────────────────────────────
     const _PROJETOS = [
       { re: /comercial|crm|vendas|sistema.*comercial|comercial.*sistema/i,    url: 'http://localhost:5173/login',                          nome: 'Sistema Comercial' },
