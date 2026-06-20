@@ -1603,6 +1603,11 @@ const MOTORISTAS_DEMO = [
   { nome: 'Rodrigo Alves Fonseca',  apelido: 'Rodriguinho', tipo: 'CLT',  rota: 'Lajeado–Ponta Grossa',        status: 'Em manutenção', placa: 'MNO-8856', veiculo: 'Carreta Scania S500'     },
   { nome: 'Ednilson Ferreira Cruz', apelido: 'Edinho',  tipo: 'TAC',      rota: 'Vale do Taquari–Florianópolis', status: 'Em rota',     placa: 'PQR-1198', veiculo: 'Truck Mercedes 2636'     },
   { nome: 'Sandro Luiz Machado',    apelido: 'Sandrão', tipo: 'CLT',      rota: 'Lajeado–Santa Cruz do Sul',    status: 'Disponível',   placa: 'STU-4470', veiculo: 'Truck VW Delivery'       },
+  { nome: 'Paulo César Almeida',    apelido: 'Paulão',  tipo: 'CLT',      rota: 'Lajeado–Rio de Janeiro',       status: 'Em rota',      placa: 'VWX-2234', veiculo: 'Carreta Volvo FH 420'    },
+  { nome: 'Evandro Luiz Correia',   apelido: 'Vando',   tipo: 'Agregado', rota: 'Vale do Taquari–Uberlândia',   status: 'Disponível',   placa: 'YZA-8812', veiculo: 'Truck Mercedes Atego'    },
+  { nome: 'Nilton Borges Costa',    apelido: 'Niltão',  tipo: 'CLT',      rota: 'Lajeado–Joinville',            status: 'Em manutenção', placa: 'BCD-5671', veiculo: 'Carreta Scania S500'     },
+  { nome: 'Cleomar Silva Dias',     apelido: 'Cleo',    tipo: 'TAC',      rota: 'Vale do Taquari–Porto Velho',  status: 'Em rota',      placa: 'EFG-3390', veiculo: 'Truck DAF XF 480'        },
+  { nome: 'Helvécio Barbosa Ramos', apelido: 'Helvinho', tipo: 'CLT',     rota: 'Lajeado–Belém',                status: 'Em rota',      placa: 'HIJ-7745', veiculo: 'Carreta Volvo FH 540'    },
 ];
 
 const _findMotorista = (q) => {
@@ -4889,7 +4894,7 @@ const DEMO_QA = [
     ]},
 
   // Integração / novo funcionário
-  { re: /novo funcionario|integrac|onboarding|comecar a trabalhar|primeiro dia|documentos.*admissao|admissao/,
+  { re: /novo funcionario|integrac.*(colab|funcionario|empresa|novo|equipe)|onboarding|comecar a trabalhar|primeiro dia|documentos.*admissao|admissao.*novo/,
     r: [
       'Para admissão na Scapini, os documentos geralmente solicitados são: RG, CPF, carteira de trabalho, comprovante de residência, foto 3×4, certificado de escolaridade, exame admissional (marcado pelo RH) e certificados específicos da função (CNH, MOPP se motorista). O RH informa a lista completa por função.',
       'No primeiro dia, o novo colaborador passa pela integração: apresentação da empresa, normas de segurança, políticas internas e apresentação ao time. A Lúmina pode ajudar a tirar dúvidas sobre procedimentos a qualquer hora — não precisa esperar um colega estar disponível. Bem-vindo à Scapini!',
@@ -6985,6 +6990,34 @@ const DEMO_QA = [
     r: [
       'A Lúmina escala para todas as filiais sem custo adicional de licença — o servidor fica na Scapini e qualquer unidade acessa via navegador na rede interna. Canoas, Santa Cruz, Curitiba, SP, RJ — todas acessam a mesma Lúmina com os mesmos dados. O que muda por filial é o contexto que cada gestor fornece.',
       'Sem limite de filiais nem de usuários simultâneos: a arquitetura é servidor central + acesso web. Já na implantação inicial, todas as unidades podem usar. Se a empresa crescer e abrir novas filiais, é só garantir acesso de rede — sem nova instalação nem nova licença.',
+    ]},
+
+  // Licença maternidade / paternidade
+  { re: /licenca.*maternidade|maternidade.*licenca|licenca.*gestante|licenca.*gravida|licenca.*bebe|quando.*afasta.*gestante|licenca.*paternidade|paternidade.*licenca|licenca.*pai|quando.*pai.*afasta|adocao.*licenca|licenca.*adocao/,
+    r: [
+      'Licença-maternidade: 120 dias garantidos por lei (CLT), prorrogáveis para 180 dias se a empresa aderir ao Programa Empresa Cidadã (dedução fiscal). Começa a partir do parto, ou até 28 dias antes se necessário por ordem médica. O salário é pago pela empresa e reembolsado pelo INSS. Fale com o RH para confirmar a modalidade vigente na Scapini.',
+      'Licença-paternidade: 5 dias corridos a partir do nascimento ou adoção (CLT). Se a Scapini aderiu ao Programa Empresa Cidadã, são 20 dias corridos. Para adoção, os prazos são os mesmos da maternidade/paternidade conforme a idade da criança. O RH orienta sobre o processo e a documentação necessária (certidão de nascimento).',
+    ]},
+
+  // Holerite / contracheque
+  { re: /holerite|contracheque|recibo.*pagamento|recibo.*salario|meu.*salario.*desconto|desconto.*salario|inss.*desconto|ir.*desconto.*salario|demonstrativo.*pagamento|como.*ler.*holerite|entender.*holerite/,
+    r: [
+      'O holerite (ou contracheque) detalha: salário bruto, descontos obrigatórios (INSS e IRRF conforme tabela), benefícios fornecidos pela empresa (VA, VT, plano de saúde) e o salário líquido final. Na Scapini, o holerite fica disponível com o RH ou sistema de folha de pagamento. Para dúvidas sobre um desconto específico, o RH esclarece linha a linha.',
+      'Os principais itens do holerite: INSS (7,5% a 14% conforme faixa salarial — tabela 2025), IRRF (tabela progressiva, isenção até ~R$ 3.036), vale-transporte (desconto máximo de 6% do salário bruto), e descontos autorizados (plano de saúde, sindicato). Se tiver qualquer dúvida sobre um valor, procure o RH — é direito do trabalhador entender cada linha.',
+    ]},
+
+  // Abono de falta / falta justificada
+  { re: /abono.*falta|falta.*abonada|falta.*justificada|justificar.*falta|falta.*descontar|falta.*desconto|posso.*faltar.*sem.*desconto|quando.*falta.*nao.*desconta|faltar.*sem.*perder.*salario/,
+    r: [
+      'Faltas que a lei garante sem desconto no salário (CLT, art. 473): casamento (3 dias), falecimento de cônjuge/filho/pai/mãe/irmão (2 dias), nascimento de filho (5 dias — licença-paternidade), doação de sangue (1 dia por ano), alistamento militar, comparecimento ao INSS, testemunho em processo judicial. Para demais situações, o RH avalia e pode abonar conforme política interna.',
+      'Atestado médico elimina o desconto de faltas por doença. Prazo para entrega: geralmente até 48h após o retorno. Prazos maiores: conforme convenção coletiva MOVIFORT/SETCERGS. Falta sem justificativa pode gerar desconto no salário E no DSR (descanso semanal remunerado) da semana. Para saídas antecipadas ou atrasos, a política é acordada diretamente com o gestor e RH.',
+    ]},
+
+  // CND / Certidão Negativa
+  { re: /cnd\b|certidao.*negativa|certidao.*debito|debito.*certidao|certidao.*regularidade|certidao.*federal|certidao.*estadual|certidao.*municipal|situacao.*fiscal.*empresa|regularidade.*fiscal|certidao.*receita|certidao.*trabalhista|certidao.*previdenciaria/,
+    r: [
+      'CND (Certidão Negativa de Débitos): documento que comprova que a empresa não tem débitos junto à Receita Federal, PGFN ou INSS. Emitida no portal da Receita (receita.fazenda.gov.br) ou PGFN. Normalmente exigida em licitações, contratos com grandes clientes e financiamentos. Validade: 180 dias. Para obter, a empresa precisa estar em dia com todos os tributos federais.',
+      'Tipos de certidão: CND Federal (Receita + PGFN), CND Estadual (SEFAZ/RS para ICMS), CND Municipal (ISSQN), CPEN (Certidão de Regularidade do FGTS — Caixa Econômica), e Certidão de Débitos Trabalhistas (TST). Cada uma tem prazo de validade e site específico. O setor fiscal/contabilidade da Scapini é o responsável por monitorar as certidões e emiti-las quando necessário.',
     ]},
 
   // Novas funcionalidades e roadmap
