@@ -417,3 +417,61 @@ Sessão autônoma com foco em PRIORIDADE 1 (bugs), PRIORIDADE 2 (qualidade/dados
 5. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
 6. **Fine-tuning** quando dataset atingir 500+ exemplos.
 7. **CCT MOVIFORT 2025/2026 RS** — valores salariais exatos (sistema.salario.com.br retornou 403). Tentar via site MOVIFORT diretamente.
+
+---
+
+# Sessão 7 — 2026-06-20 (noturna/autônoma)
+
+## Resumo
+Sessão autônoma. Continuação do contexto da Sessão 6. Foco: bugs DEMO_QA, expansão de motoristas demo, novos pares Q&A, UX mínimo.
+
+## O que foi feito
+
+### Bug corrigido: falso positivo `muito bom` / `muito boa` no DEMO_QA (app.js)
+- **Problema**: regex `/parabens|muito boa|incrivel|impressionante|uau|sensacional|muito bom/` retornava resposta de elogio para mensagens como "o resultado foi muito bom, consegue analisar?" — interrompendo o fluxo antes de chegar ao Gemini.
+- **Solução**: trocado para `/parabens|incrivel|impressionante|uau|sensacional|^muito (bom|boa)[\s!.,]*$/` — âncora `^` e `$` garantem que "muito bom/boa" só dispara quando for a mensagem inteira (ou com pontuação no final), nunca no meio de uma frase.
+- Adicionada 3ª resposta de variação: "Fico feliz! Ainda tenho muito a mostrar quando a integração com o CGI estiver ativa."
+
+### MOTORISTAS_DEMO expandido (app.js)
+Adicionados 5 novos motoristas fictícios (total: 10):
+| Nome | Apelido | Tipo | Rota | Status | Veículo |
+|---|---|---|---|---|---|
+| Gilmar José Ribeiro | Gil | CLT | Lajeado–São Paulo | Em rota | Carreta Volvo FH 540 |
+| Valdinei Costa Santos | Dinho | Agregado | Lajeado–Canoas | Disponível | Truck Iveco Hi-Road |
+| Rodrigo Alves Fonseca | Rodriguinho | CLT | Lajeado–Ponta Grossa | Em manutenção | Carreta Scania S500 |
+| Ednilson Ferreira Cruz | Edinho | TAC | Vale do Taquari–Florianópolis | Em rota | Truck Mercedes 2636 |
+| Sandro Luiz Machado | Sandrão | CLT | Lajeado–Santa Cruz do Sul | Disponível | Truck VW Delivery |
+
+### 8 novos pares DEMO_QA (app.js)
+Inseridos antes do fechamento `];` do array DEMO_QA. Cobrem perguntas práticas da apresentação de julho:
+1. **Acesso mobile** — `celular.*lumina|lumina.*mobile|acesso.*fora.*empresa`
+2. **Relatórios automáticos** — `relatorio.*automatico|lumina.*gera.*relatorio`
+3. **Tipos de arquivo aceitos** — `que.*arquivo.*lumina.*aceita|lumina.*processa.*pdf`
+4. **Comportamento offline / internet cair** — `internet.*cair|sem.*internet|lumina.*offline`
+5. **Usuários simultâneos** — `quantas pessoas.*lumina|simultaneo.*lumina`
+6. **Redigir e-mails** — `lumina.*escreve.*email|email.*lumina|lumina.*redigir`
+7. **Alertas proativos** — `lumina.*alerta|alerta.*lumina|lumina.*avisa`
+8. **Como Lúmina aprende** — `lumina.*aprende.*processo|como.*lumina.*aprende`
+
+### UX mínimo (style.css)
+- Adicionado `border-bottom: 1px solid var(--border)` ao `.topbar` — era o único header sem separador visual, inconsistente com `.sb-brand` e `.view-header`.
+
+### Pesquisas web tentadas (sem sucesso)
+- ANTT Resolução 6.076/2026 tabela por eixo (R$/km para truck/carreta/bitrem): todos os acessos retornaram HTTP 403. Não inserido no código.
+- CCT MOVIFORT/SETCERGS 2025/2026 RS — valores salariais específicos para RS: sites retornaram resultados de MG, não RS. Não inserido.
+
+## Validações obrigatórias realizadas
+- `node --check app.js` → OK (antes de cada commit)
+- `node --check server.js` → OK (antes de cada commit)
+
+## Commits desta sessão
+- `94aaaec` — fix: DEMO_QA regex muito-bom falso positivo + 8 Q&A novos + 5 motoristas demo
+- `d2cbcec` — fix: UX — border-bottom no topbar para consistência visual
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo** (herdado 4x): valores R$/km para truck, carreta, bitrem. Todos os endpoints ANTT retornam 403. Tentar acesso direto na máquina do usuário.
+2. **Menu hambúrguer mobile** (herdado 4x): sidebar some em 640px sem alternativa. Feature nova — requer botão HTML + drawer CSS + JS para toggle.
+3. **`npm run build-dataset`** na máquina local para contar exemplos reais.
+4. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
+5. **Fine-tuning** quando dataset atingir 500+ exemplos.
+6. **CCT MOVIFORT 2025/2026 RS** — valores salariais exatos para RS (não MG). Tentar via site MOVIFORT/SETCERGS diretamente.
