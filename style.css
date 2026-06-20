@@ -389,6 +389,7 @@ body {
   padding: 1.1rem 2rem;
   gap: 1rem;
   flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .voice-group { display: flex; gap: 0.5rem; }
