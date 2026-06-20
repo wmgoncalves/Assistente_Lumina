@@ -4058,7 +4058,7 @@ const detectLocalInfo = async (text) => {
   // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
   if (/tabela.*antt|antt.*tabela|piso.*minimo.*frete|frete.*minimo|tabela.*frete.*antt|antt.*piso|valor.*minimo.*frete|lei.*frete.*minimo/.test(t))
     return pick([
-      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 7%. Em março/2026 a Portaria SUROC nº 4/2026 atualizou novamente o diesel de referência. O cálculo usa: Valor = distância (km) × CCD (coeficiente de deslocamento) + CC (carga/descarga). Para o valor exato por eixo e tipo de carga: calculadorafrete.antt.gov.br',
+      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 3,15% sobre os coeficientes anteriores. Em março/2026 a Portaria SUROC nº 4/2026 atualizou o CCD para R$5,986/km e o CC para R$478,76. O cálculo usa: Valor = (distância km × CCD × eixos) + CC. Para o valor exato por tipo de carga e composição: calculadorafrete.antt.gov.br',
       'Piso mínimo ANTT 2026 — desde outubro/2025 a fiscalização é 100% eletrônica (cruzamento de MDF-e, CT-e e CIOT). Multa por operar abaixo do piso: até R$ 10 milhões por operação. Os coeficientes variam por eixos (2 a 9) e tipo de carga: geral, granel, frigorificada, perigosa e neo-bulk. Para os valores exatos atualizados, use a calculadora oficial em calculadorafrete.antt.gov.br — a Scapini precisa cobrar no mínimo esses valores para ser lucrativa e legal.',
       'A tabela de frete mínimo da ANTT (Resolução 6.076/2026) protege o caminhoneiro e mantém a viabilidade do setor. É reajustada quando o diesel varia mais de 5% (Lei 13.703/2018). Além da resolução anual, portarias intermediárias ajustam os coeficientes ao longo do ano conforme o preço do diesel S-10. Consulte sempre o valor vigente em calculadorafrete.antt.gov.br antes de fechar um contrato.',
     ]);
@@ -4949,7 +4949,7 @@ const DEMO_QA = [
     ]},
 
   // NR-17 — ergonomia
-  { re: /\bnr.?17\b|ergonomia|postura.*trabalho|dor.*coluna.*trabalho|lesao.*postura|ler|dort/,
+  { re: /\bnr.?17\b|ergonomia|postura.*trabalho|dor.*coluna.*trabalho|lesao.*postura|\bler\/dort\b|dort/,
     r: [
       'NR-17 trata de ergonomia no trabalho — adaptar o ambiente às características físicas do trabalhador. Para motoristas: assento regulável, apoio lombar, altura do volante. Para administrativo: mesa e cadeira reguláveis, monitor na altura dos olhos, pausas de 10 min a cada 50 min de digitação. Dor ou desconforto persistente: comunique o RH e procure o SESMT.',
       'LER/DORT (lesões por esforço repetitivo) são reconhecidas como doença ocupacional — geram CAT e afastamento pelo INSS. Prevenção: pausas regulares, ginástica laboral (quando disponível), posto de trabalho ergonômico. Se sentir dor nos pulsos, ombros ou coluna no trabalho, não espere piorar — comunique o SESMT da Scapini.',
@@ -5945,7 +5945,7 @@ const DEMO_QA = [
   // Gestão de combustível e custo por rota
   { re: /custo.*combustivel.*rota|diesel.*rota|consumo.*rota|quanto.*gasta.*diesel|preco.*diesel.*hoje|diesel.*litro.*rs|custo.*km.*diesel/,
     r: [
-      'Custo de combustível por rota: consumpção média de caminhão truck em estrada = 3 km/l; carreta = 2,5 km/l. Diesel no RS em junho/2025: ~R$6,10/l (posto). Lajeado → São Paulo (~1.100 km): truck gasta ~367 litros = R$2.238 só em diesel. Carreta: ~440 litros = R$2.684. Adicione pedágio (BR-116: ~R$400-600 ida) e chegará ao custo direto de combustível+pedágio da rota.',
+      'Custo de combustível por rota: consumpção média de caminhão truck em estrada = 3 km/l; carreta = 2,5 km/l. Diesel no RS em 2026: ~R$6,20–6,60/l (posto, referência ANP). Lajeado → São Paulo (~1.100 km): truck gasta ~367 litros ≈ R$2.300 só em diesel. Carreta: ~440 litros ≈ R$2.750. Adicione pedágio (BR-116: ~R$400-600 ida) e chegará ao custo direto de combustível+pedágio da rota.',
       'Variação do diesel impacta diretamente a margem: a cada R$0,10 de alta no diesel, o custo de uma viagem Lajeado-SP sobe R$37-44 (truck) ou R$44-55 (carreta). Numa frota de 20 veículos fazendo essa rota, R$0,10 de alta = R$740-1.100 de custo extra por viagem completa. Daí a importância da cláusula de fuel surcharge no contrato — repassa automaticamente a variação para o cliente.',
     ]},
 
@@ -6823,6 +6823,41 @@ const DEMO_QA = [
       'Sim — a base de conhecimento é editável: você pode adicionar procedimentos, tabelas de frete, contatos, regras internas e qualquer informação da Scapini. O modelo Llama aprende automaticamente com o uso. Para customizações mais profundas (novas funcionalidades, integrações), a arquitetura modular permite extensões sem quebrar o que já funciona.',
       'A Lúmina foi projetada para crescer com a Scapini: base de conhecimento editável, modelo Llama que aprende com conversas reais, e arquitetura modular. Qualquer atualização de procedimento, tabela ou política pode ser adicionada — e a Lúmina passa a responder com o dado atualizado imediatamente.',
     ]},
+
+  // PPP e exames médicos obrigatórios (RH)
+  { re: /ppp\b|perfil.*profissiografico|exame.*admissional|exame.*demissional|exame.*periodico|aso.*motorista|exame.*aso|atestado.*saude.*ocupacional|quando.*fazer.*exame.*medico|exame.*saude.*obrigatorio/,
+    r: [
+      'Exames médicos obrigatórios pelo PCMSO: (1) Admissional — antes de começar a trabalhar; (2) Periódico — anual para motoristas (Lei 13.103/2015 exige a cada 12 meses); (3) Retorno ao trabalho — após afastamento de 30+ dias; (4) Mudança de função — ao mudar de cargo; (5) Demissional — no desligamento. Para motoristas: o ASO (Atestado de Saúde Ocupacional) é documento essencial — condutor sem ASO válido não pode operar.',
+      'PPP (Perfil Profissiográfico Previdenciário): documento obrigatório emitido pela empresa no desligamento do colaborador, com histórico de atividades, agentes nocivos e riscos. Exigido pelo INSS para aposentadoria especial. Transportadora deve manter PPP atualizado para todos os colaboradores expostos a agentes químicos (diesel), ruído (motor) ou ergonômicos (postura). O SESMT da Scapini é responsável pela emissão.',
+    ]},
+
+  // Contas a pagar / gestão de fornecedores (Financeiro)
+  { re: /contas.*pagar|gestao.*fornecedor|pagamento.*fornecedor|fornecedor.*pagamento|fluxo.*pagamento|prazo.*pagamento.*fornecedor|negociar.*prazo.*fornecedor|agenda.*pagamento/,
+    r: [
+      'Gestão de contas a pagar em transportadora: priorize por vencimento (D+0 para folha, D+3 para combustível, D+30 para fornecedores gerais). Negocie prazo mínimo de 30 dias com fornecedores de peças e pneus — alinhado ao prazo médio de recebimento de frete (28-35 dias). Capital de giro equilibrado quando prazo de pagamento ≥ prazo de recebimento. Fornecedores estratégicos (combustível, pneu) merecem contrato anual com desconto por volume.',
+      'Boas práticas no contas a pagar: centralize aprovações acima de R$5.000, use limite de alçada por cargo, exija NF antes de liberar qualquer pagamento, e implante chave-dupla para TEDs (dois autorizadores). Para transportadoras: diesel, pedágio e seguro representam ~60% do fluxo de pagamentos — negocie prazo ou pré-pagamento com desconto nessas três categorias.',
+    ]},
+
+  // Roteirização e planejamento de rotas (Logística)
+  { re: /roteiriz|planejamento.*rota|rota.*planejamento|definir.*rota|melhor.*rota|otimizar.*rota|rota.*otimizar|como.*planeja.*rota|algoritmo.*rota|tms.*roteiriz/,
+    r: [
+      'Roteirização em transportadora: o objetivo é minimizar km vazio, custo de diesel e tempo de motorista. Princípios: agrupar entregas por região geográfica (raio de no máximo 150 km de desvio), priorizar clientes com janela de entrega restrita (JIT), equilibrar a carga por veículo (evitar caminhão subcarregado). Para frota com 10+ veículos, um TMS com módulo de roteirização reduz em 12-20% o km total rodado.',
+      'Planejamento de rota eficiente: (1) Confirme o endereço ANTES de emitir o CT-e — erro de endereço gera reentrega; (2) Agrupe cargas por corredor viário (BR-116, BR-386, BR-290); (3) Calcule a janela de entrega considerando tempo de carga/descarga (média 30-60 min por ponto); (4) Valide o peso por eixo antes de sair — excesso de peso é multa na balança e risco de acidente. Rota planejada no TMS vs. rota improvisada: diferença de 8-15% em custo.',
+    ]},
+
+  // Avaliação de desempenho de colaboradores (RH)
+  { re: /avalia.*desempenho.*colaborador|desempenho.*administrativo|feedback.*colaborador|gestao.*desempenho.*rh|performance.*colaborador|como.*avaliar.*funcionario|avaliacao.*funcionario|ciclo.*avaliacao|formulario.*avaliacao/,
+    r: [
+      'Avaliação de desempenho para transportadora: combine métricas quantitativas (OTD individual, consumo de diesel, km vazio, sinistros) com qualitativas (feedback do gestor, auto-avaliação). Para motoristas: foco em segurança + produtividade. Para administrativo: qualidade das entregas internas (prazo de emissão de CT-e, erros de faturamento, atendimento ao cliente). Ciclo semestral é o mais equilibrado — feedback anual é tarde demais para corrigir.',
+      'Modelo simplificado de avaliação 360° para transportadora: (1) Auto-avaliação do colaborador (30%); (2) Avaliação do gestor direto (50%); (3) Avaliação de par/cliente interno (20%). Para motoristas, inclua dado do tacógrafo (frenagem brusca, velocidade excessiva) como métrica objetiva. Resultado: base para PLR, promoção, desenvolvimento e — quando necessário — demissão por justa causa com evidência documentada.',
+    ]},
+
+  // Documentação veicular obrigatória (Manutenção/Operação)
+  { re: /document.*veiculo|veiculo.*document|crlv.*veiculo|tacogr.*valid|validade.*tacogr|tacomet|certificado.*veiculo|inspecao.*anual.*veiculo|inspec.*antt.*veiculo|licenciamento.*caminhao|ipva.*caminhao/,
+    r: [
+      'Documentação obrigatória por veículo: (1) CRLV — licenciamento anual, vistoria em dia; (2) RNTRC — registro ANTT da empresa (não do veículo), 5 anos de validade; (3) Tacógrafo calibrado — padrão IMETRO, calibrado a cada 24 meses (resolução DENATRAN); (4) Extintor dentro da validade — mínimo 1 por unidade; (5) Triângulo e macaco; (6) CNH do motorista na categoria correta (D ou E). Checklist pré-viagem deve verificar todos esses itens.',
+      'Validade da documentação veicular: CRLV (anual — licenciamento), tacógrafo (calibração a cada 24 meses), extintor (inspeção semestral e troca conforme validade do agente), AET para carga especial (validade por operação). Multa por CRLV vencido: R$293,47 + pontos. Tacógrafo irregular: R$2.934,70. Dica: planilha de controle de vencimentos com alerta 30 dias antes é a solução mais simples — a Lúmina pode gerar essa planilha.',
+    ]},
 ];
 
 // Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
@@ -6960,7 +6995,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 230+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 300+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
