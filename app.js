@@ -1596,6 +1596,11 @@ const MOTORISTAS_DEMO = [
   { nome: 'João Batista Lima',      apelido: 'JB',      tipo: 'Agregado', rota: 'Vale do Taquari–Florianópolis', status: 'Em manutenção', placa: 'QWE-9934', veiculo: 'Truck Mercedes Actros'   },
   { nome: 'Roberto Carlos Mendes',  apelido: 'Beto',    tipo: 'CLT',      rota: 'Lajeado–Santa Maria',          status: 'Em rota',      placa: 'ABC-1147', veiculo: 'Carreta Volvo FH'        },
   { nome: 'Anderson Rodrigues',     apelido: 'Andinho', tipo: 'TAC',      rota: 'Lajeado–Curitiba',             status: 'Disponível',   placa: 'DEF-5523', veiculo: 'Truck DAF XF'            },
+  { nome: 'Gilmar José Ribeiro',    apelido: 'Gil',     tipo: 'CLT',      rota: 'Lajeado–São Paulo',            status: 'Em rota',      placa: 'GHI-7741', veiculo: 'Carreta Volvo FH 540'    },
+  { nome: 'Valdinei Costa Santos',  apelido: 'Dinho',   tipo: 'Agregado', rota: 'Lajeado–Canoas',               status: 'Disponível',   placa: 'JKL-3312', veiculo: 'Truck Iveco Hi-Road'     },
+  { nome: 'Rodrigo Alves Fonseca',  apelido: 'Rodriguinho', tipo: 'CLT',  rota: 'Lajeado–Ponta Grossa',        status: 'Em manutenção', placa: 'MNO-8856', veiculo: 'Carreta Scania S500'     },
+  { nome: 'Ednilson Ferreira Cruz', apelido: 'Edinho',  tipo: 'TAC',      rota: 'Vale do Taquari–Florianópolis', status: 'Em rota',     placa: 'PQR-1198', veiculo: 'Truck Mercedes 2636'     },
+  { nome: 'Sandro Luiz Machado',    apelido: 'Sandrão', tipo: 'CLT',      rota: 'Lajeado–Santa Cruz do Sul',    status: 'Disponível',   placa: 'STU-4470', veiculo: 'Truck VW Delivery'       },
 ];
 
 const _findMotorista = (q) => {
@@ -6660,8 +6665,8 @@ const DEMO_QA = [
     ]},
 
   // ── Elogios ───────────────────────────────────────────────────────────────────
-  { re: /parabens|muito boa|incrivel|impressionante|uau|sensacional|muito bom/,
-    r: ['Obrigada! Fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.'] },
+  { re: /parabens|incrivel|impressionante|uau|sensacional|^muito (bom|boa)[\s!.,]*$/,
+    r: ['Obrigada! Fico ainda melhor quando integrada aos sistemas da Scapini.', 'Que bom que gostou! Mal posso esperar pela integração completa.', 'Fico feliz! Ainda tenho muito a mostrar quando a integração com o CGI estiver ativa.'] },
 
   // ── Agradecimento ─────────────────────────────────────────────────────────────
   { re: /^obrigad|^valeu|^obg|^vlw/,
@@ -6857,6 +6862,64 @@ const DEMO_QA = [
     r: [
       'Documentação obrigatória por veículo: (1) CRLV — licenciamento anual, vistoria em dia; (2) RNTRC — registro ANTT da empresa (não do veículo), 5 anos de validade; (3) Tacógrafo calibrado — padrão IMETRO, calibrado a cada 24 meses (resolução DENATRAN); (4) Extintor dentro da validade — mínimo 1 por unidade; (5) Triângulo e macaco; (6) CNH do motorista na categoria correta (D ou E). Checklist pré-viagem deve verificar todos esses itens.',
       'Validade da documentação veicular: CRLV (anual — licenciamento), tacógrafo (calibração a cada 24 meses), extintor (inspeção semestral e troca conforme validade do agente), AET para carga especial (validade por operação). Multa por CRLV vencido: R$293,47 + pontos. Tacógrafo irregular: R$2.934,70. Dica: planilha de controle de vencimentos com alerta 30 dias antes é a solução mais simples — a Lúmina pode gerar essa planilha.',
+    ]},
+
+  // ── BLOCO WORKSHOP — Perguntas práticas sobre uso da Lúmina ───────────────────
+
+  // Acesso mobile / de fora da empresa
+  { re: /celular.*lumina|lumina.*celular|lumina.*mobile|acesso.*fora.*empresa|usar.*lumina.*casa|lumina.*casa|fora.*rede.*lumina|lumina.*fora.*rede|tablet.*lumina|lumina.*tablet/,
+    r: [
+      'A Lúmina roda no servidor interno da Scapini — por design, está disponível na rede local (escritório, pátio, filial via VPN). Acesso externo via celular é tecnicamente possível com VPN configurada para o servidor. Na fase atual, o foco é o uso interno. Acesso remoto pode ser habilitado pelo TI conforme a política de segurança da Scapini.',
+      'Hoje a Lúmina é de uso interno (rede da Scapini). Para motoristas em estrada, a integração com o App Motorista é o caminho — ele já tem a cobertura mobile e se integrará à Lúmina na Phase 2. O uso direto pelo celular do colaborador administrativo pode ser viabilizado com VPN.',
+    ]},
+
+  // Relatórios automáticos
+  { re: /relatorio.*automatico|lumina.*gera.*relatorio|automatizar.*relatorio|relatorio.*sem.*abrir|relatorio.*sozinha|gerar.*relatorio.*automatico|relatorio.*gerado.*automaticamente/,
+    r: [
+      'Sim! A Lúmina já gera relatórios hoje: carregue uma planilha DRE e peça "gera o relatório de KPIs de janeiro" — ela produz um documento Word ou PDF formatado com análise de variações, margens e destaques. Com integração ao CGI, vai gerar relatórios diários automáticos sem precisar nem pedir — chega no WhatsApp do gestor às 7h prontos.',
+      'Relatórios automáticos são uma das funcionalidades mais aguardadas. Hoje: a Lúmina gera relatório de KPIs a partir de planilha carregada (DRE, balancete). Futuramente: relatório diário de operação, semanal de frota e mensal financeiro — todos gerados automaticamente e enviados por e-mail ou WhatsApp no horário programado, sem intervenção humana.',
+    ]},
+
+  // Tipos de arquivo que a Lúmina lê
+  { re: /que (arquivo|tipo de arquivo|formato).*(lumina|voce).*(l[eê]|aceita|entend|processa|abre)|lumina.*(l[eê]|aceita|abre|processa).*(pdf|excel|word|arquivo|documento)|formatos.*aceitos.*lumina/,
+    r: [
+      'A Lúmina lê: planilhas Excel (.xlsx, .xls, .csv), documentos Word (.docx, .doc), PDFs e imagens (JPG, PNG — para análise visual). Para planilhas DRE, faz análise completa com gráficos. Para PDFs, extrai o texto e responde perguntas sobre o conteúdo. Para imagens, descreve e analisa o que está na foto. Limite: 20 MB por arquivo.',
+      'Formatos suportados hoje: Excel para DRE e dados financeiros, PDF para contratos e documentos, Word para atas e relatórios, imagem para fotos de ocorrência ou placa. Para cada tipo, adapto a análise: planilha → números e margens; contrato → cláusulas e riscos; imagem → contexto e identificação. Arraste o arquivo aqui e analiso em segundos.',
+    ]},
+
+  // O que acontece se a internet cair
+  { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
+    r: [
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (300+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
+    ]},
+
+  // Quantas pessoas podem usar ao mesmo tempo
+  { re: /quantas pessoas.*lumina|lumina.*quantas pessoas|simultaneo.*lumina|lumina.*simultaneo|varios usuarios.*lumina|lumina.*varios usuarios|todo mundo.*lumina|pode usar.*ao mesmo tempo/,
+    r: [
+      'A Lúmina suporta múltiplos usuários simultaneamente — é um servidor Node.js que atende requisições em paralelo. Na prática, 5 a 20 usuários simultâneos funcionam sem degradação perceptível. O limite real vem da API do Gemini (cota de requisições por minuto), não do servidor. Para um escritório com dezenas de colaboradores, a capacidade é mais do que suficiente.',
+      'Todos os colaboradores da Scapini podem usar a Lúmina ao mesmo tempo. Cada conversa é independente — sem interferência entre usuários. A interface rodando no navegador se conecta ao servidor central. Para departamentos com alta demanda, podemos configurar filas de prioridade. Isso é uma vantagem vs. chatbots SaaS que cobram por usuário.',
+    ]},
+
+  // Redigir e-mails e mensagens
+  { re: /lumina.*escreve.*email|email.*lumina|lumina.*redigir|redigir.*lumina|lumina.*mensagem.*profissional|mensagem.*lumina|lumina.*whatsapp.*texto|texto.*profissional.*lumina|lumina.*carta/,
+    r: [
+      'Sim! Me passe o contexto — para quem, qual o assunto, o tom desejado (formal, informal, direto) — e redigio o e-mail ou mensagem pronto para enviar. Funciona para: e-mail de cobrança para cliente inadimplente, resposta a reclamação, proposta comercial, aviso interno para colaboradores, ou mensagem de WhatsApp para parceiro. É só pedir.',
+      'Redação é uma das coisas que faço bem. Precisa de e-mail profissional? Diga para quem é, o assunto e o tom. Precisa de resposta para uma reclamação de cliente? Me mostre a reclamação e eu redigio a resposta. Comunicado interno para a equipe? Só falar. Economiza tempo e garante linguagem consistente da empresa.',
+    ]},
+
+  // Alertas proativos / monitoramento
+  { re: /lumina.*alerta|alerta.*lumina|lumina.*avisa|avisa.*lumina|lumina.*monitor|monitor.*lumina|lumina.*proativa|proativo.*lumina|lumina.*notifico|notifica.*lumina|lumina.*detecta.*problema/,
+    r: [
+      'Alertas proativos são parte do roadmap da Lúmina. Quando integrada ao CGI e telemetria, vai alertar: vencimento de CRLV 30 dias antes, tacógrafo chegando na calibração, veículo parado >4h sem motivo registrado, cliente com título vencido há mais de 7 dias, motorista em direção acima do limite da Lei 13.103. Hoje já alerta sobre vencimentos na conversa quando perguntada.',
+      'A Lúmina vai de reativa para proativa com a integração. Hoje: responde perguntas. Amanhã (Phase 2 CGI): monitora automaticamente e avisa antes do problema acontecer. Exemplo: "Atenção: o CRLV do ABC-1147 vence em 12 dias" ou "Cliente XYZ tem título vencido há 15 dias sem contato". Essas mensagens chegam no WhatsApp do gestor responsável.',
+    ]},
+
+  // Como a Lúmina aprende os processos internos
+  { re: /lumina.*aprende.*processo|como.*lumina.*aprende|lumina.*conhece.*scapini|como.*lumina.*sabe|lumina.*aprende.*regra|treino.*lumina|lumina.*treinada.*scapini|ensinar.*lumina|lumina.*aprend.*scapini/,
+    r: [
+      'A Lúmina aprende de três formas: (1) Base local — o conhecimento da Scapini já foi digitado aqui: procedimentos, legislação, dados da empresa, regulamentações; (2) Conversas — cada troca de mensagem fica no histórico e alimenta o contexto; (3) Fine-tuning do Llama — as conversas reais viram um dataset para treinar o modelo local, deixando a Lúmina cada vez mais "Scapini" na forma de responder.',
+      'O processo de aprendizado: primeiro, carregamos o conhecimento base (procedimentos da empresa, CCT, regulamentações ANTT). Depois, cada conversa real melhora o contexto de memória. A longo prazo, as conversas viram treino do modelo Llama local — o modelo se calibra para o vocabulário da Scapini, suas rotas, seus clientes e seus processos. Quanto mais usada, mais precisa fica.',
     ]},
 ];
 
