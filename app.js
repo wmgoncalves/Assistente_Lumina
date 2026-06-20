@@ -627,9 +627,9 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Margem EBITDA: setor 8-14% | líder 14-20% | abaixo da média <7%
 • OTD: setor 88-93% | excelência >97% | crítico <85%
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
-• Diesel S-10 RS (2026): R$6,50-6,90/l posto (ref. SUROC 3/2026: R$6,89/l) | R$6,10-6,40/distribuidor
+• Diesel S-10 RS (2026): R$7,00-7,40/l posto (ref. SUROC 4/2026 mar: R$7,35/l; SUROC 6/2026 abr: atualizado) | R$6,50-6,80/distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
-• Salário motorista CLT RS: R$3.800-5.200/mês (CCT MOVIFORT/SETCERGS — consulte RH para valor vigente)
+• Salário motorista CLT RS: piso base R$2.475,60/mês (motorista estrada/truck, CCT SETCERGS/RS vigência mai/2025-abr/2026, reajuste 5,32% jan/2026) | com diárias+adicionais: R$3.500-5.500/mês
 • Frete Lajeado-SP (truck, 1.100 km): R$4.500-6.500 dependendo da carga
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
@@ -3648,7 +3648,7 @@ const detectLocalInfo = async (text) => {
 
   if (/diesel.*hoje|preco.*diesel.*atual|litro.*diesel.*rs|combustivel.*preco.*atual/.test(t))
     return pick([
-      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — atualizado semanalmente por estado. Referência de 2026: S-10 no RS entre R$6,50-6,90/l no posto (a ANTT usou R$6,89/l na Portaria SUROC 3/2026 de março). Você pode me dizer o preço atual e eu ajusto os cálculos de frete imediatamente.',
+      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — atualizado semanalmente por estado. Referência de 2026: S-10 no RS entre R$7,00-7,40/l no posto (ANTT ref. SUROC 4/2026 mar: R$7,35/l; SUROC 6/2026 abr também reajustou). Você pode me dizer o preço atual e eu ajusto os cálculos de frete imediatamente.',
     ]);
 
   // ── Perguntas clássicas de demo / apresentação ──
@@ -3735,8 +3735,8 @@ const detectLocalInfo = async (text) => {
   // ── Combustível — perguntas rápidas ──
   if (/qual.*preco.*diesel.*hoje|diesel.*quanto.*hoje|litro.*diesel.*preco|diesel.*rs.*preco|diesel.*s.?10.*preco/.test(t))
     return pick([
-      'Não tenho acesso ao preço em tempo real, mas a referência 2026 para RS: diesel S-10 em posto R$6,50-6,90/l (ANTT usou R$6,89/l na Portaria SUROC 3/2026); na distribuidora (volume) cerca de R$6,10-6,40/l. Para o preço exato do dia, consulte anp.gov.br — sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
-      'Preço de referência diesel S-10 RS (2026): R$6,20-6,60/l em posto, R$5,80-6,10/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
+      'Não tenho acesso ao preço em tempo real, mas a referência 2026 para RS: diesel S-10 em posto R$7,00-7,40/l (ANTT ref. SUROC 4/2026: R$7,35/l na semana 15-21/mar/2026; SUROC 6/2026 de abr também atualizou); na distribuidora R$6,50-6,80/l. Para o preço exato do dia, consulte anp.gov.br — sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
+      'Preço de referência diesel S-10 RS (2026): R$7,00-7,40/l em posto (ref. SUROC 4/2026 mar), R$6,50-6,80/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
     ]);
 
   if (/consumo.*caminhao.*litros|quantos.*litros.*caminhao|media.*combustivel.*caminhao|consumo.*carreta|consumo.*truck/.test(t))
@@ -3899,7 +3899,7 @@ const detectLocalInfo = async (text) => {
 
   if (/qual.*diesel.*hoje|preco.*diesel|combustivel.*hoje|litro.*diesel/.test(t))
     return pick([
-      'O preço do diesel varia por posto e região — em 2026, o S-10 está em torno de R$ 6,50 a R$ 6,90/litro no Sul do Brasil (referência ANTT: R$6,89/l pela Portaria SUROC 3/2026). Para o preço negociado com a distribuidora da Scapini, verifique com o setor de abastecimento. Alta > 5% justifica revisão da tabela de frete.',
+      'O preço do diesel varia por posto e região — em 2026 o S-10 está em torno de R$ 7,00-7,35/litro no Sul do Brasil (referência ANTT SUROC 4/2026 de mar: R$7,35/l; SUROC 6/2026 de abr também reajustou). Para o preço negociado com a distribuidora da Scapini, verifique com o setor de abastecimento. Alta > 5% justifica revisão da tabela de frete.',
       'Diesel S-10 em Lajeado/RS oscila com o mercado da Petrobras. A ANP publica o preço semanal por UF em gov.br/anp. Para a Scapini, o preço negociado com a distribuidora costuma ser melhor que o de bomba — monitore a diferença mensalmente e ajuste o custo por km nos seus cálculos.',
     ]);
 
@@ -4078,8 +4078,8 @@ const detectLocalInfo = async (text) => {
   // ── Diesel RS / combustível ───────────────────────────────────────────────────
   if (/preco.*diesel|diesel.*preco|diesel.*rs|diesel.*rio grande|valor.*diesel|litro.*diesel|diesel.*litro|combustivel.*preco|preco.*combustivel/.test(t))
     return pick([
-      'Diesel S-10 no Brasil (referência ANP 2026): média nacional em torno de R$ 6,20–6,60/L. O RS historicamente fica próximo à média nacional — valores específicos variam semanalmente. A ANTT reajusta os coeficientes da tabela de frete quando o diesel varia mais de 5% (Portaria SUROC). Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
-      'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 6,00/L e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,14/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.357 por viagem, sem contar pedágio, motorista e manutenção.',
+      'Diesel S-10 no RS (referência ANP 2026): em torno de R$ 7,00–7,40/L no posto (ANTT ref. SUROC 4/2026 de março: R$7,35/L). A ANTT reajusta os coeficientes da tabela de frete quando o diesel varia mais de 5% (Portaria SUROC). Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
+      'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 7,20/L e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,57/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.830 por viagem, sem contar pedágio, motorista e manutenção.',
     ]);
 
   // ── Mercado de transporte rodoviário / setor ──────────────────────────────────
@@ -4716,8 +4716,8 @@ const tryLocalResponse = (text) => {
   // ── Salário motorista / remuneração ──
   if (/salario.*motorista|motorista.*salario|quanto.*ganha.*motorista|remuneracao.*motorista|piso.*motorista|salario.*motorista.*scapini/.test(t))
     return pick([
-      'O salário de motorista na Scapini segue a CCT negociada com o sindicato MOVIFORT (Sindicato dos Trabalhadores em Transportes de Cargas do RS). O piso salarial varia conforme a categoria do veículo e a função (tração/entrega). Para o valor atualizado vigente, consulte o RH da Scapini ou a CCT atual no portal do MOVIFORT. Além do salário, há benefícios: diárias de viagem, vale-alimentação e cesta básica.',
-      'Motoristas CLT da Scapini seguem a tabela salarial da CCT MOVIFORT/SETCERGS. O salário base é complementado por diárias de viagem (R$ 60–120/dia fora da base, conforme CCT), adicional de periculosidade (30% para carga perigosa com MOPP), e outros benefícios. O RH informa os valores vigentes conforme o cargo específico.',
+      'O salário de motorista na Scapini segue a CCT SETCERGS/RS (Carga Seca, vigência mai/2025–abr/2026). Piso base: R$ 2.475,60/mês para motorista de estrada (truck/carreta) e R$ 2.185,73/mês para coleta e entrega. Reajuste de 5,32% em jan/2026. Adicionais: diárias R$60–120/dia fora da base, periculosidade 30% (carga perigosa/MOPP), adicional por bitrem (+10%) e rodotrem (+15%). Total com todos os extras pode chegar a R$3.500–5.500/mês.',
+      'Motoristas CLT da Scapini seguem a tabela salarial da CCT SETCERGS/RS: piso de R$ 2.475,60/mês para motorista de estrada (truck/carreta, vigência 2025/2026). Com diárias de viagem (R$60–120/dia), adicional de periculosidade (30%) e benefícios como VA e cesta básica, a remuneração total fica entre R$3.500–5.500/mês para quem roda bastante. Para o valor exato do seu cargo, o RH tem a tabela atualizada.',
     ]);
 
   // ── Segurança / privacidade dos dados Lúmina ──
@@ -6974,8 +6974,8 @@ const DEMO_QA = [
   // O que é o MOVIFORT / sindicato
   { re: /movifort|setcergs|sindicato.*motorista.*rs|sindicato.*transport.*rs|cct.*motorista.*rs|convencao.*motorista.*rs/,
     r: [
-      'MOVIFORT é o Sindicato dos Trabalhadores em Transportes de Cargas do RS — representa os motoristas e demais trabalhadores do setor no Rio Grande do Sul. Junto ao SETCERGS (sindicato das empresas), negociam a CCT anual que define salário base, diárias, benefícios e regras de jornada para o setor.',
-      'A CCT MOVIFORT/SETCERGS é o acordo coletivo entre trabalhadores e empresas de transporte de cargas no RS. Define piso salarial, adicional de periculosidade (30% para carga perigosa), diárias de viagem, vale-alimentação e regras de horas extras. Para o valor do piso vigente, consulte o RH da Scapini ou o portal do MOVIFORT.',
+      'O SETCERGS (Sindicato das Empresas de Transportes de Carga e Logística no RS) negocia a CCT anual com os sindicatos dos trabalhadores. A CCT Carga Seca 2025/2026 (vigência 01/05/2025 a 30/04/2026) definiu: piso motorista de estrada/truck: R$ 2.475,60/mês | motorista de coleta e entrega: R$ 2.185,73/mês | reajuste: 5,32% a partir de jan/2026 | adicional periculosidade: 30% | adicional bitrem: +10% | adicional rodotrem: +15%.',
+      'A CCT de Carga Seca do RS (SETCERGS 2025/2026) define os mínimos da categoria: salário base R$ 2.475,60/mês para motorista de estrada, diárias de viagem R$60–120/dia fora da base, adicional de periculosidade 30% para quem porta MOPP e transporta carga perigosa. A empresa pode pagar acima da CCT, mas nunca abaixo. Para o valor vigente na Scapini especificamente, o RH tem a tabela completa.',
     ]},
 
   // Suporte técnico — quem mantém a Lúmina
