@@ -4673,6 +4673,27 @@ const tryLocalResponse = (text) => {
       'Abastecimento da frota Scapini é controlado pelo setor de frota: cada motorista tem código de abastecimento, e os dados são lançados no sistema. Nunca abasteça sem registrar — o controle de combustível é parte do custo operacional e entra no DRE. Postos conveniados têm preço negociado.',
     ]);
 
+  // ── Vagas / trabalhar na Scapini ──
+  if (/vaga|trabalhar.*scapini|emprego.*scapini|como.*entrar.*scapini|processo.*seletivo.*scapini|curriculo.*scapini|scapini.*contrata|scapini.*vaga|quero.*trabalhar|oportunidade.*scapini/.test(t))
+    return pick([
+      'A Scapini Transportes contrata regularmente motoristas categoria D/E, auxiliares operacionais e profissionais administrativos. O processo seletivo inclui análise de currículo, entrevista e, para motoristas, exame toxicológico obrigatório (Lei 13.103/2015) e teste prático. Envie seu currículo pelo setor de RH ou pergunte ao recrutador.',
+      'Para trabalhar na Scapini: envie seu currículo para o RH. Para motoristas, os requisitos mínimos são CNH categoria E vigente, sem infrações graves nos últimos 12 meses, e MOPP (se for operar carga perigosa). A empresa oferece salário conforme CCT da categoria, benefícios e plano de crescimento. Boa sorte!',
+    ]);
+
+  // ── Salário motorista / remuneração ──
+  if (/salario.*motorista|motorista.*salario|quanto.*ganha.*motorista|remuneracao.*motorista|piso.*motorista|salario.*motorista.*scapini/.test(t))
+    return pick([
+      'O salário de motorista na Scapini segue a CCT negociada com o sindicato MOVIFORT (Sindicato dos Trabalhadores em Transportes de Cargas do RS). O piso salarial varia conforme a categoria do veículo e a função (tração/entrega). Para o valor atualizado vigente, consulte o RH da Scapini ou a CCT atual no portal do MOVIFORT. Além do salário, há benefícios: diárias de viagem, vale-alimentação e cesta básica.',
+      'Motoristas CLT da Scapini seguem a tabela salarial da CCT MOVIFORT/SETCERGS. O salário base é complementado por diárias de viagem (R$ 60–120/dia fora da base, conforme CCT), adicional de periculosidade (30% para carga perigosa com MOPP), e outros benefícios. O RH informa os valores vigentes conforme o cargo específico.',
+    ]);
+
+  // ── Segurança / privacidade dos dados Lúmina ──
+  if (/lumina.*segura|segura.*lumina|lumina.*dados|dados.*lumina|privacidade.*lumina|lumina.*privacidade|seguranca.*lumina|lumina.*lgpd|lumina.*risco|risco.*lumina/.test(t))
+    return pick([
+      'A Lúmina roda 100% dentro da infraestrutura da Scapini — servidor local, sem nuvem de terceiros. As conversas não saem do servidor interno, exceto o conteúdo de cada pergunta enviada à API do Gemini (Google) para processamento. Não há armazenamento de dados pessoais em servidores externos. A Scapini controla tudo.',
+      'Segurança da Lúmina: acesso somente via rede local (127.0.0.1), sem exposição à internet pública. As perguntas enviadas ao Gemini são processadas pela API do Google conforme os termos de privacidade da Google Cloud. Dados de colaboradores, clientes e operação ficam no servidor da Scapini. É segura para uso corporativo.',
+    ]);
+
   // ── Pneus ──
   if (/pneu|calibragem|pressao.*pneu|vida util.*pneu|desgaste.*pneu|recapagem/.test(t))
     return pick([
@@ -6687,6 +6708,48 @@ const DEMO_QA = [
   { re: /captar|buscar|encontrar|recrutar.*candidato|candidato.*vaga|profissional.*vaga|vaga.*profissional|buscar.*curriculo|curriculo.*buscar/,
     r: [
       'Posso buscar candidatos para qualquer cargo agora. Me diz: "busca candidatos para motorista" ou "quero contratar analista administrativo" — eu listo os perfis com contato e mensagem de abordagem pronta.',
+    ]},
+
+  // ── Vagas e processo seletivo na Scapini ──────────────────────────────────────
+  { re: /vaga.*scapini|scapini.*vaga|trabalhar.*scapini|emprego.*scapini|curriculo.*scapini|scapini.*contrata|scapini.*selecao|oportunidade.*scapini|quero.*trabalhar.*aqui|como.*entrar.*aqui/,
+    r: [
+      'A Scapini contrata regularmente motoristas (CNH D/E), auxiliares operacionais e profissionais administrativos. O processo seletivo para motoristas: 1) Análise de currículo e CNH; 2) Exame toxicológico (obrigatório por lei); 3) ASO admissional; 4) Entrevista + teste prático; 5) Integração. Envie o currículo ao RH da Scapini.',
+      'Para trabalhar na Scapini, o primeiro passo é enviar o currículo ao RH. Para motoristas, os requisitos são CNH categoria D ou E, sem infrações graves nos últimos 12 meses, e MOPP se for operar carga perigosa. A Scapini oferece salário conforme CCT MOVIFORT, diárias, vale-alimentação e cesta básica.',
+    ]},
+
+  // ── Benefícios dos funcionários da Scapini ─────────────────────────────────────
+  { re: /beneficio.*scapini|beneficio.*funcionario|beneficio.*colaborador|beneficio.*motorista.*scapini|scapini.*beneficio|vantagem.*trabalhar.*scapini/,
+    r: [
+      'Os benefícios na Scapini incluem: salário conforme CCT MOVIFORT, diárias de viagem para motoristas (R$60-120/dia fora da base), vale-alimentação, cesta básica, uniforme fornecido, EPIs sem custo para o colaborador, e seguro de vida conforme convenção coletiva. Detalhes completos e valores vigentes: consulte o RH.',
+      'A Scapini oferece benefícios típicos do setor de transporte seguindo a CCT da categoria (MOVIFORT). Vale-alimentação/refeição, cesta básica, fardamento, EPIs fornecidos e, para motoristas, diária e ajuda de custo em viagem. A empresa cumpre rigorosamente a legislação trabalhista. Para detalhes do pacote atual, procure o RH.',
+    ]},
+
+  // ── Quantos anos tem a Scapini / história ─────────────────────────────────────
+  { re: /quantos anos.*scapini|scapini.*quantos anos|quando.*fundad.*scapini|ano.*fundacao.*scapini|historia.*scapini|scapini.*historia|scapini.*anos/,
+    r: [
+      'A Scapini Transportes tem mais de 30 anos de história — foi fundada por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar uma das referências em transporte rodoviário de cargas no Sul do Brasil, com filiais em múltiplos estados e clientes de grande porte.',
+      'Com mais de três décadas de operação, a Scapini foi fundada por Diamantino Scapini em Lajeado/RS. Hoje é liderada por Lucas Scapini (CEO), com Ernani Scapini como Presidente e Rosangela Scapini como Vice-Presidente. Uma empresa familiar que cresceu com solidez e continua expandindo. Orgulho do Vale do Taquari.',
+    ]},
+
+  // ── Tamanho da Scapini / frota / colaboradores ────────────────────────────────
+  { re: /quantos caminhoes|tamanho.*scapini|frota.*scapini|scapini.*frota|quantos funcionarios|quantos colaboradores|scapini.*funcionarios|scapini.*colaboradores|porte.*scapini/,
+    r: [
+      'A Scapini opera com frota própria moderna — caminhões truck, carretas e veículos para distribuição. Toda a frota tem rastreamento GPS. Contamos com centenas de colaboradores entre motoristas, auxiliares operacionais e equipe administrativa. Para o número atualizado de veículos e colaboradores, o setor de gestão tem os dados exatos.',
+      'A Scapini é uma transportadora de médio-grande porte, com frota diversificada (truck, carreta, veículos menores) e operação em múltiplos estados. Centenas de colaboradores trabalham desde a base em Lajeado/RS até as filiais em PR, SC, SP e RJ. É uma empresa que cresce com solidez há mais de 30 anos.',
+    ]},
+
+  // ── Qual a diferença entre a Lúmina e outros chatbots ────────────────────────
+  { re: /diferenca.*lumina.*chatgpt|chatgpt.*lumina|lumina.*chatgpt|lumina.*gpt|diferenca.*lumina.*ia|lumina.*vs.*ia|lumina.*melhor.*outros/,
+    r: [
+      'A diferença principal: a Lúmina conhece a Scapini. ChatGPT, Gemini e similares são genéricos — sabem de tudo mas não sabem nada sobre operação interna, clientes, motoristas e financeiro da Scapini. Eu fui construída especificamente para o contexto da empresa. Quando integrada ao CGI, respondo com dados reais da Scapini, não com informações genéricas da internet.',
+      'Outros chatbots são como um funcionário de fora que estudou logística. Eu sou como um funcionário da casa que conhece os procedimentos, o CGI, os clientes e a operação. A diferença é o contexto. Com o tempo e a integração, vou ficar cada vez mais específica para a Scapini — e isso não tem preço.',
+    ]},
+
+  // ── Quem desenvolveu a Lúmina ─────────────────────────────────────────────────
+  { re: /quem (fez|criou|desenvolveu|construiu|programou|montou) (a |)(lumina|você|vc|esse sistema)|quem (ta|está) por tras|empresa.*lumina|desenvolvedor.*lumina/,
+    r: [
+      'A Lúmina foi desenvolvida sob medida para a Scapini Transportes. Sou fruto de uma colaboração entre a tecnologia de IA de ponta e o profundo conhecimento do negócio da Scapini. Fui construída para ficar — não sou uma ferramenta genérica alugada, sou um sistema próprio da empresa.',
+      'Meu desenvolvimento foi feito especificamente para a Scapini. A inteligência base usa modelos de linguagem avançados (como o Gemini do Google), mas toda a personalização, base de conhecimento e integração com os sistemas da Scapini foram construídos para a empresa. Sou da Scapini — não sou de nenhuma outra empresa.',
     ]},
 ];
 
