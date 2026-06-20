@@ -625,7 +625,7 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Margem EBITDA: setor 8-14% | líder 14-20% | abaixo da média <7%
 • OTD: setor 88-93% | excelência >97% | crítico <85%
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
-• Diesel S-10 RS (2025): R$5,90-6,30/l posto | R$5,50-5,80/distribuidor
+• Diesel S-10 RS (2026): R$6,20-6,60/l posto | R$5,80-6,10/distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
 • Salário motorista CLT RS: R$3.800-5.200/mês (CCT MOVIFORT 2025)
 • Frete Lajeado-SP (truck, 1.100 km): R$4.500-6.500 dependendo da carga
@@ -3724,7 +3724,7 @@ const detectLocalInfo = async (text) => {
   if (/qual.*preco.*diesel.*hoje|diesel.*quanto.*hoje|litro.*diesel.*preco|diesel.*rs.*preco|diesel.*s.?10.*preco/.test(t))
     return pick([
       'Não tenho acesso ao preço em tempo real, mas a referência atual para RS (2025): diesel S-10 em posto R$5,90-6,30/l; na distribuidora (volume) R$5,50-5,80/l. Para o preço exato do dia, consulte anp.gov.br — a pesquisa semanal sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
-      'Preço de referência diesel S-10 RS (2025): R$5,90-6,30/l em posto, R$5,50-5,80/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
+      'Preço de referência diesel S-10 RS (2026): R$6,20-6,60/l em posto, R$5,80-6,10/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
     ]);
 
   if (/consumo.*caminhao.*litros|quantos.*litros.*caminhao|media.*combustivel.*caminhao|consumo.*carreta|consumo.*truck/.test(t))
@@ -4058,15 +4058,15 @@ const detectLocalInfo = async (text) => {
   // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
   if (/tabela.*antt|antt.*tabela|piso.*minimo.*frete|frete.*minimo|tabela.*frete.*antt|antt.*piso|valor.*minimo.*frete|lei.*frete.*minimo/.test(t))
     return pick([
-      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. Em fevereiro/2025 a ANTT reajustou os valores com base no IPCA acumulado de 3,28% (dez/2024–mai/2025) e diesel S-10 de referência a R$ 6,02/L. O cálculo usa: Valor = distância (km) × coeficiente de deslocamento (CCD) + coeficiente de carga/descarga (CC). Tabela oficial disponível em: calculadorafrete.antt.gov.br',
-      'Piso mínimo ANTT 2025 — valores de referência por tipo de carga e eixos: carga geral (truck 6 eixos): ~R$ 3,57/km; carreta LS (2+3 eixos): ~R$ 3,09/km; bitrem (9 eixos): ~R$ 3,83/km. Para cargas frigorificadas e perigosas, os coeficientes são maiores. A não observância do piso mínimo pode gerar multa de até R$ 10 milhões por operação. A Scapini precisa cobrar no mínimo esses valores para ser lucrativa.',
-      'A tabela de frete mínimo da ANTT foi criada para proteger o caminhoneiro e manter a viabilidade econômica do setor. É atualizada pelo menos uma vez por ano (geralmente com base no IPCA e variação do diesel). A última atualização foi em fevereiro/2025. Para consultar o piso exato por tipo de veículo e distância: calculadorafrete.antt.gov.br — gratuito e oficial.',
+      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 7%. Em março/2026 a Portaria SUROC nº 4/2026 atualizou novamente o diesel de referência. O cálculo usa: Valor = distância (km) × CCD (coeficiente de deslocamento) + CC (carga/descarga). Para o valor exato por eixo e tipo de carga: calculadorafrete.antt.gov.br',
+      'Piso mínimo ANTT 2026 — desde outubro/2025 a fiscalização é 100% eletrônica (cruzamento de MDF-e, CT-e e CIOT). Multa por operar abaixo do piso: até R$ 10 milhões por operação. Os coeficientes variam por eixos (2 a 9) e tipo de carga: geral, granel, frigorificada, perigosa e neo-bulk. Para os valores exatos atualizados, use a calculadora oficial em calculadorafrete.antt.gov.br — a Scapini precisa cobrar no mínimo esses valores para ser lucrativa e legal.',
+      'A tabela de frete mínimo da ANTT (Resolução 6.076/2026) protege o caminhoneiro e mantém a viabilidade do setor. É reajustada quando o diesel varia mais de 5% (Lei 13.703/2018). Além da resolução anual, portarias intermediárias ajustam os coeficientes ao longo do ano conforme o preço do diesel S-10. Consulte sempre o valor vigente em calculadorafrete.antt.gov.br antes de fechar um contrato.',
     ]);
 
   // ── Diesel RS / combustível ───────────────────────────────────────────────────
   if (/preco.*diesel|diesel.*preco|diesel.*rs|diesel.*rio grande|valor.*diesel|litro.*diesel|diesel.*litro|combustivel.*preco|preco.*combustivel/.test(t))
     return pick([
-      'Diesel S-10 no Brasil (referência ANP 2025): média nacional em torno de R$ 6,06/L. O RS historicamente fica próximo à média nacional — valores específicos variam semanalmente. A ANTT usa R$ 6,02/L como referência na tabela de frete de fevereiro/2025. Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
+      'Diesel S-10 no Brasil (referência ANP 2026): média nacional em torno de R$ 6,20–6,60/L. O RS historicamente fica próximo à média nacional — valores específicos variam semanalmente. A ANTT reajusta os coeficientes da tabela de frete quando o diesel varia mais de 5% (Portaria SUROC). Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
       'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 6,00/L e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,14/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.357 por viagem, sem contar pedágio, motorista e manutenção.',
     ]);
 
