@@ -274,4 +274,73 @@ Sessão autônoma noturna com foco em bugs críticos (PRIORIDADE 1), nova base d
 3. **Mais motoristas no MOTORISTAS_DEMO**: atualmente 5 (herdado).
 4. **DEMO_QA por setor**: RH, Manutenção, Logística, Financeiro (herdado).
 5. **Integração CGI Phase 2**: endpoints de leitura via API (herdado).
-6. **localFallback() contador**: "230+ respostas" desatualizado — atualmente ~260+ pares totais.
+6. **localFallback() contador**: "230+ respostas" desatualizado — atualmente ~280+ pares totais.
+
+---
+
+# Sessão Noturna — 19-20 de junho de 2026 (5ª sessão — Llama + Dataset)
+
+## Resumo
+Sessão autônoma focada na evolução do Llama como alma da Lúmina. Troca do modelo base de gemma3:1b para llama3.2:3b, criação do pipeline de dataset JSONL para fine-tuning, guia completo de fine-tuning QLoRA na RTX 3050, e 10 novos pares DEMO_QA para apresentação executiva.
+
+## Frentes concluídas
+
+### FRENTE 1 — Modelo base llama3.2:3b (CRÍTICO)
+- **Modelfile.lumina**: `FROM gemma3:1b` → `FROM llama3.2:3b`
+- **Parâmetros ajustados**: temperature 0.65, num_predict 600, num_ctx 8192 (era 4096), repeat_penalty 1.1
+- **server.js** linha 202: default ollamaModel de `gemma3:1b` para `llama3.2:3b`
+- **app.js** 3 ocorrências: padrão inicial (linha 99), fallback callOllama (linha 3264), UI configurações (linhas 8423/8433)
+
+### FRENTE 2 — Pipeline lumina-dataset.jsonl
+- **lumina-dataset-builder.js** criado na raiz (86 linhas)
+  - Coleta pares user→Lúmina do historico SQLite (`Lúmina.db`) — mesma query de `_coletarExemplos()`
+  - Extrai respostas do DEMO_QA de app.js via regex sobre o bloco `const DEMO_QA = [...]`
+  - Formata em JSONL com template `<|begin_of_text|>...<|eot_id|>` (padrão Llama 3.2 / unsloth)
+  - Salva em `lumina-dataset.jsonl`; imprime totais por fonte
+- **package.json**: script `"build-dataset": "node lumina-dataset-builder.js"` adicionado
+- **server.js**: `spawn('node', ['lumina-dataset-builder.js'], ...)` chamado após rebuild bem-sucedido do Ollama em `_doRebuildSilent()`
+
+### FRENTE 3 — Guia de fine-tuning
+- **lumina-finetune-setup.md** criado (188 linhas)
+  - Pré-requisitos: Python 3.11, CUDA 12.1+, unsloth, xformers, trl, peft, bitsandbytes
+  - Script `lumina_train.py` completo com QLoRA 4-bit, parâmetros para RTX 3050 6GB
+  - Exportação GGUF (Q4_K_M), criação do modelo no Ollama, ativação na Lúmina via API
+  - Tabela de parâmetros seguros para RTX 3050 6GB
+  - Threshold recomendado: 500+ exemplos antes de treinar
+
+### FRENTE 4 — DEMO_QA +10 pares para apresentação
+Novos pares adicionados (regex + 2 respostas cada):
+1. **Custo/ROI**: R$500–2.000/mês, payback no 1º mês
+2. **Amplifica (não substitui)**: 1 pessoa faz trabalho de 3 — ângulo executivo
+3. **Como aprende**: BD (memória) + Llama (alma) + Gemini (raciocínio) explicado de forma simples
+4. **Segurança dos dados**: servidor local 127.0.0.1, apenas pergunta vai ao Gemini, LGPD
+5. **Integração CGI (Phase 2)**: responde em tempo real sem abrir portal
+6. **Funciona offline**: Llama local + 300+ respostas sem internet
+7. **Vai ficar mais inteligente**: retreino automático a cada 5 interações, fine-tuning futuro
+8. **Prazo de implantação**: 1–2 semanas (configuração + treinamento do time)
+9. **Quem usa IA no transporte**: Localfrio, Tegma, JSL, Sequoia, DHL/FedEx/UPS
+10. **Posso personalizar**: base editável, Llama aprende com uso, arquitetura modular
+
+### FRENTE 5 — tryLocalResponse regex aprimorado
+- Regex do bloco "Vagas/processo seletivo" expandido para cobrir:
+  - `como.*contratar.*motorista`
+  - `processo.?seletivo` (sem necessidade do qualificador "scapini")
+
+## Status do dataset
+- `lumina-dataset-builder.js` validado com `node --check` ✅
+- Sem `better-sqlite3` no ambiente CI (esperado) — funciona na máquina local da Scapini
+- DEMO_QA extração: regex sobre bloco `const DEMO_QA = [...]` capturando cada `{ re, r }` entry
+
+## Commits desta sessão
+- `46a663b` — feat: Ollama base llama3.2:3b — modelo mais capaz para alma da Lúmina
+- `7723d4d` — feat: lumina-dataset-builder — pipeline JSONL para fine-tuning do Llama
+- `b08b76d` — docs: guia fine-tuning Llama na RTX 3050 6GB — unsloth + QLoRA
+
+## Pendências / próxima sessão
+1. **Executar `npm run build-dataset`** na máquina local para verificar contagem real de exemplos do historico
+2. **Instalar llama3.2:3b no Ollama**: `ollama pull llama3.2:3b` — não foi executado remotamente
+3. **Testar `ollama create lumina-treinada -f Modelfile.lumina`** com o novo base
+4. **Fine-tuning** quando dataset atingir 500+ exemplos
+5. **Tabela ANTT por eixo** (herdado)
+6. **Menu hambúrguer mobile** (herdado)
+7. **localFallback() contador**: atualizar para ~290+ pares totais
