@@ -550,3 +550,70 @@ Novos padrões adicionados para contexto do Grupo Scapini:
 5. **Fine-tuning** quando dataset atingir 500+ exemplos.
 6. **DEMO_QA por setor RH/Manutenção/Financeiro**: ainda há lacunas em perguntas setoriais específicas.
 7. **Mais motoristas MOTORISTAS_DEMO**: atualmente 10 — adicionar 5 mais para maior variedade em demo.
+
+---
+
+# Sessão Noturna — 20 de junho de 2026 (9ª sessão — Correção Scapini + UX)
+
+## Resumo
+Sessão autônoma de continuidade. Foco em: (1) auditoria PRIORIDADE 1 — nenhum novo bug crítico (confirmando sessões anteriores); (2) PRIORIDADE 2 — tentativa de pesquisa web bloqueada por 403 (ANTT, CCT MOVIFORT RS), melhorias de qualidade em código; (3) PRIORIDADE 3+4 — DEMO_QA +3 pares para apresentação de julho; (4) PRIORIDADE 5 — correções UX no Como Usar e configurações. Total: 3 commits. `node --check` OK em todos.
+
+## Auditoria PRIORIDADE 1 — resultado
+Nenhum novo bug crítico encontrado. Todos os itens da lista da missão já corrigidos em sessões anteriores:
+- `getElementById` sem null-guard: estáticos no HTML ✓
+- `JSON.parse` sem try/catch: todos protegidos ✓
+- `fetch()` sem `.catch()`: todos com catch ✓
+- `speak()` com undefined: `buildSheetSpeech()` sempre retorna string ✓
+- `_finalize()` com undefined: guard `raw ?? ''` ✓
+- DEMO_QA regex genérico: `\bpis\b`, `^muito (bom|boa)$`, `\bler\/dort\b` já corrigidos ✓
+
+## Bug encontrado e corrigido — dados Grupo Scapini desatualizados
+
+### tryLocalResponse linha 3993 e DEMO_QA linha 5335
+- **Problema**: Dois blocos antigos (um em `tryLocalResponse`, um em `DEMO_QA`) listavam empresas inexistentes do Grupo Scapini: "ScapiniSul", "Scasul", "Scapini Motors". Esses blocos disparavam ANTES das entradas corretas adicionadas nas sessões 4 e 8, retornando informação errada durante a apresentação.
+- **Fix**: Conteúdo atualizado para as 6 empresas corretas: Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH, Stokkie. "Mais de 30 anos" substituído por "quase 50 anos / fundada em 1977".
+- **Impacto**: Qualquer pergunta sobre "empresas do grupo" agora retorna dado correto nas primeiras tentativas.
+
+## Melhorias de qualidade (PRIORIDADE 2)
+
+### Pesquisa web — bloqueada (9ª vez)
+- Tabela ANTT por eixo (R$/km) — todos os sites retornam 403. Sem novos dados.
+- CCT MOVIFORT RS — ainda não encontrado valor específico para RS. Dado PR (SETCEPAR) não usado por ser estado errado.
+
+### Contadores de respostas atualizados
+- DEMO_QA atingiu **327 entradas** após esta sessão. Atualizado de "300+" para "325+" em 4 lugares user-visíveis: `localFallback()` final pick, bloco offline, bloco implantação, bloco internet caindo.
+
+## Novas entradas DEMO_QA — +3 pares (PRIORIDADE 4)
+
+1. **Suporte técnico**: LS TECH (infra local) + DV Digital (funcionalidades/integração CGI Phase 2). Explica que não é produto de prateleira.
+   - Regex: `suporte.*lumina|lumina.*suporte|quem.*da.*suporte|suporte.*tecnico.*lumina|manutencao.*lumina|problema.*lumina.*quem`
+2. **Escalabilidade / filiais**: servidor central, acesso web, sem custo adicional por filial, sem limite de usuários simultâneos.
+   - Regex: `filiais.*lumina|lumina.*filiais|escala.*lumina|lumina.*multiplas.*unidades|quantas.*filiais.*lumina|lumina.*toda.*empresa`
+3. **Novas funcionalidades / roadmap**: base de conhecimento editável por qualquer um + roadmap Phase 2 (CGI) + WhatsApp + portal motorista.
+   - Regex: `novas.*funcionalidades|funcionalidade.*nova|lumina.*nova.*funcao|pedido.*melhoria.*lumina|lumina.*roadmap|pode.*adicionar.*funcionalidade`
+
+## Correções UX (PRIORIDADE 5)
+
+### index.html — Como Usar
+- "Envie imagens ou .txt" → "Envie imagens, PDFs, Word (.docx) ou TXT" — reflete suporte a PDF/DOCX adicionado na sessão 6.
+- "Arraste e solte direto no chat" adicionado — reflete o drag & drop corrigido na sessão 6.
+- Porta corrigida: "localhost:3000" → "localhost:4321" (port do servidor real).
+- Comando de início corrigido: `npx serve .` → `node server.js` (correto para o projeto).
+
+### index.html — Configurações
+- Placeholder do campo Ollama: "gemma3:4b" → "llama3.2:3b" (modelo atual desde sessão 5).
+- Hint do campo Ollama: `ollama pull gemma3:4b` → `ollama pull llama3.2:3b`.
+
+## Commits desta sessão
+- `0b97315` — fix: dados Grupo Scapini desatualizados + UX Como Usar + contador DEMO_QA
+- `7be3a6b` — fix: atualiza contadores de respostas offline de 300+ para 325+ em 4 pontos
+- `a907e35` — feat: DEMO_QA +3 pares para apresentação de julho — suporte, filiais e roadmap
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo** (herdado 6x): R$/km para truck, carreta, bitrem — todos os 9+ sites retornam 403. Tentar via calculadorafrete.antt.gov.br com acesso real na máquina do usuário.
+2. **CCT MOVIFORT RS 2025/2026** (herdado 3x): valores salariais exatos para RS. Sem dado verificável remotamente.
+3. **`npm run build-dataset`** na máquina local para contar exemplos reais do histórico.
+4. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
+5. **Fine-tuning** quando dataset atingir 500+ exemplos.
+6. **DEMO_QA por setor**: RH/Saúde Ocupacional e Manutenção preventiva/preditiva ainda têm lacunas em perguntas muito específicas.
+7. **Mais motoristas MOTORISTAS_DEMO**: atualmente 10 — adicionar mais para maior variedade na demo.
