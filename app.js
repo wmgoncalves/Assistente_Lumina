@@ -6820,8 +6820,8 @@ const DEMO_QA = [
   // Funciona offline — Llama local + 300+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
-      'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 300 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 300+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 325 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 325+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6834,7 +6834,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 300+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 325+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6913,7 +6913,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (300+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (325+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
