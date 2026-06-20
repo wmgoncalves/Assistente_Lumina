@@ -7587,12 +7587,12 @@ document.addEventListener('DOMContentLoaded', () => {
   chatView.addEventListener('dragleave', () => { chatView.style.outline = ''; });
   chatView.addEventListener('drop', async (e) => {
     e.preventDefault(); chatView.style.outline = '';
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    if (!files.length) return;
-    for (const file of files) {
-      const { b64, mime } = await fileToB64(file);
-      addPendingImage(b64, mime);
-    }
+    const all = Array.from(e.dataTransfer.files);
+    if (!all.length) return;
+    const imgs = all.filter(f => f.type.startsWith('image/'));
+    const docs = all.filter(f => !f.type.startsWith('image/'));
+    for (const file of imgs) { const { b64, mime } = await fileToB64(file); addPendingImage(b64, mime); }
+    for (const file of docs) analyzeFile(file);
   });
 
   const sendText = async () => {
