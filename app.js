@@ -3992,8 +3992,8 @@ const detectLocalInfo = async (text) => {
 
   if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
     return pick([
-      'O Grupo Scapini é composto por várias empresas: Scapini Transportes (carga geral, a principal), ScapiniSul, Translíquidos/Scasul (transporte de líquidos a granel), Scapini Motors e LS Tech. Um grupo familiar de mais de 30 anos fundado por Diamantino Scapini, hoje com Lucas Scapini como CEO.',
-      'A Scapini não é só uma empresa — é um grupo. Principais unidades: transporte geral (Scapini Transportes), líquidos (Translíquidos/Scasul), ScapiniSul para operações regionais, e Scapini Motors para gestão de frota.',
+      'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
+      'O Grupo Scapini é uma empresa familiar fundada em 1977. São 6 empresas: Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH e Stokkie. Mais de 30 filiais no Brasil e presença internacional na Argentina, Uruguai e Paraguai.',
     ]);
 
   if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini|uberlandia.*scapini|triunfo.*scapini|camacari.*scapini/.test(t))
@@ -5334,8 +5334,8 @@ const DEMO_QA = [
   // Grupo Scapini — empresas do grupo
   { re: /grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|scapini motors|ls tech|quantas empresas.*scapini|divisoes.*scapini/,
     r: [
-      'O Grupo Scapini é composto por: Scapini Transportes (matriz, transporte rodoviário geral), ScapiniSul (operações sul), Scasul/Translíquidos (transporte de líquidos a granel), Scapini Motors (gestão de frota/veículos) e LS Tech (tecnologia). Um grupo familiar com mais de 30 anos de história no RS, fundado por Diamantino Scapini e hoje liderado por Lucas Scapini como CEO.',
-      'Scapini não é uma empresa — é um grupo. As principais unidades: Scapini Transportes (carga geral), Translíquidos/Scasul (líquidos a granel), ScapiniSul (filial sul), Scapini Motors e LS Tech. Cada empresa tem operação própria mas compartilha estrutura administrativa, TMS (CGI) e políticas do grupo.',
+      'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (químicos e líquidos a granel — sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
+      'A Scapini não é uma empresa só — é um grupo familiar fundado em 1977. As 6 empresas: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. Mais de 30 filiais no Brasil e presença no Mercosul (Argentina, Uruguai e Paraguai). Presidente: Ernani Scapini | CEO: Lucas Scapini.',
     ]},
 
   // Filiais e abrangência geográfica
@@ -7109,7 +7109,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 300+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 325+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',

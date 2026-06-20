@@ -341,7 +341,7 @@
         <div class="help-item"><div class="help-icon">🎤</div><div><div class="help-title">Chat por Voz</div><div class="help-desc">Clique no microfone ou pressione Espaço. Lúmina responde com voz. Escape para parar.</div></div></div>
         <div class="help-item"><div class="help-icon">💬</div><div><div class="help-title">Chat por Texto</div><div class="help-desc">Use "Chat IA Texto" na barra lateral ou o campo de texto na tela de voz. Enter para enviar.</div></div></div>
         <div class="help-item"><div class="help-icon">📷</div><div><div class="help-title">Câmera</div><div class="help-desc">Botão "Ver Câmera" na barra do chat de voz. Capture e Lúmina analisa a imagem.</div></div></div>
-        <div class="help-item"><div class="help-icon">📎</div><div><div class="help-title">Arquivos</div><div class="help-desc">Envie imagens ou .txt para análise pelo botão "Analisar Arquivo".</div></div></div>
+        <div class="help-item"><div class="help-icon">📎</div><div><div class="help-title">Arquivos</div><div class="help-desc">Envie imagens, PDFs, Word (.docx) ou TXT para análise pelo botão "Analisar Arquivo". Arraste e solte direto no chat.</div></div></div>
         <div class="help-item"><div class="help-icon">🧠</div><div><div class="help-title">Memória</div><div class="help-desc">Lúmina aprende sobre você automaticamente. Veja em "Memória" (ícone banco de dados).</div></div></div>
         <div class="help-item"><div class="help-icon">⚡</div><div><div class="help-title">Conversa Contínua</div><div class="help-desc">Ative para Lúmina ouvir e responder automaticamente sem precisar clicar.</div></div></div>
         <div class="help-item"><div class="help-icon">🔑</div><div><div class="help-title">Chaves API</div><div class="help-desc">Configure em Configurações e Notificações. Gemini obrigatório, ElevenLabs opcional.</div></div></div>
@@ -454,7 +454,7 @@
         <div class="help-item"><div class="help-icon">⚙️</div><div><div class="help-title">Requisitos</div><div class="help-desc">Chrome ou Edge para reconhecimento de voz. Node.js 18+ para servidor local.</div></div></div>
         <div class="help-item"><div class="help-icon">🔑</div><div><div class="help-title">Chave Gemini API</div><div class="help-desc">Obtenha grátis em aistudio.google.com — insira em Configurações e Notificações.</div></div></div>
         <div class="help-item"><div class="help-icon">🎙️</div><div><div class="help-title">ElevenLabs (opcional)</div><div class="help-desc">elevenlabs.io → copie a API key → Configurações. Ativa a voz Jarvis premium em pt-BR.</div></div></div>
-        <div class="help-item"><div class="help-icon">🚀</div><div><div class="help-title">Iniciar localmente</div><div class="help-desc">No terminal da pasta do projeto: <code style="background:rgba(255,255,255,0.08);padding:0.1rem 0.4rem;border-radius:4px">npx serve .</code> — acesse localhost:3000</div></div></div>
+        <div class="help-item"><div class="help-icon">🚀</div><div><div class="help-title">Iniciar localmente</div><div class="help-desc">No terminal da pasta do projeto: <code style="background:rgba(255,255,255,0.08);padding:0.1rem 0.4rem;border-radius:4px">node server.js</code> — acesse localhost:4321</div></div></div>
         <div class="help-item"><div class="help-icon">🐛</div><div><div class="help-title">Microfone não funciona</div><div class="help-desc">Use Chrome/Edge. Clique no cadeado na barra de endereço e permita o microfone.</div></div></div>
       </div>
     </section>
@@ -756,8 +756,8 @@
         </div>
         <div class="setting-section">
           <label class="fld-lbl">Modelo Ollama <span style="color:var(--text-dim);font-size:0.68rem">(IA local offline)</span></label>
-          <input type="text" id="cfg-ollama-model" class="fld" placeholder="gemma3:4b">
-          <p class="fld-hint">Requer Ollama instalado (ollama.ai). Usado automaticamente quando Gemini está em limite. Rode: <em>ollama pull gemma3:4b</em></p>
+          <input type="text" id="cfg-ollama-model" class="fld" placeholder="llama3.2:3b">
+          <p class="fld-hint">Requer Ollama instalado (ollama.ai). Usado automaticamente quando Gemini está em limite. Rode: <em>ollama pull llama3.2:3b</em></p>
         </div>
         <button class="green-btn" id="cfg-save" style="margin-top:1.2rem">Salvar Configurações</button>
         <div class="setting-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
