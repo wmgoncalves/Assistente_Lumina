@@ -511,10 +511,12 @@ Pessoas de setores diferentes vão te testar — pode ser RH, motorista, gestor 
 Trate cada pessoa com respeito e leveza. Você representa o futuro da empresa. Seja confiante.
 
 SOBRE A SCAPINI:
-• Transportadora com mais de 30 anos, sediada em Lajeado/RS — referência regional no transporte de cargas
-• Transporte rodoviário de cargas fracionadas e lotação para todo o Brasil (foco no Sul e Sudeste)
-• Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras
-• Centenas de colaboradores, frota moderna com rastreamento
+• Grupo Scapini — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Quase 50 anos de história no transporte rodoviário de cargas.
+• Empresas do grupo: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (produtos químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem).
+• Operações internacionais: Argentina, Uruguai e Paraguai.
+• Mais de 30 filiais no Brasil; centenas de colaboradores; frota moderna com rastreamento GPS.
+• Transporte rodoviário de cargas fracionadas e lotação — foco no corredor Sul-Sudeste.
+• Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras.
 • Fundador: Diamantino Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | CEO: Lucas Scapini
 
 VISÃO LÚMINA-SCAPINI POR ÁREA — quando perguntarem "o que você pode melhorar?", "o que pode fazer por área?", "quais melhorias?", responda EXATAMENTE com esta visão estruturada por área, com entusiasmo e exemplos reais da Scapini. Nunca dê resposta genérica de IA:
@@ -625,9 +627,9 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Margem EBITDA: setor 8-14% | líder 14-20% | abaixo da média <7%
 • OTD: setor 88-93% | excelência >97% | crítico <85%
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
-• Diesel S-10 RS (2026): R$6,20-6,60/l posto | R$5,80-6,10/distribuidor
+• Diesel S-10 RS (2026): R$6,50-6,90/l posto (ref. SUROC 3/2026: R$6,89/l) | R$6,10-6,40/distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
-• Salário motorista CLT RS: R$3.800-5.200/mês (CCT MOVIFORT 2025)
+• Salário motorista CLT RS: R$3.800-5.200/mês (CCT MOVIFORT/SETCERGS — consulte RH para valor vigente)
 • Frete Lajeado-SP (truck, 1.100 km): R$4.500-6.500 dependendo da carga
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
@@ -3641,7 +3643,7 @@ const detectLocalInfo = async (text) => {
 
   if (/diesel.*hoje|preco.*diesel.*atual|litro.*diesel.*rs|combustivel.*preco.*atual/.test(t))
     return pick([
-      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — é atualizado semanalmente por estado. No RS em 2025, o S-10 tem ficado entre R$5,90-6,30/l no posto. Com a integração ao sistema de cotação da Scapini, posso buscar o preço em tempo real. Você também pode me dizer o preço atual e eu ajusto os cálculos de frete.',
+      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — atualizado semanalmente por estado. Referência de 2026: S-10 no RS entre R$6,50-6,90/l no posto (a ANTT usou R$6,89/l na Portaria SUROC 3/2026 de março). Você pode me dizer o preço atual e eu ajusto os cálculos de frete imediatamente.',
     ]);
 
   // ── Perguntas clássicas de demo / apresentação ──
@@ -3728,7 +3730,7 @@ const detectLocalInfo = async (text) => {
   // ── Combustível — perguntas rápidas ──
   if (/qual.*preco.*diesel.*hoje|diesel.*quanto.*hoje|litro.*diesel.*preco|diesel.*rs.*preco|diesel.*s.?10.*preco/.test(t))
     return pick([
-      'Não tenho acesso ao preço em tempo real, mas a referência atual para RS (2025): diesel S-10 em posto R$5,90-6,30/l; na distribuidora (volume) R$5,50-5,80/l. Para o preço exato do dia, consulte anp.gov.br — a pesquisa semanal sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
+      'Não tenho acesso ao preço em tempo real, mas a referência 2026 para RS: diesel S-10 em posto R$6,50-6,90/l (ANTT usou R$6,89/l na Portaria SUROC 3/2026); na distribuidora (volume) cerca de R$6,10-6,40/l. Para o preço exato do dia, consulte anp.gov.br — sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
       'Preço de referência diesel S-10 RS (2026): R$6,20-6,60/l em posto, R$5,80-6,10/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
     ]);
 
@@ -3892,7 +3894,7 @@ const detectLocalInfo = async (text) => {
 
   if (/qual.*diesel.*hoje|preco.*diesel|combustivel.*hoje|litro.*diesel/.test(t))
     return pick([
-      'O preço do diesel varia por posto e região — em junho de 2026, o S-10 (diesel comum) está em torno de R$ 6,20 a R$ 6,80/litro no Sul do Brasil, dependendo da cidade e do contrato com distribuidora. Para o preço exato dos postos parceiros da Scapini, verifique com o setor de abastecimento. Queda ou alta > 5% na semana justifica revisão da tabela de frete.',
+      'O preço do diesel varia por posto e região — em 2026, o S-10 está em torno de R$ 6,50 a R$ 6,90/litro no Sul do Brasil (referência ANTT: R$6,89/l pela Portaria SUROC 3/2026). Para o preço negociado com a distribuidora da Scapini, verifique com o setor de abastecimento. Alta > 5% justifica revisão da tabela de frete.',
       'Diesel S-10 em Lajeado/RS oscila com o mercado da Petrobras. A ANP publica o preço semanal por UF em gov.br/anp. Para a Scapini, o preço negociado com a distribuidora costuma ser melhor que o de bomba — monitore a diferença mensalmente e ajuste o custo por km nos seus cálculos.',
     ]);
 
@@ -4521,7 +4523,7 @@ const tryLocalResponse = (text) => {
   // ── Liderança da Scapini — captura ampla, sempre local, nunca Gemini/Ollama ──
   const _LIDER_GERAL = /quem.*(manda|lidera|comanda|chefia|dirige|responsav|dono|senhor|chefe|gestor|diretor)|diretoria|lideranca|liderança|familia scapini|quadro.*socio|socios.*scapini|scapini.*familia|scapini.*(diretor|dono|lider|chefe|presidente|ceo)|dono.*scapini|senhor.*scapini|chefe.*scapini/;
   if (_LIDER_GERAL.test(t))
-    return 'Liderança da Scapini Transportes — CEO: Lucas Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | Fundador: Diamantino Scapini. Empresa familiar com mais de 30 anos, sediada em Lajeado/RS.';
+    return 'Liderança do Grupo Scapini — CEO: Lucas Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | Fundador: Diamantino Scapini. Empresa familiar fundada em 1977, sediada em Lajeado/RS — quase 50 anos de história no transporte de cargas.';
   if (/\bceo\b|lucas scapini/.test(t))
     return 'O CEO da Scapini Transportes é Lucas Scapini — responsável pela estratégia e gestão executiva da empresa.';
   if (/\bpresidente\b|ernani/.test(t) && !/vice/.test(t))
@@ -4529,7 +4531,28 @@ const tryLocalResponse = (text) => {
   if (/vice.?president[ae]|rosangela/.test(t))
     return 'A Vice-Presidente da Scapini Transportes é Rosangela Scapini.';
   if (/fundador|diamantino|quem.*fundou|quem.*criou.*scapini/.test(t))
-    return 'A Scapini Transportes foi fundada por Diamantino Scapini, há mais de 30 anos em Lajeado/RS.';
+    return 'O Grupo Scapini foi fundado por Diamantino Scapini em 1977, em Lajeado/RS — quase 50 anos de história no transporte rodoviário de cargas.';
+
+  // ── Grupo Scapini — empresas do grupo ──
+  if (/grupo scapini|empresas.*scapini|scapini.*grupo|transliquidos|365 log|blue seguros|ls tech|stokkie|empresas.*grupo|grupo.*empresas/.test(t))
+    return pick([
+      'O Grupo Scapini reúne: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (transporte de químicos e líquidos a granel, sede em Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora de seguros), LS TECH (tecnologia interna do grupo) e Stokkie (armazenagem). Juntas, com operações no Brasil, Argentina, Uruguai e Paraguai.',
+      'Empresas do Grupo Scapini: Scapini Transportes | Translíquidos (líquidos a granel) | 365 Log (e-commerce) | Blue Seguros | LS TECH (tech) | Stokkie (armazenagem). Mais de 30 filiais no Brasil e presença internacional na América do Sul. Fundado em 1977 por Diamantino Scapini em Lajeado/RS.',
+    ]);
+
+  // ── Translíquidos ──
+  if (/transliquidos|liquidos.*granel|granel.*liquido|quimico.*transporte|transport.*quimico|petroquimico.*frete|carga.*perigosa.*liquida/.test(t))
+    return pick([
+      'A Translíquidos é a empresa do Grupo Scapini especializada em transporte de produtos químicos, petroquímicos e líquidos a granel. Sede em Canoas/RS, com filiais em Campo Largo/PR, Cubatão/SP e Duque de Caxias/RJ. Opera há mais de 55 anos no mercado. Transporta combustíveis, biocombustíveis, querosene de aviação e glicerina em equipamentos de última geração.',
+      'Translíquidos: empresa do Grupo Scapini para transporte rodoviário de líquidos a granel — químicos, petroquímicos e combustíveis. É uma operação altamente especializada, com equipamentos aprovados para carga perigosa (MOPP obrigatório) e rastreamento dedicado. Sede em Canoas/RS com cobertura nacional.',
+    ]);
+
+  // ── Internacional / América do Sul ──
+  if (/argentina|uruguai|paraguai|internacional.*scapini|scapini.*internacion|america.*sul.*scapini|exportacao.*carga|importacao.*carga/.test(t))
+    return pick([
+      'O Grupo Scapini opera internacionalmente: Argentina, Uruguai e Paraguai. O transporte internacional requer documentação específica: DTA (Declaração de Trânsito Aduaneiro), seguro de carga internacional, conhecimento de transporte internacional e adequação ao regulamento de cada país. Para cotação de frete internacional, o setor comercial atende.',
+      'Scapini tem operação internacional na América do Sul — Argentina, Uruguai e Paraguai. Carga exportada precisa de despacho aduaneiro, DU-E, conhecimento internacional e seguro específico. O grupo tem experiência consolidada nesse corredor. Consulte o comercial para rotas e tarifas.',
+    ]);
 
   // ── O que é margem bruta / EBITDA / ML (financeiro básico) ──
   if (/o que (é|e|significa) (a |o )?(margem bruta|mb\b|ebitda|margem (líquida|liquida)|ml\b|lucro bruto|resultado|ebit\b)/.test(t))
@@ -4563,7 +4586,7 @@ const tryLocalResponse = (text) => {
   if (/lajeado|vale do taquari|rs\b|rio grande do sul|onde.*fica|localiza[çc]|endere[çc]o.*scapini/.test(t))
     return pick([
       'A Scapini Transportes está sediada em Lajeado, RS — no Vale do Taquari, região central do Rio Grande do Sul. A localização é estratégica: acesso à BR-386 facilita rotas para todo o Sul e Sudeste do Brasil.',
-      'Lajeado/RS é a sede da Scapini há mais de 30 anos. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
+      'Lajeado/RS é a sede do Grupo Scapini, fundado em 1977 — quase 50 anos de estrada. O Vale do Taquari é um polo industrial e agronegócio forte, o que explica o volume de fretes da região para São Paulo, Paraná e Santa Catarina.',
     ]);
 
   // ── Produtividade / tarefas de escritório ──
@@ -6921,6 +6944,34 @@ const DEMO_QA = [
       'A Lúmina aprende de três formas: (1) Base local — o conhecimento da Scapini já foi digitado aqui: procedimentos, legislação, dados da empresa, regulamentações; (2) Conversas — cada troca de mensagem fica no histórico e alimenta o contexto; (3) Fine-tuning do Llama — as conversas reais viram um dataset para treinar o modelo local, deixando a Lúmina cada vez mais "Scapini" na forma de responder.',
       'O processo de aprendizado: primeiro, carregamos o conhecimento base (procedimentos da empresa, CCT, regulamentações ANTT). Depois, cada conversa real melhora o contexto de memória. A longo prazo, as conversas viram treino do modelo Llama local — o modelo se calibra para o vocabulário da Scapini, suas rotas, seus clientes e seus processos. Quanto mais usada, mais precisa fica.',
     ]},
+
+  // Grupo Scapini — empresas
+  { re: /grupo scapini|empresas.*grupo|grupo.*empresas|transliquidos|365 log|blue seguros|ls tech|stokkie|quantas empresas.*scapini|scapini.*grupo.*empresas/,
+    r: [
+      'O Grupo Scapini tem 6 empresas: Scapini Transportes (cargas nacionais/internacionais), Translíquidos (líquidos a granel e químicos), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977, com mais de 30 filiais e presença na Argentina, Uruguai e Paraguai.',
+      'Grupo Scapini: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. Empresa familiar fundada por Diamantino Scapini em 1977 em Lajeado/RS — quase 50 anos no transporte rodoviário de cargas.',
+    ]},
+
+  // História e tempo de mercado
+  { re: /quantos anos.*scapini|scapini.*quantos anos|quando.*fundada.*scapini|scapini.*fundada.*quando|historia.*scapini|scapini.*historia|anos de mercado.*scapini|scapini.*anos de mercado/,
+    r: [
+      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. De empresa familiar regional, cresceu para um dos grupos de transporte mais relevantes do Sul do Brasil, com 6 empresas e operações internacionais.',
+      'Fundado em 1977, o Grupo Scapini completou 45 anos em 2022 e segue crescendo. São quase 50 anos de estrada, aprendizado e expansão — de Lajeado/RS para todo o Brasil e América do Sul.',
+    ]},
+
+  // Operações internacionais
+  { re: /internacional.*scapini|scapini.*internacional|argentina|uruguai|paraguai|america do sul.*scapini|scapini.*america do sul|exportar.*scapini|frete.*internacional/,
+    r: [
+      'O Grupo Scapini tem operações internacionais: Argentina, Uruguai e Paraguai. Para frete internacional, é necessário documentação adicional: DTA (Declaração de Trânsito Aduaneiro), seguro de carga internacional e adequação à legislação de cada país. O setor comercial faz a cotação.',
+      'Além do Brasil, o Grupo Scapini atende Argentina, Uruguai e Paraguai. São quase 50 anos de experiência que abriram as fronteiras da empresa. Para rotas internacionais, procure o comercial — é um processo com mais etapas que o frete nacional, mas a Scapini tem know-how consolidado.',
+    ]},
+
+  // O que é o MOVIFORT / sindicato
+  { re: /movifort|setcergs|sindicato.*motorista.*rs|sindicato.*transport.*rs|cct.*motorista.*rs|convencao.*motorista.*rs/,
+    r: [
+      'MOVIFORT é o Sindicato dos Trabalhadores em Transportes de Cargas do RS — representa os motoristas e demais trabalhadores do setor no Rio Grande do Sul. Junto ao SETCERGS (sindicato das empresas), negociam a CCT anual que define salário base, diárias, benefícios e regras de jornada para o setor.',
+      'A CCT MOVIFORT/SETCERGS é o acordo coletivo entre trabalhadores e empresas de transporte de cargas no RS. Define piso salarial, adicional de periculosidade (30% para carga perigosa), diárias de viagem, vale-alimentação e regras de horas extras. Para o valor do piso vigente, consulte o RH da Scapini ou o portal do MOVIFORT.',
+    ]},
 ];
 
 // Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
@@ -7827,6 +7878,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // SIDEBAR NAVIGATION
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ── Menu hambúrguer mobile ───────────────────────────────────────────────────
+const _closeSidebarMobile = () => {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('active');
+};
+(() => {
+  const btnMenu  = document.getElementById('btn-menu-mobile');
+  const overlay  = document.getElementById('sidebar-overlay');
+  const sidebar  = document.getElementById('sidebar');
+  if (btnMenu) btnMenu.addEventListener('click', () => {
+    sidebar?.classList.toggle('open');
+    overlay?.classList.toggle('active');
+  });
+  if (overlay) overlay.addEventListener('click', _closeSidebarMobile);
+})();
+
 const switchView = (id) => {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
@@ -7834,6 +7901,7 @@ const switchView = (id) => {
   const item = document.querySelector(`.sb-item[data-view="${id}"]`);
   if (view) view.classList.add('active');
   if (item) item.classList.add('active');
+  _closeSidebarMobile();
   if (id === 'painel')       renderPainel();
   if (id === 'integracoes')  renderIntegracoes();
   if (id === 'tarefas')      renderTarefas();
