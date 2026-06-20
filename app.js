@@ -7106,39 +7106,48 @@ const localFallback = (text) => {
 
   // Sem planilha — orienta o usuário
   if (/planilha|excel|csv|dre|financ|receita|despesa|lucro/.test(t2))
-    return 'Para análise financeira, arraste a planilha aqui. Aceito Excel, CSV e DRE formatada.';
-  if (/document|pdf|arquivo|relator|procedimento|manual|norma/.test(t2))
-    return 'Pode enviar o documento pelo botão "Analisar Arquivo". Assim respondo com base no conteúdo real.';
+    return pick([
+      'Para análise financeira, arraste a planilha direto aqui. Aceito Excel, CSV e DRE formatada — leio linha a linha e respondo em linguagem natural.',
+      'Tem os dados em Excel ou CSV? Arrasta aqui que eu analiso e conto o que encontrei. Funciona com DRE, fluxo de caixa e tabelas gerais.',
+    ]);
+  if (/document|pdf|arquivo|relator|procedimento|manual|norma|ati\b/.test(t2))
+    return pick([
+      'Manda o documento pelo botão ANALISAR ARQUIVO — leio o conteúdo e respondo com base no que está escrito, sem inventar.',
+      'Tem um PDF ou Word com esse procedimento? Manda pelo botão "Analisar Arquivo" que eu leio e respondo usando o texto real do documento.',
+    ]);
   if (/quanto|valor|preco|custo|total|soma/.test(t2) && /scapini|frete|carga|motorista|empresa|filial/.test(t2))
-    return 'Para consultar valores reais da Scapini, preciso da planilha ou integração com o CGI. Arraste um arquivo aqui ou me faça uma pergunta sobre procedimentos.';
+    return pick([
+      'Para valores reais da Scapini preciso da planilha ou da integração com o CGI. Arraste um arquivo aqui ou me pergunte sobre tabelas e procedimentos.',
+      'Esse número eu só teria com a planilha aberta ou via CGI. Por enquanto, me pergunte sobre regras, procedimentos ou tabelas — esses eu tenho.',
+    ]);
 
   // Perguntas gerais de conhecimento — não inventar dados internos
   if (/\bpresent\b|\bgift\b|\bideia\b|\bsugestao\b|\bsugestoes\b|\bcomo fazer\b|\bcomo funciona\b|\bo que e\b|\bquem e\b|\bonde fica\b|\bhistoria\b|\bsignificado\b|\bconceito\b/.test(t2))
     return pick([
-      'Boa pergunta! Com o Gemini ativo respondo isso direto. Por agora estou em modo demonstração.',
-      'Isso eu saberia responder com a IA completa. No momento estou em modo offline — tente novamente em instantes.',
+      'Boa pergunta! Com o Gemini ativo respondo isso em segundos. Por agora estou em modo demonstração — tenta de novo em instantes.',
+      'Isso eu consigo com a IA completa. No modo atual cubro operação, RH, financeiro e regulamentação da Scapini. Tenta outra pergunta!',
     ]);
 
   // Fallback inteligente por área detectada
   if (/motorista|habilitacao|jornada|cnh|clt.*motor|tac.*motor|salario.*motor/.test(t2))
     return pick([
-      'Sobre motoristas: posso responder sobre jornada, CNH, CLT vs TAC, admissão, DDS e onboarding. Me faça uma pergunta mais específica.',
-      'Para dados de motoristas específicos da Scapini (folha, escala, disponibilidade), preciso da integração com o CGI. Posso ajudar com regras gerais da categoria.',
+      'Sobre motoristas tenho bastante: jornada (Lei 13.103), CNH E/D, CLT vs TAC vs Agregado, admissão, DDS, MOPP. Me faça uma pergunta específica.',
+      'Para dados de motoristas da Scapini (folha, escala, disponibilidade em tempo real), preciso do CGI. Mas sobre regras da categoria, legislação e procedimentos, pode perguntar agora.',
     ]);
   if (/veiculo|caminhao|frota|manutencao|pneu|motor|borracheiro|mecanico|combustivel/.test(t2))
     return pick([
-      'Para frota: posso ajudar com manutenção preventiva, custo por km, pneus, consumo e programação de revisões. O que precisa?',
-      'Dados de veículos específicos (placa, hodômetro, histórico) ficam no CGI. Posso responder sobre gestão de frota em geral — qual aspecto?',
+      'Frota: cubro manutenção preventiva (intervalos, custos), pneus (vida útil, recapagem), consumo por rota e custo por km. O que precisa especificamente?',
+      'Dados de veículo específico (placa, hodômetro, histórico de manutenção) ficam no CGI. Sobre gestão de frota e custo operacional posso ajudar agora.',
     ]);
   if (/cliente|contrato.*cliente|faturamento.*cliente|inadimplente|cobranca/.test(t2))
     return pick([
-      'Para dados de clientes da Scapini (contatos, contratos, histórico de faturamento), preciso da integração com o CRM/CGI. Posso ajudar com estratégias de relacionamento, cobrança ou prospecção.',
-      'Quer prospectar clientes novos? Posso buscar leads no momento. Ou me pergunte sobre gestão do relacionamento com a carteira atual.',
+      'Preciso da integração CRM/CGI para dados de clientes da Scapini (contatos, contratos, histórico). Mas posso ajudar com prospecção, estratégia de cobrança e relacionamento — o que precisa?',
+      'Quer prospectar clientes novos agora? Posso buscar leads por segmento e região. Ou me pergunte sobre gestão da carteira existente.',
     ]);
   if (/rota|entrega|prazo|viagem|carga|frete/.test(t2))
     return pick([
-      'Para status de cargas em trânsito e posição de veículos, preciso da integração com rastreamento e CGI. Posso responder sobre prazos por rota, documentação e procedimentos de entrega.',
-      'Sobre rotas e entregas: cubro tabelas de prazo, documentação (CT-e, MDFe), procedimentos de coleta e entrega, e gestão de ocorrências. Me faça uma pergunta específica.',
+      'Status de carga em trânsito e posição de veículo precisa do rastreamento/CGI. Sobre prazos por rota, documentação (CT-e, MDFe) e procedimentos de entrega, respondo agora.',
+      'Rotas e entregas: cubro prazos RS→SP (3-5 dias), RS→RJ (4-6 dias), documentação obrigatória, gestão de ocorrências e protocolo de carga avariada. Qual aspecto precisa?',
     ]);
   if (/seguro|rctr|sinistro|avaria|roubo.*carga|acidente/.test(t2))
     return pick([
