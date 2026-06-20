@@ -475,3 +475,78 @@ Inseridos antes do fechamento `];` do array DEMO_QA. Cobrem perguntas práticas 
 4. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
 5. **Fine-tuning** quando dataset atingir 500+ exemplos.
 6. **CCT MOVIFORT 2025/2026 RS** — valores salariais exatos para RS (não MG). Tentar via site MOVIFORT/SETCERGS diretamente.
+
+---
+
+# Sessão Noturna — 20 de junho de 2026 (8ª sessão — Grupo Scapini + Diesel + Mobile)
+
+## Resumo
+Sessão autônoma com foco em: (1) auditoria de bugs PRIORIDADE 1 — nenhum novo crítico encontrado; (2) atualização de dados reais 2026 — diesel S-10 e informações do Grupo Scapini; (3) novas respostas locais sobre o grupo; (4) DEMO_QA +4 pares; (5) menu hambúrguer mobile — herdado há 4 sessões, finalmente implementado. Total: 2 commits de feature. `node --check` OK em todos.
+
+## Auditoria PRIORIDADE 1 — resultado
+
+Todos os itens verificados sem novos bugs:
+- `getElementById` sem null-guard: todos em elementos estáticos do HTML ✓
+- `JSON.parse` sem try/catch: todos protegidos ✓
+- `fetch()` sem `.catch()`: todos com catch ✓
+- `speak()` com undefined: `buildSheetSpeech()` sempre retorna string ✓
+- `_finalize()` com undefined: guard `raw ?? ''` da sessão anterior ✓
+- Variáveis antes de declaração: nenhuma encontrada ✓
+- DEMO_QA regex genérico: nenhum novo caso; `\bpis\b`, `^muito (bom|boa)$`, `\bler\/dort\b` já corrigidos ✓
+
+## Melhorias de qualidade (PRIORIDADE 2)
+
+### Diesel S-10 2026 — atualizado para Portaria SUROC 3/2026
+- **Dado novo confirmado**: Portaria SUROC nº 3/2026 (mar/2026) usou **R$ 6,89/l** como referência para piso de frete.
+- Atualizado em 5 locais: buildSystem (linha ~628), detectLocalInfo (3644, 3731, 3895) — valor corrigido de "R$5,90-6,30" e "R$6,20-6,80" para **R$6,50-6,90/l** posto.
+- Distribuidora atualizada de "R$5,50-5,80" para **R$6,10-6,40/l**.
+
+### `_thinkingBudget()` — nível 512 expandido
+Novos padrões adicionados para contexto do Grupo Scapini:
+`grupo scapini`, `transliquidos`, `365 log`, `blue seguros`, `ls tech`, `stokkie`, `frete.*internacional`, `exportac`, `importac`, `argentina.*frete`, `uruguai.*frete`, `paraguai.*frete`, `america.*sul.*transporte`, `carga.*quimica`, `perigosa.*liquida`, `granel.*liquido`
+
+## Novas respostas locais (PRIORIDADE 3)
+
+### tryLocalResponse — 3 novos blocos
+- **Grupo Scapini**: lista as 6 empresas (Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH, Stokkie), 30+ filiais, operações internacionais.
+- **Translíquidos**: especializada em químicos/petroquímicos/líquidos a granel, sede Canoas/RS, filiais em Campo Largo/PR, Cubatão/SP e Duque de Caxias/RJ, 55+ anos de mercado.
+- **Internacional**: Argentina, Uruguai e Paraguai; documentação necessária (DTA, seguro, conhecimento internacional).
+
+### Correções históricas
+- "mais de 30 anos" → "fundada em 1977, quase 50 anos" em 4 pontos (buildSystem, tryLocalResponse fundador, liderança, lajeado).
+- buildSystem expandido: empresas do grupo, operações internacionais, 30+ filiais.
+- `salário motorista CCT 2025` → `CCT MOVIFORT/SETCERGS — consulte RH para valor vigente` (sem inventar número desatualizado).
+
+## DEMO_QA — +4 novos pares (PRIORIDADE 4)
+
+1. **Grupo Scapini**: 6 empresas, fundado em 1977, 30+ filiais, América do Sul.
+2. **História / anos de mercado**: quase 50 anos, artigo "45 anos" de 2022 confirmado.
+3. **Internacional**: Argentina, Uruguai, Paraguai; documentação específica; setor comercial.
+4. **MOVIFORT / CCT**: o que é o sindicato, CCT MOVIFORT/SETCERGS, salário base e benefícios.
+
+## UX mobile (PRIORIDADE 5)
+
+### Menu hambúrguer implementado (herdado 4 sessões)
+- **index.html**: botão `#btn-menu-mobile` fixo (top-left) + overlay `#sidebar-overlay`
+- **style.css**: `.btn-menu-mobile` visível só em ≤640px; sidebar muda de `display:none` para `position:fixed + transform:translateX(-100%)` — desliza com transição suave
+- **app.js**: `_closeSidebarMobile()` exportada; `switchView()` fecha sidebar ao trocar de view; IIFE inicial registra listeners no botão hambúrguer e no overlay
+
+## Pesquisa web realizada
+- Grupo Scapini — confirmado: 6 empresas, fundado 1977, 45 anos comemorados em 2022, 30+ filiais, internacional AR/UY/PY ✅
+- Translíquidos — confirmado: sede Canoas/RS, 55 anos de mercado, filiais PR/SP/RJ ✅
+- Diesel S-10 2026 — Portaria SUROC 3/2026: R$6,89/l referência consumidor (mar/2026) ✅
+- CCT MOVIFORT RS — sites retornaram dados de MG e nacionais, não RS específico. Não inserido valor numérico.
+- Tabela ANTT por eixo (R$/km) — todos os 7 sites retornaram 403. Dado não adicionado.
+
+## Commits desta sessão
+- `37bf9b4` — feat: Grupo Scapini, diesel 2026, DEMO_QA e menu hambúrguer mobile
+- `dbe4046` — feat: thinkingBudget expandido com padrões do Grupo Scapini e internacionais
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo** (herdado 5x): R$/km para truck, carreta, bitrem — todos os sites retornam 403. Tentar acesso direto na máquina do usuário ou calculadorafrete.antt.gov.br.
+2. **CCT MOVIFORT RS 2025/2026** (herdado 2x): valores salariais exatos para motoristas no RS. Usar site MOVIFORT diretamente (não via busca).
+3. **`npm run build-dataset`** na máquina local para contar exemplos reais do histórico.
+4. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
+5. **Fine-tuning** quando dataset atingir 500+ exemplos.
+6. **DEMO_QA por setor RH/Manutenção/Financeiro**: ainda há lacunas em perguntas setoriais específicas.
+7. **Mais motoristas MOTORISTAS_DEMO**: atualmente 10 — adicionar 5 mais para maior variedade em demo.
