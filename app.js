@@ -4805,7 +4805,7 @@ const DEMO_QA = [
     ]},
 
   // 13º salário
-  { re: /13|decimo terceiro|gratificacao natalina|13.*salario/,
+  { re: /decimo.?terceiro|gratificacao.?natalina|\b13[o°]?\s*(salario|parcela|mes)|\bsalario.*\b13\b|\b13\b.*salar/,
     r: [
       'O 13º salário é pago em duas parcelas: a primeira (50%) até 30 de novembro, a segunda até 20 de dezembro. Para quem trabalhou o ano inteiro, é um salário completo. Quem entrou no meio do ano recebe proporcional aos meses trabalhados. Rescisão no meio do ano: 13º proporcional é pago junto com os acertos.',
       '13º salário: pago em duas parcelas, novembro e dezembro. O cálculo é: salário bruto ÷ 12 × meses trabalhados. Sobre o 13º incidem INSS e IR (se aplicável). Para dúvidas sobre seu cálculo específico, o RH da Scapini pode detalhar o holerite.',
@@ -6866,8 +6866,8 @@ const openWebPopup = (url, title = '') => {
   frame.onerror = () => showWebError(fullUrl);
 
   frame.src = fullUrl;
-  document.getElementById('web-title').textContent = title || fullUrl;
-  document.getElementById('web-external').href = fullUrl;
+  const _wtEl = document.getElementById('web-title'); if (_wtEl) _wtEl.textContent = title || fullUrl;
+  const _weEl = document.getElementById('web-external'); if (_weEl) _weEl.href = fullUrl;
   modal.classList.add('active');
 };
 
@@ -8576,7 +8576,7 @@ const JOURNAL_KEY = 'lumina_journal';
 const saveSessionJournal = () => {
   if (app.history.length < 2) return;
   const today    = new Date().toISOString().split('T')[0];
-  const journals = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]');
+  let journals; try { journals = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]'); } catch { journals = []; }
   const userMsgs = app.history.filter(h => h.role === 'user');
   const entry = {
     date:      today,
