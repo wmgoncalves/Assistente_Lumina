@@ -6972,6 +6972,27 @@ const DEMO_QA = [
       'MOVIFORT é o Sindicato dos Trabalhadores em Transportes de Cargas do RS — representa os motoristas e demais trabalhadores do setor no Rio Grande do Sul. Junto ao SETCERGS (sindicato das empresas), negociam a CCT anual que define salário base, diárias, benefícios e regras de jornada para o setor.',
       'A CCT MOVIFORT/SETCERGS é o acordo coletivo entre trabalhadores e empresas de transporte de cargas no RS. Define piso salarial, adicional de periculosidade (30% para carga perigosa), diárias de viagem, vale-alimentação e regras de horas extras. Para o valor do piso vigente, consulte o RH da Scapini ou o portal do MOVIFORT.',
     ]},
+
+  // Suporte técnico — quem mantém a Lúmina
+  { re: /suporte.*lumina|lumina.*suporte|quem.*da.*suporte|suporte.*tecnico.*lumina|manutencao.*lumina|lumina.*para.*quem|problema.*lumina.*quem/,
+    r: [
+      'O suporte da Lúmina fica com a equipe de TI da Scapini — a LS TECH cuida da infraestrutura local. Para funcionalidades novas, ajustes na base de conhecimento ou integração com sistemas, a DV Digital (desenvolvedora da Lúmina) entra em ação. Atualizações são feitas sem parar a operação.',
+      'Modelo de suporte: TI Scapini (LS TECH) cuida do servidor local e acesso. DV Digital resolve funcionalidades, melhorias e a integração com o CGI na Phase 2. A Lúmina é desenvolvida sob medida para a Scapini — não é produto de prateleira, então vocês têm canal direto com o time de desenvolvimento.',
+    ]},
+
+  // Escalabilidade — funciona em todas as filiais
+  { re: /filiais.*lumina|lumina.*filiais|escala.*lumina|lumina.*multiplas.*unidades|quantas.*filiais.*lumina|lumina.*todas.*filiais|lumina.*toda.*empresa/,
+    r: [
+      'A Lúmina escala para todas as filiais sem custo adicional de licença — o servidor fica na Scapini e qualquer unidade acessa via navegador na rede interna. Canoas, Santa Cruz, Curitiba, SP, RJ — todas acessam a mesma Lúmina com os mesmos dados. O que muda por filial é o contexto que cada gestor fornece.',
+      'Sem limite de filiais nem de usuários simultâneos: a arquitetura é servidor central + acesso web. Já na implantação inicial, todas as unidades podem usar. Se a empresa crescer e abrir novas filiais, é só garantir acesso de rede — sem nova instalação nem nova licença.',
+    ]},
+
+  // Novas funcionalidades e roadmap
+  { re: /novas.*funcionalidades|funcionalidade.*nova|lumina.*nova.*funcao|lumina.*melhorar.*futuro|pedido.*melhoria.*lumina|lumina.*roadmap|pode.*adicionar.*funcionalidade/,
+    r: [
+      'A Lúmina evolui continuamente. Há dois caminhos: (1) base de conhecimento — qualquer colaborador pode adicionar novos procedimentos, ATIs ou políticas pelo painel, e a Lúmina passa a responder com esse conteúdo imediatamente; (2) novas integrações e funcionalidades são desenvolvidas pela DV Digital em sprints mensais com priorização pela equipe da Scapini.',
+      'Funcionalidade nova que fizer sentido para a Scapini entra no roadmap. Atualmente planejados: integração CGI Phase 2 (leitura de dados em tempo real), alertas proativos por WhatsApp e portal do motorista com voz. Pedidos de melhoria vão direto para o time de desenvolvimento — vocês têm voz ativa no produto.',
+    ]},
 ];
 
 // Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
