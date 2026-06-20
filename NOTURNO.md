@@ -209,3 +209,69 @@ Rodada de refatoração técnica, análise de segurança, acessibilidade e quali
 4. **DEMO_QA**: enriquecer com perguntas por setor (RH, Manutenção, Logística, Financeiro).
 5. **Integração CGI Phase 2**: endpoints de leitura de dados reais via API.
 6. **thinkingBudget 512 para consultas CGI simples**: não sobrecarregar chamadas triviais.
+
+---
+
+# Sessão de Bugs e Base de Conhecimento — 20 de junho de 2026 (4ª sessão)
+
+## Resumo
+Sessão autônoma noturna com foco em bugs críticos (PRIORIDADE 1), nova base de conhecimento (PRIORIDADES 3+4) e atualização de dados regulatórios 2026 (PRIORIDADE 2). Total de 3 commits de bug fix + 2 commits de feature. Todos os arquivos passam em `node --check`.
+
+## Bugs corrigidos (PRIORIDADE 1)
+
+### DEMO_QA regex `/13/` genérica — falso-positivo crítico
+- **Problema**: `{ re: /13|decimo terceiro|.../ }` dispara para QUALQUER mensagem com "13": "empresa 13", "rota 13", "13 caminhões", "dia 13", etc. Retornava resposta sobre 13° salário quando não era isso.
+- **Fix**: substituído por `/decimo.?terceiro|gratificacao.?natalina|\b13[o°]?\s*(salario|parcela|mes)|\bsalario.*\b13\b|\b13\b.*salar/` — exige contexto salarial explícito.
+- **Risco antes**: qualquer usuário que digitasse "13" em qualquer contexto recebia resposta de 13° salário.
+
+### `saveSessionJournal` — JSON.parse sem try/catch
+- **Problema**: `const journals = JSON.parse(localStorage.getItem(JOURNAL_KEY) || '[]')` chamado no evento `beforeunload`. Se localStorage tiver dados corrompidos (possível em crashes), lança exceção não capturada.
+- **Fix**: envolvido em `try { ... } catch { journals = []; }`.
+
+### `openWebPopup` — getElementById sem null-guard
+- **Problema**: `document.getElementById('web-title').textContent` e `document.getElementById('web-external').href` sem guard após verificar frame e modal. Elementos existem no HTML mas padrão defensivo aplicado.
+- **Fix**: atribuição condicional via variável intermediária: `const _wtEl = getElementById('web-title'); if (_wtEl) _wtEl.textContent = ...`.
+
+## Nova base de conhecimento (PRIORIDADES 3+4)
+
+### tryLocalResponse — 3 novos blocos
+- **Vagas / trabalhar na Scapini**: processo seletivo, requisitos CNH D/E, MOPP, toxicológico obrigatório (Lei 13.103/2015).
+- **Salário motorista (CCT MOVIFORT)**: referencia CCT sem inventar valores, menciona diárias R$60-120/dia, adicional periculosidade 30%.
+- **Segurança / privacidade Lúmina**: explica server local 127.0.0.1, uso da API Gemini/Google, sem armazenamento externo.
+
+### DEMO_QA — 6 novos pares
+- **Vagas e processo seletivo**: 5 etapas (currículo → CNH → toxicológico → ASO → integração).
+- **Benefícios dos colaboradores**: salário CCT, diárias, vale-alimentação, cesta básica, EPIs, uniforme.
+- **História da Scapini (+30 anos)**: fundada por Diamantino Scapini em Lajeado/RS, liderança Ernani/Rosangela/Lucas.
+- **Tamanho / frota / colaboradores**: frota GPS, centenas colaboradores, múltiplos estados.
+- **Lúmina vs ChatGPT**: diferença de contexto vs IA genérica.
+- **Quem desenvolveu a Lúmina**: feita especificamente para Scapini, não ferramenta alugada.
+
+## Atualizações regulatórias (PRIORIDADE 2)
+
+### Tabela ANTT — atualizada para 2026
+- **Antes**: referências a "fevereiro/2025", "IPCA 3,28%", "diesel R$ 6,02/L", "última atualização fev/2025".
+- **Depois**: Resolução ANTT nº 6.076/2026 (jan/2026), Portaria SUROC 4/2026 (mar/2026), reajuste até 7%, fiscalização 100% eletrônica via MDF-e+CT-e+CIOT desde out/2025.
+- **Nota**: tentei obter valores exatos por eixo (R$/km) via WebSearch/WebFetch mas todos os sites retornaram 403. Dados verificados por snippets dos resultados de busca (sem inventar números).
+
+### Preço diesel S-10 — atualizado para 2026
+- **buildSystem()**: `R$5,90-6,30/l (2025)` → `R$6,20-6,60/l (2026)` posto; `R$5,50-5,80` → `R$5,80-6,10/l` distribuidora.
+- **tryLocalResponse** bloco diesel: mesma atualização aplicada.
+
+## Pesquisa web realizada
+- `ANTT tabela piso frete 2025 2026` — confirmou Resolução 6.076/2026, Portaria SUROC 4/2026, reajuste até 7%, fiscalização eletrônica.
+- 7 tentativas de WebFetch para obter valores exatos por eixo → todos 403. Dados não adicionados (sem inventar).
+- Confirmado: calculadorafrete.antt.gov.br é a ferramenta oficial para verificar valor exato.
+
+## Commits desta sessão
+- `45cec6e` — fix: corrige 3 bugs — DEMO_QA /13/ genérico, JSON.parse sem try/catch, null guard
+- `0c2e501` — feat: base de conhecimento — vagas, salário, história, frota e Lúmina
+- `74e649c` — feat: atualiza referências ANTT 2026 e preço diesel
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo**: obter valores exatos em R$/km para truck (4 eixos), carreta LS (5 eixos), bitrem (7 eixos), rodotrem (9 eixos) — os sites bloquearam scraping nesta sessão. Tentar via calculadorafrete.antt.gov.br.
+2. **Menu hambúrguer mobile** (herdado): sidebar some em 640px, ainda sem alternativa.
+3. **Mais motoristas no MOTORISTAS_DEMO**: atualmente 5 (herdado).
+4. **DEMO_QA por setor**: RH, Manutenção, Logística, Financeiro (herdado).
+5. **Integração CGI Phase 2**: endpoints de leitura via API (herdado).
+6. **localFallback() contador**: "230+ respostas" desatualizado — atualmente ~260+ pares totais.
