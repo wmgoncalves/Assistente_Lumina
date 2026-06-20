@@ -199,7 +199,7 @@ app.get('/api/config', (req, res) => {
     elevenVoiceId: c.elevenVoiceId || '',
     elevenVoiceFemaleId: c.elevenVoiceFemaleId || '',
     elevenVoiceMaleId: c.elevenVoiceMaleId || '',
-    ollamaModel:   c.ollamaModel   || 'gemma3:1b',
+    ollamaModel:   c.ollamaModel   || 'llama3.2:3b',
     hasGemini:     !!c.geminiKey,
     hasElevenLabs: !!c.elevenLabsKey,
     devToolsEnabled: DEV_TOOLS_ENABLED,
@@ -2712,6 +2712,7 @@ async function _doRebuildSilent() {
         const cfg = getCfg();
         if (cfg.ollamaModel !== OLLAMA_MODEL_NAME) { cfg.ollamaModel = OLLAMA_MODEL_NAME; saveCfg(cfg); }
         console.log(`[Ollama] ✅ Modelo atualizado com ${exemplos.length} exemplos reais.`);
+        spawn('node', ['lumina-dataset-builder.js'], { cwd: __dirname, stdio: 'pipe' });
       }
       _trainLock = false;
     });

@@ -96,7 +96,7 @@ const saveCfg = () => {
   }
 };
 
-const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'gemma3:1b', piperVoiceMale: 'pt_BR-cadu-medium', piperVoiceFemale: '', ...loadCfg() };
+const cfg = { username: '', geminiKey: '', elevenLabsKey: '', elevenVoiceFemaleId: '', elevenVoiceMaleId: '', ollamaModel: 'llama3.2:3b', piperVoiceMale: 'pt_BR-cadu-medium', piperVoiceFemale: '', ...loadCfg() };
 persistCfgLocal();
 
 // Carrega chaves do servidor quando rodando no Electron (sobrescreve localStorage se o servidor tiver chave)
@@ -3261,9 +3261,9 @@ const ollamaAvailable = async () => {
 
 const callOllama = async (customHistory = null) => {
   const history = customHistory || app.history;
-  const model   = cfg.ollamaModel || 'gemma3:1b';
+  const model   = cfg.ollamaModel || 'llama3.2:3b';
 
-  // System prompt enxuto — gemma3:1b tem contexto limitado, não suporta o prompt completo
+  // System prompt enxuto — llama3.2:3b é mais capaz, mas mantemos conciso para latência
   let sysPrompt = `Você é Lúmina, assistente IA da Scapini Transportes. Responda sempre em português brasileiro, de forma direta e objetiva. Nome do usuário: ${cfg.userName || 'usuário'}.`;
 
   // Adiciona resumo da planilha se existir (só contas principais, não tudo)
@@ -4674,7 +4674,7 @@ const tryLocalResponse = (text) => {
     ]);
 
   // ── Vagas / trabalhar na Scapini ──
-  if (/vaga|trabalhar.*scapini|emprego.*scapini|como.*entrar.*scapini|processo.*seletivo.*scapini|curriculo.*scapini|scapini.*contrata|scapini.*vaga|quero.*trabalhar|oportunidade.*scapini/.test(t))
+  if (/vaga|trabalhar.*scapini|emprego.*scapini|como.*entrar.*scapini|como.*contratar.*motorista|processo.?seletivo|curriculo.*scapini|scapini.*contrata|scapini.*vaga|quero.*trabalhar|oportunidade.*scapini/.test(t))
     return pick([
       'A Scapini Transportes contrata regularmente motoristas categoria D/E, auxiliares operacionais e profissionais administrativos. O processo seletivo inclui análise de currículo, entrevista e, para motoristas, exame toxicológico obrigatório (Lei 13.103/2015) e teste prático. Envie seu currículo pelo setor de RH ou pergunte ao recrutador.',
       'Para trabalhar na Scapini: envie seu currículo para o RH. Para motoristas, os requisitos mínimos são CNH categoria E vigente, sem infrações graves nos últimos 12 meses, e MOPP (se for operar carga perigosa). A empresa oferece salário conforme CCT da categoria, benefícios e plano de crescimento. Boa sorte!',
@@ -6751,6 +6751,78 @@ const DEMO_QA = [
       'A Lúmina foi desenvolvida sob medida para a Scapini Transportes. Sou fruto de uma colaboração entre a tecnologia de IA de ponta e o profundo conhecimento do negócio da Scapini. Fui construída para ficar — não sou uma ferramenta genérica alugada, sou um sistema próprio da empresa.',
       'Meu desenvolvimento foi feito especificamente para a Scapini. A inteligência base usa modelos de linguagem avançados (como o Gemini do Google), mas toda a personalização, base de conhecimento e integração com os sistemas da Scapini foram construídos para a empresa. Sou da Scapini — não sou de nenhuma outra empresa.',
     ]},
+
+  // ── BLOCO APRESENTAÇÃO: ROI, aprendizado, segurança, offline ─────────────────
+
+  // Custo / investimento na Lúmina
+  { re: /qual.*custo.*lumina|custo.*lumina|preco.*lumina|mensalidade.*lumina|quanto.*lumina.*custa|investimento.*lumina|lumina.*custo.*mensal|roi.*lumina|lumina.*retorno/,
+    r: [
+      'O investimento na Lúmina gira entre R$500 e R$2.000/mês — dependendo do volume de uso da API Gemini e das integrações ativas. O ROI aparece no primeiro mês: 2h/dia de tempo administrativo economizado já cobrem o custo. Sem contrato mínimo, sem servidor dedicado, sem licença de SaaS. É sistema próprio da Scapini.',
+      'Custo operacional da Lúmina: API Gemini (~R$0,001 por consulta complexa), servidor já existente na Scapini, e manutenção mensal. Total estimado: R$500–2.000/mês. Se economizar apenas 1 processo manual por dia, o payback é imediato no primeiro mês — e os benefícios continuam acumulando.',
+    ]},
+
+  // Lúmina amplifica — não substitui (ângulo ROI/apresentação)
+  { re: /lumina.*amplifica|amplifica.*lumina|lumina.*1 pessoa.*3|1 pessoa.*lumina|lumina.*trabalho.*de.*3|trabalho.*de.*3.*lumina/,
+    r: [
+      'A Lúmina não substitui — amplifica. Com ela, 1 pessoa consegue fazer o trabalho de 3: pesquisa, analisa planilha, busca candidatos e responde dúvidas ao mesmo tempo que você foca nas decisões que exigem julgamento humano. O objetivo é crescer sem aumentar a folha.',
+      'Amplificar, não substituir. Um analista com Lúmina entrega mais do que três sem ela: DRE analisada em 2 minutos, candidatos prospectados em 30 segundos, dúvidas de CLT resolvidas na hora. O diferencial competitivo não é cortar gente — é fazer mais com o mesmo time.',
+    ]},
+
+  // Como a Lúmina aprende — BD + Llama + Gemini
+  { re: /como.*lumina.*aprende|lumina.*como.*aprende|mente.*lumina|alma.*lumina|bd.*lumina|banco.*dados.*lumina|llama.*lumina|lumina.*llama|gemini.*llama.*lumina/,
+    r: [
+      'A Lúmina aprende em três camadas: o Banco de Dados (SQLite) é a memória — registra cada conversa real. O Llama (modelo local, na sua máquina) é a alma — treina com essas conversas automaticamente a cada 5 interações. O Gemini é o raciocínio atual — responde perguntas complexas com contexto externo. Com o tempo, o Llama vai assumindo mais, reduzindo dependência do Gemini.',
+      'BD é a mente (histórico de conversas reais), Llama é a alma (aprende offline com esses dados), Gemini é o raciocínio atual (análise complexa via API). A cada 5 interações o modelo local retreina silenciosamente — sem intervenção humana. Quanto mais a equipe usa, mais inteligente o Llama fica.',
+    ]},
+
+  // Segurança — dados ficam na Scapini
+  { re: /lumina.*segura.*dados|dados.*lumina.*fora|lumina.*dados.*sai|lumina.*server.*local|servidor.*local.*lumina|lumina.*lgpd.*dados|lumina.*fora.*empresa/,
+    r: [
+      'A Lúmina roda no servidor local da Scapini — os dados não saem da empresa. Somente o conteúdo de cada pergunta vai para a API do Gemini (Google), processado e descartado. O histórico de conversas, a base de conhecimento e o modelo Llama treinado ficam 100% na infraestrutura da Scapini.',
+      'Segurança total: servidor local (127.0.0.1), sem exposição à internet pública, sem banco de dados em nuvem. O modelo Llama treina offline, sem enviar dados a terceiros. A API Gemini processa apenas a pergunta atual — sem histórico externo. Conformidade com LGPD: dados de colaboradores e clientes ficam só na Scapini.',
+    ]},
+
+  // Integração CGI — phase 2
+  { re: /integrar.*lumina.*cgi|cgi.*integrar.*lumina|lumina.*cgi.*real.*time|lumina.*phase.*2|phase.*2.*lumina|cgi.*lumina.*tempo.*real/,
+    r: [
+      'Sim — a integração com o CGI é a Phase 2. Quando conectada, a Lúmina vai responder em tempo real: "quantas viagens estão abertas?", "qual o faturamento de Canoas esse mês?", "quais motoristas estão em rota?" — por voz ou texto, sem abrir o portal. A API do CGI já está mapeada, a infraestrutura está pronta.',
+      'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
+    ]},
+
+  // Funciona offline — Llama local + 300+ respostas
+  { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
+    r: [
+      'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 300 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 300+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+    ]},
+
+  // Vai ficar mais inteligente — aprendizado contínuo
+  { re: /lumina.*fica.*mais.*inteligente|mais.*inteligente.*lumina|lumina.*evolui|lumina.*melhora.*tempo|lumina.*fine.*tuning|treinamento.*lumina.*futuro/,
+    r: [
+      'Sim — automaticamente. A cada 5 interações reais, o modelo Llama retreina com as conversas da Scapini, sem intervenção humana. Com o fine-tuning futuro (QLoRA + RTX 3050), o Llama vai entender a Scapini tão bem quanto um funcionário de 10 anos. Cada pergunta respondida é uma aula para ela.',
+      'A Lúmina tem aprendizado contínuo: BD registra conversas → Llama treina automaticamente → respostas ficam mais precisas. Com fine-tuning supervisionado no futuro, vai responder sobre procedimentos internos, clientes e operação com detalhes que nenhuma IA genérica consegue. Quanto mais usarem, mais inteligente fica.',
+    ]},
+
+  // Quanto tempo para implantar
+  { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
+    r: [
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 300+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
+    ]},
+
+  // Quem usa IA no transporte
+  { re: /quem usa ia.*transporte|ia.*transporte.*quem usa|localfrio.*ia|tegma.*ia|jsl.*ia|sequoia.*ia|concorrente.*ia.*transporte|transporte.*ia.*mercado/,
+    r: [
+      'As grandes transportadoras já usam IA: Localfrio (otimização de rotas refrigeradas), Tegma (previsão de demanda automotiva), JSL (análise de frota e manutenção preditiva), Sequoia Logística (roteirização dinâmica). A diferença: elas usam IAs genéricas ou plataformas caras de SaaS. A Scapini está construindo uma IA própria, treinada nos seus dados — isso é vantagem competitiva real.',
+      'No Brasil: JSL, Tegma, Sequoia e Localfrio já têm projetos de IA em frota e roteirização. No mundo: DHL, FedEx e UPS investiram bilhões. O mercado de IA em logística deve atingir US$54 bilhões até 2029. A Scapini está entrando agora, com solução feita sob medida, custo acessível e sem depender de fornecedor externo.',
+    ]},
+
+  // Posso personalizar a Lúmina?
+  { re: /personalizar.*lumina|lumina.*personalizar|posso.*mudar.*lumina|configurar.*lumina|ajustar.*lumina|lumina.*ajustar|base.*conhecimento.*editar|editar.*base.*lumina/,
+    r: [
+      'Sim — a base de conhecimento é editável: você pode adicionar procedimentos, tabelas de frete, contatos, regras internas e qualquer informação da Scapini. O modelo Llama aprende automaticamente com o uso. Para customizações mais profundas (novas funcionalidades, integrações), a arquitetura modular permite extensões sem quebrar o que já funciona.',
+      'A Lúmina foi projetada para crescer com a Scapini: base de conhecimento editável, modelo Llama que aprende com conversas reais, e arquitetura modular. Qualquer atualização de procedimento, tabela ou política pode ser adicionada — e a Lúmina passa a responder com o dado atualizado imediatamente.',
+    ]},
 ];
 
 // Cache de resposta da sessão: evita chamar Gemini para a mesma pergunta em até 20min
@@ -8420,7 +8492,7 @@ const populateConfiguracoes = () => {
   document.getElementById('cfg-el-key').value       = cfg.elevenLabsKey || '';
   document.getElementById('cfg-voice-female').value  = cfg.elevenVoiceFemaleId || '';
   document.getElementById('cfg-voice-male').value    = cfg.elevenVoiceMaleId   || '';
-  document.getElementById('cfg-ollama-model').value  = cfg.ollamaModel         || 'gemma3:4b';
+  document.getElementById('cfg-ollama-model').value  = cfg.ollamaModel         || 'llama3.2:3b';
 };
 
 const initConfiguracoes = () => {
@@ -8430,7 +8502,7 @@ const initConfiguracoes = () => {
     cfg.elevenLabsKey       = document.getElementById('cfg-el-key').value.trim();
     cfg.elevenVoiceFemaleId = document.getElementById('cfg-voice-female').value.trim();
     cfg.elevenVoiceMaleId   = document.getElementById('cfg-voice-male').value.trim();
-    cfg.ollamaModel         = document.getElementById('cfg-ollama-model').value.trim() || 'gemma3:4b';
+    cfg.ollamaModel         = document.getElementById('cfg-ollama-model').value.trim() || 'llama3.2:3b';
     saveCfg(); toast('Configurações salvas.', 'success');
   });
   document.getElementById('cfg-clear-mem').addEventListener('click', () => {
