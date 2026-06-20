@@ -344,3 +344,76 @@ Novos pares adicionados (regex + 2 respostas cada):
 5. **Tabela ANTT por eixo** (herdado)
 6. **Menu hambúrguer mobile** (herdado)
 7. **localFallback() contador**: atualizar para ~290+ pares totais
+
+---
+
+# Sessão Noturna — 20 de junho de 2026 (6ª sessão — QA + Base de Conhecimento)
+
+## Resumo
+Sessão autônoma com foco em PRIORIDADE 1 (bugs), PRIORIDADE 2 (qualidade/dados reais), PRIORIDADE 4 (DEMO_QA novos pares) e PRIORIDADE 5 (UX). Total: 4 commits. Todos os arquivos passam em `node --check`. Pesquisa web confirmou reajuste ANTT 2026 de 3,15% (não 7% como estimado antes).
+
+## Bugs corrigidos (PRIORIDADE 1)
+
+### DEMO_QA regex `|ler|` — falso positivo crítico
+- **Problema**: regex `/\bnr.?17\b|ergonomia|...|ler|dort/` capturava o verbo comum "ler" (português), retornando resposta sobre NR-17/ergonomia para perguntas como "pode ler este PDF?", "quero ler isso".
+- **Fix**: `|ler|` → `|\bler\/dort\b|` — agora só captura o acrônimo LER/DORT explícito.
+
+### Auditoria PRIORIDADE 1 — itens verificados e OK
+- `getElementById` sem null-guard: elementos críticos (`stat-msgs`, `painel-msgs`, `chart-title`) estão no HTML estático — risco baixo, sem crash observável.
+- `fetch()` sem `.catch()`: todos os 8 pontos já têm `.catch(() => {})` ✓
+- `JSON.parse` sem try/catch: todos os 14 pontos já estão protegidos em try/catch ✓
+- `speak()` com undefined: todos os 20+ pontos usam strings literais ou valores já validados ✓
+- `_finalize()` com undefined: já tem `raw ?? ''` guard da sessão anterior ✓
+- Variáveis antes de declaração em closures: nenhuma encontrada ✓
+
+## Melhorias de qualidade (PRIORIDADE 2)
+
+### Tabela ANTT 2026 — dado corrigido
+- **Antes**: "reajuste de até 7%" (estimativa da sessão anterior).
+- **Depois**: "até 3,15%" — confirmado por múltiplas fontes web (ResoluçÃo 6.076/2026, snippets TranspNet, Estrelas das Estradas).
+- **Novo**: CCD R$5,986/km e CC R$478,76 adicionados à resposta (dados da pesquisa web).
+- Nota: 7 tentativas de WebFetch para obter tabela completa por eixo → todos 403. Valores por eixo não adicionados (sem inventar).
+
+### Diesel 2026 — referência de data atualizada
+- `detectLocalInfo` bloco diesel custo por rota: "Diesel no RS em junho/2025" → "em 2026" com faixa R$6,20–6,60/l.
+
+### `_thinkingBudget()` expandido
+- **2048** (raciocínio profundo): adicionados padrões jurídicos/trabalhistas ausentes:
+  `acao.*trabalhista|passivo.*trabalhista|verbas.*rescis|processo.*trabalhista|defesa.*trabalhista|reclamacao.*trabalhista|trabalhista.*calculo|indenizacao.*trabalhista|folha.*recalculo|calculo.*rescisao`
+- **512** (raciocínio leve): adicionados padrões operacionais novos:
+  `roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao`
+
+### `localFallback()` contador
+- "230+" → "300+" (DEMO_QA tem 300 entradas após esta sessão)
+
+## Novos pares DEMO_QA (PRIORIDADE 4) — 5 pares novos
+
+1. **PPP e exames médicos obrigatórios** (RH/Saúde Ocupacional): admissional, periódico, demissional, retorno ao trabalho; PPP para aposentadoria especial; SESMT responsável.
+2. **Contas a pagar / gestão de fornecedores** (Financeiro): priorização por vencimento, prazo mínimo 30 dias, chave dupla para TEDs, combustível/pedágio/seguro = 60% do fluxo.
+3. **Roteirização e planejamento de rotas** (Logística): princípios de agrupamento por região, janela de entrega, TMS com módulo de roteirização reduz km em 12-20%.
+4. **Avaliação de desempenho de colaboradores** (RH): modelo 360°, métricas tacógrafo para motoristas, ciclo semestral, base para PLR.
+5. **Documentação veicular obrigatória** (Manutenção/Operação): CRLV, RNTRC, tacógrafo calibrado, extintor, AET — multas por item, dica de planilha de controle.
+
+## Correções de UX (PRIORIDADE 5)
+
+### `file-input` accept attribute (index.html)
+- **Antes**: `accept="image/*,.txt"` — o botão "ANALISAR ARQUIVO" não mostrava PDFs/DOCX no seletor do SO.
+- **Depois**: `accept="image/*,.pdf,.docx,.doc,.txt"` — agora PDFs e Word aparecem no file picker nativo.
+
+### Drag & drop silenciosamente descartava documentos (app.js)
+- **Antes**: `chatView.addEventListener('drop')` filtrava apenas `image/` e ignorava PDFs/DOCX sem avisar.
+- **Depois**: separa `imgs` (→ addPendingImage) de `docs` (→ analyzeFile). Arrastar um PDF agora funciona.
+
+## Commits desta sessão
+- `b9f6ba5` — fix: DEMO_QA regex 'ler' sem contexto + ANTT 3,15% + diesel 2026 + counter 300+ + 5 DEMO_QA novos
+- `6c6f7e5` — fix: UX — file-input aceita PDF/DOCX e drag-drop roteia documentos para analyzeFile
+- `d000989` — feat: qualidade — thinkingBudget expandido com padrões jurídicos/trabalhistas e operacionais
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo** (herdado 3x): obter valores exatos R$/km para truck, carreta, bitrem — todos os sites retornam 403. Tentar via calculadorafrete.antt.gov.br com acesso real.
+2. **Menu hambúrguer mobile** (herdado 3x): sidebar some em 640px sem alternativa. Feature nova — requer botão + drawer CSS.
+3. **Mais motoristas MOTORISTAS_DEMO** (herdado): atualmente 5 — adicionar 5-10 fictícios realistas.
+4. **`npm run build-dataset`** na máquina local para verificar contagem de exemplos reais.
+5. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
+6. **Fine-tuning** quando dataset atingir 500+ exemplos.
+7. **CCT MOVIFORT 2025/2026 RS** — valores salariais exatos (sistema.salario.com.br retornou 403). Tentar via site MOVIFORT diretamente.
