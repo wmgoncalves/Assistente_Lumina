@@ -609,7 +609,7 @@ Nenhum novo bug crítico encontrado. Todos os itens da lista da missão já corr
 - `7be3a6b` — fix: atualiza contadores de respostas offline de 300+ para 325+ em 4 pontos
 - `a907e35` — feat: DEMO_QA +3 pares para apresentação de julho — suporte, filiais e roadmap
 
-## Pendências / próxima sessão
+## Pendências / próxima sessão (herdado da sessão 9)
 1. **Tabela ANTT por eixo** (herdado 6x): R$/km para truck, carreta, bitrem — todos os 9+ sites retornam 403. Tentar via calculadorafrete.antt.gov.br com acesso real na máquina do usuário.
 2. **CCT MOVIFORT RS 2025/2026** (herdado 3x): valores salariais exatos para RS. Sem dado verificável remotamente.
 3. **`npm run build-dataset`** na máquina local para contar exemplos reais do histórico.
@@ -617,3 +617,96 @@ Nenhum novo bug crítico encontrado. Todos os itens da lista da missão já corr
 5. **Fine-tuning** quando dataset atingir 500+ exemplos.
 6. **DEMO_QA por setor**: RH/Saúde Ocupacional e Manutenção preventiva/preditiva ainda têm lacunas em perguntas muito específicas.
 7. **Mais motoristas MOTORISTAS_DEMO**: atualmente 10 — adicionar mais para maior variedade na demo.
+
+---
+
+# Sessão Noturna 10 — 20 de junho de 2026 (20:22 UTC)
+
+## Resumo
+Sessão de continuidade: verificação e commit das mudanças pendentes da sessão 9 que ficaram sem commit (CCT SETCERGS/RS confirmados, diesel SUROC 4/2026). Auditoria PRIORIDADE 1 confirmou que todos os bugs críticos das sessões anteriores foram corrigidos. Único novo bug encontrado e corrigido: false positive na regex `integrac` do DEMO_QA.
+
+## Situação crítica: branch separado de origin/main
+
+**ATENÇÃO — REQUER AÇÃO DO USUÁRIO:**
+
+O `origin/main` está no commit `023901e` (18/junho/2026 — estado PRÉ-sessões noturnas). NENHUM commit das sessões 1-10 está no main. Isso ocorreu porque as sessões trabalharam em modo "detached HEAD" por engano.
+
+Todos os 52+ commits das sessões noturnas estão preservados no branch `sessoes-noturnas-jun2026` no GitHub.
+
+**Para resolver, o usuário deve escolher uma opção:**
+
+**Opção A — Merge/Rebase (recomendado se quiser histórico limpo):**
+```bash
+git checkout main
+git pull origin main
+git merge --allow-unrelated-histories origin/sessoes-noturnas-jun2026
+# Resolver conflitos se houver, depois:
+git push origin main
+```
+
+**Opção B — Force push (mais simples, substitui main pelo branch das sessões):**
+```bash
+git push origin sessoes-noturnas-jun2026:main --force
+```
+*Atenção: destrói o histórico atual do main (mas o main pré-sessões não tem valor prático, já que o trabalho real está no branch das sessões.)*
+
+**Opção C — Continuar trabalhando no branch sessoes-noturnas-jun2026** e fazer o merge quando chegar a data de apresentação.
+
+## O que foi feito nesta sessão
+
+### PRIORIDADE 1 — Auditoria de bugs (resultado)
+Todos os checks anteriores OK. Único novo bug encontrado:
+- **DEMO_QA `integrac` false positive**: a regex `integrac` sem contexto capturava "integração CGI", "integração da Lúmina", "integração de sistemas" e retornava resposta de onboarding/admissão. Corrigido para exigir contexto: `integrac.*(colab|funcionario|empresa|novo|equipe)`.
+
+### PRIORIDADE 1 — IDs no app.js não presentes no index.html (seguro)
+Auditado 5 IDs: `btn-new-chat`, `memory-list`, `no-key-banner`, `no-key-link`, `quick-actions` — todos tratados com guard `if (!el) return` ou `?.addEventListener`.
+
+### PRIORIDADE 2 — CCT SETCERGS/RS 2025/2026 (confirmado)
+Pesquisa confirmou valores reais via agente de background:
+- **Motorista de estrada/truck**: R$ 2.475,60/mês (piso, CCT carga seca 2025/2026)
+- **Motorista coleta/entrega**: R$ 2.185,73/mês
+- **Reajuste**: 5,32% em janeiro/2026
+- Atualizado em: `buildSystem()`, `tryLocalResponse()`, DEMO_QA MOVIFORT entry
+
+### PRIORIDADE 2 — Diesel S-10 RS — SUROC 4/2026 e SUROC 6/2026
+Todas as referências de diesel atualizadas de R$6,50-6,90/l para:
+- **Posto RS**: R$ 7,00-7,40/l (ANTT ref. SUROC 4/2026 março: R$7,35/l; SUROC 6/2026 abril também reajustou)
+- **Distribuidora**: R$ 6,50-6,80/l
+- **Exemplo de custo km**: atualizado de R$2,14/km (base R$6,00/l) → R$2,57/km (base R$7,20/l)
+- Locais atualizados: `buildSystem()` linha 630, `detectLocalInfo()` ~3 pontos, DEMO_QA diesel bloco ~4 respostas, localFallback()
+
+### PRIORIDADE 3 — 4 novos pares DEMO_QA (RH/fiscal)
+1. **Licença maternidade/paternidade**: 120 dias materno (até 180 PAE), 5/20 dias paterno (CLT/PAE)
+2. **Holerite/contracheque**: INSS 7,5-14%, IRRF por faixa, como ler o contracheque
+3. **Abono de falta/falta justificada**: CLT art. 473, prazo atestado 48h, impacto no DSR
+4. **CND/Certidão Negativa de Débitos**: Federal/Receita, Estadual/ICMS, Municipal/ISS, FGTS/Caixa, Trabalhista/TST
+
+### PRIORIDADE 3 — MOTORISTAS_DEMO expandido
+De 10 para **15 motoristas fictícios**. Novos 5 adicionados:
+- Paulo César Almeida (Paulão) — CLT — Lajeado→Rio de Janeiro
+- Evandro Luiz Correia (Vando) — Agregado — Vale do Taquari→Uberlândia
+- Nilton Borges Costa (Niltão) — CLT — Lajeado→Joinville (manutenção)
+- Cleomar Silva Dias (Cleo) — TAC — Vale do Taquari→Porto Velho
+- Helvécio Barbosa Ramos (Helvinho) — CLT — Lajeado→Belém
+
+### PRIORIDADE 3 — localFallback() mais natural
+Respostas reescritas com 2 variantes pick() por categoria, mencionando detalhes específicos da Scapini:
+- Planilha: cita "arraste aqui", Excel/CSV/DRE
+- Documento: cita "Analisar Arquivo", ATI
+- Motoristas: cita Lei 13.103, CNH E/D, DDS, MOPP
+- Frota: cita intervalos preventivos, custo/km
+- Rotas: cita tempos reais RS→SP (3-5 dias), RS→RJ (4-6 dias)
+
+## Commits desta sessão
+- `c6fd40d` — fix: DEMO_QA integrac falso-positivo + 5 motoristas + 4 Q&A novos (RH/fiscal)
+- `0c90e45` — feat: localFallback mais natural — respostas específicas para Scapini
+- `26e3b98` — feat: atualiza CCT SETCERGS/RS 2025-2026 e preços diesel S-10 SUROC 4/2026
+
+## Pendências / próxima sessão
+1. **MERGE sessoes-noturnas-jun2026 → main** (URGENTE — requer usuário): 52 commits das sessões não estão no main. Ver opções A/B/C acima.
+2. **Tabela ANTT por eixo** (herdado 7x): R$/km por tipo de veículo — todos os sites retornam 403. Só via calculadorafrete.antt.gov.br na máquina do usuário.
+3. **CCT MOVIFORT RS carreteiro** (herdado 4x): R$ 3.508,49 (bitrem) e R$ 3.667,65 (rodotrem) encontrados mas incertos se RS-específicos.
+4. **`npm run build-dataset`** na máquina local.
+5. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b`.
+6. **Fine-tuning** quando dataset atingir 500+ exemplos.
+7. **DEMO_QA**: Saúde Ocupacional e Manutenção preditiva ainda têm lacunas.
