@@ -1884,7 +1884,7 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Intercept: cotação de frete — Gemini nem sempre chama estimarFrete
-    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr|sai|seria)|quanto\s+vai\s+(?:custar|ficar|sair)|quanto\s+(?:seria\s+)?(?:o\s+)?(?:frete|transporte|levar)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete|valor\s+(?:do\s+)?transporte|custo\s+(?:de|do)\s+(?:frete|transporte)|custo\s+de\s+|me\s+faz?\s+uma\s+cota[çc][aã]o|fazer\s+uma\s+cota[çc][aã]o|calcul[ae]\s+(?:o\s+)?frete|calcul[ae]\s+(?:o\s+)?transporte|levar\s+(?:uma\s+)?carga|transportar\s+(?:de|para)|enviar\s+(?:de|carga|produto|mercadoria)|quanto\s+(?:fica\s+)?(?:pra?|para)\s+levar)\b/i;
+    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr|sai|seria)|quanto\s+vai\s+(?:custar|ficar|sair)|quanto\s+(?:seria\s+)?(?:o\s+)?(?:frete|transporte|levar)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete|valor\s+(?:do\s+)?transporte|custo\s+(?:de|do)\s+(?:frete|transporte)|custo\s+de\s+|me\s+faz?\s+uma\s+cota[çc][aã]o|fazer\s+uma\s+cota[çc][aã]o|calcul[ae]\s+(?:o\s+)?frete|calcul[ae]\s+(?:o\s+)?transporte|levar\s+(?:uma\s+)?carga|transportar\s+(?:de|para)|enviar\s+(?:de|carga|produto|mercadoria)|quanto\s+(?:fica\s+)?(?:pra?|para)\s+levar|simul[ae]\s+(?:o\s+)?frete|simula[çc][aã]o\s+de\s+frete|or[çc]amento\s+(?:de\s+)?(?:frete|transporte)|preciso\s+transportar|quero\s+transportar|quero\s+(?:um\s+)?frete|me\s+passa\s+(?:um\s+)?frete)\b/i;
     const FRETE_ROTA = /\b(de\s+|saindo\s+de\s+|origin[ae]m?\s*[:-]?\s*)([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25}?)\s+(?:pra?|para|até|ao?|→|>)\s+([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25})/i;
     if (FRETE_CMD.test(text) && FRETE_ROTA.test(text)) {
       try {
@@ -6830,11 +6830,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 300+ respostas
+  // Funciona offline — Llama local + 350+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
-      'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 325 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 345+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 350+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6847,7 +6847,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 345+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 350+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6926,7 +6926,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (345+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (350+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7290,7 +7290,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 345+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 350+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
