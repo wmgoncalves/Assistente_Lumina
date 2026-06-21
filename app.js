@@ -1603,6 +1603,11 @@ const MOTORISTAS_DEMO = [
   { nome: 'Rodrigo Alves Fonseca',  apelido: 'Rodriguinho', tipo: 'CLT',  rota: 'Lajeado–Ponta Grossa',        status: 'Em manutenção', placa: 'MNO-8856', veiculo: 'Carreta Scania S500'     },
   { nome: 'Ednilson Ferreira Cruz', apelido: 'Edinho',  tipo: 'TAC',      rota: 'Vale do Taquari–Florianópolis', status: 'Em rota',     placa: 'PQR-1198', veiculo: 'Truck Mercedes 2636'     },
   { nome: 'Sandro Luiz Machado',    apelido: 'Sandrão', tipo: 'CLT',      rota: 'Lajeado–Santa Cruz do Sul',    status: 'Disponível',   placa: 'STU-4470', veiculo: 'Truck VW Delivery'       },
+  { nome: 'Leandro Barbosa Lima',   apelido: 'Leandro', tipo: 'CLT',      rota: 'Lajeado–Rio de Janeiro',        status: 'Em rota',      placa: 'VWX-2233', veiculo: 'Carreta Volvo FH 460'    },
+  { nome: 'Vanderlei Souza Campos', apelido: 'Vandão',  tipo: 'TAC',      rota: 'Lajeado–Belo Horizonte',        status: 'Disponível',   placa: 'YZA-8875', veiculo: 'Carreta MB Actros 2651'  },
+  { nome: 'Claudio Roberto Nunes',  apelido: 'Claudinho', tipo: 'Agregado', rota: 'Lajeado–Florianópolis',       status: 'De férias',    placa: 'BCD-3361', veiculo: 'Truck VW Constellation'  },
+  { nome: 'José Carlos Ribeiro',    apelido: 'Zé Carlos', tipo: 'CLT',    rota: 'Lajeado–Curitiba',              status: 'Em rota',      placa: 'EFG-6694', veiculo: 'Bitrem Scania R500'      },
+  { nome: 'Marinaldo José Rodrigues', apelido: 'Marinaldo', tipo: 'CLT',  rota: 'Lajeado–Porto Alegre',          status: 'Disponível',   placa: 'HIJ-1127', veiculo: 'Truck Volvo VM 330'      },
 ];
 
 const _findMotorista = (q) => {
@@ -6828,7 +6833,7 @@ const DEMO_QA = [
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 325 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 340+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 345+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6841,7 +6846,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 340+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 345+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6920,7 +6925,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (340+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (345+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7048,6 +7053,41 @@ const DEMO_QA = [
     r: [
       'Controle de abastecimento na Scapini: o motorista abastece em postos conveniados usando o cartão de frota (ou vale-combustível) vinculado à placa do veículo. O sistema registra: posto, data, hora, litros abastecidos e hodômetro. Qualquer abastecimento fora do circuito conveniado requer autorização prévia e nota fiscal. O setor de frota cruza o consumo real com o hodômetro para detectar variações suspeitas.',
       'Gestão de combustível na Scapini: cada veículo tem um custo-alvo de l/km baseado na média da frota. Motorista que consome acima da média por 3 meses consecutivos passa por revisão técnica (pode ser motor, pneus, filtros) e avaliação de estilo de condução pelo tacógrafo. Abastecimento é registrado por placa — nunca por nome do motorista. Dúvidas sobre abastecimento fora do percurso: fale com o despachante antes.',
+    ]},
+
+  // Balança de pesagem rodoviária / posto de pesagem
+  { re: /balanca.*rodoviaria|balanca.*pesagem|posto.*pesagem.*caminhao|posto.*pesagem.*truck|pesagem.*rodoviaria|excesso.*peso.*multa|pbt.*excesso|como.*funciona.*balanca|parado.*balanca|parado.*pesagem|caminhao.*pesado.*demais|carga.*acima.*peso/,
+    r: [
+      'Posto de pesagem rodoviário: as balanças (fixas ou WIM — Weigh In Motion) medem o PBT e a carga por eixo. Quando parado na balança, o motorista apresenta CNH, CRLV, RNTRC e, se houver excesso, o agente emite o auto de infração. Excesso até 5%: multa (Art. 209 CTB, R$293,47 a R$2.934,70 conforme % excedido). Acima de 5%: retenção do veículo até redistribuição ou remoção da carga. Nunca discuta na balança — assine, depois conteste.',
+      'Limites de peso por composição: Truck 3 eixos: 23 t PBT | Carreta 5 eixos: 41,5 t | Carreta LS 6 eixos: 48,5 t | Bitrem 7 eixos: 57 t | Rodotrem 9 eixos: 74 t. A tolerância legal é de 5% nos eixos e no PBT. O DNIT e a ANTT publicam o mapa de balanças fixas e móveis nas rodovias federais. Antes de carregar acima da capacidade, calcule o peso por eixo — não só o total.',
+    ]},
+
+  // Licença maternidade e paternidade
+  { re: /licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|paternidade.*licenca|gestante.*trabalho|empregada.*gravida|motorista.*gravida|nascimento.*filho.*licenca|bebe.*nasceu.*licenca|quantos.*dias.*maternidade|quantos.*dias.*paternidade|gravidez.*trabalho|estabilidade.*gravida/,
+    r: [
+      'Licença maternidade: 120 dias corridos a partir do parto (CLT Art. 392). A empregada gestante tem estabilidade provisória desde a confirmação da gravidez até 5 meses após o parto — não pode ser demitida sem justa causa nesse período, mesmo durante o aviso prévio. Empresas aderentes ao programa Empresa Cidadã (prorrogação voluntária) oferecem 180 dias. Durante a licença, o salário é pago pela empresa e depois ressarcido via INSS (salário-maternidade).',
+      'Licença paternidade: 5 dias corridos após o nascimento (CLT Art. 473, II). Empresas no programa Empresa Cidadã podem ampliar para 20 dias corridos. Para adoção, a licença segue o mesmo prazo da maternidade biológica (120 dias). O colaborador deve comunicar a chefia imediata e o RH no momento do nascimento para providenciar o afastamento correto. Consulte o RH da Scapini para verificar se a empresa adere ao Empresa Cidadã.',
+    ]},
+
+  // Recapagem e reforma de pneu
+  { re: /recapagem.*pneu|pneu.*recapagem|reforma.*pneu|pneu.*reforma|recauchutagem|recauchutado|pneu.*retreading|quando.*recapar|recapar.*vale|recapagem.*custo|borracheiro.*recapar|pneu.*reformado|vida.*util.*recapagem/,
+    r: [
+      'Recapagem de pneu: processo de substituição da banda de rodagem desgastada com nova borracha vulcanizada. É permitida e regulamentada — mas com restrições: pneus recapados NÃO podem ser usados no eixo direcional (dianteiro) de caminhões acima de 10.000 kg (Resolução CONTRAN nº 558). No eixo tração e reboque, a recapagem é liberada. Custo médio: R$500-900 vs pneu novo R$1.800-2.400 — economia de ~60%, quando bem executada.',
+      'Quando recapar vs comprar novo: recapagem é viável quando a carcaça está íntegra (sem danos estruturais), o pneu tem menos de 10 anos de fabricação e foi retirado com sulco mínimo respeitado (1,6 mm). Um pneu de qualidade aguenta até 3 recapagens em eixos não direcionais, multiplicando por 3 a vida total. Exija do fornecedor certificado de qualidade da carcaça e laudo de inspeção — recapagem barata de carcaça ruim é desperdício e risco.',
+    ]},
+
+  // Adiantamento salarial / vale
+  { re: /adiantamento.*salario|adiantamento.*salarial|salario.*adiantado|vale.*salario|vale.*scapini|adiantar.*salario|como.*pedir.*adiantamento|quero.*adiantamento|quinzena.*pagamento|primeiro.*pagamento.*quinzena/,
+    r: [
+      'Adiantamento salarial (vale): a CLT permite que a empresa conceda adiantamento de salário. A prática comum é pagar até 40% do salário bruto na 1ª quinzena (em torno do dia 15) e o restante no fechamento do mês. O desconto do vale aparece no holerite como "adiantamento quinzenal". Consulte o RH da Scapini para saber o percentual e o prazo exato praticado internamente.',
+      'Vale vs adiantamento vs empréstimo consignado: vale é antecipação do próprio salário (sem juros). Consignado é empréstimo descontado em folha (com juros, limite 35% do salário líquido). A CCT MOVIFORT pode prever condições específicas para vale. Importante: o empregador não pode descontar mais de 30% do salário em vales, salvo exceções previstas em ACT/CCT. Dúvida sobre o seu caso específico: procure o RH.',
+    ]},
+
+  // Gestão de segurança de carga / gerenciamento de risco
+  { re: /gerenciamento.*risco.*carga|grc|risco.*carga|segurança.*carga.*transporte|perfil.*carga.*risco|carga.*alto.*valor.*procedimento|como.*proteger.*carga|protocolo.*carga.*segura|carga.*sensivel.*procedimento|avaliacao.*risco.*frete/,
+    r: [
+      'GRC (Gerenciamento de Risco de Carga) é obrigatório para cargas de alto valor ou risco (eletrônicos, cigarros, medicamentos, carga frigorificada). O processo inclui: avaliação do perfil de risco da carga, definição de rota segura (evitar trechos críticos), veículo com rastreamento ativo, comunicação de início e fim de viagem, e protocolo de parada (nunca parar em local não autorizado após 22h). Seguradoras exigem GRC documentado para cobertura total.',
+      'Procedimentos padrão de GRC na transportadora: 1) Motorista não divulga origem/destino nem tipo de carga a terceiros; 2) Paradas autorizadas apenas em postos conveniados com câmera; 3) Check-in com a central a cada 2h em rotas críticas; 4) Se perder comunicação por >30min: protocolo de busca ativa; 5) Em caso de abordagem (tentativa de roubo): NÃO resista — a vida vale mais que a carga. Acione seguradora e polícia após local seguro.',
     ]},
 ];
 
@@ -7186,7 +7226,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 340+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 345+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
