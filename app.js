@@ -3956,11 +3956,11 @@ const detectLocalInfo = async (text) => {
 
   // ── Perguntas estratégicas da diretoria ──
   if (/^(o que (e|é|eh) a?|me fala (da?|sobre a?)|fala (da?|sobre a?)|quem (e|é|eh) a?|me apresenta a?)\s*(scapini|scapini transportes)\s*[?.!]?$/.test(t.trim()) || /^scapini transportes\s*[?.!]?$/.test(t.trim()))
-    return 'A Scapini Transportes é uma transportadora com mais de 30 anos, sediada em Lajeado/RS. Especializada em transporte rodoviário de cargas no Sul e Sudeste do Brasil. Liderança: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). Fundada por Diamantino Scapini. Frota moderna, múltiplas filiais e clientes de grande porte como JTI, Souza Cruz, Nestlé, CMPC e Suzano.';
+    return 'A Scapini Transportes é parte do Grupo Scapini, fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte rodoviário de cargas. Especializada no Sul e Sudeste do Brasil. Liderança: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). Frota moderna, 30+ filiais e clientes de grande porte como JTI, Souza Cruz, Nestlé, CMPC e Suzano.';
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
-      'A Scapini Transportes tem mais de 30 anos de história no transporte rodoviário de cargas. Fundada por Diamantino Scapini em Lajeado/RS, hoje é liderada por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Mais de três décadas construindo credibilidade no Sul do Brasil.',
-      'A Scapini nasceu no Rio Grande do Sul e cresceu com o agronegócio e o setor industrial do Sul do Brasil. Três décadas de operação, frota própria moderna e, agora, inteligência artificial integrada à gestão. Família Scapini — Diamantino como fundador, Ernani, Rosangela e Lucas na liderança atual.',
+      'O Grupo Scapini foi fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos construindo credibilidade no transporte de cargas. Hoje liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Uma das histórias de crescimento mais sólidas do transporte rodoviário no Sul do Brasil.',
+      'A Scapini nasceu no Rio Grande do Sul em 1977 e cresceu com o agronegócio e o setor industrial do Sul do Brasil. São quase 50 anos de operação, frota própria moderna, 6 empresas no grupo e, agora, inteligência artificial integrada à gestão. Família Scapini — Diamantino como fundador, Ernani, Rosangela e Lucas na liderança atual.',
     ]);
 
   if (/quantos (funcionarios|colaboradores|empregados|motoristas).*scapini|tamanho.*equipe|tamanho.*scapini|porte.*scapini/.test(t))
@@ -3972,7 +3972,7 @@ const detectLocalInfo = async (text) => {
   if (/(qual|quais?).*(concorrente|competidor|rival|mercado.*scapini|scapini.*mercado)/.test(t))
     return pick([
       'O mercado de transporte rodoviário no Sul do Brasil é competitivo — há transportadoras regionais, cooperativas de caminhoneiros e filiais de grandes operadores nacionais. A Scapini se diferencia pela capilaridade local, atendimento personalizado e relacionamento de longo prazo com clientes — o que grandes operadores logísticos raramente oferecem.',
-      'A Scapini compete num mercado com muitos players regionais e algumas transportadoras de grande porte. Os diferenciais que pesam na decisão do cliente: confiança (mais de 30 anos), disponibilidade (frota própria), atendimento (você fala com quem decide) e agora tecnologia (IA interna, rastreamento, portal do cliente).',
+      'A Scapini compete num mercado com muitos players regionais e algumas transportadoras de grande porte. Os diferenciais que pesam na decisão do cliente: confiança (quase 50 anos de mercado desde 1977), disponibilidade (frota própria), atendimento (você fala com quem decide) e agora tecnologia (IA interna, rastreamento, portal do cliente).',
     ]);
 
   if (/reuniao.*diaria|reuniao.*logistica|reuniao.*manutencao|programacao.*diaria.*scapini|como.*scapini.*programa.*viagem/.test(t))
@@ -6490,8 +6490,8 @@ const DEMO_QA = [
   // Pitch / apresentação comercial
   { re: /pitch.*comercial|apresentacao.*comercial|como.*vender.*scapini|argumento.*venda|proposta.*ganha|fechar.*venda|discurso.*vendas/,
     r: [
-      'Pitch da Scapini em 60 segundos: "Somos a Scapini Transportes, mais de 30 anos conectando o Sul do Brasil ao Sudeste. Frota própria, rastreamento em tempo real, zero dependência de broker — você fala direto com quem decide. Nosso diferencial: quando tem problema, a gente resolve. Nossa tecnologia: IA integrada para tracking e relatórios instantâneos. Quer um piloto de 30 dias?"',
-      'Argumentos de venda da Scapini: 1) Confiabilidade — 30 anos sem fechar as portas; 2) Atendimento — fala com quem resolve, não com call center; 3) Tecnologia — rastreamento real + IA (Lúmina); 4) Flexibilidade — fracionada ou lotação, LTL ou FTL; 5) Preço justo — sem cobrança de surpresa, tabela transparente. Para fechar: "Quando você quer o primeiro frete?"',
+      'Pitch da Scapini em 60 segundos: "Somos a Scapini Transportes, quase 50 anos conectando o Sul do Brasil ao Sudeste — desde 1977. Frota própria, rastreamento em tempo real, zero dependência de broker — você fala direto com quem decide. Nosso diferencial: quando tem problema, a gente resolve. Nossa tecnologia: IA integrada para tracking e relatórios instantâneos. Quer um piloto de 30 dias?"',
+      'Argumentos de venda da Scapini: 1) Confiabilidade — quase 50 anos no mercado sem fechar as portas (desde 1977); 2) Atendimento — fala com quem resolve, não com call center; 3) Tecnologia — rastreamento real + IA (Lúmina); 4) Flexibilidade — fracionada ou lotação, LTL ou FTL; 5) Preço justo — sem cobrança de surpresa, tabela transparente. Para fechar: "Quando você quer o primeiro frete?"',
     ]},
 
   // Follow-up e CRM
@@ -6676,7 +6676,7 @@ const DEMO_QA = [
   // ── Sobre a Scapini ───────────────────────────────────────────────────────────
   { re: /\bme (fala|conta|explica|diz) (da|sobre|da empresa|sobre a) scapini\b|o que e a scapini|quem e a scapini|historia.*scapini|scapini.*historia|sobre a empresa scapini|o que faz a scapini|\btransportadora scapini\b/,
     r: [
-      'A Scapini é uma transportadora com mais de 30 anos de história em Lajeado, RS — referência no transporte de cargas fracionadas e lotação para todo o Brasil, com foco no Sul e Sudeste. Quando integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
+      'A Scapini é um grupo com quase 50 anos de história em Lajeado, RS (fundado em 1977) — referência no transporte de cargas fracionadas e lotação para todo o Brasil, com foco no Sul e Sudeste. Quando integrada aos sistemas internos, vou conhecer cada detalhe da operação.',
       'A Scapini tem frota moderna, rastreamento, sistemas próprios como o CGI, App Motorista e muito mais. É exatamente por isso que faz sentido ter IA aqui — o potencial de dados é enorme.',
     ]},
 
