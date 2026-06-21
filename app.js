@@ -5207,7 +5207,7 @@ const DEMO_QA = [
   // Habilitação da empresa / licenças
   { re: /habilitac|licenca.*transport|alvara.*transport|registro.*antt|rntrc.*empresa|document.*empresa.*transport|empresa.*regularizada/,
     r: [
-      'Para operar legalmente como transportadora no Brasil: RNTRC ativo (Registro Nacional de Transportadores Rodoviários de Cargas — emitido pela ANTT, renovação anual). CNPJ ativo com CNAE de transporte (4930-2/01 para carga geral; outros para especialidades). Alvará municipal. Licença ambiental se operar pátio. Veículos com CRLV, tacógrafo calibrado e ART assinada para veículos acima de limite.',
+      'Para operar legalmente como transportadora no Brasil: RNTRC ativo (Registro Nacional de Transportadores Rodoviários de Cargas — emitido pela ANTT; desde a Resolução ANTT 6.068/2025, a validade passou a ser indeterminada, sem renovação periódica). CNPJ ativo com CNAE de transporte (4930-2/01 para carga geral; outros para especialidades). Alvará municipal. Licença ambiental se operar pátio. Veículos com CRLV, tacógrafo calibrado e ART assinada para veículos acima de limite.',
       'Regularidade da Scapini: RNTRC vigente, emissão de CT-e e MDFe ativa no SEFAZ, contribuição SEST/SENAT em dia para TACs. Transportadora irregular não pode emitir CT-e — qualquer inconsistência no cadastro bloqueia a emissão. O setor fiscal deve monitorar o RNTRC mensalmente.',
     ]},
 
@@ -6586,7 +6586,14 @@ const DEMO_QA = [
   { re: /\bantt\b|agencia nacional.*transporte|rntrc|registro.*transportador|habilitacao.*transporte/,
     r: [
       'A ANTT (Agência Nacional de Transportes Terrestres) é o órgão regulador do transporte rodoviário de cargas no Brasil. O RNTRC (Registro Nacional de Transportadores Rodoviários de Carga) é o cadastro obrigatório para transportadoras e caminhoneiros autônomos. Sem RNTRC válido, não é possível emitir CT-e nem operar legalmente.',
-      'A ANTT fiscaliza peso, dimensões, documentação e condições dos veículos. O RNTRC precisa ser renovado a cada 5 anos para empresas. Para motoristas autônomos, o registro é vitalício. A Scapini mantém RNTRC regularizado — qualquer vencimento precisa ser tratado imediatamente pelo setor jurídico/financeiro.',
+      'A ANTT fiscaliza peso, dimensões, documentação e condições dos veículos. Com a Resolução ANTT 6.068/2025, o RNTRC passou a ter validade indeterminada — acabou a renovação quinquenal. O registro só é cancelado por iniciativa do titular ou por infração grave. A Scapini mantém RNTRC regularizado — qualquer irregularidade precisa ser tratada imediatamente pelo setor jurídico/financeiro.',
+    ]},
+
+  // Resolução ANTT 6.068/2025 — nova regulamentação RNTRC
+  { re: /resolucao.*6\.?068|6068.*antt|antt.*6068|resolucao.*antt.*2025|nova.*resolucao.*rntrc|rntrc.*nova.*lei|rntrc.*validade.*indeterminada|validade.*rntrc.*indeterminada|rntrc.*nao.*renovar|rntrc.*nao.*precisa.*renovar/,
+    r: [
+      'Resolução ANTT 6.068/2025: principal mudança — o RNTRC passou a ter validade INDETERMINADA. Antes era necessário renovar a cada 5 anos. Agora o registro só é cancelado por solicitação do titular, encerramento da empresa, ou decisão administrativa por infração grave. Taxa de registro: R$386,00 para pessoa física (TAC/motorista autônomo) e R$497,50 para pessoa jurídica (transportadora). Menos burocracia, mas o RNTRC ainda exige situação regular na ANTT para operar.',
+      'O que muda com a Resolução ANTT 6.068/2025 para a Scapini: (1) RNTRC não precisa mais ser renovado a cada 5 anos — validade indeterminada; (2) Empresa continua obrigada a manter cadastro atualizado na ANTT (dados, responsável legal, frota); (3) Taxa de registro R$497,50 PJ, paga uma única vez (novas empresas) ou na adequação ao novo sistema. Verifique com o setor fiscal se o RNTRC da Scapini já foi migrado para o novo regime.',
     ]},
 
   // Tacógrafo
@@ -6727,7 +6734,7 @@ const DEMO_QA = [
     ]},
   { re: /o que.*rntrc|rntrc.*significa|rntrc.*pra que|registro.*nacional.*transportador/,
     r: [
-      'RNTRC (Registro Nacional de Transportadores Rodoviários de Cargas): cadastro obrigatório na ANTT para toda empresa ou autônomo que transporta carga profissionalmente. Tem validade de 5 anos e precisa ser renovado. Sem RNTRC, a operação é irregular e o veículo pode ser apreendido na fiscalização. Consulta: antt.gov.br.',
+      'RNTRC (Registro Nacional de Transportadores Rodoviários de Cargas): cadastro obrigatório na ANTT para toda empresa ou autônomo que transporta carga profissionalmente. Desde a Resolução ANTT 6.068/2025, a validade é indeterminada — não há mais renovação periódica de 5 anos. Taxa de registro: R$386,00 (pessoa física) e R$497,50 (pessoa jurídica). Sem RNTRC, a operação é irregular e o veículo pode ser apreendido na fiscalização. Consulta: antt.gov.br.',
     ]},
   { re: /o que (voce|você|lumina) (faz|pode|consegue|sabe).*(rh|recurso|curriculo|candidato|contratar|vaga)|funcionalidade.*rh|capacidade.*rh/,
     r: [
@@ -6883,7 +6890,7 @@ const DEMO_QA = [
   // Documentação veicular obrigatória (Manutenção/Operação)
   { re: /document.*veiculo|veiculo.*document|crlv.*veiculo|tacogr.*valid|validade.*tacogr|tacomet|certificado.*veiculo|inspecao.*anual.*veiculo|inspec.*antt.*veiculo|licenciamento.*caminhao|ipva.*caminhao/,
     r: [
-      'Documentação obrigatória por veículo: (1) CRLV — licenciamento anual, vistoria em dia; (2) RNTRC — registro ANTT da empresa (não do veículo), 5 anos de validade; (3) Tacógrafo calibrado — padrão IMETRO, calibrado a cada 24 meses (resolução DENATRAN); (4) Extintor dentro da validade — mínimo 1 por unidade; (5) Triângulo e macaco; (6) CNH do motorista na categoria correta (D ou E). Checklist pré-viagem deve verificar todos esses itens.',
+      'Documentação obrigatória por veículo: (1) CRLV — licenciamento anual, vistoria em dia; (2) RNTRC — registro ANTT da empresa (não do veículo), validade indeterminada desde Resolução 6.068/2025; (3) Tacógrafo calibrado — padrão IMETRO, calibrado a cada 24 meses (resolução DENATRAN); (4) Extintor dentro da validade — mínimo 1 por unidade; (5) Triângulo e macaco; (6) CNH do motorista na categoria correta (D ou E). Checklist pré-viagem deve verificar todos esses itens.',
       'Validade da documentação veicular: CRLV (anual — licenciamento), tacógrafo (calibração a cada 24 meses), extintor (inspeção semestral e troca conforme validade do agente), AET para carga especial (validade por operação). Multa por CRLV vencido: R$293,47 + pontos. Tacógrafo irregular: R$2.934,70. Dica: planilha de controle de vencimentos com alerta 30 dias antes é a solução mais simples — a Lúmina pode gerar essa planilha.',
     ]},
 
