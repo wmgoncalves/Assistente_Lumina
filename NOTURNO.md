@@ -617,3 +617,82 @@ Nenhum novo bug crítico encontrado. Todos os itens da lista da missão já corr
 5. **Fine-tuning** quando dataset atingir 500+ exemplos.
 6. **DEMO_QA por setor**: RH/Saúde Ocupacional e Manutenção preventiva/preditiva ainda têm lacunas em perguntas muito específicas.
 7. **Mais motoristas MOTORISTAS_DEMO**: atualmente 10 — adicionar mais para maior variedade na demo.
+
+---
+
+# Sessão Noturna — 21 de junho de 2026 (10ª sessão — QA + Base de Conhecimento + Word Boundaries)
+
+## Resumo
+Sessão autônoma. Foco em PRIORIDADE 1 (bugs DEMO_QA), PRIORIDADE 2 (qualidade — histórico Scapini), PRIORIDADE 4 (5 novos pares para RH e Manutenção). Total: 4 commits. Todos os arquivos passam em `node --check`. Pesquisa web confirmou indisponibilidade dos dados ANTT/CCT por HTTP 403 (agente Explore verificou).
+
+## Bugs corrigidos (PRIORIDADE 1)
+
+### DEMO_QA falso positivo — `argentina|uruguai|paraguai` sem contexto (bug novo)
+- **Problema**: regex `/internacional.*scapini|scapini.*internacional|argentina|uruguai|paraguai|...` tinha os países sem âncora de contexto. Consultas de câmbio ("peso argentino", "quanto vale o peso") disparariam DEMO_QA antes de `detectLocalInfo` (que trata câmbio), retornando resposta de transporte internacional ao invés de cotação.
+- **Fix**: `argentina|uruguai|paraguai` → `argentina.*scapini|scapini.*argentina|uruguai.*scapini|scapini.*uruguai|paraguai.*scapini|scapini.*paraguai|frete.*argentina|frete.*uruguai|frete.*paraguai` — exige contexto Scapini ou frete para disparar.
+- **Verificação**: `detectLocalInfo` usa `peso\s+argentin` (com espaço), não `argentina` puro — o câmbio foi preservado.
+
+### DEMO_QA dados desatualizados — história da Scapini (linha 6756) duplicata ainda "30 anos"
+- **Problema**: entrada na linha 6756 ainda dizia "mais de 30 anos" / "mais de três décadas". A versão correta (1977, quase 50 anos) estava só na linha 6956 — nunca alcançada para os mesmos padrões.
+- **Fix**: conteúdo da linha 6756 atualizado para "quase 50 anos / fundada em 1977".
+
+### DEMO_QA word boundaries em acrônimos curtos (4 bugs)
+- **Problema**: 4 padrões sem `\b` podiam capturar texto no meio de palavras:
+  - `/esg/` → match em "desgracado" (d**esg**racado)
+  - `/rcp|rcd/` → match em palavras com essas sequências
+  - `/pso/` → match em sequências com "pso"
+  - `/nig/` → match em palavras com "nig"
+- **Fix**: `\besg\b`, `\brctr\b|\brcta\b|\brcp\b|\brcd\b`, `\bpso\b`, `\bnig\b`
+- **Impacto**: baixo (workshop não usa essas palavras tipicamente), mas o padrão correto é sempre usar `\b` em acrônimos.
+
+## Auditoria PRIORIDADE 1 — outros itens (resultado: nenhum novo bug)
+- `getElementById` sem null-guard: elementos estáticos confirmados no HTML ✓
+- `JSON.parse` sem try/catch: todos protegidos (3 locais verificados: linha 1350, 7887, 8883) ✓
+- `fetch()` sem `.catch()`: todos com catch confirmados ✓
+- `speak()` com undefined: `buildSheetSpeech()` sempre retorna string, `callGeminiVision` retorna `??''` ✓
+- `_finalize()` com undefined: guard `raw ?? ''` confirmado ✓
+- Variáveis antes de declaração em closures: nenhuma encontrada ✓
+
+## Melhorias de qualidade (PRIORIDADE 2)
+
+### Histórico Scapini unificado para 1977/quase 50 anos — 6 pontos corrigidos
+- `detectLocalInfo` linha 3959 (resposta "o que é a Scapini"): `mais de 30 anos` → `quase 50 anos / fundada em 1977`
+- `detectLocalInfo` linhas 3962-3963 (quantos anos/história — ambas as respostas)
+- `detectLocalInfo` linha 3975 (concorrentes — "confiança mais de 30 anos")
+- DEMO_QA linhas 6493-6494 (pitch de vendas × 2)
+- DEMO_QA linha 6679 (intro genérica offline)
+
+### Pesquisa web realizada
+- Tabela ANTT por eixo (R$/km) — agente Explore confirmou: todos os sites retornam 403. Sem novos dados.
+- CCT MOVIFORT RS 2025/2026 — agente Explore confirmou: dados não encontrados localmente, sites regionais inacessíveis.
+
+## Novos pares DEMO_QA (PRIORIDADE 4) — 5 pares × 2 respostas = 10 entradas
+
+Todos adicionados antes do fechamento `];` do array DEMO_QA:
+
+1. **CIPA (NR-5)**: composição paritária, mandato 1 ano, reuniões mensais, função preventiva, estabilidade de membros eleitos.
+   - Regex: `/\bcipa\b|comissao.*interna.*prevencao|nr.?5\b.*cipa|prevencao.*acidente.*comissao|cipa.*obrigatorio|cipa.*eleicao|cipa.*reuniao|cipa.*mandato/`
+2. **Arla 32 / AdBlue**: fluido de ureia para SCR (Euro 5/6), consumo 3-5% do diesel, consequências da falta (modo fail-safe), qual não misturar com diesel.
+   - Regex: `/arla.*32|adblue|urea.*diesel|reagente.*scr|motor.*scr|euro.*5.*urea|euro.*6.*arla|reservatorio.*arla|acabou.*arla|falta.*arla/`
+3. **Holerite/contracheque**: o que é cada desconto (INSS alíquota progressiva, IRRF isenção, VT até 6%, FGTS pago pelo empregador não aparece), como reclamar discordâncias.
+   - Regex: `/holerite|contracheque|contra.*cheque|ler.*holerite|entender.*holerite|desconto.*salario|holerite.*desconto|...`
+4. **Tacógrafo — calibração e obrigatoriedade**: obrigatório >3.500 kg (CONTRAN 432/2013), calibração a cada 3 anos ou após reparo no hodômetro, infração gravíssima por descalibrado, tacógrafo digital armazena 365 dias.
+   - Regex: `/tacografo.*calibra|calibra.*tacografo|validade.*tacografo|lacre.*tacografo|...`
+5. **SEST SENAT**: o que é, como é financiado (1,5% folha das transportadoras), serviços oferecidos (cursos, saúde, academia, odontologia), benefício real para motoristas.
+   - Regex: `/sest.*senat|senat.*sest|sest\b|senat\b|servico.*social.*transporte|...`
+
+### Contador atualizado: 325+ → 335+ em 4 pontos user-visíveis
+
+## Commits desta sessão
+- `ba195bc` — fix+feat: DEMO_QA argentina/uruguai/paraguai falso positivo + história Scapini + 5 Q&A novos
+- `7806f92` — feat: qualidade — unificação histórico Scapini para 1977/quase 50 anos em 6 pontos
+- `766e62b` — fix: DEMO_QA word boundaries em acrônimos curtos (\besg\b, \brcp\b, \bpso\b, \bnig\b)
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo** (herdado 7x): R$/km para truck, carreta, bitrem — todos os sites retornam 403. Tentar via calculadorafrete.antt.gov.br com acesso real na máquina do usuário.
+2. **CCT MOVIFORT RS 2025/2026** (herdado 5x): valores salariais específicos para RS. Sem dado verificável remotamente.
+3. **`npm run build-dataset`** na máquina local para contar exemplos reais do histórico.
+4. **Instalar llama3.2:3b**: `ollama pull llama3.2:3b` — ainda não executado remotamente.
+5. **Fine-tuning** quando dataset atingir 500+ exemplos.
+6. **DEMO_QA duplicata linha 6956**: agora redundante pois 6756 foi corrigida — pode ser simplificada ou removida. Não foi removida para preservar padrões únicos (`anos de mercado.*scapini`, `scapini.*fundada.*quando`).
+7. **`/esg/` ainda pode ter variações**: outras sequências de 3 letras podem ter o mesmo problema em adições futuras. Padrão de code review: sempre usar `\b` em acrônimos ≤4 chars.
