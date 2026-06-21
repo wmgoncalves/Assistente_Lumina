@@ -627,9 +627,9 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Margem EBITDA: setor 8-14% | líder 14-20% | abaixo da média <7%
 • OTD: setor 88-93% | excelência >97% | crítico <85%
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
-• Diesel S-10 RS (2026): R$6,50-6,90/l posto (ref. SUROC 3/2026: R$6,89/l) | R$6,10-6,40/distribuidor
+• Diesel S-10 RS (2026): R$7,10-7,60/l posto (ref. SUROC 4/2026: R$7,35/l de mar/2026) | R$6,70-7,10/l distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
-• Salário motorista CLT RS: R$3.800-5.200/mês (CCT MOVIFORT/SETCERGS — consulte RH para valor vigente)
+• Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): base ~R$3.189/mês tração | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | + diárias R$60-120/dia | + periculosidade 30% se MOPP
 • Frete Lajeado-SP (truck, 1.100 km): R$4.500-6.500 dependendo da carga
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
@@ -1878,7 +1878,7 @@ const processInput = async (rawText, opts = {}) => {
     }
 
     // ── Intercept: cotação de frete — Gemini nem sempre chama estimarFrete
-    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr|sai|seria)|quanto\s+(?:seria\s+)?(?:o\s+)?(?:frete|transporte|levar)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete|valor\s+(?:do\s+)?transporte|custo\s+(?:de|do)\s+(?:frete|transporte)|me\s+faz?\s+uma\s+cota[çc][aã]o|fazer\s+uma\s+cota[çc][aã]o|calcul[ae]\s+(?:o\s+)?frete|calcul[ae]\s+(?:o\s+)?transporte|levar\s+(?:uma\s+)?carga|transportar\s+(?:de|para)|quanto\s+(?:fica\s+)?(?:pra?|para)\s+levar)\b/i;
+    const FRETE_CMD = /\b(cota[çc][aã]o|cotiza|quanto (custa|fica|cobr|sai|seria)|quanto\s+vai\s+(?:custar|ficar|sair)|quanto\s+(?:seria\s+)?(?:o\s+)?(?:frete|transporte|levar)|pre[çc]o\s+de\s+frete|frete\s+(de|do|da|entre|pra?|para)|estimativa\s+de\s+frete|valor\s+do\s+frete|valor\s+(?:do\s+)?transporte|custo\s+(?:de|do)\s+(?:frete|transporte)|custo\s+de\s+|me\s+faz?\s+uma\s+cota[çc][aã]o|fazer\s+uma\s+cota[çc][aã]o|calcul[ae]\s+(?:o\s+)?frete|calcul[ae]\s+(?:o\s+)?transporte|levar\s+(?:uma\s+)?carga|transportar\s+(?:de|para)|enviar\s+(?:de|carga|produto|mercadoria)|quanto\s+(?:fica\s+)?(?:pra?|para)\s+levar)\b/i;
     const FRETE_ROTA = /\b(de\s+|saindo\s+de\s+|origin[ae]m?\s*[:-]?\s*)([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25}?)\s+(?:pra?|para|até|ao?|→|>)\s+([A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç][A-ZÀ-Úa-záàâãéèêíìîóòôõúùûç\s]{2,25})/i;
     if (FRETE_CMD.test(text) && FRETE_ROTA.test(text)) {
       try {
@@ -3643,7 +3643,7 @@ const detectLocalInfo = async (text) => {
 
   if (/diesel.*hoje|preco.*diesel.*atual|litro.*diesel.*rs|combustivel.*preco.*atual/.test(t))
     return pick([
-      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — atualizado semanalmente por estado. Referência de 2026: S-10 no RS entre R$6,50-6,90/l no posto (a ANTT usou R$6,89/l na Portaria SUROC 3/2026 de março). Você pode me dizer o preço atual e eu ajusto os cálculos de frete imediatamente.',
+      'Para o preço atual do diesel, use o site da ANP (anp.gov.br/preco) — atualizado semanalmente por estado. Referência de 2026: S-10 no RS entre R$7,10-7,60/l no posto (a ANTT usou R$7,35/l na Portaria SUROC 4/2026 de março). Você pode me dizer o preço atual e eu ajusto os cálculos de frete imediatamente.',
     ]);
 
   // ── Perguntas clássicas de demo / apresentação ──
@@ -3730,8 +3730,8 @@ const detectLocalInfo = async (text) => {
   // ── Combustível — perguntas rápidas ──
   if (/qual.*preco.*diesel.*hoje|diesel.*quanto.*hoje|litro.*diesel.*preco|diesel.*rs.*preco|diesel.*s.?10.*preco/.test(t))
     return pick([
-      'Não tenho acesso ao preço em tempo real, mas a referência 2026 para RS: diesel S-10 em posto R$6,50-6,90/l (ANTT usou R$6,89/l na Portaria SUROC 3/2026); na distribuidora (volume) cerca de R$6,10-6,40/l. Para o preço exato do dia, consulte anp.gov.br — sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
-      'Preço de referência diesel S-10 RS (2026): R$6,20-6,60/l em posto, R$5,80-6,10/l em distribuidora. Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
+      'Não tenho acesso ao preço em tempo real, mas a referência 2026 para RS: diesel S-10 em posto R$7,10-7,60/l (ANTT usou R$7,35/l na Portaria SUROC 4/2026 de março); na distribuidora (volume) cerca de R$6,70-7,10/l. Para o preço exato do dia, consulte anp.gov.br — sai toda quarta-feira. Quer que eu calcule o impacto de uma variação no custo da sua frota?',
+      'Preço de referência diesel S-10 RS (2026): R$7,10-7,60/l em posto, R$6,70-7,10/l em distribuidora (ref. SUROC 4/2026: R$7,35/l). Dado atualizado semanalmente pela ANP. Para o exato de hoje, acesse anp.gov.br. Posso calcular o custo de combustível por rota se quiser — me diga origem, destino e tipo de veículo.',
     ]);
 
   if (/consumo.*caminhao.*litros|quantos.*litros.*caminhao|media.*combustivel.*caminhao|consumo.*carreta|consumo.*truck/.test(t))
@@ -3894,7 +3894,7 @@ const detectLocalInfo = async (text) => {
 
   if (/qual.*diesel.*hoje|preco.*diesel|combustivel.*hoje|litro.*diesel/.test(t))
     return pick([
-      'O preço do diesel varia por posto e região — em 2026, o S-10 está em torno de R$ 6,50 a R$ 6,90/litro no Sul do Brasil (referência ANTT: R$6,89/l pela Portaria SUROC 3/2026). Para o preço negociado com a distribuidora da Scapini, verifique com o setor de abastecimento. Alta > 5% justifica revisão da tabela de frete.',
+      'O preço do diesel varia por posto e região — em 2026, o S-10 está em torno de R$ 7,10 a R$ 7,60/litro no Sul do Brasil (referência ANTT: R$7,35/l pela Portaria SUROC 4/2026, março). Para o preço negociado com a distribuidora da Scapini, verifique com o setor de abastecimento. Alta > 5% justifica revisão da tabela de frete.',
       'Diesel S-10 em Lajeado/RS oscila com o mercado da Petrobras. A ANP publica o preço semanal por UF em gov.br/anp. Para a Scapini, o preço negociado com a distribuidora costuma ser melhor que o de bomba — monitore a diferença mensalmente e ajuste o custo por km nos seus cálculos.',
     ]);
 
@@ -4711,8 +4711,8 @@ const tryLocalResponse = (text) => {
   // ── Salário motorista / remuneração ──
   if (/salario.*motorista|motorista.*salario|quanto.*ganha.*motorista|remuneracao.*motorista|piso.*motorista|salario.*motorista.*scapini/.test(t))
     return pick([
-      'O salário de motorista na Scapini segue a CCT negociada com o sindicato MOVIFORT (Sindicato dos Trabalhadores em Transportes de Cargas do RS). O piso salarial varia conforme a categoria do veículo e a função (tração/entrega). Para o valor atualizado vigente, consulte o RH da Scapini ou a CCT atual no portal do MOVIFORT. Além do salário, há benefícios: diárias de viagem, vale-alimentação e cesta básica.',
-      'Motoristas CLT da Scapini seguem a tabela salarial da CCT MOVIFORT/SETCERGS. O salário base é complementado por diárias de viagem (R$ 60–120/dia fora da base, conforme CCT), adicional de periculosidade (30% para carga perigosa com MOPP), e outros benefícios. O RH informa os valores vigentes conforme o cargo específico.',
+      'O salário de motorista na Scapini segue a CCT MOVIFORT/SETCERGS. Na tabela 2025/2026 (vigência mai/2025–abr/2026): piso base (tração simples) ~R$3.189/mês; bitrem R$3.508,49/mês (+10%); rodotrem 9 eixos +15% sobre a base. Além disso: diárias de viagem R$60–120/dia fora da base, adicional de periculosidade 30% se carga com MOPP, vale-alimentação e cesta básica. Para o valor exato do seu cargo, consulte o RH.',
+      'Motoristas CLT da Scapini seguem a tabela salarial da CCT MOVIFORT/SETCERGS 2025/2026. O piso salarial varia por tipo de composição: tração simples ~R$3.189/mês | bitrem R$3.508/mês | rodotrem mais 15% sobre a base. O pacote total (salário + diárias + benefícios + eventual periculosidade MOPP) pode superar R$5.000/mês em viagens de longa distância. O RH confirma os valores vigentes.',
     ]);
 
   // ── Segurança / privacidade dos dados Lúmina ──
@@ -5152,7 +5152,7 @@ const DEMO_QA = [
     ]},
 
   // Obrigações fiscais acessórias (SPED)
-  { re: /sped|obrigacao.*fiscal|declaracao.*fiscal|efd|ecf|ecd|escrituracao.*digital|obrigacoes.*acessorias/,
+  { re: /\bsped\b|obrigacao.*fiscal|declaracao.*fiscal|\befd\b|\becf\b|\becd\b|escrituracao.*digital|obrigacoes.*acessorias/,
     r: [
       'Obrigações fiscais acessórias para transportadoras: EFD-ICMS/IPI (mensalmente para empresas no Lucro Real/Presumido), EFD-Contribuições (PIS/COFINS), ECF (declaração anual de rendimentos), ECD (escrituração digital), e no transporte especificamente: CT-e (em tempo real por viagem), MDFe (por veículo em trânsito), SEFAZ do estado de origem do CT-e. O contador deve estar integrado ao sistema de emissão.',
       'SPED no transporte: cada CT-e emitido alimenta automaticamente o SPED Fiscal e o SPED Contribuições. O MDFe é encerrado ao chegar no destino. Erros na emissão de CT-e (valores, CFOP, tributação) geram autuação na malha fina fiscal. A Lúmina pode analisar inconsistências entre CT-es emitidos e os valores na DRE quando integrada ao sistema.',
@@ -6821,7 +6821,7 @@ const DEMO_QA = [
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 325 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 335+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 340+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6834,7 +6834,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 335+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 340+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6913,7 +6913,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (335+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (340+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7027,6 +7027,20 @@ const DEMO_QA = [
     r: [
       'SEST SENAT é o Sistema de Ensino e Assistência Social do Transporte — mantido por contribuição obrigatória das empresas do setor (1,5% sobre a folha de pagamento). Oferece aos colaboradores do transporte: cursos técnicos (direção defensiva, primeiros socorros, operação de cargas), atendimento médico e odontológico, academia e assistência social. Para motoristas da Scapini, o cadastro é gratuito na unidade mais próxima (Lajeado tem unidade SEST SENAT).',
       'O SEST SENAT é um benefício real para motoristas — cursos de direção defensiva (obrigatório para renovação da CNH profissional), check-up médico anual, exames de risco cardiovascular e psicossocial, academia, odontologia e consultoria jurídica trabalhista básica. Tudo custeado pela contribuição das transportadoras. Seu sindicato (MOVIFORT) pode orientar sobre os serviços disponíveis na sua região.',
+    ]},
+
+  // Celular ao volante
+  { re: /celular.*volante|volante.*celular|usar.*celular.*dirig|celular.*dirig|fone.*volante|telefonar.*dirig|mensagem.*dirig|whatsapp.*volante|dirigir.*celular|celular.*caminhao.*dirig|atender.*celular.*volante/,
+    r: [
+      'Usar celular ao volante é infração gravíssima (Art. 252, inciso VIII do CTB): multa de R$293,47 + 7 pontos na CNH + suspensão do direito de dirigir. Para caminhão profissional, um único flagrante pode gerar perda temporária da CNH — e sem CNH, sem trabalho. A única exceção legal é o uso de viva-voz com o celular fixo no veículo, desde que não segure o aparelho. A Scapini proíbe uso de celular com a mão durante a condução — consulte o manual de conduta.',
+      'Celular ao volante é uma das principais causas de acidente de trânsito no Brasil — enviar uma mensagem de 5 segundos a 80km/h equivale a percorrer 111 metros "de olhos fechados". Infração: gravíssima (Art. 252 CTB) | multa: R$293,47 | pontos: 7 | risco: suspensão da CNH. Para comunicação urgente em viagem: estacione o veículo em local seguro, desligue o motor, aí atenda. Nenhuma mensagem vale a CNH profissional.',
+    ]},
+
+  // Controle de combustível e abastecimento
+  { re: /controle.*abastec|abastec.*controle|cartao.*combustivel|combustivel.*cartao|posto.*conven|conven.*posto|abastec.*posto|como.*abastecer.*scapini|abastec.*frota|combustivel.*frota.*controle|sistema.*abastec|registro.*abastec/,
+    r: [
+      'Controle de abastecimento na Scapini: o motorista abastece em postos conveniados usando o cartão de frota (ou vale-combustível) vinculado à placa do veículo. O sistema registra: posto, data, hora, litros abastecidos e hodômetro. Qualquer abastecimento fora do circuito conveniado requer autorização prévia e nota fiscal. O setor de frota cruza o consumo real com o hodômetro para detectar variações suspeitas.',
+      'Gestão de combustível na Scapini: cada veículo tem um custo-alvo de l/km baseado na média da frota. Motorista que consome acima da média por 3 meses consecutivos passa por revisão técnica (pode ser motor, pneus, filtros) e avaliação de estilo de condução pelo tacógrafo. Abastecimento é registrado por placa — nunca por nome do motorista. Dúvidas sobre abastecimento fora do percurso: fale com o despachante antes.',
     ]},
 ];
 
@@ -7165,7 +7179,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 335+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 340+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
