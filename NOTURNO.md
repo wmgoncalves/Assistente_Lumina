@@ -850,3 +850,55 @@ Adicionados ao nível 512 (raciocínio leve) os padrões dos 5 novos tópicos Q&
 6. **`ollama pull llama3.2:3b`** — ainda pendente na máquina local.
 7. **Fine-tuning** — quando dataset atingir 500+ exemplos.
 8. **DEMO_QA linha 6956** (herdado) — entrada possivelmente redundante.
+
+---
+
+# Sessão 13 — 21 de junho de 2026
+
+## Resumo
+Sessão autônoma noturna aplicada sobre branch `main` atualizado (session 12 base, 9011 linhas). Foram aplicadas correções de bugs, novos pares DEMO_QA e atualização de dados confirmados da Scapini. Resolvida complicação de histórico git divergente (detached HEAD vs main) — todos os commits foram feitos corretamente no branch session13 e empurrados como main.
+
+## Frentes concluídas
+
+### BUG CRÍTICO — Falso positivo clima/temperatura (DEMO_QA)
+- **Problema**: padrão `/clima|chuva|temperatura|previsao do tempo/` capturava erroneamente "temperatura do motor", "câmara fria", "clima organizacional" — DEMO_QA dispara ANTES de detectLocalInfo(), causando resposta incorreta de "preciso de internet para clima" nessas consultas legítimas
+- **Correção**: substituído por `/\bchuva\b|previsao.*tempo|vai chover|como.*tempo.*hoje|que tempo.*faz|previsao.*chuva|tempo.*amanha/`
+
+### 5 Novos pares DEMO_QA (apresentação julho/2026)
+1. **Contrato de experiência CLT** — 90 dias, 45+45, rescisão, Art. 481 CLT
+2. **Check-list pré-viagem** — protocolo completo obrigatório, 9 itens
+3. **CNH profissional renovação** — validades por idade, toxicológico, multa R$880 vencida
+4. **E quando a Lúmina errar?** — honestidade, validação humana, aprendizado com correção
+5. **Lei de Cotas PcD** — Lei 8.213/91 Art. 93, faixa de 5% para 1001+ empregados
+
+### Dados Scapini confirmados — atualizados
+- **Colaboradores**: ~1.100 (800 CLT + 300 terceirizados/agregados) — atualizado em buildSystem(), detectLocalInfo(), DEMO_QA frota/tamanho
+- **Faturamento 2024**: ~R$ 440 milhões (crescimento 28% vs 2023); meta 2030: R$ 1 bilhão — atualizado em detectLocalInfo()
+- **TST Global (EUA)**: inaugurada setembro/2024 — adicionada ao Grupo Scapini, Internacional, buildSystem()
+- **Frota**: 500+ equipamentos, idade média 3,4 anos (2024), 100% rastreada GPS — atualizado em tryLocalResponse() frota
+- **ANTT Portaria SUROC 6/2026** (23/abr/2026): reajuste 4,52-8,17%; CCD Carga Geral R$4,00-9,25/km; Frigorificado R$4,74-10,96/km — atualizado no DEMO_QA piso mínimo frete
+
+### Expansões tryLocalResponse()
+- `grupo scapini`: agora menciona TST Global (EUA) e total de 22 unidades; regex expandida para capturar "tst global", "scapini eua", "america norte scapini"
+- `internacional`: regex expandida para cobrir TST Global, USA; respostas atualizadas com abertura set/2024
+- `frota`: atualizado com 500+ equipamentos, 3,4 anos média, GPS 100%
+
+## Pesquisa web desta sessão
+- **Dados Scapini**: confirmados via pesquisa (sessão 12 background agent): ~1.100 colaboradores, R$440M 2024, TST Global EUA set/2024, Translíquidos adquirida 2021, frota 3,4 anos
+- **ANTT Portaria SUROC 6/2026**: confirmada vigência abr/2026, valores CCD por categoria
+- **Tabela ANTT por eixo** (herdado 9x): sites retornam 403. Acesso manual em calculadorafrete.antt.gov.br
+- **CCT MOVIFORT RS 2025/2026** (herdado 6x): PDF bloqueado. Dado parcial: bitrem R$3.508,49/mês (já em código)
+
+## Git
+- Histórico divergente identificado: local `main` baseado em commit antigo (023901e), remote `main` em história separada (sessões 1-12 force-pushed)
+- Solução: criado branch `session13` a partir de `origin/main` (9011 linhas, session 12 base), aplicadas todas as mudanças, push sem force via `session13:main`
+- Total de linhas adicionadas: +55 (19 removidas/substituídas)
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 10x. Acesso manual necessário em calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 — tabela salarial completa** — herdado 7x. Dados parciais em código.
+3. **`npm run build-dataset`** — executar na máquina local (quando dataset ≥ 500 exemplos)
+4. **`ollama pull llama3.2:3b`** — ainda pendente na máquina local
+5. **Fine-tuning** — quando dataset atingir 500+ exemplos
+6. **DEMO_QA entrada possivelmente redundante** (herdado) — verificar linha ~6956 na versão remote
+7. **PRIORIDADE 5 UX/CSS** — não executada nesta sessão; revisar index.html e style.css antes da apresentação
