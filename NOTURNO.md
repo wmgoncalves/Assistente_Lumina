@@ -902,3 +902,58 @@ Sessão autônoma noturna aplicada sobre branch `main` atualizado (session 12 ba
 5. **Fine-tuning** — quando dataset atingir 500+ exemplos
 6. **DEMO_QA entrada possivelmente redundante** (herdado) — verificar linha ~6956 na versão remote
 7. **PRIORIDADE 5 UX/CSS** — não executada nesta sessão; revisar index.html e style.css antes da apresentação
+
+---
+
+# Sessão 14 — 21 de junho de 2026
+
+## Resumo
+Sessão autônoma noturna continuada após compactação de contexto (sessão 14 já havia iniciado edições em sessão anterior). Base: app.js 9075 linhas, 352 entradas DEMO_QA. Foram aplicados 3 commits: fix de word-boundary, 4 novos pares DEMO_QA, e expansão FRETE_CMD + atualização contagem.
+
+## Frentes concluídas
+
+### FIX — Falsos positivos DEMO_QA (word-boundary)
+- **frigorífico block (l.6063)**: adicionado `\b` em `sadia`, `seara`, `brf`, `jbs`, `marfrig`, `perdigao`
+  - `sadia` sem `\b` batia em "empresa sadia" (sadia = adjetivo saudável em PT-BR)
+  - `seara` sem `\b` batia em "seara" (= campo de colheita em PT literário)
+- **clients block (l.5355)**: adicionado `\b` em `jti` e `braskem` por consistência
+
+### +4 novos pares DEMO_QA (PRIORIDADE 2)
+1. **Gestão de multas de trânsito da frota** — NIP, indicação de condutor, CTB, DETRAN, prazos
+2. **Lúmina no WhatsApp como canal** — roadmap Phase 2, mensageria, quando disponível
+3. **Reconhecimento e premiação de motoristas** — motorista do mês, PLR, bonificação por segurança
+4. **Lúmina fase atual vs roadmap** — v1.0 operacional, o que falta, previsão de lançamento
+
+### FRETE_CMD — expansão de frases naturais
+- Adicionadas 6 frases: `simular frete`, `simulação de frete`, `orçamento de frete/transporte`, `preciso transportar`, `quero transportar`, `me passa um frete`
+- FRETE_CMD requer FRETE_ROTA simultaneamente — expansão melhora captura de pedidos informais
+
+### Contagem de respostas atualizada
+- Todas as referências "325" e "345+" atualizadas para "350+" (temos 352 entradas reais)
+- Atualizado em: offline DEMO_QA (2 respostas), implantação, fallback genérico, comment
+
+### Auditoria UX/CSS (PRIORIDADE 5)
+- Auditados index.html (817 linhas) e style.css (1236 linhas)
+- Falsos positivos encontrados pelo audit:
+  - `.pres-count` — classe JS hook, sem necessidade de CSS (correto)
+  - `.pres-arch-mid` — wrapper estrutural, `display:block` default adequado (correto)
+  - `intg-google-connect` / `intg-google-disconnect` — stubs planejados, sem handler (conhecido)
+- **Nenhum bug UX real encontrado**
+- Toast, upload button, hamburger menu, placeholders, history bubbles — todos corretos
+
+## Git — situação dos branches
+- `main` local estava em detached HEAD após git branch -f do contexto anterior
+- Push para `noturno/sessoes-11-14` bem-sucedido; depois verificado que `origin/main` já estava em session 13 (ef0ce48)
+- Sessions 14 commits fast-forwarded diretamente para `origin/main` — 3 commits + este NOTURNO.md
+
+## Auditoria de pendências herdadas
+- **Tabela ANTT por eixo (R$/km)** — herdado 11x. Acesso manual em calculadorafrete.antt.gov.br
+- **CCT MOVIFORT RS 2025/2026** — herdado 8x. Dados parciais em código já refletem a categoria
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 11x. Acesso manual necessário
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 8x
+3. **`npm run build-dataset`** — executar na máquina local (≥ 500 exemplos)
+4. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+5. **PRIORIDADE 1 bugs remanescentes** — verificar se há crashers não cobertos em edições anteriores
+6. **DEMO_QA entrada possivelmente redundante** (~l.6956 remote) — verificar duplicata
