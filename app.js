@@ -6755,8 +6755,8 @@ const DEMO_QA = [
   // ── Quantos anos tem a Scapini / história ─────────────────────────────────────
   { re: /quantos anos.*scapini|scapini.*quantos anos|quando.*fundad.*scapini|ano.*fundacao.*scapini|historia.*scapini|scapini.*historia|scapini.*anos/,
     r: [
-      'A Scapini Transportes tem mais de 30 anos de história — foi fundada por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar uma das referências em transporte rodoviário de cargas no Sul do Brasil, com filiais em múltiplos estados e clientes de grande porte.',
-      'Com mais de três décadas de operação, a Scapini foi fundada por Diamantino Scapini em Lajeado/RS. Hoje é liderada por Lucas Scapini (CEO), com Ernani Scapini como Presidente e Rosangela Scapini como Vice-Presidente. Uma empresa familiar que cresceu com solidez e continua expandindo. Orgulho do Vale do Taquari.',
+      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar um dos grupos de transporte mais relevantes do Sul do Brasil, com 6 empresas, 30+ filiais e operações internacionais.',
+      'Fundado em 1977, o Grupo Scapini completou 45 anos em 2022 e segue expandindo. São quase 50 anos de estrada — de empresa familiar em Lajeado/RS para operações em todo o Brasil, Argentina, Uruguai e Paraguai. Hoje é liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (VP).',
     ]},
 
   // ── Tamanho da Scapini / frota / colaboradores ────────────────────────────────
@@ -6821,7 +6821,7 @@ const DEMO_QA = [
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 325 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 325+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 335+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6834,7 +6834,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 325+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 335+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6913,7 +6913,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (325+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (335+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -6960,7 +6960,7 @@ const DEMO_QA = [
     ]},
 
   // Operações internacionais
-  { re: /internacional.*scapini|scapini.*internacional|argentina|uruguai|paraguai|america do sul.*scapini|scapini.*america do sul|exportar.*scapini|frete.*internacional/,
+  { re: /internacional.*scapini|scapini.*internacional|argentina.*scapini|scapini.*argentina|uruguai.*scapini|scapini.*uruguai|paraguai.*scapini|scapini.*paraguai|frete.*argentina|frete.*uruguai|frete.*paraguai|america do sul.*scapini|scapini.*america do sul|exportar.*scapini|frete.*internacional/,
     r: [
       'O Grupo Scapini tem operações internacionais: Argentina, Uruguai e Paraguai. Para frete internacional, é necessário documentação adicional: DTA (Declaração de Trânsito Aduaneiro), seguro de carga internacional e adequação à legislação de cada país. O setor comercial faz a cotação.',
       'Além do Brasil, o Grupo Scapini atende Argentina, Uruguai e Paraguai. São quase 50 anos de experiência que abriram as fronteiras da empresa. Para rotas internacionais, procure o comercial — é um processo com mais etapas que o frete nacional, mas a Scapini tem know-how consolidado.',
@@ -6992,6 +6992,41 @@ const DEMO_QA = [
     r: [
       'A Lúmina evolui continuamente. Há dois caminhos: (1) base de conhecimento — qualquer colaborador pode adicionar novos procedimentos, ATIs ou políticas pelo painel, e a Lúmina passa a responder com esse conteúdo imediatamente; (2) novas integrações e funcionalidades são desenvolvidas pela DV Digital em sprints mensais com priorização pela equipe da Scapini.',
       'Funcionalidade nova que fizer sentido para a Scapini entra no roadmap. Atualmente planejados: integração CGI Phase 2 (leitura de dados em tempo real), alertas proativos por WhatsApp e portal do motorista com voz. Pedidos de melhoria vão direto para o time de desenvolvimento — vocês têm voz ativa no produto.',
+    ]},
+
+  // CIPA — NR-5
+  { re: /\bcipa\b|comissao.*interna.*prevencao|nr.?5\b.*cipa|prevencao.*acidente.*comissao|cipa.*obrigatorio|cipa.*eleicao|cipa.*reuniao|cipa.*mandato/,
+    r: [
+      'CIPA é a Comissão Interna de Prevenção de Acidentes (NR-5). É obrigatória para empresas com 20 ou mais empregados. Composição: metade dos membros eleitos pelos próprios empregados, metade indicada pelo empregador. Mandato de 1 ano, reuniões mensais obrigatórias. A CIPA não pune — ela investiga causas de acidentes e sugere melhorias de segurança. Para dúvidas sobre a CIPA da Scapini, procure o SESMT.',
+      'CIPA (Comissão Interna de Prevenção de Acidentes — NR-5): obrigatória em empresas com 20+ empregados. Eleição a cada ano — qualquer funcionário pode se candidatar como representante. Os membros titulares eleitos têm estabilidade de emprego durante o mandato e por 1 ano após. Pauta típica das reuniões: análise de acidentes, inspeções na operação, propostas de melhoria. Participe — é direito e proteção sua.',
+    ]},
+
+  // Arla 32 / AdBlue
+  { re: /arla.*32|adblue|urea.*diesel|reagente.*scr|motor.*scr|euro.*5.*urea|euro.*6.*arla|reservatorio.*arla|acabou.*arla|falta.*arla/,
+    r: [
+      'Arla 32 (ou AdBlue) é uma solução de ureia usada nos caminhões com motor Euro 5 e Euro 6 para reduzir a emissão de NOx. É obrigatória em praticamente todos os caminhões fabricados a partir de 2012 no Brasil. Fica em um reservatório separado do diesel — nunca misture! Consumo médio: 3 a 5% do diesel. Se acabar o Arla, o caminhão reduz potência e entra em modo de emergência — abasteça antes de zerar.',
+      'Sem Arla 32, o motor entra em modo fail-safe: redução de torque e alerta no painel. Em alguns modelos, o veículo pode ser imobilizado. Arla não é aditivo — é reagente que transforma NOx em nitrogênio e vapor d\'água no catalisador (SCR). Preço médio: R$ 3–5/litro posto. Sempre abasteça em postos com nota fiscal — Arla fora do padrão deteriora o sistema SCR rapidamente.',
+    ]},
+
+  // Holerite / contracheque
+  { re: /holerite|contracheque|contra.*cheque|ler.*holerite|entender.*holerite|desconto.*salario|holerite.*desconto|o que.*desconto.*salario|inss.*desconto|irrf.*desconto|folha.*pagamento.*entender/,
+    r: [
+      'Principais descontos no holerite: INSS (alíquota progressiva de 7,5% a 14% conforme salário — contribuição do empregado), IRRF (imposto de renda retido na fonte — isento até R$2.824/mês em 2025), VT (vale-transporte — desconto de até 6% do salário base). O FGTS (8% do salário) não aparece como desconto — é pago pelo empregador. Dúvida específica sobre seus descontos: procure o RH.',
+      'Como ler seu holerite: (1) Proventos = o que você ganha (salário base + horas extras + adicionais + diárias); (2) Descontos = o que é deduzido (INSS + IRRF + VT + plano de saúde se tiver); (3) Líquido = o que cai na conta. Discordância de valores? Solicite ao RH dentro do mês — após o 5º dia útil do mês seguinte fica mais difícil de corrigir.',
+    ]},
+
+  // Tacógrafo — calibração e obrigatoriedade
+  { re: /tacografo.*calibra|calibra.*tacografo|validade.*tacografo|lacre.*tacografo|tacografo.*vencido|inspecao.*tacografo|tacografo.*imetro|tacografo.*digital|tacografo.*obrigatorio|multa.*tacografo/,
+    r: [
+      'Tacógrafo é obrigatório em veículos com PBT acima de 3.500 kg (Resolução CONTRAN 432/2013). Calibração: obrigatória a cada 3 anos ou sempre que o hodômetro for reparado/substituído. Só oficinas credenciadas pelo INMETRO podem fazer a calibração e aplicar o lacre oficial. Tacógrafo descalibrado ou lacre violado é infração gravíssima (art. 97 CTB) com multa e suspensão do documento do veículo.',
+      'Tacógrafo digital: armazena 365 dias de jornada do motorista — velocidade, paradas, tempo de condução e descanso. A empresa pode baixar os dados para verificar cumprimento da Lei 13.103/2015 (jornada/descanso). Em fiscalização, o agente da PRF pode exigir impressão e leitura dos dados na hora. Guarde os cartões/discos de tacógrafo por no mínimo 30 dias — é obrigação legal.',
+    ]},
+
+  // SEST SENAT
+  { re: /sest.*senat|senat.*sest|sest\b|senat\b|servico.*social.*transporte|curso.*sest|saude.*motorista.*sest|odonto.*motorista.*sest/,
+    r: [
+      'SEST SENAT é o Sistema de Ensino e Assistência Social do Transporte — mantido por contribuição obrigatória das empresas do setor (1,5% sobre a folha de pagamento). Oferece aos colaboradores do transporte: cursos técnicos (direção defensiva, primeiros socorros, operação de cargas), atendimento médico e odontológico, academia e assistência social. Para motoristas da Scapini, o cadastro é gratuito na unidade mais próxima (Lajeado tem unidade SEST SENAT).',
+      'O SEST SENAT é um benefício real para motoristas — cursos de direção defensiva (obrigatório para renovação da CNH profissional), check-up médico anual, exames de risco cardiovascular e psicossocial, academia, odontologia e consultoria jurídica trabalhista básica. Tudo custeado pela contribuição das transportadoras. Seu sindicato (MOVIFORT) pode orientar sobre os serviços disponíveis na sua região.',
     ]},
 ];
 
@@ -7130,7 +7165,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 325+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 335+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
