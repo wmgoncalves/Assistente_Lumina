@@ -514,7 +514,7 @@ SOBRE A SCAPINI:
 • Grupo Scapini — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Quase 50 anos de história no transporte rodoviário de cargas.
 • Empresas do grupo: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (produtos químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem).
 • Operações internacionais: Argentina, Uruguai e Paraguai.
-• Mais de 30 filiais no Brasil; centenas de colaboradores; frota moderna com rastreamento GPS.
+• 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste, Nordeste) + 3 internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul; frota 500+ equipamentos com rastreamento GPS; centenas de colaboradores.
 • Transporte rodoviário de cargas fracionadas e lotação — foco no corredor Sul-Sudeste.
 • Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras.
 • Fundador: Diamantino Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | CEO: Lucas Scapini
@@ -3956,7 +3956,7 @@ const detectLocalInfo = async (text) => {
 
   // ── Perguntas estratégicas da diretoria ──
   if (/^(o que (e|é|eh) a?|me fala (da?|sobre a?)|fala (da?|sobre a?)|quem (e|é|eh) a?|me apresenta a?)\s*(scapini|scapini transportes)\s*[?.!]?$/.test(t.trim()) || /^scapini transportes\s*[?.!]?$/.test(t.trim()))
-    return 'A Scapini Transportes é parte do Grupo Scapini, fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte rodoviário de cargas. Especializada no Sul e Sudeste do Brasil. Liderança: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). Frota moderna, 30+ filiais e clientes de grande porte como JTI, Souza Cruz, Nestlé, CMPC e Suzano.';
+    return 'A Scapini Transportes é parte do Grupo Scapini, fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte rodoviário de cargas. Especializada no Sul e Sudeste do Brasil. Liderança: Ernani Scapini (Presidente), Lucas Scapini (CEO), Rosangela Scapini (Vice-Presidente). Frota 500+ equipamentos com rastreamento GPS, 18 filiais no Brasil + 3 no Mercosul (Argentina, Paraguai, Uruguai) e clientes de grande porte como JTI, Souza Cruz, Nestlé, CMPC e Suzano.';
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
       'O Grupo Scapini foi fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos construindo credibilidade no transporte de cargas. Hoje liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Uma das histórias de crescimento mais sólidas do transporte rodoviário no Sul do Brasil.',
@@ -3993,7 +3993,7 @@ const detectLocalInfo = async (text) => {
   if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
     return pick([
       'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
-      'O Grupo Scapini é uma empresa familiar fundada em 1977. São 6 empresas: Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH e Stokkie. Mais de 30 filiais no Brasil e presença internacional na Argentina, Uruguai e Paraguai.',
+      'O Grupo Scapini é uma empresa familiar fundada em 1977. São 6 empresas: Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH e Stokkie. 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste e Nordeste) + 3 unidades internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul. Frota de 500+ equipamentos.',
     ]);
 
   if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini|uberlandia.*scapini|triunfo.*scapini|camacari.*scapini/.test(t))
@@ -4065,7 +4065,7 @@ const detectLocalInfo = async (text) => {
   // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
   if (/tabela.*antt|antt.*tabela|piso.*minimo.*frete|frete.*minimo|tabela.*frete.*antt|antt.*piso|valor.*minimo.*frete|lei.*frete.*minimo/.test(t))
     return pick([
-      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 3,15% sobre os coeficientes anteriores. Em março/2026 a Portaria SUROC nº 4/2026 atualizou o CCD para R$5,986/km e o CC para R$478,76. O cálculo usa: Valor = (distância km × CCD × eixos) + CC. Para o valor exato por tipo de carga e composição: calculadorafrete.antt.gov.br',
+      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 3,15%. Em março/2026 a Portaria SUROC nº 4/2026 atualizou o diesel de referência para R$7,35/l (semana 15-21/mar/2026), elevando os coeficientes CCD/CC acima dos valores da SUROC 3 (R$6,89/l). O cálculo usa: Valor = (distância km × CCD × eixos) + CC. Para os valores exatos atualizados por tipo de carga e composição: calculadorafrete.antt.gov.br',
       'Piso mínimo ANTT 2026 — desde outubro/2025 a fiscalização é 100% eletrônica (cruzamento de MDF-e, CT-e e CIOT). Multa por operar abaixo do piso: até R$ 10 milhões por operação. Os coeficientes variam por eixos (2 a 9) e tipo de carga: geral, granel, frigorificada, perigosa e neo-bulk. Para os valores exatos atualizados, use a calculadora oficial em calculadorafrete.antt.gov.br — a Scapini precisa cobrar no mínimo esses valores para ser lucrativa e legal.',
       'A tabela de frete mínimo da ANTT (Resolução 6.076/2026) protege o caminhoneiro e mantém a viabilidade do setor. É reajustada quando o diesel varia mais de 5% (Lei 13.703/2018). Além da resolução anual, portarias intermediárias ajustam os coeficientes ao longo do ano conforme o preço do diesel S-10. Consulte sempre o valor vigente em calculadorafrete.antt.gov.br antes de fechar um contrato.',
     ]);
@@ -4537,7 +4537,7 @@ const tryLocalResponse = (text) => {
   if (/grupo scapini|empresas.*scapini|scapini.*grupo|transliquidos|365 log|blue seguros|ls tech|stokkie|empresas.*grupo|grupo.*empresas/.test(t))
     return pick([
       'O Grupo Scapini reúne: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (transporte de químicos e líquidos a granel, sede em Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora de seguros), LS TECH (tecnologia interna do grupo) e Stokkie (armazenagem). Juntas, com operações no Brasil, Argentina, Uruguai e Paraguai.',
-      'Empresas do Grupo Scapini: Scapini Transportes | Translíquidos (líquidos a granel) | 365 Log (e-commerce) | Blue Seguros | LS TECH (tech) | Stokkie (armazenagem). Mais de 30 filiais no Brasil e presença internacional na América do Sul. Fundado em 1977 por Diamantino Scapini em Lajeado/RS.',
+      'Empresas do Grupo Scapini: Scapini Transportes | Translíquidos (líquidos a granel) | 365 Log (e-commerce) | Blue Seguros | LS TECH (tech) | Stokkie (armazenagem). 18 filiais no Brasil + 3 no Mercosul = 21 unidades. Frota 500+ equipamentos. Fundado em 1977 por Diamantino Scapini em Lajeado/RS.',
     ]);
 
   // ── Translíquidos ──
@@ -5335,7 +5335,7 @@ const DEMO_QA = [
   { re: /grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|scapini motors|ls tech|quantas empresas.*scapini|divisoes.*scapini/,
     r: [
       'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (químicos e líquidos a granel — sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
-      'A Scapini não é uma empresa só — é um grupo familiar fundado em 1977. As 6 empresas: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. Mais de 30 filiais no Brasil e presença no Mercosul (Argentina, Uruguai e Paraguai). Presidente: Ernani Scapini | CEO: Lucas Scapini.',
+      'A Scapini não é uma empresa só — é um grupo familiar fundado em 1977. As 6 empresas: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. 18 filiais no Brasil + 3 no Mercosul (Argentina, Uruguai e Paraguai) = 21 unidades. Frota 500+ equipamentos. Presidente: Ernani Scapini | CEO: Lucas Scapini.',
     ]},
 
   // Filiais e abrangência geográfica
@@ -6755,7 +6755,7 @@ const DEMO_QA = [
   // ── Quantos anos tem a Scapini / história ─────────────────────────────────────
   { re: /quantos anos.*scapini|scapini.*quantos anos|quando.*fundad.*scapini|ano.*fundacao.*scapini|historia.*scapini|scapini.*historia|scapini.*anos/,
     r: [
-      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar um dos grupos de transporte mais relevantes do Sul do Brasil, com 6 empresas, 30+ filiais e operações internacionais.',
+      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar um dos grupos de transporte mais relevantes do Sul do Brasil: 6 empresas, 18 filiais no Brasil + 3 no Mercosul (21 unidades), frota 500+ equipamentos e operações internacionais.',
       'Fundado em 1977, o Grupo Scapini completou 45 anos em 2022 e segue expandindo. São quase 50 anos de estrada — de empresa familiar em Lajeado/RS para operações em todo o Brasil, Argentina, Uruguai e Paraguai. Hoje é liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (VP).',
     ]},
 
@@ -6948,7 +6948,7 @@ const DEMO_QA = [
   // Grupo Scapini — empresas
   { re: /grupo scapini|empresas.*grupo|grupo.*empresas|transliquidos|365 log|blue seguros|ls tech|stokkie|quantas empresas.*scapini|scapini.*grupo.*empresas/,
     r: [
-      'O Grupo Scapini tem 6 empresas: Scapini Transportes (cargas nacionais/internacionais), Translíquidos (líquidos a granel e químicos), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977, com mais de 30 filiais e presença na Argentina, Uruguai e Paraguai.',
+      'O Grupo Scapini tem 6 empresas: Scapini Transportes (cargas nacionais/internacionais), Translíquidos (líquidos a granel e químicos), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977. 18 filiais no Brasil + 3 no Mercosul (Argentina, Uruguai e Paraguai) = 21 unidades. Frota 500+ equipamentos.',
       'Grupo Scapini: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. Empresa familiar fundada por Diamantino Scapini em 1977 em Lajeado/RS — quase 50 anos no transporte rodoviário de cargas.',
     ]},
 
