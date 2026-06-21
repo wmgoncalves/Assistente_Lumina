@@ -4073,8 +4073,8 @@ const detectLocalInfo = async (text) => {
   // ── Diesel RS / combustível ───────────────────────────────────────────────────
   if (/preco.*diesel|diesel.*preco|diesel.*rs|diesel.*rio grande|valor.*diesel|litro.*diesel|diesel.*litro|combustivel.*preco|preco.*combustivel/.test(t))
     return pick([
-      'Diesel S-10 no Brasil (referência ANP 2026): média nacional em torno de R$ 6,20–6,60/L. O RS historicamente fica próximo à média nacional — valores específicos variam semanalmente. A ANTT reajusta os coeficientes da tabela de frete quando o diesel varia mais de 5% (Portaria SUROC). Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
-      'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 6,00/L e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,14/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.357 por viagem, sem contar pedágio, motorista e manutenção.',
+      'Diesel S-10 no Brasil (referência ANP 2026): média nacional estimada em torno de R$ 6,80–7,30/L (ANTT usou R$7,35/l na Portaria SUROC 4/2026 de março). O RS historicamente fica próximo à média nacional — valores variam semanalmente. A ANTT reajusta os coeficientes da tabela de frete quando o diesel varia mais de 5% (Portaria SUROC). Para preço atualizado por posto, o app Valecard Frota e o site da ANP (anp.gov.br) publicam levantamento semanal por estado.',
+      'O diesel é o maior custo variável de uma transportadora — representa 35-40% do custo operacional de uma carreta. Com diesel S-10 a ~R$ 7,35/L (ref. SUROC 4/2026) e consumo médio de uma carreta em 2,8 km/L, o custo de combustível por km fica em torno de R$ 2,63/km. Numa viagem Lajeado–São Paulo (~1.100 km), só em diesel são ~R$ 2.890 por viagem, sem contar pedágio, motorista e manutenção.',
     ]);
 
   // ── Mercado de transporte rodoviário / setor ──────────────────────────────────
@@ -5191,7 +5191,7 @@ const DEMO_QA = [
   // Custo por viagem / rentabilidade de rota
   { re: /custo.*viagem|rentabilidade.*rota|rota.*lucrativa|rota.*rentavel|margem.*rota|quanto.*custa.*viagem/,
     r: [
-      'Custo por viagem (carreta RS→SP, ~1.600 km ida): diesel ~400L × R$ 6,50 = R$ 2.600; pedágio ~R$ 600; motorista (diária+pernoite) ~R$ 350; depreciação veículo ~R$ 400; pneus/manutenção rateada ~R$ 200. Total custo operacional: ~R$ 4.150. Frete mínimo para cobrir custos: R$ 4.150 + overhead + margem. Valores são referência 2025 — ajuste ao preço atual do diesel.',
+      'Custo por viagem (carreta RS→SP, ~1.600 km ida): diesel ~400L × R$ 7,35 = R$ 2.940; pedágio ~R$ 600; motorista (diária+pernoite) ~R$ 350; depreciação veículo ~R$ 400; pneus/manutenção rateada ~R$ 200. Total custo operacional: ~R$ 4.490. Frete mínimo para cobrir custos: R$ 4.490 + overhead + margem. Referência diesel: SUROC 4/2026 — ajuste ao preço atual da sua distribuidora.',
       'Para calcular a rentabilidade de uma rota: some todos os custos variáveis (diesel, pedágio, pneu, diária motorista) mais o rateio de custos fixos (depreciação, seguro, financiamento). Compare com o frete recebido. Margem abaixo de 12% numa rota longa é sinal de reajuste urgente. Rotas curtas toleram margens menores pelo menor risco e menor imobilização.',
     ]},
 
@@ -5904,7 +5904,7 @@ const DEMO_QA = [
   // Frotas elétricas e hidrogênio
   { re: /caminhao.*eletrico|frota.*eletrica|veiculo.*eletrico.*transporte|hidrogenio.*caminhao|fuel.*cell.*caminhao|bev.*caminhao|caminhao.*bateria|tesla.*semi|volvo.*eletrico.*caminhao/,
     r: [
-      'Caminhões elétricos no Brasil: Volvo FH Electric, Scania BEV e Mercedes e-Actros já estão disponíveis no mercado brasileiro. Autonomia real: 200-450 km por carga (ideal para distribuição urbana e short haul, não para rotas Sul-Sudeste de 1.100 km). Custo de recarga: R$0,80-1,20/kWh industrial vs diesel R$6,10/l — economia de 60-70% por km. Barreira: custo do veículo 2-3x maior e infraestrutura de recarga inexistente nas rodovias.',
+      'Caminhões elétricos no Brasil: Volvo FH Electric, Scania BEV e Mercedes e-Actros já estão disponíveis no mercado brasileiro. Autonomia real: 200-450 km por carga (ideal para distribuição urbana e short haul, não para rotas Sul-Sudeste de 1.100 km). Custo de recarga: R$0,80-1,20/kWh industrial vs diesel R$7,35/l (ref. 2026) — economia de 60-70% por km. Barreira: custo do veículo 2-3x maior e infraestrutura de recarga inexistente nas rodovias.',
       'Hidrogênio (H2) para transporte pesado: a célula de combustível de hidrogênio (FCEV) é a tecnologia mais promissora para longa distância — abastece em 15 min (como diesel) e tem autonomia de 800-1.000 km. Toyota, Hyundai e Daimler já têm protótipos. No Brasil, Petrobras e Vale investem em H2 verde. Horizon realista para o Brasil: 2030-2035. Por ora, mantenha foco em diesel S-10 e GNL para reduzir emissões.',
     ]},
 
@@ -5973,7 +5973,7 @@ const DEMO_QA = [
   // Gestão de combustível e custo por rota
   { re: /custo.*combustivel.*rota|diesel.*rota|consumo.*rota|quanto.*gasta.*diesel|preco.*diesel.*hoje|diesel.*litro.*rs|custo.*km.*diesel/,
     r: [
-      'Custo de combustível por rota: consumpção média de caminhão truck em estrada = 3 km/l; carreta = 2,5 km/l. Diesel no RS em 2026: ~R$6,20–6,60/l (posto, referência ANP). Lajeado → São Paulo (~1.100 km): truck gasta ~367 litros ≈ R$2.300 só em diesel. Carreta: ~440 litros ≈ R$2.750. Adicione pedágio (BR-116: ~R$400-600 ida) e chegará ao custo direto de combustível+pedágio da rota.',
+      'Custo de combustível por rota: consumo médio de caminhão truck em estrada = 3 km/l; carreta = 2,5 km/l. Diesel no RS em 2026: ~R$7,10–7,60/l (posto, ref. SUROC 4/2026: R$7,35/l). Lajeado → São Paulo (~1.100 km): truck gasta ~367 litros ≈ R$2.697 só em diesel. Carreta: ~440 litros ≈ R$3.234. Adicione pedágio (BR-116: ~R$400-600 ida) e chegará ao custo direto de combustível+pedágio da rota.',
       'Variação do diesel impacta diretamente a margem: a cada R$0,10 de alta no diesel, o custo de uma viagem Lajeado-SP sobe R$37-44 (truck) ou R$44-55 (carreta). Numa frota de 20 veículos fazendo essa rota, R$0,10 de alta = R$740-1.100 de custo extra por viagem completa. Daí a importância da cláusula de fuel surcharge no contrato — repassa automaticamente a variação para o cliente.',
     ]},
 
