@@ -513,8 +513,9 @@ Trate cada pessoa com respeito e leveza. Você representa o futuro da empresa. S
 SOBRE A SCAPINI:
 • Grupo Scapini — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Quase 50 anos de história no transporte rodoviário de cargas.
 • Empresas do grupo: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (produtos químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem).
-• Operações internacionais: Argentina, Uruguai e Paraguai.
-• 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste, Nordeste) + 3 internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul; frota 500+ equipamentos com rastreamento GPS; centenas de colaboradores.
+• Operações internacionais: Argentina, Uruguai, Paraguai + TST Global (EUA, inaugurada set/2024).
+• 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste, Nordeste) + 3 internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul; frota 500+ equipamentos (idade média 3,4 anos em 2024, 100% rastreada GPS); ~1.100 colaboradores (800 CLT + 300 terceirizados/agregados).
+• Faturamento 2024: ~R$ 440 milhões (crescimento 28% vs 2023); meta 2030: R$ 1 bilhão.
 • Transporte rodoviário de cargas fracionadas e lotação — foco no corredor Sul-Sudeste.
 • Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras.
 • Fundador: Diamantino Scapini | Presidente: Ernani Scapini | Vice-Presidente: Rosangela Scapini | CEO: Lucas Scapini
@@ -3970,8 +3971,8 @@ const detectLocalInfo = async (text) => {
 
   if (/quantos (funcionarios|colaboradores|empregados|motoristas).*scapini|tamanho.*equipe|tamanho.*scapini|porte.*scapini/.test(t))
     return pick([
-      'A Scapini Transportes tem uma equipe dedicada de motoristas, líderes de operação, pessoal administrativo e técnicos de manutenção. Para o número exato de colaboradores, o RH informa — esses dados variam com a sazonalidade. O porte é de empresa média regional com alcance Sul-Sudeste.',
-      'Não tenho o headcount exato atualizado — o RH é a fonte certa. O que posso dizer: a Scapini tem operação completa com motoristas próprios e agregados, equipe administrativa, financeiro, operações e manutenção. Uma transportadora de médio porte com gestão familiar e presença consolidada no Sul.',
+      'A Scapini Transportes tem cerca de 1.100 colaboradores: aproximadamente 800 contratados CLT (motoristas, operacional, administrativo, manutenção) e 300 terceirizados/agregados. Esses números podem variar conforme a operação — o RH tem o headcount atualizado.',
+      'Headcount Scapini: ~1.100 pessoas no total — 800 diretos (CLT) e 300 terceirizados e agregados. Uma operação de grande porte para o padrão regional, com presença em 21 unidades no Brasil e Mercosul, e expansão para os EUA com TST Global (set/2024).',
     ]);
 
   if (/(qual|quais?).*(concorrente|competidor|rival|mercado.*scapini|scapini.*mercado)/.test(t))
@@ -3995,10 +3996,10 @@ const detectLocalInfo = async (text) => {
       'Antes de cada viagem, o motorista faz o check-list do veículo: parte elétrica, pneus, rastreador, CFTV (câmeras), travessas do SIDER montadas, carreta limpa. Para clientes como Braskem há check-list específico do cliente. Para Souza Cruz em Uberlândia, o veículo vai para carregamento no SUPPORTE no dia anterior — o motorista de viagem descansa no alojamento da filial enquanto manobristas carregam.',
     ]);
 
-  if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
+  if (/grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|ls.?tech|tst global|tst.*eua|scapini.*eua|eua.*scapini|america.*norte.*scapini|quantas.*empresas.*scapini|divisoes.*grupo/.test(t))
     return pick([
-      'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
-      'O Grupo Scapini é uma empresa familiar fundada em 1977. São 6 empresas: Scapini Transportes, Translíquidos, 365 Log, Blue Seguros, LS TECH e Stokkie. 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste e Nordeste) + 3 unidades internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul. Frota de 500+ equipamentos.',
+      'O Grupo Scapini reúne 7 empresas: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (químicos e líquidos a granel, adquirida 2021), 365 Log (e-commerce e last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem) e TST Global (EUA, inaugurada set/2024). Fundado em 1977 por Diamantino Scapini. Faturamento 2024: ~R$ 440M, meta 2030: R$ 1B.',
+      'O Grupo Scapini: 18 filiais no Brasil + 3 internacionais (Argentina, Paraguai, Uruguai) + TST Global (EUA, inaugurada set/2024) = 22 unidades. Frota 500+ equipamentos (3,4 anos média, 100% GPS). ~1.100 colaboradores. Faturamento 2024 ~R$ 440M, crescimento 28% vs 2023.',
     ]);
 
   if (/filiais.*scapini|onde.*scapini.*opera|abrangencia|canoas|carazinho|ponta grossa|itajai|resende.*scapini|santa cruz.*scapini|uberlandia.*scapini|triunfo.*scapini|camacari.*scapini/.test(t))
@@ -4057,8 +4058,8 @@ const detectLocalInfo = async (text) => {
 
   if (/quanto.*fatura|faturamento.*scapini|receita.*anual|revenue.*scapini/.test(t))
     return pick([
-      'O faturamento da Scapini é informação estratégica — não compartilho publicamente. Para análise interna, suba uma planilha DRE e faço o fechamento completo com variações, margens e alertas. O que posso dizer: transportadoras regionais de médio porte no Sul faturam entre R$ 20M e R$ 100M/ano dependendo da frota e das rotas.',
-      'Não divulgo faturamento da Scapini em conversa aberta — é dado confidencial da diretoria. Para análise detalhada, compartilhe a DRE e eu processo tudo: receita bruta, líquida, margens, variações mensais e anuais.',
+      'O faturamento da Scapini em 2024 foi de aproximadamente R$ 440 milhões — crescimento de 28% em relação a 2023. A meta para 2030 é atingir R$ 1 bilhão, com expansão para os EUA (TST Global, inaugurada em setembro/2024). Para análise detalhada da DRE interna, compartilhe a planilha e eu processo tudo: receita bruta, margens, variações e alertas.',
+      'Scapini: faturamento ~R$ 440M em 2024, meta R$ 1 bilhão em 2030. Receita mensal estimada em ~R$ 32M. Para análise detalhada de DRE por rota ou período, suba a planilha — processo variações, margens e tendências automaticamente.',
     ]);
 
   if (/como.*(expansao|crescimento|escalar|crescer|nova.*rota|nova.*regiao|expandir).*scapini|plano.*crescimento|plano.*expansao/.test(t))
@@ -5012,8 +5013,8 @@ const DEMO_QA = [
 
   { re: /o que (e|eh|é|significa) (o |a )?(frete tabelado|tabela.*frete|tac.*frete|piso.*frete|piso.*caminhao|frete minimo|frete.*piso)/,
     r: [
-      'Piso mínimo de frete (Lei 13.703/2018): lei que estabelece valores mínimos para fretes rodoviários de carga, calculados por eixo e tipo de carga. A ANTT divulga a tabela periodicamente. Transportadoras não podem contratar fretes abaixo desse piso — sujeito a multa. Para motoristas autônomos (TAC), o piso é calculado pelo CIOT.',
-      'Tabela ANTT de fretes: define valores mínimos por eixo, tipo de carga e distância. Por exemplo: carga geral em carreta com 5 eixos = X reais por km. A Scapini usa essa tabela como referência de base — o frete real pode ser maior dependendo do cliente e do mercado. A tabela atual está no site da ANTT (gov.br/antt).',
+      'Piso mínimo de frete (Lei 13.703/2018): lei que estabelece valores mínimos para fretes rodoviários de carga, calculados por eixo e tipo de carga. A ANTT atualiza periodicamente via Portaria SUROC. Última atualização: Portaria SUROC 6/2026 (23/abr/2026), com reajuste de 4,52% a 8,17% sobre a tabela anterior. Transportadoras não podem contratar abaixo do piso — sujeito a multa. Para TAC, o valor obrigatório vai no CIOT.',
+      'Tabela ANTT (Portaria SUROC 6/2026 — vigente desde abr/2026): Carga Geral CCD R$4,00-9,25/km; Granel Sólido R$4,03-9,27/km; Frigorificado R$4,74-10,96/km (valores variam por número de eixos). A Scapini usa essa tabela como piso — o frete real praticado é igual ou maior dependendo do cliente e da rota. Tabela completa: gov.br/antt.',
     ]},
 
   { re: /o que (e|eh|é|significa) (o |a )?(subcontratacao|subcontratado|agregado|motorista.*agregado|veiculo.*agregado)/,
@@ -5239,11 +5240,11 @@ const DEMO_QA = [
 
   // ── BLOCO INTERNACIONAL E FISCAL AVANÇADO ────────────────────────────────────
 
-  // Transporte internacional / Mercosul
-  { re: /mercosul|argentina|uruguai|paraguai|transporte.*internacional|internacional.*transporte|importacao.*frete|exportacao.*frete|alfandega|aduana/,
+  // Transporte internacional / Mercosul / EUA
+  { re: /mercosul|argentina|uruguai|paraguai|transporte.*internacional|internacional.*transporte|importacao.*frete|exportacao.*frete|alfandega|aduana|tst global|scapini.*eua|eua.*scapini|america.*norte/,
     r: [
-      'Transporte internacional Mercosul a partir do RS: documentação obrigatória — DTA (Declaração de Trânsito Aduaneiro), TIF/DTA (conhecimento de transporte internacional), Certificado de Origem, Lista de Embalagem. Para Argentina e Uruguai, a Scapini precisa de habilitação na ANTT para transporte internacional e seguro específico para cobertura fora do Brasil. Prazo: +3 a 7 dias por burocracia aduaneira.',
-      'Exportação de carga do RS: Lajeado → Argentina (Uruguaiana ou Foz do Iguaçu) — 600 a 900 km. A carga sai com NF de exportação + DU-E (Declaração Única de Exportação) e DTA. O frete internacional é isento de ICMS (exportação) mas sujeito ao IOF sobre o pagamento em moeda estrangeira. Para operar regularmente, a Scapini precisa de RNTRC com habilitação para internacional.',
+      'Transporte internacional Mercosul a partir do RS: documentação obrigatória — DTA (Declaração de Trânsito Aduaneiro), TIF/DTA (conhecimento de transporte internacional), Certificado de Origem, Lista de Embalagem. Para Argentina e Uruguai, a Scapini precisa de habilitação na ANTT para transporte internacional e seguro específico para cobertura fora do Brasil. Prazo: +3 a 7 dias por burocracia aduaneira. Destaque: a Scapini possui 3 unidades internacionais (Argentina, Paraguai, Uruguai) e em setembro/2024 inaugurou a TST Global nos EUA — primeira operação na América do Norte.',
+      'Exportação de carga do RS: Lajeado → Argentina (Uruguaiana ou Foz do Iguaçu) — 600 a 900 km. A carga sai com NF de exportação + DU-E (Declaração Única de Exportação) e DTA. O frete internacional é isento de ICMS (exportação). Expansão recente: TST Global (EUA), inaugurada em setembro/2024, amplia o alcance do Grupo Scapini para a América do Norte.',
     ]},
 
   // DIFAL — Diferencial de Alíquota ICMS
@@ -6711,8 +6712,8 @@ const DEMO_QA = [
   { re: /^(tchau|adeus|ate logo|ate mais|ate amanha)/,
     r: ['Até breve!', 'Até mais! Foi um prazer.', 'Estarei aqui quando precisar.'] },
 
-  // ── Clima ─────────────────────────────────────────────────────────────────────
-  { re: /clima|chuva|temperatura|previsao do tempo/,
+  // ── Clima (padrão restrito — evita falso positivo em "temperatura do motor", "câmara fria", "clima organizacional")
+  { re: /\bchuva\b|previsao.*tempo|vai chover|como.*tempo.*hoje|que tempo.*faz|previsao.*chuva|tempo.*amanha/,
     r: ['Para clima em tempo real preciso de conexão com a internet. Me faz uma pergunta sobre a Scapini — aí estou em casa.'] },
 
   // ── Planilha / base de conhecimento ──────────────────────────────────────────
@@ -6774,8 +6775,8 @@ const DEMO_QA = [
   // ── Tamanho da Scapini / frota / colaboradores ────────────────────────────────
   { re: /quantos caminhoes|tamanho.*scapini|frota.*scapini|scapini.*frota|quantos funcionarios|quantos colaboradores|scapini.*funcionarios|scapini.*colaboradores|porte.*scapini/,
     r: [
-      'A Scapini opera com frota própria moderna — caminhões truck, carretas e veículos para distribuição. Toda a frota tem rastreamento GPS. Contamos com centenas de colaboradores entre motoristas, auxiliares operacionais e equipe administrativa. Para o número atualizado de veículos e colaboradores, o setor de gestão tem os dados exatos.',
-      'A Scapini é uma transportadora de médio-grande porte, com frota diversificada (truck, carreta, veículos menores) e operação em múltiplos estados. Centenas de colaboradores trabalham desde a base em Lajeado/RS até as filiais em PR, SC, SP e RJ. É uma empresa que cresce com solidez há mais de 30 anos.',
+      'A Scapini opera com frota de 500+ equipamentos, idade média 3,4 anos em 2024 e 100% rastreada por GPS. Tipos: carretas SIDER, baú fechado, grade baixa, rodotrem e truck para distribuição regional. ~1.100 colaboradores: 800 CLT (motoristas, operacional, administrativo, manutenção) e 300 terceirizados/agregados.',
+      'Frota Scapini: mais de 500 equipamentos com rastreamento GPS em tempo real, uma das frotas mais novas do setor no Sul (média 3,4 anos em 2024). Mix: própria + agregada + terceiros (TAC). ~1.100 colaboradores — 800 diretos e 300 terceirizados. Faturamento 2024: ~R$ 440 milhões, meta R$ 1 bilhão em 2030.',
     ]},
 
   // ── Qual a diferença entre a Lúmina e outros chatbots ────────────────────────
@@ -7088,6 +7089,41 @@ const DEMO_QA = [
     r: [
       'GRC (Gerenciamento de Risco de Carga) é obrigatório para cargas de alto valor ou risco (eletrônicos, cigarros, medicamentos, carga frigorificada). O processo inclui: avaliação do perfil de risco da carga, definição de rota segura (evitar trechos críticos), veículo com rastreamento ativo, comunicação de início e fim de viagem, e protocolo de parada (nunca parar em local não autorizado após 22h). Seguradoras exigem GRC documentado para cobertura total.',
       'Procedimentos padrão de GRC na transportadora: 1) Motorista não divulga origem/destino nem tipo de carga a terceiros; 2) Paradas autorizadas apenas em postos conveniados com câmera; 3) Check-in com a central a cada 2h em rotas críticas; 4) Se perder comunicação por >30min: protocolo de busca ativa; 5) Em caso de abordagem (tentativa de roubo): NÃO resista — a vida vale mais que a carga. Acione seguradora e polícia após local seguro.',
+    ]},
+
+  // ── Contrato de experiência CLT ───────────────────────────────────────────
+  { re: /contrato.*experiencia|periodo.*experiencia|experiencia.*45.*dias|45.*dias.*experiencia|contrato.*prazo.*determin.*clt|experiencia.*clt|clt.*experiencia.*prazo|rescisao.*experiencia|demissao.*experiencia|dentro.*experiencia/,
+    r: [
+      'Contrato de experiência CLT: prazo máximo de 90 dias, dividido em dois períodos de até 45 dias cada (45+45). Pode ser prorrogado uma única vez. Se a empresa demitir dentro do período: indenização de 50% dos salários restantes + salário do período trabalhado + 13º/férias proporcionais (sem aviso prévio). Se o colaborador pedir demissão: paga metade dos salários restantes do período (penalidade). Ao término sem renovação: sem multa, mas paga saldo de salário, 13º e férias proporcionais.',
+      'Rescisão no contrato de experiência: a empresa pode demitir sem justa causa pagando 50% dos dias restantes do contrato como indenização (cláusula asseguratória recíproca — Art. 481 CLT). Exemplo: contrato de 45 dias, demitido no 30º dia → indenização = 15 dias × 50% = 7,5 dias de salário. O FGTS (8%) é recolhido normalmente durante todo o período, mas a multa de 40% SÓ se aplica fora do contrato de experiência.',
+    ]},
+
+  // ── Check-list pré-viagem do motorista ────────────────────────────────────
+  { re: /checklist.*pre.?viagem|pre.?viagem.*checklist|vistoria.*diaria.*motorista|vistoria.*antes.*viagem|inspecao.*diaria.*veiculo|inspecao.*pre.?viagem|o que.*verificar.*antes.*sair|verificacao.*antes.*viagem|inspecao.*caminhao.*diaria|checklist.*diario.*motorista/,
+    r: [
+      'Check-list pré-viagem obrigatório (a fazer antes de cada saída): ✅ Pneus — calibragem correta e desgaste (sulco mínimo 1,6mm). ✅ Nível de óleo do motor, fluido de freio, embreagem e água do radiador. ✅ Arla 32 (tanque cheio). ✅ Faróis, lanternas, pisca e freios. ✅ Limpadores e retrovisores. ✅ Extintor (carga válida e lacre íntegro). ✅ Triângulo de segurança. ✅ Documentos: CNH, CRLV, tacógrafo em funcionamento, CT-e e MDFe da viagem. ✅ Carga estufada, amarrada e lacrada. Qualquer irregularidade: comunicar ao setor de frota ANTES de sair.',
+      'Inspeção pré-viagem: o motorista é responsável por verificar o veículo antes de ligar o motor. Veículo com problema detectado na saída = zero custo. Veículo com problema detectado a 500 km de Lajeado = reboque + dia parado + possível perda de carga.',
+    ]},
+
+  // ── CNH profissional — renovação ──────────────────────────────────────────
+  { re: /renovar.*cnh|cnh.*renovacao|cnh.*venc|vencer.*cnh|validade.*cnh|cnh.*validade|cnh.*profissional.*validade|renovacao.*habilitacao.*profissional|como.*renovar.*cnh.*motorista|prazo.*renovacao.*cnh/,
+    r: [
+      'CNH profissional (categorias C, D e E): validade de 5 anos até 49 anos de idade. Após os 50 anos: 3 anos. Após os 60 anos: 1 ano. Para renovar: exame médico + psicológico no DETRAN e exame toxicológico de larga janela de detecção (Lei 13.103/2015) feito nos últimos 60 dias antes do vencimento. Sem toxicológico: CNH não é renovada.',
+      'CNH vencida na estrada: infração gravíssima — multa R$ 880,41 + 7 pontos + retenção do veículo. Dica para o setor de frota: planilha de controle com alerta 90 dias antes do vencimento de cada CNH. Motorista sem CNH válida não sai na viagem: regra sem exceção.',
+    ]},
+
+  // ── E quando a Lúmina errar? ──────────────────────────────────────────────
+  { re: /e quando.*errar|lumina.*erra|e se.*errar.*resposta|lumina.*der.*resposta.*errada|e se.*informacao.*errada|lumina.*inventar|lumina.*alucin|confiar.*lumina|resultado.*errado.*lumina|lumina.*resposta.*incorreta|quando.*errar.*lumina/,
+    r: [
+      'Boa pergunta — honestidade primeiro. Eu posso errar. Quando suspeitar de uma resposta minha, peça para eu explicar o raciocínio: se eu não souber a fonte, admito. Para dados críticos (valores de frete, regulamentação, decisões jurídicas ou financeiras), sempre valide com o responsável da área. Eu sou uma camada de inteligência que acelera o trabalho — não substituo a validação humana nas decisões que importam.',
+      'Transparência: sou uma IA e posso cometer erros — especialmente em dados numéricos exatos, datas específicas e interpretações jurídicas. Se eu errar, me corrija diretamente — "Lúmina, isso está errado, o correto é X" — e registro na memória. Com o tempo, erro menos porque aprendo com o uso real da Scapini.',
+    ]},
+
+  // ── Lei de Cotas PcD ──────────────────────────────────────────────────────
+  { re: /lei.*cotas|cotas.*pcd|cotas.*deficiente|deficiente.*cotas|pcd.*empresa|lei.*8213|pessoa.*deficiencia.*contrat|contratar.*pcd|cota.*reabilitado|percentual.*pcd|cota.*pne|pne.*empresa/,
+    r: [
+      'Lei de Cotas (Lei 8.213/1991 — Art. 93): empresas com 100 ou mais empregados são OBRIGADAS a contratar pessoas com deficiência (PcD) ou reabilitados pelo INSS. Percentuais: 100 a 200 empregados = 2%; 201 a 500 = 3%; 501 a 1.000 = 4%; acima de 1.001 = 5%. A Scapini, com ~1.100 colaboradores, se enquadra na faixa de 5% do quadro.',
+      'PcD no transporte: contratar para funções operacionais exige laudo médico e adaptação da função. Cargos administrativos e de apoio têm mais opções de alocação. Recrutamento de PcD pode ser feito via SEST SENAT, SINE, APAEs regionais. O PcD demitido sem justa causa gera reincidência da cota e risco de autuação.',
     ]},
 ];
 
