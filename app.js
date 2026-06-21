@@ -5352,7 +5352,7 @@ const DEMO_QA = [
     ]},
 
   // Clientes da Scapini
-  { re: /clientes.*scapini|quem.*scapini.*atende|carteira.*clientes.*scapini|jti|souza cruz|nestle.*scapini|fruki.*scapini|bat.*scapini|braskem|suzano.*scapini|continental.*scapini|jbs.*scapini/,
+  { re: /clientes.*scapini|quem.*scapini.*atende|carteira.*clientes.*scapini|\bjti\b|souza cruz|nestle.*scapini|fruki.*scapini|bat.*scapini|\bbraskem\b|suzano.*scapini|continental.*scapini|jbs.*scapini/,
     r: [
       'A Scapini atende clientes de grande porte, principalmente indústrias do Sul e Sudeste. Entre os principais: JTI (Japan Tobacco International), Souza Cruz/BAT, Philip Morris, Nestlé, Fruki, Braskem, Continental, CMPC, Suzano, LD Celulose, WestRock, Gen Mills, Saint-Gobain, Leroy Merlin, Unilever e JBS. Carteira diversificada entre fumo/tabaco, papel/celulose, alimentos, bebidas e materiais de construção.',
       'Portfólio de clientes Scapini: predominância em tabaco (JTI, Souza Cruz, Philip Morris — setor de alta complexidade e rigor), celulose/papel (CMPC, Suzano, LD Celulose, WestRock), alimentos e bebidas (Nestlé, Fruki, Gen Mills, JBS) e indústria geral (Braskem, Continental, Saint-Gobain). Relacionamentos de longa data — alguns clientes há mais de 15 anos.',
@@ -6060,7 +6060,7 @@ const DEMO_QA = [
   // ── BLOCO CLIENTES ESTRATÉGICOS E SETOR FRIGORÍFICO ───────────────────────────
 
   // Frigoríficos como clientes — BRF, JBS, Marfrig, Aurora
-  { re: /frigorifico|brf|jbs|marfrig|aurora.*alimentos|seara|sadia|perdigao|carne.*transporte|frigorifico.*cliente|transporte.*frigorifico/,
+  { re: /frigorifico|\bbrf\b|\bjbs\b|\bmarfrig\b|aurora.*alimentos|\bseara\b|\bsadia\b|\bperdigao\b|carne.*transporte|frigorifico.*cliente|transporte.*frigorifico/,
     r: [
       'Frigoríficos como clientes de transportadora: BRF (Sadia/Perdigão), JBS (Seara/Friboi) e Aurora são os maiores geradores de carga do RS e SC. Exigências típicas: frota com baú refrigerado (temperatura -18°C para congelados, 0-4°C para resfriados), rastreamento em tempo real com acesso ao sistema do cliente, HACCP (controle higiênico-sanitário), e motoristas treinados para carga alimentar. Homologação leva 30-90 dias.',
       'Processo de homologação em frigorífico: a transportadora passa por auditoria técnica (inspeção da frota, calibração dos baús, limpeza e higienização), documental (RNTRC, RCTR-C, apólice de carga alimentar, certificado do baú pelo MAPA) e operacional (teste de entrega monitorada). Após aprovada, entra na lista de transportadoras habilitadas — as cargas são distribuídas por desempenho (OTD, avarias, comunicação).',
@@ -7124,6 +7124,34 @@ const DEMO_QA = [
     r: [
       'Lei de Cotas (Lei 8.213/1991 — Art. 93): empresas com 100 ou mais empregados são OBRIGADAS a contratar pessoas com deficiência (PcD) ou reabilitados pelo INSS. Percentuais: 100 a 200 empregados = 2%; 201 a 500 = 3%; 501 a 1.000 = 4%; acima de 1.001 = 5%. A Scapini, com ~1.100 colaboradores, se enquadra na faixa de 5% do quadro.',
       'PcD no transporte: contratar para funções operacionais exige laudo médico e adaptação da função. Cargos administrativos e de apoio têm mais opções de alocação. Recrutamento de PcD pode ser feito via SEST SENAT, SINE, APAEs regionais. O PcD demitido sem justa causa gera reincidência da cota e risco de autuação.',
+    ]},
+
+  // ── Multas de trânsito da frota ───────────────────────────────────────────
+  { re: /multa.*transito.*frota|frota.*multa.*transito|infracao.*transito.*caminhao|gestao.*multa.*frota|multa.*placa.*empresa|detran.*multa.*empresa|indicar.*condutor.*multa|indicacao.*condutor.*multa|multa.*indicacao.*condutor|nip.*detran|multa.*ctb.*empresa|infracao.*ctb.*empresa|multa.*veiculo.*empresa/,
+    r: [
+      'Gestão de multas de trânsito da frota: quando o veículo da empresa recebe uma infração, a notificação chega em nome da placa (empresa). O prazo para indicar o condutor responsável é de 30 dias a partir da notificação (varia por estado). Se não indicar: a multa é paga pela empresa, mas os pontos não são atribuídos a nenhuma CNH — porém a empresa fica com o registro de infração e pode perder desconto de seguro. Com telemetria, o motorista no horário da infração é identificado automaticamente para indicação.',
+      'Procedimento de multa de frota: 1) Notificação chega ao CNPJ da Scapini (e-mail ou carta); 2) RH ou frota identifica o motorista via escala ou telemetria; 3) Indica o condutor no portal do DETRAN/órgão autuador em até 30 dias; 4) Multa e pontos migram para a CNH do motorista. Se o motorista já tem 20 pontos na CNH, avalie o impacto antes de indicar — suspensão afeta disponibilidade da frota. Dica: planilha de controle de multas por placa e motorista, com coluna de prazo de indicação.',
+    ]},
+
+  // ── Lúmina no WhatsApp como canal ────────────────────────────────────────
+  { re: /lumina.*no.*whatsapp|lumina.*funciona.*whatsapp|quando.*lumina.*whatsapp|lumina.*vai.*ter.*whatsapp|vai.*ter.*lumina.*whatsapp|lumina.*disponivel.*whatsapp|whatsapp.*lumina.*disponivel|lumina.*canal.*whatsapp|lumina.*messenger|lumina.*telegram/,
+    r: [
+      'A Lúmina via WhatsApp é uma das funcionalidades mais pedidas — e está no roadmap! A Fase 2 prevê: gestores recebem alertas proativos no WhatsApp (vencimento de CRLV, metas de OTD em risco, títulos em aberto) e motoristas em estrada podem consultar procedimentos via chatbot no WhatsApp sem abrir o sistema. Hoje funciona pelo navegador na rede da Scapini — o WhatsApp vem com a integração CGI.',
+      'WhatsApp como canal da Lúmina está previsto na Phase 2: chatbot para motoristas (dúvidas de procedimento na estrada, check-in de viagem, registro de ocorrência por texto), alertas automáticos para gestores (relatório diário das 7h, alerta de vencimento, meta em risco). A API do WhatsApp Business viabiliza isso. Hoje, a inteligência já existe — o canal WhatsApp é o próximo passo.',
+    ]},
+
+  // ── Reconhecimento e premiação de motoristas ──────────────────────────────
+  { re: /premio.*motorista|premiar.*motorista|reconhecimento.*motorista|reconhecer.*motorista|melhor.*motorista.*mes|motorista.*mes.*premio|motorista.*do.*mes|campanha.*seguranca.*motorista|programa.*reconhecimento.*motorista|incentivo.*motorista.*reconhec|bonificacao.*seguranca.*motorista|bonus.*desempenho.*motorista|premiar.*melhor.*motorista/,
+    r: [
+      'Programa de reconhecimento de motoristas (modelo eficaz para transportadora): defina 3 KPIs mensuráveis — (1) consumo de combustível abaixo da média da rota (km/l); (2) zero infração e zero multa no mês; (3) OTD individual acima de 97%. Motorista que bate os 3: "Motorista do Mês" com placa no mural + bonificação de R$300-500. Custo anual de R$3.600-6.000 por motorista — retorno: redução significativa de turnover e sinistros. Reconhecimento público pesa tanto quanto financeiro.',
+      'Além do PLR, o reconhecimento pontual funciona para reter motoristas bons: prêmio de segurança mensal (zero acidente + zero multa = bônus de R$200-400), ranking de desempenho publicado mensalmente (transparência gera competição saudável), e "Motorista do Ano" com troféu + valor maior no fim do ano. Custo total baixo, impacto alto. Motorista que se sente valorizado não vai para a concorrência por R$50 a mais — fica pela cultura.',
+    ]},
+
+  // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
+  { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
+    r: [
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 340+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 ];
 
