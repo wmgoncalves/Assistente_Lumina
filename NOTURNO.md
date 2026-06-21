@@ -696,3 +696,81 @@ Todos adicionados antes do fechamento `];` do array DEMO_QA:
 5. **Fine-tuning** quando dataset atingir 500+ exemplos.
 6. **DEMO_QA duplicata linha 6956**: agora redundante pois 6756 foi corrigida — pode ser simplificada ou removida. Não foi removida para preservar padrões únicos (`anos de mercado.*scapini`, `scapini.*fundada.*quando`).
 7. **`/esg/` ainda pode ter variações**: outras sequências de 3 letras podem ter o mesmo problema em adições futuras. Padrão de code review: sempre usar `\b` em acrônimos ≤4 chars.
+
+---
+
+# Sessão Noturna 11 — 21 de junho de 2026 (continuação da sessão 10)
+
+## Resumo
+Sessão autônoma noturna #11 (continuação direta da sessão 10 que esgotou o contexto). Foco em: (1) correção de bug de falso positivo SPED/DESPEDIDA, (2) atualização massiva de dados reais do setor (diesel SUROC 4/2026, salário CCT MOVIFORT 2025/2026, contagem correta de filiais), (3) expansão de FRETE_CMD, (4) novos Q&A, (5) regulamentação RNTRC Resolução 6.068/2025. Total de 4 commits, 4 pushes.
+
+## Bugs corrigidos (PRIORIDADE 1)
+
+### Bug DEMO_QA: regex SPED sem word boundaries — falso positivo em "despedida"/"despedimento"
+- **Problema**: `/sped|efd|ecf|ecd/` detectava "s-p-e-d" dentro de "despedida" (posições 2-5) e "despedimento" — palavras muito comuns em contextos de RH
+- **Correção**: adicionado `\b` em todos os 4 tokens: `/\bsped\b|\befd\b|\becf\b|\becd\b/`
+- Localização: linha 5155 do app.js
+
+## Atualizações de dados (PRIORIDADE 2)
+
+### Diesel RS — SUROC 4/2026 (semana 15-21/mar/2026)
+Atualizado em **8 pontos** no código:
+- `buildSystem()`: R$6,50-6,90/l → R$7,10-7,60/l posto; R$7,35/l referência SUROC 4
+- `detectLocalInfo` diesel nacional: R$6,20-6,60 → R$6,80-7,30/l
+- `detectLocalInfo` custo/km: R$2,14/km → R$2,63/km; viagem Lajeado-SP R$3.140 → R$3.890
+- DEMO_QA custo por viagem: R$6,50 → R$7,35/l; total R$4.150 → R$4.490
+- DEMO_QA combustível por rota: R$6,20-6,60 → R$7,10-7,60/l
+- DEMO_QA caminhão elétrico: R$6,10 → R$7,35/l comparativo
+- ANTT tabela: removida atribuição incorreta de "CCD R$5,986/km" à SUROC 4 (era dado da SUROC 3)
+
+### Salário motorista CCT MOVIFORT/SETCERGS 2025/2026
+- `buildSystem()` linha 631-632: atualizado com piso tração simples ~R$3.189/mês, bitrem R$3.508/mês (+10%), rodotrem +15%
+- `tryLocalResponse` salário: 2 respostas atualizadas com valores CCT 2025/2026, diárias R$60-120/dia, periculosidade MOPP 30%
+
+### Contagem de filiais Grupo Scapini — dado incorreto corrigido em 7 locais
+- **Dado errado**: "mais de 30 filiais" (em 7 lugares no código)
+- **Dado correto verificado**: 18 filiais no Brasil + 3 no Mercosul (Argentina, Uruguai, Paraguai) = 21 unidades totais; frota 500+ equipamentos
+- Locais corrigidos: `buildSystem()` (l.517), `detectLocalInfo` × 2 (l.3959, l.3996), `tryLocalResponse` × 1 (l.4540), DEMO_QA × 3 (l.5338, l.6758, l.6951)
+
+## Expansões e melhorias (PRIORIDADE 2–3)
+
+### FRETE_CMD — regex expandida (linha 1881)
+Adicionados 3 novos padrões de intenção de cotação:
+- `quanto\s+vai\s+(?:custar|ficar|sair)` — "quanto vai custar levar..."
+- `custo\s+de\s+` — "custo de X até Y" (para pegar "custo de transporte de...")
+- `enviar\s+(?:de|carga|produto|mercadoria)` — "enviar mercadoria de..."
+
+### 2 novos pares DEMO_QA adicionados
+1. **Celular ao volante**: infração gravíssima CTB Art. 252 VIII, multa R$293,47 + 7 pontos + suspensão; estatísticas de acidentes; posição da Scapini (risco não apenas legal)
+   - Regex: `/celular.*volante|volante.*celular|usar.*celular.*dirig|...`
+2. **Controle de abastecimento**: cartão de frota em postos conveniados; custo-alvo l/km por veículo; sistema de alertas; integração CGI
+   - Regex: `/controle.*abastec|abastec.*controle|cartao.*combustivel|...`
+
+### Contador DEMO_QA: 335+ → 340+ (atualizado em 4 locais user-visíveis)
+
+## Regulamentação RNTRC — Resolução ANTT 6.068/2025 (novo bloco)
+
+### Atualização de 4 referências obsoletas
+- Linha 5210 (`habilitação empresa`): "renovação anual" → "validade indeterminada desde Resolução ANTT 6.068/2025"
+- Linha 6589 (`ANTT/RNTRC`): "renovado a cada 5 anos para empresas" → "validade indeterminada, cancelado só por infração grave ou solicitação"
+- Linha 6730 (`o que é RNTRC`): "Tem validade de 5 anos" → "validade indeterminada; taxa R$386 PF / R$497,50 PJ"
+- Linha 6886 (`documentação veicular`): "5 anos de validade" → "validade indeterminada desde Resolução 6.068/2025"
+
+### Novo bloco DEMO_QA — Resolução ANTT 6.068/2025
+Regex: `/resolucao.*6\.?068|6068.*antt|rntrc.*validade.*indeterminada|...`
+- 2 respostas: (1) mudanças principais da 6.068 — validade indeterminada, taxa R$386 PF / R$497,50 PJ; (2) impacto para a Scapini — sem renovação quinquenal, verificar migração do cadastro
+
+## Commits desta sessão
+- `c9bcbdc` — fix+feat: DEMO_QA \bsped\b falso positivo + diesel SUROC 4/2026 R$7,35/L + CCT MOVIFORT 2025/2026 + FRETE_CMD expandido + 2 Q&A novos
+- `f42f83e` — feat: qualidade — diesel 2026 consistente + custo por viagem atualizado (4 pontos adicionais)
+- `1ab6911` — fix dados: corrige contagem de filiais do Grupo Scapini em 7 locais
+- `d582b9a` — feat regul: RNTRC validade indeterminada — Resolução ANTT 6.068/2025
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 8x. Todos os sites retornam HTTP 403. Única solução: acesso manual via calculadorafrete.antt.gov.br na máquina do usuário.
+2. **CCT MOVIFORT RS 2025/2026 — tabela salarial completa** — herdado 5x. Dados parciais confirmados (bitrem R$3.508,49/mês), tabela completa não acessível remotamente.
+3. **`npm run build-dataset`** — executar na máquina local para contar exemplos reais do histórico.
+4. **`ollama pull llama3.2:3b`** — ainda pendente na máquina local.
+5. **Fine-tuning** — quando dataset atingir 500+ exemplos.
+6. **Mais motoristas em MOTORISTAS_DEMO** — atualmente 10 registros; expandir para cobrir variações de consulta de candidatos.
+7. **DEMO_QA linha 6956** (herdado) — entrada redundante pós-correção da 6756, pode ser simplificada ou removida na próxima sessão.
