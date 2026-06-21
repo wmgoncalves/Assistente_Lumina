@@ -6150,7 +6150,7 @@ const DEMO_QA = [
     ]},
 
   // Automação de processos internos (RPA/integração)
-  { re: /automacao.*processo|rpa|robô.*processo|automatizar.*emissao|automatizar.*cte|emissao.*automatica|integracao.*sistema.*frete|api.*cte/,
+  { re: /automacao.*processo|\brpa\b|robô.*processo|automatizar.*emissao|automatizar.*cte|emissao.*automatica|integracao.*sistema.*frete|api.*cte/,
     r: [
       'Automação de emissão de CT-e: com integração entre TMS e SEFAZ, o CT-e pode ser emitido automaticamente quando o pedido de coleta é confirmado no sistema. Elimina o trabalho manual do digitador, reduz erros de digitação (CFOP, CNPJ tomador, valor da mercadoria) e acelera o início da cobrança. Plataformas como PlugNotaS, Tecnospeed e Focus NFe oferecem API de emissão a partir de R$200/mês.',
       'RPA em transportadora: robôs de software que executam tarefas repetitivas — baixar XML de CT-e do portal SEFAZ e importar no ERP, conciliar boletos pagos com CT-es no financeiro, enviar e-mail de aviso de entrega ao cliente após atualização de status. Ferramentas: Power Automate (Microsoft, incluído no Office 365), UiPath e n8n (open source). ROI em 3-6 meses para processos que consomem mais de 4h/dia de um funcionário.',
@@ -6225,7 +6225,7 @@ const DEMO_QA = [
   // ── BLOCO ESG, ACIDENTE E MARKETING ───────────────────────────────────────────
 
   // ESG e sustentabilidade no transporte
-  { re: /esg|sustentabilidade.*transporte|emissao.*co2|carbono.*frota|descarbonizacao|combustivel.*verde|biodiesel|gas.*natural.*veiculo|gnv.*caminhao|caminhao.*eletrico|frota.*sustentavel/,
+  { re: /\besg\b|sustentabilidade.*transporte|emissao.*co2|carbono.*frota|descarbonizacao|combustivel.*verde|biodiesel|gas.*natural.*veiculo|gnv.*caminhao|caminhao.*eletrico|frota.*sustentavel/,
     r: [
       'ESG no transporte rodoviário: o setor é responsável por ~25% das emissões de CO2 do Brasil. Ações ESG para a Scapini: renovação de frota (caminhões Euro 6 emitem até 80% menos que Euro 3), uso de biodiesel B15/B20 (obrigatório pelo Renovabio), telemetria para reduzir consumo por motorista agressivo, e logística reversa. Relatório de emissões atrai clientes com metas ESG (indústrias, varejistas) que exigem ESG de fornecedores.',
       'Combustíveis alternativos para frota: GNV (Gás Natural Veicular) — custo até 40% menor que diesel, mas requer adaptação do motor e postos limitados nas rodovias. Biodiesel B100 — disponível em algumas regiões, reduz CO2 em 74% vs diesel fóssil. Caminhão elétrico — ainda inviável para rotas longas (autonomia 300-500 km vs 1.000+ km no diesel). Horizonte real: GNL (Gás Natural Liquefeito) para rotas Sul-Sudeste a partir de 2027.',
