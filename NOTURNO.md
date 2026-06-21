@@ -957,3 +957,92 @@ Sessão autônoma noturna continuada após compactação de contexto (sessão 14
 4. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 5. **PRIORIDADE 1 bugs remanescentes** — verificar se há crashers não cobertos em edições anteriores
 6. **DEMO_QA entrada possivelmente redundante** (~l.6956 remote) — verificar duplicata
+
+---
+
+# Sessão Noturna — 21 de junho de 2026 (Sessão 15)
+
+## Resumo
+Sessão autônoma noturna. Foco em: (1) PRIORIDADE 1 — bug DEMO_QA regex genérica sem contexto; (2) PRIORIDADE 2 — pesquisa web (CCT/ANTT bloqueados 403); (3) PRIORIDADE 4 — 5 novos pares DEMO_QA sobre governança/adoção da Lúmina; (4) PRIORIDADE 5 — 2 correções UX. Total: 1 commit pushado.
+
+## Bugs corrigidos (PRIORIDADE 1)
+
+### DEMO_QA regex genérica — 'nao (consegue|sabe|pode|faz)' e 'o que falta' sem contexto
+- **Problema**: regex `/o que voce nao (faz|pode|consegue)|limitacao|nao (consegue|sabe|pode|faz)|restricao|o que falta/` disparava para qualquer frase comum:
+  - "não faz sentido" → retornava resposta de limitações da Lúmina (falso positivo)
+  - "o que falta de documentação na viagem?" → retornava resposta de limitações (falso positivo)
+  - `limitacao` sem contexto pegava "limitação de carga", "limitação de peso" etc.
+- **Fix**: reescrito para exigir contexto explícito de Lúmina/voce/ia/sistema:
+  - `nao (consegue|sabe|pode|faz)` → `(voce|lumina|ia) nao (consegue|sabe|pode|faz)` ou `...*.lumina`
+  - `limitacao` → `limitacao.*(lumina|voce|ia|sistema)` ou inverso
+  - `o que falta` → `o que (voce|lumina|a ia|ainda|lhe|te) falta`
+  - `restricao` → `restricao.*(lumina|ia|sistema)` ou inverso
+  - `\blimitacoes\b` mantido como fallback razoável
+
+## Pesquisa web (PRIORIDADE 2)
+
+### CCT MOVIFORT RS 2025/2026
+- Pesquisa via agente encontrou dados de SETCEPAR (Paraná) e SETCEMG (MG), não RS
+- Confirmado: bitrem R$3.508,49/mês (já em código) permanece o único dado confiável para RS
+- Dados de MG (Rodotrem R$3.115,71, Bitrem R$2.967,35) NÃO inseridos — são de outro estado
+
+### ANTT tabela por eixo (R$/km)
+- Portaria SUROC 16/2026 identificada via snippet (não confirmada com valores exatos — 403)
+- Valores R$/km por eixo ainda inacessíveis remotamente (herdado 10x)
+- Referência única confirmada: calculadorafrete.antt.gov.br
+
+### Dados Scapini
+- Confirma: 21 unidades, frota 500+, ~1.100 colaboradores, CNPJ 88.078.209/0001-19 — todos já em código ✓
+- Nenhuma notícia relevante de 2025-2026 disponível via busca
+
+## Novos pares DEMO_QA (PRIORIDADE 4) — 5 pares × 2 respostas = 10 entradas
+
+**Total: 357 entradas → contador atualizado de "350+" para "355+"** (em 6 ocorrências)
+
+1. **Histórico de conversas / quem pode ver**: auditoria, SQLite local, políticas de retenção, painel de auditoria Fase 2
+   - Regex: `quem.*ve.*conversa|conversa.*fica.*salva|historico.*conversa.*lumina|lumina.*grava.*conversa|...`
+2. **Como editar a base de conhecimento**: upload PDF/Word, texto livre, fluxo via ⚙️ Configurações
+   - Regex: `editar.*base.*conhecimento|base.*conhecimento.*editar|adicionar.*conhecimento.*lumina|...`
+3. **Treinamento da equipe**: curva mínima, plano 3 semanas, papel de "campeões" por área, DV Digital apoia
+   - Regex: `treinar.*equipe.*lumina|equipe.*aprender.*lumina|lumina.*facil.*usar|...`
+4. **Métricas de uso / adoção**: painel atual (contador de mensagens), histórico, roadmap (relatório semanal automático)
+   - Regex: `metrica.*lumina|uso.*lumina.*relatorio|relatorio.*uso.*lumina|...`
+5. **Custo de manutenção e atualização**: API Gemini (~R$0,001/query), infraestrutura local, parceria DV Digital (~R$500-2.000/mês)
+   - Regex: `custo.*manutencao.*lumina|manutencao.*lumina.*custo|custo.*mensal.*lumina|...`
+
+## Correções UX (PRIORIDADE 5)
+
+### index.html — doc-file-input accept attribute
+- **Antes**: `accept=".pdf,.docx,.txt"` — o input de Base de Conhecimento não aceitava `.doc` (Word clássico)
+- **Depois**: `accept=".pdf,.docx,.doc,.txt"` — Word clássico agora aparece no file picker
+
+### app.js — toast Gemini API mais descritivo
+- **Antes**: `toast('Configure a chave Gemini API.', 'error')`
+- **Depois**: `toast('Configure a chave Gemini API em ⚙️ Configurações → API Key.', 'error')` — orienta o usuário para onde ir
+
+## Auditoria PRIORIDADE 1 — itens verificados OK
+
+Todos os itens da checklist passaram:
+- `getElementById` sem null-guard: elementos estáticos no HTML ✓
+- `JSON.parse` sem try/catch: todos protegidos (app.js linhas 22, 227, 234, 278, 646, 1351, 1419, 8047, 9043; server.js linhas 304, 415, 1410, 2023, 2174) ✓
+- `fetch()` sem `.catch()`: todos com catch; await fetch() dentro de try/catch ✓
+- `speak()` com undefined: nunca chamado com valor não-string ✓
+- `_finalize()` com undefined: guard `raw ?? ''` confirmado ✓
+- Variáveis antes de declaração: nenhuma encontrada ✓
+- DEMO_QA regex genérico: corrigido (novo bug linha 6569) + verificações anteriores confirmadas ✓
+
+## Git — situação dos branches
+
+- Container iniciou em detached HEAD de `origin/main` (que estava em 023901e localmente — fetch atualizou para 996314c)
+- Commit feito em detached HEAD → push via `git push -u origin HEAD:main` — fast-forward OK
+
+## Commits desta sessão
+- `3a2c1a2` — fix+feat: DEMO_QA regex limitação genérica + 5 Q&A novos + UX — PUSHED
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 11x. Portaria SUROC 16/2026 identificada mas valores não acessíveis. Acesso manual em calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 9x. Dados parciais: bitrem R$3.508,49/mês.
+3. **`npm run build-dataset`** — executar na máquina local (quando ≥ 500 exemplos no histórico)
+4. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+5. **DEMO_QA entrada possivelmente redundante** (~l.6956 na main) — entrada de história duplicada; preservada por padrões únicos mas pode ser simplificada
+6. **Portaria SUROC 16/2026** — nova portaria ANTT identificada; verificar se trouxe reajuste adicional ao SUROC 4 de março/2026
