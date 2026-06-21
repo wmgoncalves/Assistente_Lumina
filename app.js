@@ -6566,7 +6566,7 @@ const DEMO_QA = [
     ]},
 
   // ── O que eu NÃO faço ────────────────────────────────────────────────────────
-  { re: /o que voce nao (faz|pode|consegue)|limitacao|nao (consegue|sabe|pode|faz)|restricao|o que falta/,
+  { re: /o que voce nao (faz|pode|consegue)|lumina.*(nao pode|nao consegue|nao sabe|nao faz)|(nao pode|nao consegue|nao sabe|nao faz).*(lumina|ia|voce)|voce nao (consegue|sabe|pode|faz)|limitacao.*(lumina|voce|ia|sistema)|lumina.*limitacao|\blimitacoes\b|restricao.*(lumina|ia|sistema)|lumina.*restricao|o que (voce|lumina|a ia|ainda|lhe|te) falta/,
     r: [
       'O que ainda não faço: acessar dados em tempo real do CGI (aguardando integração), fazer ligações ou enviar e-mails autonomamente, aprovar pagamentos ou tomar decisões sozinha. Sou analista e consultora — a decisão final é sempre humana. O que consigo fazer surpreende mais do que o que falta.',
       'Minhas limitações atuais: sem acesso ao CGI (dados de viagem, frota em tempo real), sem envio autônomo de mensagens externas, sem acesso à internet em modo offline. Não invento dados — quando não sei, aviso claramente. Quando integrada ao CGI, 80% dessas limitações somem.',
@@ -6830,11 +6830,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 350+ respostas
+  // Funciona offline — Llama local + 355+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 350+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 355+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6847,7 +6847,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 350+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 355+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6926,7 +6926,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (350+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (355+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7150,8 +7150,43 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 340+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 355+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
+    ]},
+
+  // ── Histórico de conversas / quem pode ver ────────────────────────────────
+  { re: /quem.*ve.*conversa|conversa.*fica.*salva|historico.*conversa.*lumina|lumina.*grava.*conversa|conversa.*lumina.*privada|privacidade.*conversa|auditoria.*conversa.*lumina|minha.*conversa.*lumina.*quem|log.*conversa.*lumina|acesso.*historico.*lumina/,
+    r: [
+      'As conversas ficam salvas localmente no servidor da Scapini (banco SQLite no computador onde o servidor roda) — não saem para a nuvem, exceto a pergunta que vai ao Gemini para processamento. Quem pode acessar o histórico: os administradores do sistema (LS TECH e DV Digital). Cada colaborador vê só o próprio histórico na interface. É possível configurar políticas de retenção — ex: apagar logs com mais de 90 dias.',
+      'O que fica salvo: pergunta, resposta, data/hora, tempo de resposta e fonte (local ou Gemini). O que NÃO fica salvo: a análise detalhada que o Gemini faz — apenas a resposta final. Pense como um e-mail corporativo: a empresa pode auditar, mas o acesso é controlado. Na Fase 2 teremos painel de auditoria de conversas para gestores com filtros por colaborador, período e tema.',
+    ]},
+
+  // ── Como editar a base de conhecimento ───────────────────────────────────
+  { re: /editar.*base.*conhecimento|base.*conhecimento.*editar|adicionar.*conhecimento.*lumina|lumina.*base.*editavel|como.*adicionar.*informacao.*lumina|atualizar.*conhecimento.*lumina|lumina.*aprende.*nova.*informacao|inserir.*dado.*lumina|lumina.*nova.*informacao|base.*dados.*lumina.*atualizar/,
+    r: [
+      'A base de conhecimento da Lúmina é totalmente editável. Acesse o ícone ⚙️ Configurações → "Base de Conhecimento" — você vê tudo que a Lúmina sabe e pode: (1) adicionar texto livre (novas regras, procedimentos, informações de clientes); (2) fazer upload de PDF ou Word (contratos, manuais, CCT) — ela extrai e indexa automaticamente; (3) editar qualquer entrada já existente. Não precisa de programador para atualizar.',
+      'Qualquer usuário com acesso ao painel pode adicionar conhecimento novo. O fluxo: abra Configurações → Base de Conhecimento → clique em "Adicionar" → cole o texto ou faça upload do documento. Em segundos a Lúmina já sabe a nova informação. Ideal para: tabelas de frete internas, procedimentos operacionais novos, informações de clientes estratégicos ou atualização de CCT do sindicato.',
+    ]},
+
+  // ── Treinamento da equipe para usar a Lúmina ─────────────────────────────
+  { re: /treinar.*equipe.*lumina|equipe.*aprender.*lumina|lumina.*facil.*usar|dificuldade.*usar.*lumina|curva.*aprendizado.*lumina|quanto.*tempo.*aprender.*lumina|como.*adotar.*lumina|lumina.*intuitiva|onboarding.*lumina|capacitacao.*lumina/,
+    r: [
+      'A curva de aprendizado da Lúmina é mínima — se a pessoa sabe usar o WhatsApp, sabe usar a Lúmina. O plano de adoção recomendado: Semana 1 — apresentação de 1h para os times (o que faz, o que não faz, como perguntar bem); Semanas 2-4 — uso guiado com 1-2 "campeões" por área que respondem dúvidas de colegas; A partir do 2º mês — uso autônomo. Sem certificações, sem treinamentos longos.',
+      'Adoção da Lúmina na prática: os usuários que mais se engajam primeiro são os que têm mais perguntas repetitivas no dia a dia (RH, Operações, Financeiro). A Lúmina responde o que antes precisava de uma ligação ou de buscar no manual. Recomendo: comece com um grupo piloto de 5-10 pessoas por 2 semanas, colete o feedback, então expanda para toda a empresa. A DV Digital apoia nesse processo de adoção.',
+    ]},
+
+  // ── Métricas de uso / adoção da Lúmina ───────────────────────────────────
+  { re: /metrica.*lumina|uso.*lumina.*relatorio|relatorio.*uso.*lumina|lumina.*sendo.*usada|adocao.*lumina|lumina.*estatistica|quantas.*perguntas.*lumina|lumina.*dashboard.*uso|monitorar.*uso.*lumina|uso.*equipe.*lumina/,
+    r: [
+      'O painel da Lúmina já mostra métricas básicas: total de mensagens, conversas por período, e a aba de Histórico exibe todas as interações com data/hora. Na Fase 2, teremos: dashboard de adoção por usuário/área, perguntas mais frequentes (indica gaps de treinamento ou processos confusos), tempo médio de resposta e satisfação (thumbs up/down). Hoje: painel lateral com contador de mensagens.',
+      'Métricas de uso atuais: total de conversas no painel lateral, histórico completo consultável por qualquer administrador. O que o histórico mostra: quais assuntos a equipe mais pergunta (isso é ouro para gestão — revela onde a empresa tem gaps de conhecimento). Plano para Fase 2: relatório semanal automático por e-mail para o gestor: "Semana passada a equipe fez 150 perguntas — top 5 temas: frete, CGI, RH, regulamentação, clientes".',
+    ]},
+
+  // ── Custo de manutenção e atualização contínua ───────────────────────────
+  { re: /custo.*manutencao.*lumina|manutencao.*lumina.*custo|custo.*mensal.*lumina|mensalidade.*lumina|lumina.*custo.*continuo|manter.*lumina.*rodando|lumina.*custo.*operacional|atualizacao.*lumina.*custo|lumina.*quanto.*custa.*mes|custo.*operacao.*lumina/,
+    r: [
+      'O custo operacional da Lúmina tem três componentes: (1) API Gemini (Google): pago por uso — aprox. R$0,001-0,01 por pergunta; uso intenso de 500 perguntas/mês = ~R$5-50; (2) Infraestrutura: já existe na Scapini — nenhum servidor adicional; (3) Manutenção e evolução: contrato com a DV Digital para atualizações, novas funcionalidades e suporte. Sem taxa por usuário, sem licença por módulo. O maior custo é a parceria com a DV Digital para desenvolvimento contínuo.',
+      'Resumo de custos mensais estimados após implantação: (1) Google Gemini API: R$10-100/mês dependendo do volume de uso (muito barato para IA generativa); (2) Eletricidade do servidor local: irrelevante — roda em computador já existente; (3) Suporte DV Digital: conforme contrato de manutenção. Total estimado: R$500-2.000/mês para manutenção e evolução — payback já no primeiro mês com o tempo economizado.',
     ]},
 ];
 
@@ -7290,7 +7325,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 350+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 355+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
@@ -7977,7 +8012,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cam-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeCamera(); });
 
   // ── File ──
-  document.getElementById('btn-file').addEventListener('click', () => { if (!cfg.geminiKey) { toast('Configure a chave Gemini API.', 'error'); return; } document.getElementById('file-input').click(); });
+  document.getElementById('btn-file').addEventListener('click', () => { if (!cfg.geminiKey) { toast('Configure a chave Gemini API em ⚙️ Configurações → API Key.', 'error'); return; } document.getElementById('file-input').click(); });
   document.getElementById('file-input').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     e.target.value = '';
