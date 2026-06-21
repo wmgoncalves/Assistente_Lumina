@@ -5138,7 +5138,7 @@ const DEMO_QA = [
   // ── BLOCO SEGUROS E SINISTROS ─────────────────────────────────────────────────
 
   // Tipos de seguro no transporte
-  { re: /seguro.*transport|rctr|rcta|rcp|rcd|tipo.*seguro.*carg|seguro.*frotar|seguro.*frota/,
+  { re: /seguro.*transport|\brctr\b|\brcta\b|\brcp\b|\brcd\b|tipo.*seguro.*carg|seguro.*frotar|seguro.*frota/,
     r: [
       'Seguros essenciais para transportadoras: RCTR-C (Responsabilidade Civil do Transportador de Cargas — cobre avaria e perda da carga por acidente); RCTA (cobre roubo); RCF-DC (dano a terceiros e ao veículo). O CT-e sem seguro válido deixa a Scapini exposta a indenização integral ao cliente. Seguro de frota cobre os próprios veículos.',
       'Seguro no transporte de cargas: o RCTR-C é obrigatório por lei (Dec. 61.867/67) e cobre danos à carga por acidente, incêndio e colisão. O valor segurado deve ser igual ao valor declarado na NF. RCTA cobre roubo — exige BO em até 24h. Carga sem NF = sem base para indenização. Verifique sempre se a apólice cobre todas as rotas operadas.',
@@ -5256,7 +5256,7 @@ const DEMO_QA = [
     ]},
 
   // Programa de motorista seguro / PSO
-  { re: /programa.*motorista.*seguro|pso|motorista.*seguro.*programa|seguranca.*motorista.*programa|direcao.*defensiva.*programa/,
+  { re: /programa.*motorista.*seguro|\bpso\b|motorista.*seguro.*programa|seguranca.*motorista.*programa|direcao.*defensiva.*programa/,
     r: [
       'Programa de Segurança Operacional (PSO): obrigatório para transportadoras que operam produtos perigosos (carga química, combustíveis). Para as demais, é boas práticas mas reduz sinistros. Componentes: treinamento em direção defensiva (obrigatório pela Lei 13.103), curso de primeiros socorros, gestão de fadiga (tacógrafo + cronograma de descanso), protocolo de emergência em rota, e avaliação semestral de desempenho.',
       'Direção defensiva para motoristas: a Lei 13.103 exige o curso a cada 5 anos para renovação da CNH categoria D e E. O SEST SENAT oferece gratuitamente (direito do motorista contribuinte). Além do treinamento, a telemetria monitora comportamento em tempo real: excesso de velocidade, freadas bruscas, curvas perigosas. Motoristas com nota alta na telemetria têm menos sinistros e consomem menos combustível.',
@@ -5302,7 +5302,7 @@ const DEMO_QA = [
     ]},
 
   // Sustentabilidade / ESG
-  { re: /sustentabilidade|esg|carbono|emissao.*co2|co2.*frota|frota.*verde|descarbonizacao|emissao.*diesel|pegada.*carbon/,
+  { re: /sustentabilidade|\besg\b|carbono|emissao.*co2|co2.*frota|frota.*verde|descarbonizacao|emissao.*diesel|pegada.*carbon/,
     r: [
       'Sustentabilidade no transporte é uma tendência crescente — clientes grandes exigem relatórios de emissão de CO2 dos fornecedores. Um caminhão a diesel emite aproximadamente 2,68 kg CO2/litro de combustível. Estratégias para reduzir: telemetria para reduzir excesso de velocidade e freiadas bruscas (economiza 10-15% de diesel), roteirização eficiente para reduzir km rodado, e no longo prazo, adoção de veículos a biocombustível ou elétrico.',
       'ESG para a Scapini: na dimensão ambiental (E), o principal indicador é emissão de CO2 por tonelada-km transportada. Na social (S): segurança dos motoristas, geração de emprego, diversidade. Na governança (G): compliance fiscal, transparência, política anticorrupção. Grandes embarcadores estão exigindo relatórios ESG dos transportadores — ter os dados organizados vira diferencial competitivo.',
@@ -6532,7 +6532,7 @@ const DEMO_QA = [
     ]},
 
   // Capital de giro
-  { re: /capital.*giro|giro.*capital|necessidade.*giro|nig|desconto.*recebivel|antecipacao.*recebivel|caixa.*curto.*prazo/,
+  { re: /capital.*giro|giro.*capital|necessidade.*giro|\bnig\b|desconto.*recebivel|antecipacao.*recebivel|caixa.*curto.*prazo/,
     r: [
       'Capital de giro no transporte: o principal descasamento é entre o prazo de recebimento (7-30 dias do CT-e) e o pagamento de diesel e motorista (praticamente no ato). Numa semana com 50 viagens, a empresa financia o giro por até 30 dias. Soluções: linha de capital de giro no banco, antecipação de recebíveis (desconta o CT-e antes do vencimento) ou fundo de reserva equivalente a 30-45 dias de custos variáveis.',
       'Necessidade de Investimento em Giro (NIG) da transportadora: calcule quanto dinheiro fica preso no ciclo operacional. Fórmula simplificada: Clientes a receber × dias de prazo ÷ 30 − Fornecedores a pagar × dias de prazo ÷ 30. O resultado positivo é o caixa que você precisa ter disponível para rodar. Transporte tem NIG positivo alto — exige gestão de caixa ativa.',
