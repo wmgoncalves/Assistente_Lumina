@@ -774,3 +774,79 @@ Regex: `/resolucao.*6\.?068|6068.*antt|rntrc.*validade.*indeterminada|...`
 5. **Fine-tuning** — quando dataset atingir 500+ exemplos.
 6. **Mais motoristas em MOTORISTAS_DEMO** — atualmente 10 registros; expandir para cobrir variações de consulta de candidatos.
 7. **DEMO_QA linha 6956** (herdado) — entrada redundante pós-correção da 6756, pode ser simplificada ou removida na próxima sessão.
+
+---
+
+# Sessão Noturna — 21 de junho de 2026 (Sessão 12)
+
+## Resumo
+Sessão autônoma com 4 frentes: correções de word-boundary em DEMO_QA (/esg/ e /rpa/), expansão da base de conhecimento (5 motoristas + 5 Q&A novos), calibração de _thinkingBudget() com novos padrões, e auditoria UX que encontrou e corrigiu 3 bugs no CSS. Total: 4 commits pusheados.
+
+## Prioridades executadas
+
+### PRIORIDADE 1 — Bugs (word-boundary DEMO_QA)
+- **`/esg/` → `/\besg\b/` (linha 6228)**: regex sem fronteira de palavra gerava falsos positivos em perguntas sobre "desgaste de pneu", "esgotamento de motorista" e "rede de esgoto" — respondendo com conteúdo de sustentabilidade/ESG. A linha 5305 já havia sido corrigida em sessão anterior; essa segunda ocorrência estava oculta.
+- **`/rpa/` → `/\brpa\b/` (linha 6153)**: `/rpa/` correspondia a "usu**rpa**r", "satu**rpa**r" etc., causando resposta de RPA/automação de processos para perguntas não relacionadas. Corrigido com `\b`.
+- Varredura confirmou: `speak()` seguro (`String(raw ?? '')`), todos `fetch()` em try/catch, `JSON.parse` no server.js protegido.
+
+### PRIORIDADE 4 — Base de conhecimento: MOTORISTAS_DEMO + 5 Q&A novos
+
+#### MOTORISTAS_DEMO (10 → 15 registros)
+Adicionados 5 motoristas com diversidade de tipo, rota, status e veículo:
+| Nome | Apelido | Tipo | Rota | Status | Veículo |
+|------|---------|------|------|--------|---------|
+| Leandro Barbosa Lima | Leandro | CLT | Lajeado–Rio de Janeiro | Em rota | Carreta Volvo FH 460 |
+| Vanderlei Souza Campos | Vandão | TAC | Lajeado–Belo Horizonte | Disponível | Carreta MB Actros 2651 |
+| Claudio Roberto Nunes | Claudinho | Agregado | Lajeado–Florianópolis | De férias | Truck VW Constellation |
+| José Carlos Ribeiro | Zé Carlos | CLT | Lajeado–Curitiba | Em rota | Bitrem Scania R500 |
+| Marinaldo José Rodrigues | Marinaldo | CLT | Lajeado–Porto Alegre | Disponível | Truck Volvo VM 330 |
+- Primeiro "De férias" e primeiro Bitrem adicionados ao demo.
+
+#### 5 novos pares DEMO_QA (linhas ~7052–7092)
+1. **Balança de pesagem rodoviária** — peso máximo legal por eixo, PBT por tipo de veículo, procedimento em balança, multa por excesso (Resolução ANTT 5.496/2020)
+   - Regex: `/balanca.*rodoviaria|balanca.*pesagem|posto.*pesagem.*caminhao|pesagem.*rodoviaria|pbt.*caminhao|peso.*maximo.*legal.*caminhao|multa.*excesso.*peso|excesso.*peso.*multa|eixo.*peso.*limite/`
+2. **Licença maternidade/paternidade** — 120 dias CLT, 180 CIPA, 5 dias paternidade (20 SE), estabilidade gestante 5 meses pós-parto (CCT MOVIFORT)
+   - Regex: `/licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|paternidade.*licenca|estabilidade.*gestante|gestante.*estabilidade|gest.*estabilidade|maternidade.*motorista|motorista.*maternidade/`
+3. **Recapagem de pneu** — quando recapar vs substituir, economia vs risco, regras CONTRAN, recapagem proibida em posição direcional
+   - Regex: `/recapagem.*pneu|pneu.*recapagem|reforma.*pneu|pneu.*reforma|borrachao|pneu.*recauchutado|recauchutado|recapagem.*frota/`
+4. **Adiantamento salarial / vale** — regras CLT (não obrigatório por lei), CCT pode obrigar, limite 40% do salário, consignado vs vale
+   - Regex: `/adiantamento.*salario|adiantamento.*salarial|salario.*adiantado|vale.*salario|adiantamento.*clt|consignado.*folha|desconto.*folha.*adiantamento/`
+5. **GRC — Gerenciamento de Risco de Carga** — vistoria prévia, rastreamento, escolta, bloqueador, SASSMAQ, custo ~1-3% do frete, obrigatório por seguro e embarcadores exigentes
+   - Regex: `/gerenciamento.*risco.*carga|\bgrc\b|risco.*carga|segurança.*carga.*transporte|seguro.*carga.*exigencia|escolta.*carga|vistoria.*carga.*roubo|roubo.*carga.*prevencao|carga.*rastreamento.*obrigatorio/`
+
+### Contador DEMO_QA: 340+ → 345+ (atualizado em 4 locais user-visíveis)
+
+### PRIORIDADE 2 — _thinkingBudget() expandido
+Adicionados ao nível 512 (raciocínio leve) os padrões dos 5 novos tópicos Q&A, evitando que perguntas sobre balança, licença maternidade, GRC, recapagem e adiantamento caíssem no nível 0 (sem thinking) ao chegar ao Gemini:
+```
+|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante
+|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem
+|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu
+|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha
+```
+
+### PRIORIDADE 5 — UX: 3 bugs CSS corrigidos
+1. **`.hmsg.lumina.hmsg-bubble` → `.hmsg.lumina .hmsg-bubble`** (espaço adicionado):
+   - JS cria `<div class="hmsg lumina">` com filho `<div class="hmsg-bubble">`, mas o seletor sem espaço exigia que os três fossem classes do mesmo elemento. Mensagens de Lúmina no painel de histórico ficavam sem o fundo vermelho diferenciado. Confirmado via `grep` na estrutura DOM gerada.
+2. **Classe `.btn-sm` inexistente**: botão "▶ Testar Voz Agora" em Configurações renderizava como botão nativo do browser. Adicionada definição CSS com estilo ghost pequeno (ghost-btn reduzido).
+3. **`var(--surface)` indefinida** no `.btn-menu-mobile`: variável CSS nunca declarada em `:root`, deixando o hambúrguer mobile com fundo transparente. Substituído por `rgba(12,4,4,0.95)` compatível com a paleta dark.
+
+## Commits desta sessão
+- `07526ae` — fix: DEMO_QA word-boundary — `\besg\b` falso positivo + `\brpa\b` (usurpar) — PUSHED
+- `ef8c680` — feat: base de conhecimento — 5 motoristas demo + 5 Q&A novos + contador 345+ — PUSHED
+- `34c4aac` — feat: qualidade — _thinkingBudget expandido com GRC, licença maternidade, balança, recapagem e adiantamento — PUSHED
+- `3d18a71` — fix: UX — 3 bugs CSS: seletor hmsg-bubble, classe btn-sm ausente, var --surface indefinida — PUSHED
+
+## Pesquisa web desta sessão
+- **Tabela ANTT 2026** (herdado 9x): todos os sites continuam retornando HTTP 403 Forbidden. Domínios tentados em sessões anteriores: bsoft.com.br, emitircte.com.br, gazetadoparana.com.br, consisa.com.br, salario.com.br, setcarfs.com.br, sites.diretasistemas.com.br. Única solução: acesso manual em calculadorafrete.antt.gov.br na máquina do usuário.
+- **CCT MOVIFORT RS 2025/2026** (herdado 6x): tabela salarial completa não acessível remotamente. Apenas dado confirmado: bitrem R$3.508,49/mês (já em código).
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 9x. Acesso manual necessário.
+2. **CCT MOVIFORT RS 2025/2026 — tabela salarial completa** — herdado 6x. Dados parciais em código.
+3. **PRIORIDADE 3** — novas respostas locais `tryLocalResponse()` para Grupo Scapini, salário motorista, processo seletivo, perguntas sobre apresentação/Lúmina — não executada nesta sessão.
+4. **PRIORIDADE 4 parcial** — DEMO_QA pairs de custo/ROI da Lúmina, segurança/privacidade, integrações, RH, histórico/frota Scapini — não executados.
+5. **`npm run build-dataset`** — executar na máquina local.
+6. **`ollama pull llama3.2:3b`** — ainda pendente na máquina local.
+7. **Fine-tuning** — quando dataset atingir 500+ exemplos.
+8. **DEMO_QA linha 6956** (herdado) — entrada possivelmente redundante.
