@@ -507,7 +507,7 @@ body {
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px 12px 2px 12px;
 }
-.hmsg.lumina.hmsg-bubble {
+.hmsg.lumina .hmsg-bubble {
   background: rgba(239,68,68,0.07);
   border: 1px solid rgba(239,68,68,0.14);
   border-radius: 2px 12px 12px 12px;
@@ -836,6 +836,20 @@ a.source-chip:hover { background: rgba(90,180,255,0.15); color: #8ad4ff; }
 }
 .ghost-btn:hover { background: var(--btn-active); color: var(--text); }
 
+.btn-sm {
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.38rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-sm:hover { background: var(--btn-active); color: var(--text); }
+
 .x-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0.2rem 0.4rem; transition: color 0.2s; }
 .x-btn:hover { color: var(--text); }
 .abs-top { position: absolute; top: 1rem; right: 1rem; }
@@ -1035,7 +1049,7 @@ input:focus:not(:focus-visible) {
   top: 12px;
   left: 12px;
   z-index: 1100;
-  background: var(--surface);
+  background: rgba(12,4,4,0.95);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px 8px;
