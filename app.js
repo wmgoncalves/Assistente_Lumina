@@ -1860,6 +1860,34 @@ const processInput = async (rawText, opts = {}) => {
   let _thinkingEl = _addThinkingDots();
 
   try {
+    // ── Abrir projetos localhost por comando de voz/texto ─────────────────────
+    const PROJETOS = {
+      'n8n':          'http://localhost:5678',
+      'automação':    'http://localhost:5678',
+      'automacao':    'http://localhost:5678',
+      'entrevista':   'http://localhost:8080/entrevista',
+      'candidaturas': 'http://localhost:8080/api/candidaturas',
+      'vagas':        'https://www.scapini.com.br/trabalhe-conosco',
+      'site':         'https://www.scapini.com.br',
+      'composio':     'https://app.composio.dev',
+    };
+    const abreMatch = text.match(/\b(abr[ae]|abre[i]?|vai para|acessa|entra no?|mostra o?|abre o?)\b\s+(.+)/i);
+    if (abreMatch) {
+      const alvo = abreMatch[2].toLowerCase().trim()
+        .replace(/^(o |a |os |as |projeto |app |painel )/, '').trim();
+      const url = Object.entries(PROJETOS).find(([k]) => alvo.includes(k))?.[1];
+      if (url) {
+        _thinkingEl?.remove();
+        window.open(url, '_blank');
+        const resp = `Abrindo ${alvo}...`;
+        app.history.push({ role: 'model', content: resp });
+        addMsgUI('lumina', resp);
+        speak(resp);
+        setFace('idle');
+        return;
+      }
+    }
+
     // ── Respostas locais imediatas — sem precisar de IA ────────────────────────
     const dlResp = await detectLocalDownload(text);
     if (dlResp) {
