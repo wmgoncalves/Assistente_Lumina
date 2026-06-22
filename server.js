@@ -53,6 +53,7 @@ const PORT        = Number(process.env.PORT || 8080);
 const HOST        = process.env.HOST || '127.0.0.1';
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 const MEMORY_FILE = path.join(__dirname, 'memory.json');
+const EMBED_FILE  = path.join(__dirname, 'embeddings.json');
 const WORKSPACE_ROOT = path.resolve(__dirname);
 const DEV_TOOLS_ENABLED = process.env.LUMINA_DEV === '1';
 const ALLOW_SYSTEM_FILES = process.env.LUMINA_ALLOW_SYSTEM_FILES === '1';
@@ -135,9 +136,16 @@ const SENSITIVE_GET_ENDPOINTS = [
   /^\/api\/data\//,
 ];
 
+// Endpoints públicos de POST (sem token) — candidatura pública do site
+const PUBLIC_POST_ENDPOINTS = [
+  /^\/api\/candidatura\/[^/]+\/responder$/,
+  /^\/api\/candidatura$/,
+];
+
 const requiresLocalToken = (req) => {
   if (!req.path.startsWith('/api/')) return false;
   if (req.method === 'GET' && PUBLIC_GET_ENDPOINTS.some(re => re.test(req.path))) return false;
+  if (req.method !== 'GET' && PUBLIC_POST_ENDPOINTS.some(re => re.test(req.path))) return false;
   if (req.method !== 'GET') return true;
   return SENSITIVE_GET_ENDPOINTS.some(re => re.test(req.path)) || req.path.startsWith('/api/dev/');
 };
@@ -1150,8 +1158,6 @@ app.post('/api/import-vault', (req, res) => {
 });
 
 // ── RAG: Embeddings Vetoriais ─────────────────────────────────────────────────
-const EMBED_FILE = path.join(__dirname, 'embeddings.json');
-
 const cosineSim = (a, b) => {
   let dot = 0, na = 0, nb = 0;
   for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
@@ -1204,19 +1210,34 @@ app.post('/api/index-notes', async (req, res) => {
 
 app.post('/api/search-notes', async (req, res) => {
   const c = getCfg();
-  if (!c.geminiKey) return res.status(400).json({ error: 'no_key' });
-  const { query = '', topK = 5 } = req.body;
-  if (!query) return res.json({ ids: [] });
+  const { query = '', topK = 5, limit } = req.body;
+  const k = parseInt(limit || topK) || 5;
+  if (!query) return res.json({ ids: [], results: [] });
 
-  try {
-    const [qVec]  = await geminiEmbed(c.geminiKey, [query]);
-    const embed   = readEmbed();
-    const scores  = Object.entries(embed)
-      .map(([id, vec]) => ({ id, score: cosineSim(qVec, vec) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK);
-    res.json({ ids: scores.map(s => s.id), scores });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  // Busca vetorial via Gemini (prefere) — fallback para busca textual local
+  if (c.geminiKey) {
+    try {
+      const [qVec] = await geminiEmbed(c.geminiKey, [query]);
+      const embed  = readEmbed();
+      const scores = Object.entries(embed)
+        .map(([id, vec]) => ({ id, score: cosineSim(qVec, vec) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, k);
+      const notes = readJSON(path.join(__dirname, 'notes.json'), []);
+      const results = scores.map(s => notes.find(n => n.id === s.id)).filter(Boolean);
+      return res.json({ ids: scores.map(s => s.id), scores, results });
+    } catch (e) {
+      console.warn('[search-notes] embedding falhou, usando busca textual:', e.message);
+    }
+  }
+
+  // Fallback: busca textual simples
+  const notes = readJSON(path.join(__dirname, 'notes.json'), []);
+  const q = query.toLowerCase();
+  const results = notes
+    .filter(n => (n.title || '').toLowerCase().includes(q) || (n.content || '').toLowerCase().includes(q))
+    .slice(0, k);
+  res.json({ ids: results.map(n => n.id), results });
 });
 
 // Reindexar automaticamente quando notas são salvas já está coberto pelo POST /api/data/notes
@@ -1743,23 +1764,30 @@ try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN proxima_notificacao TE
 // Perguntas por tipo de vaga
 const PERGUNTAS = {
   motorista: [
-    'Qual é o seu número de CNH e categoria? Há quanto tempo você possui?',
-    'Você tem experiência com cargas pesadas ou carreta? Conte um pouco sobre suas últimas experiências.',
-    'Você tem disponibilidade para viagens longas (São Paulo, outras regiões)? Tem família ou compromissos que podem dificultar?',
-    'Já passou por alguma situação de risco no trânsito? Como você agiu?',
+    'Qual é o número da sua CNH?',
+    'Qual a categoria da sua CNH e há quanto tempo você a possui?',
+    'Você tem experiência com carreta ou bitrem? Em quais rotas costumava rodar?',
+    'Você tem disponibilidade para viagens longas, como para São Paulo ou outros estados?',
     'Por que você quer trabalhar na Scapini Transportes?',
   ],
   comprador: [
-    'Qual é a sua formação e experiência em compras ou suprimentos?',
-    'Você já trabalhou com negociação de contratos com fornecedores? Pode dar um exemplo?',
-    'Como você analisa o custo-benefício de uma proposta de fornecedor?',
-    'Você tem experiência com sistemas de gestão (ERP)? Quais?',
+    'Qual é a sua formação?',
+    'Você tem experiência em compras ou suprimentos? Conte um pouco.',
+    'Já negociou contratos com fornecedores? Pode dar um exemplo?',
+    'Você tem experiência com algum sistema de gestão (ERP)? Qual?',
+    'Por que você quer trabalhar na Scapini Transportes?',
+  ],
+  manutencao: [
+    'Qual é a sua formação ou curso técnico na área?',
+    'Você tem experiência com manutenção de caminhões ou carretas? Em quais sistemas?',
+    'Já trabalhou com diagnóstico eletrônico (scanner)? Quais marcas conhece?',
+    'Você tem disponibilidade para trabalhar em turnos ou finais de semana?',
     'Por que você quer trabalhar na Scapini Transportes?',
   ],
   default: [
-    'Conte um pouco sobre sua experiência profissional.',
+    'Qual é a sua formação e área de atuação?',
+    'Conte sobre sua experiência profissional mais recente.',
     'Quais são seus principais pontos fortes para essa vaga?',
-    'Você tem alguma experiência no setor de transportes ou logística?',
     'Qual é a sua disponibilidade de horário?',
     'Por que você tem interesse em trabalhar na Scapini Transportes?',
   ],
@@ -1769,6 +1797,7 @@ const getPerguntasVaga = (vaga = '') => {
   const v = vaga.toLowerCase();
   if (v.includes('motorista')) return PERGUNTAS.motorista;
   if (v.includes('comprador')) return PERGUNTAS.comprador;
+  if (v.includes('manuten')) return PERGUNTAS.manutencao;
   return PERGUNTAS.default;
 };
 
@@ -2048,6 +2077,37 @@ app.get('/api/candidaturas', (req, res) => {
 // ── Página de entrevista pública ──────────────────────────────────────────────
 app.get('/entrevista/:token', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'entrevista.html'));
+});
+
+// ── Painel de candidaturas (interno) ─────────────────────────────────────────
+app.get('/candidaturas', (req, res) => {
+  const rows = recrutaDB.prepare(`SELECT * FROM candidaturas ORDER BY id DESC`).all();
+  const cores = { aprovado: '#22c55e', atencao: '#f59e0b', reprovado: '#ef4444', pendente: '#94a3b8', banco_talentos: '#6366f1' };
+  const emoji = { aprovado: '🟢', atencao: '🟡', reprovado: '🔴', pendente: '⏳', banco_talentos: '📦' };
+  const cards = rows.map(r => `
+    <div style="background:#1e1e2e;border-radius:10px;padding:20px;border-left:4px solid ${cores[r.faixa||r.status]||'#555'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:16px">${r.nome}</strong>
+        <span style="font-size:22px;font-weight:700;color:${cores[r.faixa||r.status]||'#fff'}">${r.nota ? r.nota+'/10' : '—'}</span>
+      </div>
+      <div style="color:#aaa;font-size:13px;margin-bottom:10px">
+        ${emoji[r.faixa||r.status]||'⏳'} ${(r.faixa||r.status||'pendente').toUpperCase()} &nbsp;·&nbsp; Vaga: <strong style="color:#fff">${r.vaga}</strong> &nbsp;·&nbsp; ${r.email}
+      </div>
+      ${r.laudo ? `<details><summary style="cursor:pointer;color:#cc1c1c;font-size:13px">Ver laudo completo</summary><pre style="margin-top:10px;font-size:12px;color:#ccc;white-space:pre-wrap">${r.laudo}</pre></details>` : ''}
+      <div style="color:#555;font-size:11px;margin-top:8px">${r.criado_em||''}</div>
+    </div>`).join('');
+
+  res.send(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Candidaturas — Scapini</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#fff;padding:24px}
+    h1{color:#cc1c1c;margin-bottom:6px}p{color:#aaa;margin-bottom:24px;font-size:14px}
+    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+    details summary{user-select:none}details[open] summary{margin-bottom:8px}</style>
+  </head><body>
+    <h1>Painel de Candidaturas</h1>
+    <p>${rows.length} candidato(s) · Atualizado agora</p>
+    <div class="grid">${cards || '<p style="color:#555">Nenhuma candidatura ainda.</p>'}</div>
+  </body></html>`);
 });
 
 // ── Composio — status / apps conectados ──────────────────────────────────────

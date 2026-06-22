@@ -115,9 +115,12 @@ const serverCfgReady = (location.hostname === 'localhost' || location.hostname =
   : Promise.resolve();
 
 // ── Persistent Memory (Self-Learning) ─────────────────────────────────────────
-const MEM_KEY   = 'lumina_mem';
-const HIST_KEY  = 'lumina_hist';
-const NOTES_KEY = 'lumina_notes';
+const MEM_KEY        = 'lumina_mem';
+const HIST_KEY       = 'lumina_hist';
+const NOTES_KEY      = 'lumina_notes';
+const SHEET_KEY      = 'lumina_lastSheet';
+const PATTERNS_KEY   = 'lumina_patterns';
+const THEME_KEY      = 'lumina_theme';
 
 // ── Persistência híbrida: localStorage (cache) + servidor (fonte da verdade) ──
 const serverGet  = async (store, fallback = []) => {
@@ -274,7 +277,6 @@ const EMOTION_CTX = {
 };
 
 // ── Rastreamento de padrões de uso ────────────────────────────────────────────
-const PATTERNS_KEY = 'lumina_patterns';
 const getPatterns  = () => { try { return JSON.parse(localStorage.getItem(PATTERNS_KEY) || '{}'); } catch { return {}; } };
 const savePatterns = (p) => localStorage.setItem(PATTERNS_KEY, JSON.stringify(p));
 
@@ -645,18 +647,21 @@ Quando usar: sempre que perguntarem "qual a média?", "é caro?", "compensa?", "
 };
 
 // ── App State ──────────────────────────────────────────────────────────────────
-const _loadLastSheet = () => { try { const s = localStorage.getItem('lumina_lastSheet'); return s ? JSON.parse(s) : null; } catch { return null; } };
+const _loadLastSheet = () => { try { const s = localStorage.getItem(SHEET_KEY); return s ? JSON.parse(s) : null; } catch { return null; } };
 
 const app = {
   voiceGender:        'female',
   continuous:         false,
-  presentationMode:   false, // ativado pelo reveal: mic sempre on, mas ainda exige "Lúmina"
+  presentationMode:   false,
   isListening:        false,
   isSpeaking:         false,
+  isProcessing:       false,
   history:            loadHist(),
-  lastResponseTime:   0,
   lastSheet:          _loadLastSheet(),
+  currentEmotion:     null,
   _afterSpeak:        null,
+  _reqStart:          null,
+  _lastQuestion:      '',
 };
 
 // ── Toast ──────────────────────────────────────────────────────────────────────
@@ -744,8 +749,10 @@ const stopSpeaking = () => {
   if (ttsAbort) { try { ttsAbort.abort(); } catch {} ttsAbort = null; }
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
   try { window.speechSynthesis.cancel(); } catch {}
-  clearTimeout(speakTimer); speakTimer = null;   // era clearInterval — bug
+  clearTimeout(speakTimer); speakTimer = null;
   app.isSpeaking = false;
+  app.isProcessing = false; // libera mic caso tenha parado no meio do processamento
+  if (typeof _chartPending !== 'undefined') _chartPending = false;
   setFace('idle');
   setStopBtn(false);
 };
@@ -953,9 +960,10 @@ const speakPiper = async (text, onEnd) => {
       if (app.continuous && !app.isListening) setTimeout(startListening, 250);
     };
     audio.onended = finish;
-    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakEdge(text, onEnd); };
+    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakEdge(text, onEnd); };
     audio.play();
   } catch {
+    currentAudio = null;
     app.isSpeaking = false;
     speakEdge(text, onEnd);
   }
@@ -994,7 +1002,7 @@ const speakEdge = async (text, onEnd) => {
       if (app.continuous && !app.isListening) setTimeout(startListening, 250);
     };
     audio.onended = finish;
-    audio.onerror = () => { currentAudio = null; app.isSpeaking = false; speakBrowser(text, onEnd); };
+    audio.onerror = () => { currentAudio = null; URL.revokeObjectURL(url); app.isSpeaking = false; speakBrowser(text, onEnd); };
     audio.play().catch(() => {
       // Chrome bloqueou autoplay — reseta estado sem travar a UI
       currentAudio = null; URL.revokeObjectURL(url);
@@ -1327,6 +1335,8 @@ const WAKE_WORDS = ['lúmina', 'ei lúmina', 'oi lúmina', 'hey lúmina', 'ok l�
 
 const stopWakeWord = () => {
   wakeActive = false;
+  wakeWordActivated = false;
+  if (wakeSilTimer) { clearTimeout(wakeSilTimer); wakeSilTimer = null; }
   if (wakeMR?.state === 'recording') try { wakeMR.stop(); } catch {}
   if (wakeStream) { wakeStream.getTracks().forEach(t => t.stop()); wakeStream = null; }
   if (wakeAudioCtx) { wakeAudioCtx.close(); wakeAudioCtx = null; }
@@ -1789,7 +1799,6 @@ const _finalize = (raw, source = 'unknown') => {
   applyInlineLearn(learned);
   const finalResponse = sanitizeIdentity(response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']));
   app.history.push({ role: 'model', content: finalResponse });
-  app.lastResponseTime = Date.now();
   // Remove bolinhas de "pensando" se existirem
   document.querySelector('.hmsg-thinking')?.remove();
   // Typewriter: texto curto (<120 chars) aparece direto; longo digita palavra a palavra
@@ -1920,8 +1929,7 @@ const processInput = async (rawText, opts = {}) => {
     if (dlResp) {
       _thinkingEl?.remove(); _thinkingEl = null;
       app.history.push({ role: 'model', content: dlResp });
-      app.lastResponseTime = Date.now();
-      addMsgUI('lumina', dlResp);
+          addMsgUI('lumina', dlResp);
       saveHist();
       speak(dlResp);
       setFace('idle');
@@ -2121,6 +2129,7 @@ const processInput = async (rawText, opts = {}) => {
     logInteraction(text || '', '', 'error', null, app._reqStart ? Date.now() - app._reqStart : 0, err.message);
     try { _finalize(localFallback(text || ''), 'demo'); } catch { setFace('idle'); }
     _showDemoMode();
+    app.isProcessing = false;
   }
 };
 
@@ -7951,15 +7960,14 @@ const analyzeSpreadsheetFile = async (file) => {
       return;
     }
     app.lastSheet = { analysis: data.analysis, context: data.context, rawText: data.rawText || '' };
-    try { localStorage.setItem('lumina_lastSheet', JSON.stringify(app.lastSheet)); } catch {}
+    try { localStorage.setItem(SHEET_KEY, JSON.stringify(app.lastSheet)); } catch {}
     const summary  = buildSheetSummary(data.analysis);
     const speech   = buildSheetSpeech(data.analysis);
     addMsgUI('user', `📊 ${file.name}`);
     addMsgUI('lumina', summary);
     app.history.push({ role: 'user',  content: `[Planilha enviada: ${file.name}]` });
     app.history.push({ role: 'model', content: summary });
-    app.lastResponseTime = Date.now();
-    saveHist();
+      saveHist();
     speak(speech);
     setFace('idle');
   } catch (err) {
@@ -9195,8 +9203,6 @@ const renderAnalises = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 // PERSONALIZAÇÃO
 // ══════════════════════════════════════════════════════════════════════════════
-
-const THEME_KEY = 'lumina_theme';
 
 const applyTheme = (accent, hi) => {
   document.documentElement.style.setProperty('--accent', accent);
