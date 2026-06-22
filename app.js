@@ -4122,6 +4122,13 @@ const detectLocalInfo = async (text) => {
       'Principais obrigações regulatórias que a Scapini precisa manter em dia: RNTRC ativo para toda a frota e motoristas TAC, CIOT gerado antes de cada embarque TAC (o CGI faz isso automaticamente), jornada de motorista dentro da lei (11h de trabalho + 1h de almoço + descanso obrigatório de 11h), tachógrafo calibrado, e documentação do veículo completa. A gerenciadora de risco também exige compliance para liberar o seguro da carga.',
     ]);
 
+  // ── Portaria SUROC 16/2026 — nova regra de CIOT ──────────────────────────────
+  if (/suroc.*16|portaria.*16.*2026|16.*2026.*portaria|suroc 16|ciot.*fracionado|fracionado.*ciot|ciot.*subcontratacao|subcontratacao.*ciot|nova.*regra.*ciot|regra.*ciot.*2026/.test(t))
+    return pick([
+      'A Portaria SUROC 16/2026 (20/maio/2026, vigência 24/maio/2026) alterou as regras do CIOT — não alterou a tabela de piso mínimo de frete. As principais mudanças: (1) Carga Fracionada com múltiplos contratantes e SEM subcontratação = 1 CIOT único para todo o percurso; (2) Se houver subcontratação de TAC em operação com múltiplos embarcadores, a operação é reclassificada de "fracionada" para "lotação" — regras de CIOT de lotação se aplicam. O CGI precisa ser configurado para refletir essa reclassificação.',
+      'SUROC 16/2026 resumo: altera classificação de operações para fins de CIOT, não altera valores de frete. Carga fracionada real (múltiplos contratantes, sem TAC subcontratado) = 1 CIOT unificado. Quando há subcontratação de TAC, passa a ser "lotação" operacionalmente. Reduz bloqueios indevidos no sistema ANTT. O piso mínimo de frete continua regido pela SUROC 6/2026 (abr/2026): CCD Carga Geral R$4,00-9,25/km, Frigorificado R$4,74-10,96/km.',
+    ]);
+
   return null;
 };
 
