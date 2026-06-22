@@ -1046,3 +1046,118 @@ Todos os itens da checklist passaram:
 4. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 5. **DEMO_QA entrada possivelmente redundante** (~l.6956 na main) — entrada de história duplicada; preservada por padrões únicos mas pode ser simplificada
 6. **Portaria SUROC 16/2026** — nova portaria ANTT identificada; verificar se trouxe reajuste adicional ao SUROC 4 de março/2026
+
+---
+
+# Sessão 16 — 22 de junho de 2026
+
+## Resumo
+Sessão autônoma noturna. Foco em 5 prioridades: (P1) bugs QA — DEMO_QA entrada redundante removida, dados desatualizados corrigidos em 6 locais; (P2) pesquisa web — SUROC 16/2026 confirmada e codificada, CCT MOVIFORT RS bloqueado 12ª vez; (P3) DEMO_QA +8 pares para diretores; (P4) tryLocalResponse +4 blocos de dados reais Scapini 2024; (P5) UX placeholder simplificado. Total: 2 commits, +88 inserções, -28 remoções.
+
+## PRIORIDADE 0 — Ollama
+
+`ollama` não está disponível no ambiente remoto (container cloud). Rebuild do modelo `lumina-treinada` precisa ser executado na máquina local:
+```bash
+ollama create lumina-treinada -f Modelfile.lumina
+```
+
+## PRIORIDADE 1 — Bugs corrigidos
+
+### DEMO_QA entrada redundante (~l.6956/6962) — RESOLVIDA
+- Entrada "Grupo Scapini — empresas" na linha ~6962 era redundante com a entrada em l.5341 (mesma cobertura temática, regex sobrepostos)
+- **Fix**: regex da l.5341 expandida para absorver todos os padrões únicos da l.6962 (`|365 log|blue seguros|stokkie|empresas.*grupo|grupo.*empresas|tst global|scapini.*grupo.*empresas`)
+- Entrada redundante em l.6962 **removida** (-11 linhas)
+
+### Dados "6 empresas / 21 unidades" atualizados — 6 locais
+| Local | Antes | Depois |
+|-------|-------|--------|
+| DEMO_QA l.5343-5344 | 6 empresas, 21 unidades | 7 empresas + TST Global, 22 unidades |
+| DEMO_QA l.6771 (história) | "6 empresas, 21 unidades" | "7 empresas, 22 unidades, R$440M 2024" |
+| tryLocalResponse grupo scapini l.4543 | 6 companies sem TST Global | 7 empresas + TST Global, 22 unidades |
+| tryLocalResponse internacional l.4557 | só Mercosul | + TST Global/EUA adicionado |
+| tryLocalResponse história l.3969 | "6 empresas no grupo" | "7 empresas no grupo (incluindo TST Global nos EUA)" |
+| tryLocalResponse frota l.4669 | resposta genérica sem números | "500+ equipamentos, 3,4 anos média, 100% GPS" |
+
+### MOTORISTAS_DEMO: 15 → 19 registros
+Adicionados 4 motoristas com CNH E, MOPP, rotas RS→SP/Campinas/Guarulhos:
+| Nome | Apelido | Tipo | Rota | Status | Veículo |
+|------|---------|------|------|--------|---------|
+| Edivaldo Gomes Ferreira | Edivaldo | CLT | Lajeado–São Paulo | Em rota | Carreta Scania R540 (CNH E, MOPP) |
+| Cleiton Souza Barbosa | Cleiton | Agregado | Lajeado–Campinas | Disponível | Carreta Volvo FH 500 (CNH E, MOPP) |
+| Waldir Antunes Moraes | Waldir | TAC | Lajeado–São Paulo | Em rota | Bitrem Scania S500 (CNH E, MOPP) |
+| Paulo Sérgio Lima Costa | Paulinho | CLT | Lajeado–Guarulhos | Disponível | Carreta MB Actros 2651 (CNH E) |
+
+### Auditoria de itens herdados (verificação rápida)
+- `getElementById` null-safety: verificado OK (sessão 14 confirmou)
+- `JSON.parse` try/catch: verificado OK (sessão 15 confirmou)
+- `fetch()` com `.catch()`: verificado OK
+- `speak(undefined)` / `_finalize(undefined)`: guards confirmados em sessões anteriores
+
+## PRIORIDADE 2 — Pesquisa web
+
+### Portaria SUROC 16/2026 — CONFIRMADA E CODIFICADA ✓
+- **Data**: 20 de maio de 2026 | **Vigência**: 24 de maio de 2026
+- **O que muda**: CIOT apenas — NÃO altera tabela de piso mínimo de frete
+- Carga fracionada com múltiplos contratantes e SEM subcontratação = 1 CIOT único para todo o percurso
+- Subcontratação de TAC em operação com múltiplos embarcadores → reclassificada de "fracionada" para "lotação"
+- Piso mínimo de frete permanece regido pela SUROC 6/2026 (CCD Geral R$4,00-9,25/km; Frigorificado R$4,74-10,96/km)
+- **Novo bloco detectLocalInfo adicionado**: `/suroc.*16|portaria.*16.*2026|ciot.*fracionado|ciot.*subcontratacao/`
+
+### CCT MOVIFORT RS 2025/2026 — herdado 12ª vez
+- Todos os PDFs retornam HTTP 403 Forbidden
+- Único dado confirmado: bitrem R$3.508,49/mês (já em código)
+- Não inseridos dados de outros estados (SETCEMG/SETCEPAR são MG/PR, não RS)
+
+## PRIORIDADE 3 — DEMO_QA +8 pares para diretores
+
+Dos 8 itens listados na missão: 6 já existiam em sessões anteriores. Adicionados 8 pares NOVOS (não duplicados):
+
+| # | Tema | Regex exemplo |
+|---|------|---------------|
+| 1 | Quantas perguntas sabe responder | `/quantas perguntas.*lumina|lumina.*sabe.*responder/` |
+| 2 | E se o Google mudar a API | `/google.*mudar.*api|dependencia.*gemini|e se.*gemini.*acabar/` |
+| 3 | Lúmina no processo de vendas/prospecção | `/lumina.*ajuda.*vendas|lumina.*prospectar.*cliente/` |
+| 4 | Funciona em inglês/espanhol (TST Global, Mercosul) | `/lumina.*ingles|lumina.*espanhol|lumina.*idioma/` |
+| 5 | Como medir o ROI | `/roi.*lumina|como.*medir.*resultado.*lumina/` |
+| 6 | O que faz quando não sabe a resposta | `/lumina.*nao sabe|quando nao tem resposta|lumina.*inventar/` |
+| 7 | Gerar documentos oficiais (Word/Excel/PDF) | `/lumina.*gerar.*documento|documento.*lumina|lumina.*word/` |
+| 8 | Ajuda no processo comercial/BD | `/lumina.*ajuda.*vendas|lead.*lumina|lumina.*gerar.*lead/` |
+
+**Contador atualizado**: 355+ → 365+ (em 6 ocorrências no código)
+
+## PRIORIDADE 4 — tryLocalResponse pontos fracos
+
+| Item | Status |
+|------|--------|
+| crescimento/resultado Scapini (+28% 2024, meta R$1B 2030) | ✅ **Novo bloco adicionado** |
+| quantas unidades/filiais → 22 unidades em 6 estados | ✅ **Novo bloco adicionado** |
+| TST Global / scapini eua → inaugurada set/2024 | ✅ **Adicionado ao bloco grupo scapini** |
+| qual a frota → 500+ equipamentos, 3,4 anos média, 100% GPS | ✅ **Bloco atualizado com dados específicos** |
+| quantos colaboradores → ~1.100 (800 CLT + 300 terceirizados) | ✅ Já existia corretamente |
+
+## PRIORIDADE 5 — UX
+
+- **Placeholder** simplificado: "Ou digite aqui e pressione Enter… (Ctrl+V para colar imagem)" → "Digite sua pergunta aqui ou use o microfone…"
+  - Motivo: o "(Ctrl+V para colar imagem)" é feature de power user; distracts diretores na demo
+- Mensagem de boas-vindas: já impactante — "Bom dia. Sou Lúmina. Dando vida aos dados e luz às decisões." ✓
+- Botão mic: estado `listening` com animação `micPulse` vermelho + border ativo ✓
+- Toast erro Gemini: já melhorado em sessão 15 → "Configure a chave Gemini API em ⚙️ Configurações → API Key." ✓
+- Demo greeting mode: "Olá. Sou a Lúmina, a inteligência artificial da Scapini Transportes. Estou pronta para demonstrar o que posso fazer. Pode começar." ✓
+
+## Commits desta sessão
+- `dee6b0a` — fix: QA sessão 22/jun — DEMO_QA redundante removida, 7 empresas/22 unidades, frota 500+ detalhada — PUSHED
+- `cce0173` — feat: DEMO_QA +8 pares diretoria + tryLocal +5 Scapini 2024 + SUROC 16/2026 CIOT — PUSHED
+
+## Estado final app.js
+- 9.190 linhas (era 9.110)
+- MOTORISTAS_DEMO: 19 registros
+- DEMO_QA: 365+ entradas (estimativa; 8 novos blocos × 2 respostas cada)
+- tryLocalResponse: +4 novos blocos (crescimento, unidades, SUROC 16, frota atualizada)
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 12x. Acesso manual necessário em calculadorafrete.antt.gov.br. SUROC 16/2026 confirmada como alteração CIOT apenas (não altera valores).
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 12x. Dado parcial: bitrem R$3.508,49/mês. Sem acesso remoto ao PDF.
+3. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — executar na máquina local
+4. **`npm run build-dataset`** — executar na máquina local quando ≥ 500 exemplos
+5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+6. **Apresentação julho/2026** — verificar fluxo completo da demo antes da reunião com diretor
