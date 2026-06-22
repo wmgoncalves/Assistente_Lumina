@@ -1854,8 +1854,13 @@ const processInput = async (rawText, opts = {}) => {
         const segmento = segMatch ? segMatch[1].trim() : '';
         const regiaoMatch = text.match(/\b(?:em|na|no|pra|para)\s+([a-záàâãéèêíìîóòôõúùûç\s\/]{3,30}?)(?:\s*$|,)/i);
         const regiao = regiaoMatch ? regiaoMatch[1].trim() : 'Vale do Taquari/RS';
+        const autoDownload = /\b(baixa|exporta|gera|salva|manda|download)\b.*\b(excel|csv|planilha|pdf)\b|\b(excel|csv|planilha|pdf)\b/i.test(text);
+        const autoPDF     = /\bpdf\b/i.test(text) && !/\b(csv|excel|planilha)\b/i.test(text);
         setRespText('⚡ Buscando empresas para prospectar…');
         const result = await executeTool('prospectClients', { segmento, regiao, quantidade, para: 'Scapini Transportes' });
+        if (autoDownload && window._lastProspectData) {
+          setTimeout(() => autoPDF ? window.downloadLeadsPDF() : window.downloadLeadsCSV(), 0);
+        }
         _finalize(result, 'local');
         return;
       } catch(e) { /* fallthrough para Gemini */ }
