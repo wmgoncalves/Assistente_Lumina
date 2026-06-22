@@ -1726,10 +1726,18 @@ recrutaDB.exec(`
     status    TEXT DEFAULT 'pendente',
     respostas TEXT DEFAULT '[]',
     laudo     TEXT DEFAULT '',
+    nota      INTEGER DEFAULT NULL,
+    faixa     TEXT DEFAULT NULL,
     criado_em TEXT DEFAULT (datetime('now','localtime')),
-    concluido_em TEXT
+    concluido_em TEXT,
+    rejeicao_em  TEXT DEFAULT NULL
   );
+  -- adiciona colunas se já existia a tabela
+  CREATE TABLE IF NOT EXISTS _dummy_nota (x);
 `);
+try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN nota INTEGER DEFAULT NULL`); } catch(_) {}
+try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN faixa TEXT DEFAULT NULL`); } catch(_) {}
+try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN rejeicao_em TEXT DEFAULT NULL`); } catch(_) {}
 
 // Perguntas por tipo de vaga
 const PERGUNTAS = {
@@ -1848,47 +1856,152 @@ app.post('/api/candidatura/:token/responder', async (req, res) => {
            .run(JSON.stringify(respostas), row.token);
 
   if (respostas.length >= perguntas.length) {
-    // Gerar laudo com Gemini
     const c = getCfg();
-    let laudo = '';
+    let laudo = '', nota = 0, faixa = 'reprovado';
+
+    // ── Gerar laudo + nota 1-10 com Gemini ───────────────────────────────────
     try {
-      const prompt = `Você é especialista em RH da Scapini Transportes, uma transportadora de Lajeado/RS com 500+ veículos.\n\nAnalise a entrevista do candidato abaixo para a vaga de "${row.vaga}" e gere um laudo profissional.\n\nCANDIDATO: ${row.nome}\nVAGA: ${row.vaga}\n\nRESPOSTAS:\n${respostas.map((r,i)=>`${i+1}. ${r.pergunta}\nResposta: ${r.resposta}`).join('\n\n')}\n\nGere um laudo com:\n1. **Resumo do candidato** (2-3 linhas)\n2. **Pontos fortes** (top 3)\n3. **Pontos de atenção** (top 2)\n4. **Parecer final**: 🟢 RECOMENDADO / 🟡 COM RESSALVAS / 🔴 NÃO RECOMENDADO (com justificativa em 1 frase)\n\nSeja direto e objetivo. Foco no que importa para a vaga.`;
+      const prompt = `Você é especialista em RH da Scapini Transportes (transportadora Lajeado/RS, 500+ veículos).
+
+Analise a entrevista abaixo para a vaga de "${row.vaga}" e gere um laudo objetivo.
+
+CANDIDATO: ${row.nome}
+VAGA: ${row.vaga}
+
+RESPOSTAS:
+${respostas.map((r,i)=>`${i+1}. ${r.pergunta}\nResposta: ${r.resposta}`).join('\n\n')}
+
+Gere o laudo com EXATAMENTE este formato:
+
+NOTA: [número de 1 a 10]
+
+RESUMO: [2-3 linhas sobre o candidato]
+
+PONTOS FORTES:
+- [ponto 1]
+- [ponto 2]
+- [ponto 3]
+
+PONTOS DE ATENÇÃO:
+- [ponto 1]
+- [ponto 2]
+
+PARECER: [uma frase direta justificando a nota]
+
+Critérios da nota:
+8-10 → Candidato excelente, encaminhar imediatamente para entrevista presencial
+5-7  → Candidato razoável, Marjorie deve avaliar com atenção
+1-4  → Candidato não atende os requisitos mínimos da vaga
+
+Seja direto. Foco no que importa para a vaga.`;
+
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
         { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:1000,temperature:0.3,thinkingConfig:{thinkingBudget:512}} }),
+          body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:800,temperature:0.2,thinkingConfig:{thinkingBudget:512}} }),
           signal: AbortSignal.timeout(30000) });
       const d = await r.json();
       laudo = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Laudo não gerado.';
-    } catch(e) { laudo = 'Erro ao gerar laudo: ' + e.message; }
+      const notaMatch = laudo.match(/NOTA:\s*(\d+)/i);
+      nota = notaMatch ? Math.min(10, Math.max(1, parseInt(notaMatch[1]))) : 5;
+    } catch(e) { laudo = 'Erro ao gerar laudo: ' + e.message; nota = 0; }
 
-    recrutaDB.prepare('UPDATE candidaturas SET status=?,laudo=?,concluido_em=datetime("now","localtime") WHERE token=?')
-             .run('concluida', laudo, row.token);
+    // Classificar faixa
+    if      (nota >= 8) faixa = 'aprovado';
+    else if (nota >= 5) faixa = 'atencao';
+    else                faixa = 'reprovado';
 
-    // Email para Marjorie
-    const mailer = getMailer();
-    if (mailer) {
-      const marjorieEmail = getCfg().rhEmail || getCfg().smtpUser;
-      try {
-        await mailer.sendMail({
-          from: `"Lúmina RH" <${getCfg().smtpUser}>`,
-          to: marjorieEmail,
-          subject: `[RH] Entrevista concluída — ${row.nome} (${row.vaga})`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h2>Candidato: ${row.nome}</h2><p><strong>Vaga:</strong> ${row.vaga}</p><h3>Laudo da Lúmina</h3><pre style="background:#f5f5f5;padding:16px;border-radius:6px;white-space:pre-wrap">${laudo}</pre><hr><h3>Respostas completas</h3>${respostas.map((r,i)=>`<p><strong>${i+1}. ${r.pergunta}</strong><br>${r.resposta}</p>`).join('')}</div>`,
-        });
-        console.log(`[recruta] laudo enviado → ${marjorieEmail}`);
-      } catch(e) { console.warn('[recruta] email laudo falhou:', e.message); }
+    const emoji = nota >= 8 ? '🟢' : nota >= 5 ? '🟡' : '🔴';
+    const rejeicaoEm = faixa === 'reprovado'
+      ? new Date(Date.now() + 2*24*60*60*1000).toISOString()
+      : null;
+
+    recrutaDB.prepare(`UPDATE candidaturas
+      SET status=?, laudo=?, nota=?, faixa=?, concluido_em=datetime('now','localtime'), rejeicao_em=?
+      WHERE token=?`).run('concluida', laudo, nota, faixa, rejeicaoEm, row.token);
+
+    console.log(`[recruta] ${row.nome} (${row.vaga}) → nota ${nota} ${emoji} ${faixa}`);
+
+    // ── Email para Marjorie (aprovados e atenção) ─────────────────────────────
+    if (faixa !== 'reprovado') {
+      const mailer = getMailer();
+      if (mailer) {
+        const marjorieEmail = getCfg().rhEmail || getCfg().smtpUser;
+        const assunto = faixa === 'aprovado'
+          ? `${emoji} [RH] APROVADO — ${row.nome} (${row.vaga}) — Nota ${nota}/10`
+          : `${emoji} [RH] ATENÇÃO — ${row.nome} (${row.vaga}) — Nota ${nota}/10`;
+        try {
+          await mailer.sendMail({
+            from: `"Lúmina RH" <${getCfg().smtpUser}>`,
+            to: marjorieEmail,
+            subject: assunto,
+            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+              <div style="background:${faixa==='aprovado'?'#2a9d2a':'#e8a000'};color:#fff;padding:16px 20px;border-radius:8px 8px 0 0">
+                <h2 style="margin:0">${emoji} Candidato ${faixa==='aprovado'?'Aprovado':'Para Verificar'}</h2>
+                <p style="margin:4px 0 0">Nota: <strong>${nota}/10</strong></p>
+              </div>
+              <div style="border:1px solid #ddd;border-top:none;padding:20px;border-radius:0 0 8px 8px">
+                <p><strong>Nome:</strong> ${row.nome}</p>
+                <p><strong>Vaga:</strong> ${row.vaga}</p>
+                <p><strong>E-mail:</strong> ${row.email}</p>
+                <h3>Laudo da Lúmina</h3>
+                <pre style="background:#f5f5f5;padding:16px;border-radius:6px;white-space:pre-wrap;font-size:14px">${laudo}</pre>
+                <hr>
+                <h3>Respostas completas</h3>
+                ${respostas.map((r,i)=>`<p><strong>${i+1}. ${r.pergunta}</strong><br><em>${r.resposta}</em></p>`).join('')}
+              </div>
+            </div>`,
+          });
+          console.log(`[recruta] email Marjorie → ${marjorieEmail}`);
+        } catch(e) { console.warn('[recruta] email Marjorie falhou:', e.message); }
+      }
     }
 
-    return res.json({ ok: true, concluida: true, laudo });
+    return res.json({ ok: true, concluida: true, laudo, nota, faixa });
   }
 
   const proxima = perguntas[respostas.length];
   res.json({ ok: true, concluida: false, proxima, respondidas: respostas.length, total: perguntas.length });
 });
 
+// ── Verificador de rejeições automáticas (roda a cada hora) ──────────────────
+const enviarRejeicoesPendentes = async () => {
+  const mailer = getMailer();
+  if (!mailer) return;
+  const pendentes = recrutaDB.prepare(`
+    SELECT * FROM candidaturas
+    WHERE faixa='reprovado' AND status='concluida' AND rejeicao_em IS NOT NULL
+      AND rejeicao_em <= datetime('now') AND status != 'rejeitado_enviado'
+  `).all();
+  for (const c of pendentes) {
+    try {
+      await mailer.sendMail({
+        from: `"Scapini Transportes RH" <${getCfg().smtpUser}>`,
+        to: c.email,
+        subject: `Retorno sobre sua candidatura — ${c.vaga} | Scapini Transportes`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
+          <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="140" alt="Scapini" style="margin-bottom:16px">
+          <p>Olá, <strong>${c.nome}</strong>.</p>
+          <p>Agradecemos seu interesse na vaga de <strong>${c.vaga}</strong> e o tempo dedicado à nossa entrevista online.</p>
+          <p>Após análise cuidadosa do seu perfil, optamos por seguir com outros candidatos que se encaixam mais ao perfil que buscamos no momento.</p>
+          <p>Guardamos seu cadastro e, havendo uma oportunidade alinhada ao seu perfil no futuro, entraremos em contato.</p>
+          <p>Desejamos sucesso na sua jornada profissional!</p>
+          <p style="color:#666;font-size:13px;margin-top:24px">Atenciosamente,<br><strong>Equipe de RH — Scapini Transportes</strong><br>Lajeado/RS • scapini.com.br</p>
+        </div>`,
+      });
+      recrutaDB.prepare(`UPDATE candidaturas SET status='rejeitado_enviado', rejeicao_em=NULL WHERE id=?`).run(c.id);
+      console.log(`[recruta] rejeição enviada → ${c.email} (${c.vaga})`);
+    } catch(e) { console.warn('[recruta] rejeição falhou:', c.email, e.message); }
+  }
+};
+setInterval(enviarRejeicoesPendentes, 60 * 60 * 1000); // a cada hora
+setTimeout(enviarRejeicoesPendentes, 5000);             // verifica 5s após iniciar
+
 // ── GET /api/candidaturas — painel Marjorie (lista todas) ────────────────────
 app.get('/api/candidaturas', (req, res) => {
-  const rows = recrutaDB.prepare('SELECT id,nome,email,vaga,status,criado_em,concluido_em FROM candidaturas ORDER BY id DESC').all();
+  const rows = recrutaDB.prepare(`
+    SELECT id, nome, email, vaga, status, nota, faixa, criado_em, concluido_em
+    FROM candidaturas ORDER BY id DESC
+  `).all();
   res.json(rows);
 });
 
