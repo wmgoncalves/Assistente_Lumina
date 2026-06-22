@@ -97,6 +97,10 @@
     <span class="mic-label">C L I Q U E &nbsp; E &nbsp; F A L E</span>
     <div class="text-row">
       <input type="text" id="text-input" class="text-fld" placeholder="Ou digite aqui e pressione Enter…" autocomplete="off">
+      <label id="btn-audio-upload" title="Enviar áudio do WhatsApp" style="cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);color:#ccc;flex-shrink:0;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        <input type="file" id="audio-file-input" accept=".opus,.ogg,.m4a,.mp3,.wav,.aac,.ptt,.flac,.webm" style="display:none">
+      </label>
       <button class="send-btn" id="btn-send">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>

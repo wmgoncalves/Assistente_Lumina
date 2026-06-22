@@ -8161,6 +8161,17 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-send').addEventListener('click', sendText);
   textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(); });
 
+  // ── Upload de áudio (botão microfone na barra de texto) ──────────────────
+  const audioFileInput = document.getElementById('audio-file-input');
+  if (audioFileInput) {
+    audioFileInput.addEventListener('change', async () => {
+      const file = audioFileInput.files?.[0];
+      audioFileInput.value = ''; // reset para permitir mesmo arquivo de novo
+      if (!file) return;
+      await analyzeFile(file);
+    });
+  }
+
   // ── Botões de ação rápida (estilo Marvis) ──
   const qaWrap = document.getElementById('quick-actions');
   const hideQA = () => { if (qaWrap) qaWrap.classList.add('hidden'); };
