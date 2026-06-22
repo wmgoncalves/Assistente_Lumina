@@ -631,7 +631,7 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Diesel S-10 RS (2026): R$7,10-7,60/l posto (ref. SUROC 4/2026: R$7,35/l de mar/2026) | R$6,70-7,10/l distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
 • Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): base ~R$3.189/mês tração | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | + diárias R$60-120/dia | + periculosidade 30% se MOPP
-• Frete Lajeado-SP (truck, 1.100 km): R$4.500-6.500 dependendo da carga
+• Piso mínimo ANTT Lajeado→SP (1.100 km, Carga Geral, PORT.SUROC 04/2026): truck 2 eixos R$6.315 (CCD R$5,27/km) | carreta 5 eixos R$8.019 (CCD R$6,71/km) | bitrem 7 eixos alto desempenho R$7.745 (CCD R$6,80/km)
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
 • ROI telemetria: economia 10-15% em combustível + redução 30-40% sinistros
@@ -4089,9 +4089,9 @@ const detectLocalInfo = async (text) => {
   // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
   if (/tabela.*antt|antt.*tabela|piso.*minimo.*frete|frete.*minimo|tabela.*frete.*antt|antt.*piso|valor.*minimo.*frete|lei.*frete.*minimo/.test(t))
     return pick([
-      'A tabela ANTT define o piso mínimo de frete obrigatório para transporte rodoviário de cargas — estabelecida pela Lei 13.703/2018, atualizada periodicamente. A norma vigente é a Resolução ANTT nº 6.076/2026 (janeiro/2026), com reajuste de até 3,15%. Em março/2026 a Portaria SUROC nº 4/2026 atualizou o diesel de referência para R$7,35/l (semana 15-21/mar/2026), elevando os coeficientes CCD/CC acima dos valores da SUROC 3 (R$6,89/l). O cálculo usa: Valor = (distância km × CCD × eixos) + CC. Para os valores exatos atualizados por tipo de carga e composição: calculadorafrete.antt.gov.br',
-      'Piso mínimo ANTT 2026 — desde outubro/2025 a fiscalização é 100% eletrônica (cruzamento de MDF-e, CT-e e CIOT). Multa por operar abaixo do piso: até R$ 10 milhões por operação. Os coeficientes variam por eixos (2 a 9) e tipo de carga: geral, granel, frigorificada, perigosa e neo-bulk. Para os valores exatos atualizados, use a calculadora oficial em calculadorafrete.antt.gov.br — a Scapini precisa cobrar no mínimo esses valores para ser lucrativa e legal.',
-      'A tabela de frete mínimo da ANTT (Resolução 6.076/2026) protege o caminhoneiro e mantém a viabilidade do setor. É reajustada quando o diesel varia mais de 5% (Lei 13.703/2018). Além da resolução anual, portarias intermediárias ajustam os coeficientes ao longo do ano conforme o preço do diesel S-10. Consulte sempre o valor vigente em calculadorafrete.antt.gov.br antes de fechar um contrato.',
+      'Piso mínimo ANTT — PORT.SUROC 04/2026 (20/mar/2026), Carga Geral, rota de 1.100 km (Lajeado→SP): 🚛 Truck 2 eixos = R$ 6.315 (CCD R$5,27/km + CC R$515,17) | 🚚 Carreta LS 5 eixos = R$ 8.019 (CCD R$6,71/km + CC R$635,08) | 🚛 Bitrem 7 eixos alto desempenho = R$ 7.745 (CCD R$6,80/km + CC R$263,47). Fórmula: (distância × CCD) + CC. Multa por operar abaixo do piso: até R$10 milhões.',
+      'A tabela ANTT define o piso mínimo de frete obrigatório — Lei 13.703/2018, atualizada pela PORT.SUROC 04/2026 (mar/2026). Desde out/2025 a fiscalização é 100% eletrônica via cruzamento MDF-e, CT-e e CIOT. Valores reais confirmados para Carga Geral 1.100 km: truck R$6.315 | carreta R$8.019 | bitrem R$7.745. Para simular sua rota exata: calculadorafrete.antt.gov.br',
+      'Coeficientes ANTT Carga Geral vigentes (PORT.SUROC 04/2026): truck 2 eixos CCD=5,2729 CC=515,17 | carreta 5 eixos CCD=6,7126 CC=635,08 | bitrem 7 eixos alto desempenho CCD=6,8012 CC=263,47. O CCD é o custo por km e o CC é fixo de carga/descarga. Tabela reajusta quando diesel varia >5%. Consulte sempre antes de fechar contrato.',
     ]);
 
   // ── Diesel RS / combustível ───────────────────────────────────────────────────
