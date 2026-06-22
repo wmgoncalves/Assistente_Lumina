@@ -7898,31 +7898,41 @@ const analyzeFile = async (file) => {
       try {
         const fd = new FormData();
         fd.append('file', file);
-        const tr = await fetch('/api/transcribe-audio', { method: 'POST', body: fd });
-        const tj = await tr.json();
-        if (!tr.ok || !tj.transcription) throw new Error(tj.error || 'Falha na transcrição');
+        let tj;
+        try {
+          const tr = await fetch('/api/transcribe-audio', { method: 'POST', body: fd });
+          tj = await tr.json();
+          if (!tr.ok || !tj.transcription) throw new Error(tj.error || 'Falha na transcrição');
+        } catch (err) {
+          // remove bolha "transcrevendo..." e mostra erro
+          document.querySelectorAll('#chat .lumina-msg').forEach(el => {
+            if (el.textContent.includes('Transcrevendo')) el.remove();
+          });
+          speak('Não consegui transcrever o áudio.');
+          console.error('[transcribe-audio]', err);
+          return;
+        }
 
         const transcricao = tj.transcription;
-        // remove a bolha de "transcrevendo..."
-        const dots = document.querySelector('#chat .lumina-msg:last-child');
-        if (dots) dots.remove();
+        // remove bolha "transcrevendo..."
+        document.querySelectorAll('#chat .lumina-msg').forEach(el => {
+          if (el.textContent.includes('Transcrevendo')) el.remove();
+        });
 
         addMsgUI('lumina', `**Transcrição do áudio:**\n\n"${transcricao}"`);
-        speak(`Transcrevi o áudio. Diz o seguinte: ${transcricao}`);
+        speak(`Transcrevi o áudio. Diz o seguinte: ${transcricao.substring(0,200)}`);
 
-        // passa a transcrição para o Gemini analisar
-        app.history.push({ role: 'user', content: `Recebi um áudio com a seguinte transcrição:\n\n"${transcricao}"\n\nAnalise o conteúdo e responda de forma útil.` });
-        const analise = await callGemini();
-        app.history.push({ role: 'model', content: analise });
-        addMsgUI('lumina', analise);
-        speak(analise);
+        // analisa com Gemini (erro aqui não apaga a transcrição já mostrada)
+        try {
+          app.history.push({ role: 'user', content: `Recebi um áudio com a seguinte transcrição:\n\n"${transcricao}"\n\nAnalise o conteúdo e responda de forma útil para a Scapini Transportes.` });
+          const analise = await callGemini();
+          app.history.push({ role: 'model', content: analise });
+          addMsgUI('lumina', analise);
+          speak(analise);
+        } catch (err2) {
+          console.warn('[transcribe-audio] análise falhou:', err2);
+        }
         saveHist();
-      } catch (err) {
-        const dots2 = document.querySelector('#chat .lumina-msg:last-child');
-        if (dots2 && dots2.textContent.includes('Transcrevendo')) dots2.remove();
-        speak('Não consegui transcrever o áudio. Tenta um arquivo MP3 ou WAV.');
-        console.error('[transcribe-audio]', err);
-      }
       return;
 
     } else {
