@@ -1940,9 +1940,9 @@ const processInput = async (rawText, opts = {}) => {
     const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou)|você é (o |a )?(gemini|gpt|claude|google|llm)|foi(ste)? criad[oa] (pel[ao] )?google|sua? (empresa|fabricante|criador[ae]?)\b)\b/i;
     if (IDENTITY_Q.test(text)) {
       const identityResps = [
-        'Sou a Lúmina — a inteligência artificial da Scapini Transportes. O que precisas?',
-        'Lúmina, IA da Scapini. No que posso ajudar?',
-        'Sou a Lúmina! A inteligência artificial feita para a Scapini. O que precisas?',
+        'Sou a Lúmina — fui criada pela equipe da DV Digital especialmente para a Scapini Transportes. O que precisas?',
+        'Fui desenvolvida pela DV Digital sob medida para a Scapini. Sou um sistema próprio da empresa — não sou produto de prateleira. No que posso ajudar?',
+        'Meu criador é a DV Digital — uma empresa de tecnologia e inteligência artificial que desenvolveu tudo isso exclusivamente para a Scapini. O que precisas?',
       ];
       _finalize(pick(identityResps), 'local');
       return;
@@ -6875,8 +6875,8 @@ const DEMO_QA = [
   // ── Quem desenvolveu a Lúmina ─────────────────────────────────────────────────
   { re: /quem (fez|criou|desenvolveu|construiu|programou|montou) (a |)(lumina|você|vc|esse sistema)|quem (ta|está) por tras|empresa.*lumina|desenvolvedor.*lumina/,
     r: [
-      'A Lúmina foi desenvolvida sob medida para a Scapini Transportes. Sou fruto de uma colaboração entre a tecnologia de IA de ponta e o profundo conhecimento do negócio da Scapini. Fui construída para ficar — não sou uma ferramenta genérica alugada, sou um sistema próprio da empresa.',
-      'Meu desenvolvimento foi feito especificamente para a Scapini. A inteligência base usa modelos de linguagem avançados (como o Gemini do Google), mas toda a personalização, base de conhecimento e integração com os sistemas da Scapini foram construídos para a empresa. Sou da Scapini — não sou de nenhuma outra empresa.',
+      'Fui criada pela DV Digital — uma empresa de tecnologia especializada em inteligência artificial — desenvolvida exclusivamente para a Scapini Transportes. Toda a minha base de conhecimento, personalidade e integração com os sistemas da Scapini foi construída sob medida. Não sou um produto genérico: sou da Scapini.',
+      'Meu criador é a DV Digital, que desenvolveu tudo isso especificamente para a Scapini. Sou um sistema próprio da empresa — a base de conhecimento, as respostas operacionais e a integração com a rotina do transporte foram todas construídas para vocês. Fui feita para ficar.',
     ]},
 
   // ── BLOCO APRESENTAÇÃO: ROI, aprendizado, segurança, offline ─────────────────
