@@ -535,6 +535,55 @@ const chunkText = (text, size = 800, overlap = 100) => {
   return chunks.filter(c => c.trim().length > 60);
 };
 
+// ── Transcrição de áudio via Gemini ──────────────────────────────────────────
+const AUDIO_EXTS = ['opus', 'ogg', 'm4a', 'mp3', 'wav', 'aac', 'webm', 'mp4', 'oga'];
+const AUDIO_MIME = { opus:'audio/ogg', ogg:'audio/ogg', m4a:'audio/mp4', mp3:'audio/mpeg',
+                     wav:'audio/wav', aac:'audio/aac', webm:'audio/webm', mp4:'audio/mp4',
+                     oga:'audio/ogg' };
+
+app.post('/api/transcribe-audio', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  const c = getCfg();
+  if (!c.geminiKey) return res.status(400).json({ error: 'Gemini não configurado.' });
+
+  const ext = fileExt(req.file.originalname);
+  if (!AUDIO_EXTS.includes(ext))
+    return res.status(400).json({ error: `Formato não suportado. Use: ${AUDIO_EXTS.join(', ')}` });
+
+  const mime = AUDIO_MIME[ext] || 'audio/ogg';
+  const b64  = req.file.buffer.toString('base64');
+  const context = req.body.context || '';
+
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: `Transcreva o áudio abaixo com precisão. Idioma: português brasileiro. ${context ? 'Contexto: ' + context : ''} Retorne apenas o texto transcrito, sem comentários.` },
+              { inline_data: { mime_type: mime, data: b64 } }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 2000, temperature: 0, thinkingConfig: { thinkingBudget: 0 } }
+        }),
+        signal: AbortSignal.timeout(30000)
+      }
+    );
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
+    const d = await r.json();
+    const transcription = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    if (!transcription) throw new Error('Gemini não retornou transcrição.');
+    console.log(`[transcribe] ${req.file.originalname} (${(req.file.size/1024).toFixed(0)}kb) → ${transcription.length} chars`);
+    res.json({ ok: true, transcription, filename: req.file.originalname, duration_kb: Math.round(req.file.size/1024) });
+  } catch (e) {
+    console.error('[transcribe]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Extrai texto de PDF/DOCX sem indexar na base de conhecimento (para análise on-the-fly)
 app.post('/api/extract-doc', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });

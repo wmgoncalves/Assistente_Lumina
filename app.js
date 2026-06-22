@@ -7891,8 +7891,42 @@ const analyzeFile = async (file) => {
       addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lumina', response);
       saveHist(); speak(response); return;
 
+    } else if (/\.(opus|ogg|m4a|mp3|wav|aac|webm|oga)$/i.test(file.name) || file.type.startsWith('audio/')) {
+      // ── Transcrição de áudio via Gemini ───────────────────────────────────
+      addMsgUI('user', `[Áudio: ${file.name}]`);
+      addMsgUI('lumina', '🎙️ Transcrevendo áudio...');
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const tr = await fetch('/api/transcribe-audio', { method: 'POST', body: fd });
+        const tj = await tr.json();
+        if (!tr.ok || !tj.transcription) throw new Error(tj.error || 'Falha na transcrição');
+
+        const transcricao = tj.transcription;
+        // remove a bolha de "transcrevendo..."
+        const dots = document.querySelector('#chat .lumina-msg:last-child');
+        if (dots) dots.remove();
+
+        addMsgUI('lumina', `**Transcrição do áudio:**\n\n"${transcricao}"`);
+        speak(`Transcrevi o áudio. Diz o seguinte: ${transcricao}`);
+
+        // passa a transcrição para o Gemini analisar
+        app.history.push({ role: 'user', content: `Recebi um áudio com a seguinte transcrição:\n\n"${transcricao}"\n\nAnalise o conteúdo e responda de forma útil.` });
+        const analise = await callGemini();
+        app.history.push({ role: 'model', content: analise });
+        addMsgUI('lumina', analise);
+        speak(analise);
+        saveHist();
+      } catch (err) {
+        const dots2 = document.querySelector('#chat .lumina-msg:last-child');
+        if (dots2 && dots2.textContent.includes('Transcrevendo')) dots2.remove();
+        speak('Não consegui transcrever o áudio. Tenta um arquivo MP3 ou WAV.');
+        console.error('[transcribe-audio]', err);
+      }
+      return;
+
     } else {
-      speak(`Esse formato não consigo ler diretamente. Tenta PDF, Word ou imagem.`); return;
+      speak(`Esse formato não consigo ler diretamente. Tenta PDF, Word, imagem ou áudio.`); return;
     }
 
     app.history.push({ role: 'user', content: `[Arquivo: ${file.name}]` });
