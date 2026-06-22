@@ -1609,6 +1609,10 @@ const MOTORISTAS_DEMO = [
   { nome: 'Claudio Roberto Nunes',  apelido: 'Claudinho', tipo: 'Agregado', rota: 'Lajeado–Florianópolis',       status: 'De férias',    placa: 'BCD-3361', veiculo: 'Truck VW Constellation'  },
   { nome: 'José Carlos Ribeiro',    apelido: 'Zé Carlos', tipo: 'CLT',    rota: 'Lajeado–Curitiba',              status: 'Em rota',      placa: 'EFG-6694', veiculo: 'Bitrem Scania R500'      },
   { nome: 'Marinaldo José Rodrigues', apelido: 'Marinaldo', tipo: 'CLT',  rota: 'Lajeado–Porto Alegre',          status: 'Disponível',   placa: 'HIJ-1127', veiculo: 'Truck Volvo VM 330'      },
+  { nome: 'Edivaldo Gomes Ferreira',  apelido: 'Edivaldo', tipo: 'CLT',   rota: 'Lajeado–São Paulo',             status: 'Em rota',      placa: 'KLM-5543', veiculo: 'Carreta Scania R540 (CNH E, MOPP)' },
+  { nome: 'Cleiton Souza Barbosa',    apelido: 'Cleiton',  tipo: 'Agregado', rota: 'Lajeado–Campinas',           status: 'Disponível',   placa: 'NOP-7712', veiculo: 'Carreta Volvo FH 500 (CNH E, MOPP)' },
+  { nome: 'Waldir Antunes Moraes',    apelido: 'Waldir',   tipo: 'TAC',   rota: 'Lajeado–São Paulo',             status: 'Em rota',      placa: 'QRS-3381', veiculo: 'Bitrem Scania S500 (CNH E, MOPP)' },
+  { nome: 'Paulo Sérgio Lima Costa',  apelido: 'Paulinho', tipo: 'CLT',   rota: 'Lajeado–Guarulhos',             status: 'Disponível',   placa: 'TUV-9924', veiculo: 'Carreta MB Actros 2651 (CNH E)' },
 ];
 
 const _findMotorista = (q) => {
@@ -3966,7 +3970,7 @@ const detectLocalInfo = async (text) => {
   if (/quantos (anos?|tempo).*(existe|opera|mercado|scapini)|historia.*scapini|scapini.*historia|quando.*(fundad|criada|abriu|nasceu).*scapini/.test(t))
     return pick([
       'O Grupo Scapini foi fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos construindo credibilidade no transporte de cargas. Hoje liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (Vice-Presidente). Uma das histórias de crescimento mais sólidas do transporte rodoviário no Sul do Brasil.',
-      'A Scapini nasceu no Rio Grande do Sul em 1977 e cresceu com o agronegócio e o setor industrial do Sul do Brasil. São quase 50 anos de operação, frota própria moderna, 6 empresas no grupo e, agora, inteligência artificial integrada à gestão. Família Scapini — Diamantino como fundador, Ernani, Rosangela e Lucas na liderança atual.',
+      'A Scapini nasceu no Rio Grande do Sul em 1977 e cresceu com o agronegócio e o setor industrial do Sul do Brasil. São quase 50 anos de operação, frota própria moderna, 7 empresas no grupo (incluindo TST Global nos EUA) e, agora, inteligência artificial integrada à gestão. Família Scapini — Diamantino como fundador, Ernani, Rosangela e Lucas na liderança atual.',
     ]);
 
   if (/quantos (funcionarios|colaboradores|empregados|motoristas).*scapini|tamanho.*equipe|tamanho.*scapini|porte.*scapini/.test(t))
@@ -4066,6 +4070,20 @@ const detectLocalInfo = async (text) => {
     return pick([
       'Crescimento para uma transportadora passa por: 1) aumentar densidade nas rotas existentes (mais carga por viagem = melhor margem); 2) ampliar a cobertura geográfica com rotas novas; 3) desenvolver novos clientes nos setores que já atende; 4) agregar transportadores autônomos parceiros (TACs) para pico de demanda. A Lúmina pode ajudar a identificar setores promissores para prospecção.',
       'Estratégias de expansão que funcionam no transporte rodoviário: rotas complementares ao corredor principal (aproveitando retorno de carga), penetração em novos setores (e-commerce, saúde, agronegócio), parcerias com operadores logísticos menores como subcontratado, e aquisição de carteira de clientes de transportadoras que saem do mercado.',
+    ]);
+
+  // ── Crescimento / resultado da Scapini ────────────────────────────────────────
+  if (/crescimento.*scapini|resultado.*scapini|scapini.*crescimento|scapini.*resultado|performance.*scapini|expansao.*scapini|meta.*2030.*scapini|scapini.*meta.*2030|r\$.*440|440.*milhoes.*scapini|28.*porcento.*scapini/.test(t))
+    return pick([
+      'O Grupo Scapini cresceu 28% em 2024, encerrando o ano com faturamento de ~R$ 440 milhões. A meta para 2030 é R$ 1 bilhão — o que exige dobrar a receita em 6 anos. A expansão com a TST Global (EUA, set/2024) é um dos vetores estratégicos. Para análise de DRE interna, compartilhe a planilha e processo tudo.',
+      'Resultado 2024 do Grupo Scapini: ~R$ 440M de faturamento e crescimento de 28% frente a 2023. Ritmo acima do setor de transporte rodoviário (cresceu ~7% no mesmo período). A meta é R$ 1 bilhão em 2030. Alavancas: expansão de carteira, operação internacional via TST Global e ganho de margem com tecnologia (Lúmina + CGI).',
+    ]);
+
+  // ── Quantas unidades / filiais da Scapini ─────────────────────────────────────
+  if (/quantas.*unidades|quantas.*filiais.*scapini|scapini.*quantas.*filiais|unidades.*scapini|scapini.*unidades|em quantos estados.*scapini|22 unidades/.test(t))
+    return pick([
+      'O Grupo Scapini opera em 22 unidades no total: 18 filiais no Brasil (distribuídas em RS, PR, SP, RJ, SC e MG), 3 unidades no Mercosul (Argentina, Uruguai e Paraguai) e 1 nos EUA (TST Global, inaugurada set/2024). A presença em 6 estados brasileiros garante cobertura no corredor Sul-Sudeste — o mais movimentado do país.',
+      '22 unidades: matriz em Estrela/RS + filiais em Canoas, Carazinho, Santa Cruz do Sul (RS), Ponta Grossa (PR), Itajaí (SC), São Paulo (SP), Resende (RJ), entre outras + 3 internacionais no Mercosul + TST Global (EUA). Uma das redes de filiais mais capilarizadas do transporte de cargas do Sul do Brasil.',
     ]);
 
   // ── Tabela ANTT / piso mínimo de frete ────────────────────────────────────────
@@ -4540,10 +4558,10 @@ const tryLocalResponse = (text) => {
     return 'O Grupo Scapini foi fundado por Diamantino Scapini em 1977, em Lajeado/RS — quase 50 anos de história no transporte rodoviário de cargas.';
 
   // ── Grupo Scapini — empresas do grupo ──
-  if (/grupo scapini|empresas.*scapini|scapini.*grupo|transliquidos|365 log|blue seguros|ls tech|stokkie|empresas.*grupo|grupo.*empresas/.test(t))
+  if (/grupo scapini|empresas.*scapini|scapini.*grupo|transliquidos|365 log|blue seguros|ls tech|stokkie|empresas.*grupo|grupo.*empresas|tst global|scapini.*eua|eua.*scapini/.test(t))
     return pick([
-      'O Grupo Scapini reúne: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (transporte de químicos e líquidos a granel, sede em Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora de seguros), LS TECH (tecnologia interna do grupo) e Stokkie (armazenagem). Juntas, com operações no Brasil, Argentina, Uruguai e Paraguai.',
-      'Empresas do Grupo Scapini: Scapini Transportes | Translíquidos (líquidos a granel) | 365 Log (e-commerce) | Blue Seguros | LS TECH (tech) | Stokkie (armazenagem). 18 filiais no Brasil + 3 no Mercosul = 21 unidades. Frota 500+ equipamentos. Fundado em 1977 por Diamantino Scapini em Lajeado/RS.',
+      'O Grupo Scapini reúne 7 empresas: Scapini Transportes (cargas nacionais e internacionais — empresa principal), Translíquidos (químicos e líquidos a granel, sede em Canoas/RS), 365 Log (e-commerce e last-mile), Blue Seguros (corretora de seguros), LS TECH (tecnologia interna do grupo), Stokkie (armazenagem) e TST Global (EUA, inaugurada set/2024). Operações no Brasil, Mercosul e América do Norte.',
+      'Empresas do Grupo Scapini: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie | TST Global (EUA). 18 filiais no Brasil + 3 no Mercosul + 1 nos EUA = 22 unidades. Frota 500+ equipamentos, 3,4 anos de média. Fundado em 1977 por Diamantino Scapini em Lajeado/RS.',
     ]);
 
   // ── Translíquidos ──
@@ -4553,11 +4571,11 @@ const tryLocalResponse = (text) => {
       'Translíquidos: empresa do Grupo Scapini para transporte rodoviário de líquidos a granel — químicos, petroquímicos e combustíveis. É uma operação altamente especializada, com equipamentos aprovados para carga perigosa (MOPP obrigatório) e rastreamento dedicado. Sede em Canoas/RS com cobertura nacional.',
     ]);
 
-  // ── Internacional / América do Sul ──
-  if (/argentina|uruguai|paraguai|internacional.*scapini|scapini.*internacion|america.*sul.*scapini|exportacao.*carga|importacao.*carga/.test(t))
+  // ── Internacional / América do Sul e EUA ──
+  if (/argentina|uruguai|paraguai|internacional.*scapini|scapini.*internacion|america.*sul.*scapini|exportacao.*carga|importacao.*carga|tst global|scapini.*eua|eua.*scapini|america.*norte.*scapini/.test(t))
     return pick([
-      'O Grupo Scapini opera internacionalmente: Argentina, Uruguai e Paraguai. O transporte internacional requer documentação específica: DTA (Declaração de Trânsito Aduaneiro), seguro de carga internacional, conhecimento de transporte internacional e adequação ao regulamento de cada país. Para cotação de frete internacional, o setor comercial atende.',
-      'Scapini tem operação internacional na América do Sul — Argentina, Uruguai e Paraguai. Carga exportada precisa de despacho aduaneiro, DU-E, conhecimento internacional e seguro específico. O grupo tem experiência consolidada nesse corredor. Consulte o comercial para rotas e tarifas.',
+      'O Grupo Scapini opera internacionalmente: Argentina, Uruguai e Paraguai (Mercosul) e, desde setembro/2024, nos EUA com a TST Global. O transporte internacional requer documentação específica: DTA (Declaração de Trânsito Aduaneiro), seguro de carga internacional, conhecimento de transporte e adequação às normas de cada país. Para cotação de frete internacional, o setor comercial atende.',
+      'Scapini tem operação internacional na América do Sul (Argentina, Uruguai e Paraguai) e agora também na América do Norte com a TST Global (EUA, inaugurada set/2024). São 22 unidades no total. Carga exportada precisa de despacho aduaneiro, DU-E, conhecimento internacional e seguro específico. Consulte o comercial para rotas e tarifas.',
     ]);
 
   // ── O que é margem bruta / EBITDA / ML (financeiro básico) ──
@@ -4668,8 +4686,8 @@ const tryLocalResponse = (text) => {
   // ── Frota / veículos ──
   if (/frota|quantos.*caminh|caminhoes.*scapini|tipo.*veiculo|veiculos.*scapini|truck|carreta|bau|graneleiro/.test(t))
     return pick([
-      'A Scapini opera com frota própria moderna — caminhões truck, carretas e veículos menores para distribuição local. Toda a frota tem rastreamento GPS. A composição exata da frota pode ser consultada no CGI quando eu estiver integrada.',
-      'A frota da Scapini inclui veículos para diferentes tipos de carga: veículos fechados (baú) para cargas gerais, carretas para lotação, e truck para distribuição regional. Manutenção preventiva programada mantém disponibilidade alta.',
+      'A Scapini opera frota de 500+ equipamentos com rastreamento GPS em 100% dos veículos. Idade média 3,4 anos em 2024 — uma das frotas mais novas do setor no Sul. Mix: carreta SIDER, baú fechado, grade baixa, rodotrem e truck para distribuição regional. Manutenção preventiva programada reduz imobilização.',
+      'Frota Scapini: mais de 500 equipamentos, média de 3,4 anos de uso (2024), 100% rastreados por GPS em tempo real. Composição: própria + agregada (motorista com veículo próprio vinculado) + TAC (terceiros). Tipos: carreta SIDER (principal), baú fechado, grade baixa, rodotrem e truck. Ideal para cargas secas, fracionadas e de grande volume.',
     ]);
 
   // ── Frete / como solicitar ──
@@ -5338,10 +5356,10 @@ const DEMO_QA = [
   // ── BLOCO SCAPINI — EMPRESA, GRUPO, FILIAIS E CLIENTES ──────────────────────
 
   // Grupo Scapini — empresas do grupo
-  { re: /grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|scapini motors|ls tech|quantas empresas.*scapini|divisoes.*scapini/,
+  { re: /grupo scapini|empresas.*scapini|scapinisul|scasul|transliquidos|scapini motors|ls tech|quantas empresas.*scapini|divisoes.*scapini|365 log|blue seguros|stokkie|empresas.*grupo|grupo.*empresas|tst global|scapini.*grupo.*empresas/,
     r: [
-      'O Grupo Scapini reúne 6 empresas: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (químicos e líquidos a granel — sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
-      'A Scapini não é uma empresa só — é um grupo familiar fundado em 1977. As 6 empresas: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. 18 filiais no Brasil + 3 no Mercosul (Argentina, Uruguai e Paraguai) = 21 unidades. Frota 500+ equipamentos. Presidente: Ernani Scapini | CEO: Lucas Scapini.',
+      'O Grupo Scapini reúne 7 empresas: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (químicos e líquidos a granel — sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem) e TST Global (EUA, inaugurada set/2024). Fundado em 1977 por Diamantino Scapini em Lajeado/RS — quase 50 anos de história no transporte.',
+      'A Scapini não é uma empresa só — é um grupo familiar fundado em 1977. As 7 empresas: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie | TST Global (EUA). 18 filiais no Brasil + 3 no Mercosul + EUA = 22 unidades. Frota 500+ equipamentos. Presidente: Ernani Scapini | CEO: Lucas Scapini.',
     ]},
 
   // Filiais e abrangência geográfica
@@ -6768,7 +6786,7 @@ const DEMO_QA = [
   // ── Quantos anos tem a Scapini / história ─────────────────────────────────────
   { re: /quantos anos.*scapini|scapini.*quantos anos|quando.*fundad.*scapini|ano.*fundacao.*scapini|historia.*scapini|scapini.*historia|scapini.*anos/,
     r: [
-      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar um dos grupos de transporte mais relevantes do Sul do Brasil: 6 empresas, 18 filiais no Brasil + 3 no Mercosul (21 unidades), frota 500+ equipamentos e operações internacionais.',
+      'O Grupo Scapini tem quase 50 anos de história — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Começou como uma pequena operação regional e cresceu para se tornar um dos grupos de transporte mais relevantes do Sul do Brasil: 7 empresas (incluindo TST Global, EUA, set/2024), 22 unidades no Brasil, Mercosul e EUA, frota 500+ equipamentos e faturamento ~R$440M em 2024.',
       'Fundado em 1977, o Grupo Scapini completou 45 anos em 2022 e segue expandindo. São quase 50 anos de estrada — de empresa familiar em Lajeado/RS para operações em todo o Brasil, Argentina, Uruguai e Paraguai. Hoje é liderado por Lucas Scapini (CEO), Ernani Scapini (Presidente) e Rosangela Scapini (VP).',
     ]},
 
@@ -6830,11 +6848,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 355+ respostas
+  // Funciona offline — Llama local + 365+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 355+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 365+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -6847,7 +6865,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 355+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 365+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -6926,7 +6944,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (355+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (365+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -6956,13 +6974,6 @@ const DEMO_QA = [
     r: [
       'A Lúmina aprende de três formas: (1) Base local — o conhecimento da Scapini já foi digitado aqui: procedimentos, legislação, dados da empresa, regulamentações; (2) Conversas — cada troca de mensagem fica no histórico e alimenta o contexto; (3) Fine-tuning do Llama — as conversas reais viram um dataset para treinar o modelo local, deixando a Lúmina cada vez mais "Scapini" na forma de responder.',
       'O processo de aprendizado: primeiro, carregamos o conhecimento base (procedimentos da empresa, CCT, regulamentações ANTT). Depois, cada conversa real melhora o contexto de memória. A longo prazo, as conversas viram treino do modelo Llama local — o modelo se calibra para o vocabulário da Scapini, suas rotas, seus clientes e seus processos. Quanto mais usada, mais precisa fica.',
-    ]},
-
-  // Grupo Scapini — empresas
-  { re: /grupo scapini|empresas.*grupo|grupo.*empresas|transliquidos|365 log|blue seguros|ls tech|stokkie|quantas empresas.*scapini|scapini.*grupo.*empresas/,
-    r: [
-      'O Grupo Scapini tem 6 empresas: Scapini Transportes (cargas nacionais/internacionais), Translíquidos (líquidos a granel e químicos), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna) e Stokkie (armazenagem). Fundado em 1977. 18 filiais no Brasil + 3 no Mercosul (Argentina, Uruguai e Paraguai) = 21 unidades. Frota 500+ equipamentos.',
-      'Grupo Scapini: Scapini Transportes | Translíquidos | 365 Log | Blue Seguros | LS TECH | Stokkie. Empresa familiar fundada por Diamantino Scapini em 1977 em Lajeado/RS — quase 50 anos no transporte rodoviário de cargas.',
     ]},
 
   // História e tempo de mercado
@@ -7150,7 +7161,7 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 355+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 365+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 
@@ -7187,6 +7198,55 @@ const DEMO_QA = [
     r: [
       'O custo operacional da Lúmina tem três componentes: (1) API Gemini (Google): pago por uso — aprox. R$0,001-0,01 por pergunta; uso intenso de 500 perguntas/mês = ~R$5-50; (2) Infraestrutura: já existe na Scapini — nenhum servidor adicional; (3) Manutenção e evolução: contrato com a DV Digital para atualizações, novas funcionalidades e suporte. Sem taxa por usuário, sem licença por módulo. O maior custo é a parceria com a DV Digital para desenvolvimento contínuo.',
       'Resumo de custos mensais estimados após implantação: (1) Google Gemini API: R$10-100/mês dependendo do volume de uso (muito barato para IA generativa); (2) Eletricidade do servidor local: irrelevante — roda em computador já existente; (3) Suporte DV Digital: conforme contrato de manutenção. Total estimado: R$500-2.000/mês para manutenção e evolução — payback já no primeiro mês com o tempo economizado.',
+    ]},
+
+  // ── Quantas perguntas a Lúmina sabe responder (apresentação/diretoria) ────────
+  { re: /quantas perguntas.*lumina|lumina.*quantas perguntas|lumina.*sabe.*responder|quantos assuntos.*lumina|lumina.*quantos assuntos|base.*conhecimento.*quantas|quantas respostas.*lumina|lumina.*banco.*conhecimento.*tamanho/,
+    r: [
+      'A Lúmina tem hoje mais de 365 respostas locais prontas — sem precisar de internet. Cobrem: transporte/frete, regulamentações ANTT, CGI/operacional, RH/CLT, financeiro/DRE, segurança de carga, prospecção de clientes, procedimentos internos e apresentação da empresa. E essa base cresce automaticamente: cada conversa real alimenta o banco de dados e, a cada 5 interações, o modelo Llama aprende mais.',
+      'Mais de 365 respostas locais — esse é o ponto de partida. A base cresce de três formas: (1) documentos que vocês sobem (PDFs, manuais, contratos), (2) informações que o gestor digita direto no painel e (3) aprendizado automático com as conversas reais da equipe. Em 90 dias de uso, a Lúmina da Scapini já vai saber muito mais do que qualquer IA genérica sobre a operação de vocês.',
+    ]},
+
+  // ── E se o Google mudar ou descontinuar a API Gemini ─────────────────────────
+  { re: /google.*mudar.*api|api.*google.*mudar|google.*descontinuar|e se.*google.*parar|lumina.*depende.*google|gemini.*descontinuado|dependencia.*gemini|lumina.*gemini.*sumir|e se.*gemini.*acabar|risco.*dependencia.*api/,
+    r: [
+      'A Lúmina não fica refém do Google. Temos duas camadas de independência: (1) modelo Llama rodando 100% local — responde sem nenhuma API, sem internet, sem Google; (2) arquitetura modular: se o Gemini mudar ou encarecer, migramos para outro modelo (Claude, GPT-4, Mistral) em menos de 2 dias de trabalho, sem afetar a base de conhecimento nem o histórico de conversas da Scapini. O conhecimento da empresa fica na Scapini, não no provedor.',
+      'Boa pergunta de gestão de risco! O Llama local é o seguro: ele aprende com as conversas da Scapini e funciona offline, sem Google. A API do Gemini é usada para as respostas mais complexas — mas é intercambiável. Se o Google mudar a política de preços ou encerrar o serviço, a migração para outro provedor (OpenAI, Anthropic, Meta) leva 2 dias de desenvolvimento. O ativo real é o banco de dados e o modelo treinado nos dados da Scapini — isso não vai a lugar nenhum.',
+    ]},
+
+  // ── A Lúmina pode ajudar no processo de vendas e prospecção ──────────────────
+  { re: /lumina.*ajuda.*vendas|vendas.*lumina|lumina.*prospectar.*cliente|lumina.*prospect|prospecao.*lumina|lumina.*bd|lumina.*comercial|time.*vendas.*lumina|lumina.*gerar.*lead|lead.*lumina/,
+    r: [
+      'Sim — prospecção é uma das funções mais poderosas. Diga "busca 5 transportadoras para prospectar em SP" e eu listo empresas com CNPJ, contato, setor e uma mensagem de abordagem personalizada. Também analiso a carteira atual e sugiro setores adjacentes para expandir. Isso que levaria horas de pesquisa, a Lúmina faz em segundos.',
+      'O time comercial ganha um pesquisador que nunca dorme: posso buscar potenciais clientes por setor, região e porte, montar a lista com contatos e já escrever o e-mail de prospecção personalizado. Também analiso planilhas de pipeline, identifico os clientes com maior potencial de crescimento e alerto sobre vencimentos de contratos. BD com Lúmina = mais tempo para relacionamento, menos tempo em pesquisa manual.',
+    ]},
+
+  // ── Funciona em inglês ou espanhol (operações internacionais) ────────────────
+  { re: /lumina.*ingles|lumina.*espanhol|lumina.*outros idiomas|ingles.*lumina|espanhol.*lumina|lumina.*idioma|lumina.*bilingue|lumina.*multilingual|lumina.*international|lumina.*america.*norte.*idioma/,
+    r: [
+      'Sim — a Lúmina entende e responde em inglês e espanhol. Para operações da TST Global (EUA), consigo responder perguntas em inglês sobre frete, regulamentações e procedimentos. Para Argentina, Uruguai e Paraguai, atendo em espanhol. A base de conhecimento pode ser alimentada em qualquer idioma. Pergunte em inglês agora se quiser testar!',
+      'A Lúmina é multilíngue: português (principal), inglês e espanhol. Útil para a operação internacional do grupo — TST Global (EUA) e as 3 unidades no Mercosul. Documentos em inglês (contratos, e-mails) e espanhol (Argentina/Uruguai/Paraguai) podem ser analisados e respondidos. A base de conhecimento aceita conteúdo nos três idiomas.',
+    ]},
+
+  // ── Como medir o ROI da Lúmina ───────────────────────────────────────────────
+  { re: /roi.*lumina|lumina.*roi|retorno.*lumina|lumina.*retorno.*investimento|como.*medir.*resultado.*lumina|kpi.*lumina|lumina.*kpi|resultado.*lumina.*mensur|lumina.*comprovado|payback.*lumina/,
+    r: [
+      'ROI da Lúmina se mede em tempo economizado por colaborador: se cada pessoa economiza 30 min/dia em busca de informação, são 2,5h/semana por funcionário. Com 10 usuários = 25h/semana economizadas. Ao custo médio de R$40/h (incluindo encargos), isso é R$1.000/semana = R$4.000/mês de ganho — para um investimento de R$500-2.000/mês. ROI de 2x a 8x no primeiro mês.',
+      'Três métricas de ROI que recomendo acompanhar: (1) Tempo de resposta a dúvidas de regulamentação (antes: 20 min, com Lúmina: 30 seg); (2) Volume de perguntas que chegam ao RH/Jurídico via WhatsApp (indicador de redução de retrabalho); (3) Tempo de análise de DRE mensal (antes: 4h, com Lúmina: 15 min). Depois de 30 dias, o painel mostra quantas perguntas foram respondidas e de quais áreas — você monta a conta do ROI com dados reais.',
+    ]},
+
+  // ── O que a Lúmina faz quando não sabe a resposta ────────────────────────────
+  { re: /lumina.*nao sabe|nao sabe.*lumina|lumina.*sem resposta|quando nao tem resposta|lumina.*inventar|lumina.*alucinar|lumina.*confabular|e se.*lumina.*nao souber|nao encontrar.*resposta.*lumina|resposta.*lumina.*errada.*o que/,
+    r: [
+      'Quando não tenho a resposta certa, digo claramente: "não tenho essa informação — recomendo verificar com [setor responsável]". Nunca invento dados numéricos, datas ou nomes. Se a pergunta exige integração com o CGI (dados em tempo real), explico que isso vem na Phase 2. O princípio é: é melhor dizer "não sei" do que dar uma informação errada que cause um problema operacional.',
+      'A Lúmina não alucina dados críticos. Quando a confiança na resposta é baixa, aviso explicitamente e direciono para a fonte correta (RH, Jurídico, comercial, o próprio CGI). Para perguntas fora do domínio da Scapini, digo que sou especialista na operação da empresa e posso buscar via Gemini. Transparência sobre limitações é parte do design — uma IA que "chuta" é perigosa; a Lúmina prefere ser honesta.',
+    ]},
+
+  // ── Posso usar a Lúmina para gerar documentos oficiais ───────────────────────
+  { re: /lumina.*gerar.*documento|documento.*lumina|lumina.*criar.*relatorio|relatorio.*lumina.*gerar|lumina.*exportar.*pdf|pdf.*lumina|lumina.*word|lumina.*excel|lumina.*planilha.*gerar|lumina.*contrato.*gerar/,
+    r: [
+      'Sim — a Lúmina gera documentos em Word, Excel e PDF. Exemplos: relatório de KPI de transporte, lista de candidatos prospectados, análise de DRE formatada, e-mail profissional, ata de reunião, check-list de procedimento. Basta pedir: "gera um relatório de fretes do mês em PDF" ou "exporta a lista de candidatos para Excel". Os arquivos são gerados e disponibilizados para download.',
+      'Geração de documentos é um dos recursos prontos. Tipos disponíveis: (1) PDF — relatórios de KPI, análises, atas; (2) Excel — listas de candidatos, planilhas de frete, tabelas comparativas; (3) Word — cartas, contratos modelo, comunicados internos. Ideal para formalizar análises que antes precisavam de horas de formatação manual. Diga o que precisa e eu monto.',
     ]},
 ];
 
@@ -7325,7 +7385,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 355+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 365+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
