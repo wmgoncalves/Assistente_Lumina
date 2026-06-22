@@ -1709,6 +1709,194 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
   }
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// MÓDULO RECRUTAMENTO — candidatura online + entrevista por Lúmina
+// ════════════════════════════════════════════════════════════════════════════
+const Database = require('better-sqlite3');
+const nodemailer = require('nodemailer');
+
+const recrutaDB = new Database(path.join(__dirname, 'data', 'recrutamento.db'));
+recrutaDB.exec(`
+  CREATE TABLE IF NOT EXISTS candidaturas (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    token     TEXT UNIQUE NOT NULL,
+    nome      TEXT NOT NULL,
+    email     TEXT NOT NULL,
+    vaga      TEXT NOT NULL,
+    status    TEXT DEFAULT 'pendente',
+    respostas TEXT DEFAULT '[]',
+    laudo     TEXT DEFAULT '',
+    criado_em TEXT DEFAULT (datetime('now','localtime')),
+    concluido_em TEXT
+  );
+`);
+
+// Perguntas por tipo de vaga
+const PERGUNTAS = {
+  motorista: [
+    'Qual é o seu número de CNH e categoria? Há quanto tempo você possui?',
+    'Você tem experiência com cargas pesadas ou carreta? Conte um pouco sobre suas últimas experiências.',
+    'Você tem disponibilidade para viagens longas (São Paulo, outras regiões)? Tem família ou compromissos que podem dificultar?',
+    'Já passou por alguma situação de risco no trânsito? Como você agiu?',
+    'Por que você quer trabalhar na Scapini Transportes?',
+  ],
+  comprador: [
+    'Qual é a sua formação e experiência em compras ou suprimentos?',
+    'Você já trabalhou com negociação de contratos com fornecedores? Pode dar um exemplo?',
+    'Como você analisa o custo-benefício de uma proposta de fornecedor?',
+    'Você tem experiência com sistemas de gestão (ERP)? Quais?',
+    'Por que você quer trabalhar na Scapini Transportes?',
+  ],
+  default: [
+    'Conte um pouco sobre sua experiência profissional.',
+    'Quais são seus principais pontos fortes para essa vaga?',
+    'Você tem alguma experiência no setor de transportes ou logística?',
+    'Qual é a sua disponibilidade de horário?',
+    'Por que você tem interesse em trabalhar na Scapini Transportes?',
+  ],
+};
+
+const getPerguntasVaga = (vaga = '') => {
+  const v = vaga.toLowerCase();
+  if (v.includes('motorista')) return PERGUNTAS.motorista;
+  if (v.includes('comprador')) return PERGUNTAS.comprador;
+  return PERGUNTAS.default;
+};
+
+const getMailer = () => {
+  const c = getCfg();
+  if (!c.smtpHost) return null;
+  return nodemailer.createTransport({
+    host: c.smtpHost, port: c.smtpPort || 587,
+    secure: (c.smtpPort || 587) === 465,
+    auth: { user: c.smtpUser, pass: c.smtpPass },
+  });
+};
+
+const BASE_URL = () => {
+  const c = getCfg();
+  return c.baseUrl || 'http://localhost:8080';
+};
+
+// ── POST /api/candidatura — recebe candidatura do site e envia email ──────────
+app.post('/api/candidatura', async (req, res) => {
+  const { nome, email, vaga } = req.body || {};
+  if (!nome || !email || !vaga)
+    return res.status(400).json({ error: 'nome, email e vaga são obrigatórios.' });
+
+  const token = crypto.randomBytes(24).toString('hex');
+  recrutaDB.prepare(`INSERT INTO candidaturas (token,nome,email,vaga) VALUES (?,?,?,?)`)
+           .run(token, nome.trim(), email.trim().toLowerCase(), vaga.trim());
+
+  const link = `${BASE_URL()}/entrevista/${token}`;
+  const mailer = getMailer();
+  if (mailer) {
+    try {
+      await mailer.sendMail({
+        from: `"Scapini Transportes RH" <${getCfg().smtpUser}>`,
+        to: email,
+        subject: `Sua entrevista para ${vaga} — Scapini Transportes`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
+            <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="160" alt="Scapini" style="margin-bottom:16px">
+            <h2 style="color:#cc1c1c">Olá, ${nome}!</h2>
+            <p>Recebemos sua candidatura para a vaga de <strong>${vaga}</strong> na Scapini Transportes.</p>
+            <p>Para dar continuidade ao processo seletivo, clique no botão abaixo e responda algumas perguntas rápidas. Leva cerca de <strong>5 a 10 minutos</strong>.</p>
+            <a href="${link}" style="display:inline-block;background:#cc1c1c;color:#fff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;margin:16px 0">
+              Iniciar Entrevista Online →
+            </a>
+            <p style="color:#666;font-size:13px">Este link é válido por 7 dias e é exclusivo para você. Não compartilhe.</p>
+            <hr style="border:none;border-top:1px solid #eee">
+            <p style="color:#999;font-size:12px">Scapini Transportes • Lajeado/RS • scapini.com.br</p>
+          </div>`,
+      });
+      console.log(`[recruta] email enviado → ${email} (${vaga})`);
+    } catch (e) {
+      console.warn('[recruta] email falhou:', e.message);
+    }
+  } else {
+    console.log(`[recruta] sem SMTP — link: ${link}`);
+  }
+
+  res.json({ ok: true, token, link, emailEnviado: !!mailer });
+});
+
+// ── GET /api/candidatura/:token — estado da entrevista ───────────────────────
+app.get('/api/candidatura/:token', (req, res) => {
+  const row = recrutaDB.prepare('SELECT * FROM candidaturas WHERE token=?').get(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Entrevista não encontrada.' });
+  const perguntas = getPerguntasVaga(row.vaga);
+  const respostas = JSON.parse(row.respostas || '[]');
+  const proxima   = respostas.length < perguntas.length ? perguntas[respostas.length] : null;
+  res.json({ nome: row.nome, vaga: row.vaga, status: row.status, total: perguntas.length,
+             respondidas: respostas.length, proxima, concluida: !proxima, laudo: row.laudo });
+});
+
+// ── POST /api/candidatura/:token/responder — salva resposta + avança ─────────
+app.post('/api/candidatura/:token/responder', async (req, res) => {
+  const row = recrutaDB.prepare('SELECT * FROM candidaturas WHERE token=?').get(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Token inválido.' });
+  if (row.status === 'concluida') return res.json({ ok: true, concluida: true, laudo: row.laudo });
+
+  const { resposta } = req.body || {};
+  if (!resposta?.trim()) return res.status(400).json({ error: 'Resposta vazia.' });
+
+  const perguntas = getPerguntasVaga(row.vaga);
+  const respostas = JSON.parse(row.respostas || '[]');
+  respostas.push({ pergunta: perguntas[respostas.length], resposta: resposta.trim() });
+  recrutaDB.prepare('UPDATE candidaturas SET respostas=? WHERE token=?')
+           .run(JSON.stringify(respostas), row.token);
+
+  if (respostas.length >= perguntas.length) {
+    // Gerar laudo com Gemini
+    const c = getCfg();
+    let laudo = '';
+    try {
+      const prompt = `Você é especialista em RH da Scapini Transportes, uma transportadora de Lajeado/RS com 500+ veículos.\n\nAnalise a entrevista do candidato abaixo para a vaga de "${row.vaga}" e gere um laudo profissional.\n\nCANDIDATO: ${row.nome}\nVAGA: ${row.vaga}\n\nRESPOSTAS:\n${respostas.map((r,i)=>`${i+1}. ${r.pergunta}\nResposta: ${r.resposta}`).join('\n\n')}\n\nGere um laudo com:\n1. **Resumo do candidato** (2-3 linhas)\n2. **Pontos fortes** (top 3)\n3. **Pontos de atenção** (top 2)\n4. **Parecer final**: 🟢 RECOMENDADO / 🟡 COM RESSALVAS / 🔴 NÃO RECOMENDADO (com justificativa em 1 frase)\n\nSeja direto e objetivo. Foco no que importa para a vaga.`;
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+        { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:1000,temperature:0.3,thinkingConfig:{thinkingBudget:512}} }),
+          signal: AbortSignal.timeout(30000) });
+      const d = await r.json();
+      laudo = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Laudo não gerado.';
+    } catch(e) { laudo = 'Erro ao gerar laudo: ' + e.message; }
+
+    recrutaDB.prepare('UPDATE candidaturas SET status=?,laudo=?,concluido_em=datetime("now","localtime") WHERE token=?')
+             .run('concluida', laudo, row.token);
+
+    // Email para Marjorie
+    const mailer = getMailer();
+    if (mailer) {
+      const marjorieEmail = getCfg().rhEmail || getCfg().smtpUser;
+      try {
+        await mailer.sendMail({
+          from: `"Lúmina RH" <${getCfg().smtpUser}>`,
+          to: marjorieEmail,
+          subject: `[RH] Entrevista concluída — ${row.nome} (${row.vaga})`,
+          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h2>Candidato: ${row.nome}</h2><p><strong>Vaga:</strong> ${row.vaga}</p><h3>Laudo da Lúmina</h3><pre style="background:#f5f5f5;padding:16px;border-radius:6px;white-space:pre-wrap">${laudo}</pre><hr><h3>Respostas completas</h3>${respostas.map((r,i)=>`<p><strong>${i+1}. ${r.pergunta}</strong><br>${r.resposta}</p>`).join('')}</div>`,
+        });
+        console.log(`[recruta] laudo enviado → ${marjorieEmail}`);
+      } catch(e) { console.warn('[recruta] email laudo falhou:', e.message); }
+    }
+
+    return res.json({ ok: true, concluida: true, laudo });
+  }
+
+  const proxima = perguntas[respostas.length];
+  res.json({ ok: true, concluida: false, proxima, respondidas: respostas.length, total: perguntas.length });
+});
+
+// ── GET /api/candidaturas — painel Marjorie (lista todas) ────────────────────
+app.get('/api/candidaturas', (req, res) => {
+  const rows = recrutaDB.prepare('SELECT id,nome,email,vaga,status,criado_em,concluido_em FROM candidaturas ORDER BY id DESC').all();
+  res.json(rows);
+});
+
+// ── Página de entrevista pública ──────────────────────────────────────────────
+app.get('/entrevista/:token', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'entrevista.html'));
+});
+
 // ── Composio — status / apps conectados ──────────────────────────────────────
 app.get('/api/composio/status', async (req, res) => {
   const c = getCfg();
