@@ -1016,6 +1016,9 @@ const speakLocal = async (text, onEnd) => {
 // Remove markdown e formata texto para ser falado naturalmente
 const cleanForTTS = (raw) => {
   let t = String(raw ?? '')
+    .replace(/\[\[BAIXAR_LEADS\]\]/g, '')         // token de UI — não falar
+    .replace(/\\(\$)/g,          '$1')            // R\$ (LaTeX) → R$
+    .replace(/\\/g,              '')              // backslashes soltos → silêncio
     .replace(/\*\*([^*]+)\*\*/g, '$1')           // **negrito** → texto puro
     .replace(/\*([^*]+)\*/g,     '$1')            // *itálico* → texto puro
     .replace(/\*/g,              '')              // asteriscos soltos
