@@ -1738,6 +1738,7 @@ recrutaDB.exec(`
 try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN nota INTEGER DEFAULT NULL`); } catch(_) {}
 try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN faixa TEXT DEFAULT NULL`); } catch(_) {}
 try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN rejeicao_em TEXT DEFAULT NULL`); } catch(_) {}
+try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN proxima_notificacao TEXT DEFAULT NULL`); } catch(_) {}
 
 // Perguntas por tipo de vaga
 const PERGUNTAS = {
@@ -1974,27 +1975,66 @@ const enviarRejeicoesPendentes = async () => {
   `).all();
   for (const c of pendentes) {
     try {
+      // Email inicial: "sem vaga no momento" — tom positivo, porta aberta
+      const proximaNotif = new Date(Date.now() + 30*24*60*60*1000).toISOString();
       await mailer.sendMail({
         from: `"Scapini Transportes RH" <${getCfg().smtpUser}>`,
         to: c.email,
-        subject: `Retorno sobre sua candidatura — ${c.vaga} | Scapini Transportes`,
+        subject: `Obrigado pelo seu contato — Scapini Transportes`,
         html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
           <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="140" alt="Scapini" style="margin-bottom:16px">
-          <p>Olá, <strong>${c.nome}</strong>.</p>
-          <p>Agradecemos seu interesse na vaga de <strong>${c.vaga}</strong> e o tempo dedicado à nossa entrevista online.</p>
-          <p>Após análise cuidadosa do seu perfil, optamos por seguir com outros candidatos que se encaixam mais ao perfil que buscamos no momento.</p>
-          <p>Guardamos seu cadastro e, havendo uma oportunidade alinhada ao seu perfil no futuro, entraremos em contato.</p>
-          <p>Desejamos sucesso na sua jornada profissional!</p>
+          <p>Olá, <strong>${c.nome}</strong>!</p>
+          <p>Agradecemos seu contato e interesse em fazer parte do time Scapini Transportes.</p>
+          <p>No momento <strong>não temos vaga disponível</strong> para ${c.vaga}, mas seu cadastro ficará em nosso banco de talentos.</p>
+          <p>Assim que surgir uma nova oportunidade alinhada ao seu perfil, entraremos em contato com você diretamente.</p>
+          <p>Obrigado e sucesso!</p>
           <p style="color:#666;font-size:13px;margin-top:24px">Atenciosamente,<br><strong>Equipe de RH — Scapini Transportes</strong><br>Lajeado/RS • scapini.com.br</p>
         </div>`,
       });
-      recrutaDB.prepare(`UPDATE candidaturas SET status='rejeitado_enviado', rejeicao_em=NULL WHERE id=?`).run(c.id);
-      console.log(`[recruta] rejeição enviada → ${c.email} (${c.vaga})`);
+      recrutaDB.prepare(`UPDATE candidaturas SET status='banco_talentos', rejeicao_em=NULL, proxima_notificacao=? WHERE id=?`)
+               .run(proximaNotif, c.id);
+      console.log(`[recruta] banco de talentos → ${c.email} | próx. notif: ${proximaNotif.substring(0,10)}`);
     } catch(e) { console.warn('[recruta] rejeição falhou:', c.email, e.message); }
   }
 };
-setInterval(enviarRejeicoesPendentes, 60 * 60 * 1000); // a cada hora
-setTimeout(enviarRejeicoesPendentes, 5000);             // verifica 5s após iniciar
+setInterval(enviarRejeicoesPendentes, 60 * 60 * 1000);
+setTimeout(enviarRejeicoesPendentes, 5000);
+
+// ── Re-contato mensal — banco de talentos ────────────────────────────────────
+const recontатarBancoTalentos = async () => {
+  const mailer = getMailer();
+  if (!mailer) return;
+  const candidatos = recrutaDB.prepare(`
+    SELECT * FROM candidaturas
+    WHERE status='banco_talentos' AND proxima_notificacao IS NOT NULL
+      AND proxima_notificacao <= datetime('now')
+  `).all();
+  for (const c of candidatos) {
+    try {
+      const proximaNotif = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+      await mailer.sendMail({
+        from: `"Scapini Transportes RH" <${getCfg().smtpUser}>`,
+        to: c.email,
+        subject: `Scapini Transportes — Ainda temos interesse no seu perfil!`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
+          <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="140" alt="Scapini" style="margin-bottom:16px">
+          <p>Olá, <strong>${c.nome}</strong>!</p>
+          <p>A equipe de RH da Scapini Transportes está sempre em busca de bons profissionais para a área de <strong>${c.vaga}</strong>.</p>
+          <p>Você tem interesse em novas oportunidades? Acesse nosso site para ver as vagas abertas:</p>
+          <a href="https://www.scapini.com.br/trabalhe-conosco"
+            style="display:inline-block;background:#cc1c1c;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin:12px 0">
+            Ver vagas abertas →
+          </a>
+          <p style="color:#666;font-size:13px;margin-top:20px">Atenciosamente,<br><strong>Equipe de RH — Scapini Transportes</strong></p>
+        </div>`,
+      });
+      recrutaDB.prepare(`UPDATE candidaturas SET proxima_notificacao=? WHERE id=?`).run(proximaNotif, c.id);
+      console.log(`[recruta] re-contato mensal → ${c.email}`);
+    } catch(e) { console.warn('[recruta] re-contato falhou:', c.email, e.message); }
+  }
+};
+setInterval(recontатarBancoTalentos, 60 * 60 * 1000);
+setTimeout(recontатarBancoTalentos, 8000);
 
 // ── GET /api/candidaturas — painel Marjorie (lista todas) ────────────────────
 app.get('/api/candidaturas', (req, res) => {
