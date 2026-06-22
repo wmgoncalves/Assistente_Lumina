@@ -1,0 +1,11 @@
+
+╔═══════════════════════════════════════╗
+║  Lúmina  →  http://127.0.0.1:8080    ║
+╚═══════════════════════════════════════╝
+
+  Pressione Ctrl+C para encerrar.
+
+[recruta] email enviado → teste@teste.com (Motorista Teste)
+[recruta] email enviado → joao@test.com (Motorista)
+[recruta] Joao Testador (Motorista) → nota 9 🟢 aprovado
+[recruta] email Marjorie → dh03@scapini.com.br

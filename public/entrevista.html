@@ -142,7 +142,9 @@
         return;
       }
 
-      const pct = Math.round((estado.respondidas / estado.total) * 100);
+      const total = estado.total || 5;
+      const respondidas = estado.respondidas || 0;
+      const pct = Math.round((respondidas / total) * 100);
 
       app.innerHTML = `
         <div class="lumina-avatar">🤖</div>
@@ -150,7 +152,7 @@
           Olá, <strong>${estado.nome}</strong> · Vaga: <strong>${estado.vaga}</strong>
         </p>
 
-        <p class="progress-label">Pergunta ${estado.respondidas + 1} de ${estado.total}</p>
+        <p class="progress-label">Pergunta ${respondidas + 1} de ${total}</p>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
 
         <div class="chat" id="chat">
@@ -167,26 +169,23 @@
       });
     }
 
+    function mostrarCarregando() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div style="text-align:center;padding:60px 0">
+          <div class="typing" style="justify-content:center;margin-bottom:12px">
+            <span></span><span></span><span></span>
+          </div>
+          <p style="color:#888;font-size:14px">Lúmina está preparando a próxima pergunta...</p>
+        </div>`;
+    }
+
     async function enviar() {
       const resp = document.getElementById('resp').value.trim();
       if (!resp) return;
 
-      const btn = document.getElementById('btn');
-      const chat = document.getElementById('chat');
-      btn.disabled = true;
-
-      // mostra resposta do candidato
-      const msgCand = document.createElement('div');
-      msgCand.className = 'msg candidato';
-      msgCand.textContent = resp;
-      chat.appendChild(msgCand);
-
-      // mostra digitando...
-      const typing = document.createElement('div');
-      typing.className = 'msg lumina';
-      typing.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-      chat.appendChild(typing);
-      chat.scrollTop = chat.scrollHeight;
+      document.getElementById('btn').disabled = true;
+      mostrarCarregando();
 
       try {
         const r = await fetch(`/api/candidatura/${token}/responder`, {
@@ -195,39 +194,21 @@
           body: JSON.stringify({ resposta: resp }),
         });
         const d = await r.json();
-        estado.respondidas++;
+
+        if (!r.ok) throw new Error(d.error || 'Erro no servidor');
 
         if (d.concluida) {
-          typing.remove();
-          const msgFim = document.createElement('div');
-          msgFim.className = 'msg lumina';
-          msgFim.textContent = 'Obrigado pelas suas respostas! Vou encaminhar para nossa equipe de RH. Boa sorte! 😊';
-          chat.appendChild(msgFim);
-          chat.scrollTop = chat.scrollHeight;
-          setTimeout(() => {
-            estado.concluida = true;
-            renderizar();
-          }, 2500);
+          estado.concluida = true;
+          renderizar();
         } else {
-          typing.remove();
-          const msgProx = document.createElement('div');
-          msgProx.className = 'msg lumina';
-          msgProx.textContent = d.proxima;
-          chat.appendChild(msgProx);
-          chat.scrollTop = chat.scrollHeight;
-
-          const pct = Math.round((d.respondidas / d.total) * 100);
-          document.querySelector('.progress-fill').style.width = pct + '%';
-          document.querySelector('.progress-label').textContent = `Pergunta ${d.respondidas + 1} de ${d.total}`;
-
-          document.getElementById('resp').value = '';
-          document.getElementById('resp').focus();
-          btn.disabled = false;
+          estado.respondidas = d.respondidas;
+          estado.total = d.total;
+          estado.proxima = d.proxima;
+          renderizar();
         }
       } catch(e) {
-        typing.remove();
-        btn.disabled = false;
-        alert('Erro ao enviar. Tente novamente.');
+        renderizar();
+        alert('Erro ao enviar resposta. Tente novamente.\n' + e.message);
       }
     }
 

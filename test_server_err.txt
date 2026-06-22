@@ -1,0 +1,1 @@
+[search-notes] embedding falhou, usando busca textual: Embed HTTP 404
