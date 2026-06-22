@@ -1017,6 +1017,7 @@ const speakLocal = async (text, onEnd) => {
 const cleanForTTS = (raw) => {
   let t = String(raw ?? '')
     .replace(/\[\[BAIXAR_LEADS\]\]/g, '')         // token de UI — não falar
+    .replace(/https?:\/\/\S+/g,  '')             // URLs — não ler em voz alta
     .replace(/\\(\$)/g,          '$1')            // R\$ (LaTeX) → R$
     .replace(/\\/g,              '')              // backslashes soltos → silêncio
     .replace(/\*\*([^*]+)\*\*/g, '$1')           // **negrito** → texto puro
