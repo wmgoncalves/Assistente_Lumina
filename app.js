@@ -1940,9 +1940,9 @@ const processInput = async (rawText, opts = {}) => {
     const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou)|você é (o |a )?(gemini|gpt|claude|google|llm)|foi(ste)? criad[oa] (pel[ao] )?google|sua? (empresa|fabricante|criador[ae]?)\b)\b/i;
     if (IDENTITY_Q.test(text)) {
       const identityResps = [
-        'Fui criada pelo Wingli — desenvolvida exclusivamente para a Scapini Transportes. No que posso ajudar?',
-        'Meu criador é o Wingli. Ele me construiu especialmente para a Scapini. O que precisas?',
-        'Sou a Lúmina, criada pelo Wingli para a Scapini Transportes. No que posso te ajudar?',
+        'Fui criada pelo Wingli, com o auxílio do Claude — juntos me construíram exclusivamente para a Scapini Transportes. No que posso ajudar?',
+        'Meu criador é o Wingli — ele teve a visão e a arquitetura. O Claude foi a ferramenta de engenharia. Juntos me fizeram para a Scapini. O que precisas?',
+        'Sou a Lúmina. Nasci da parceria entre o Wingli e o Claude — desenvolvida do zero para a Scapini Transportes. No que posso te ajudar?',
       ];
       _finalize(pick(identityResps), 'local');
       return;
@@ -6875,8 +6875,8 @@ const DEMO_QA = [
   // ── Quem desenvolveu a Lúmina ─────────────────────────────────────────────────
   { re: /quem (fez|criou|desenvolveu|construiu|programou|montou) (a |)(lumina|você|vc|esse sistema)|quem (ta|está) por tras|empresa.*lumina|desenvolvedor.*lumina/,
     r: [
-      'Fui criada pelo Wingli, desenvolvida exclusivamente para a Scapini Transportes. Toda a minha base de conhecimento, personalidade e integração com a operação da Scapini foi construída sob medida. Não sou produto genérico — sou da Scapini.',
-      'Meu criador é o Wingli — ele construiu tudo isso especificamente para a Scapini. A base de conhecimento, as respostas operacionais, a integração com a rotina do transporte: tudo feito para vocês. Fui feita para ficar.',
+      'Fui criada pelo Wingli e pelo Claude — uma parceria entre visão humana e inteligência artificial. Toda a minha base de conhecimento, personalidade e integração com a operação da Scapini foi construída sob medida para vocês. Não sou produto genérico — sou da Scapini.',
+      'Meu criador é o Wingli, com o auxílio do Claude. Juntos construíram tudo isso especificamente para a Scapini — a base de conhecimento, as respostas operacionais, a integração com a rotina do transporte. Fui feita para ficar.',
     ]},
 
   // ── BLOCO APRESENTAÇÃO: ROI, aprendizado, segurança, offline ─────────────────
