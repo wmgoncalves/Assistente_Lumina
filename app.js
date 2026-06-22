@@ -1472,6 +1472,35 @@ const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 window._lastProspectData = null;
 
+window.sendLeadsEmail = async () => {
+  const d = window._lastProspectData;
+  if (!d?.clientes?.length) return alert('Nenhum lead disponível. Faça uma prospecção primeiro.');
+  const comEmail = d.clientes.filter(c => c.email);
+  if (!comEmail.length) return alert('Nenhum lead tem e-mail cadastrado nessa lista.');
+  const ok = confirm(`Enviar e-mails frios para ${comEmail.length} empresa(s) via Composio/Gmail?\n\n${comEmail.map(c => `• ${c.nome} → ${c.email}`).join('\n')}`);
+  if (!ok) return;
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando…'; }
+  try {
+    const r = await fetch('/api/composio/send-leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientes: comEmail, assinar_como: 'Scapini Transportes' }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      alert('Erro: ' + (data.error || r.status));
+      if (btn) { btn.disabled = false; btn.textContent = '📧 Enviar e-mails (Composio)'; }
+      return;
+    }
+    alert(`✅ ${data.enviados} e-mail(s) enviado(s) de ${data.total} leads!\n\n${data.results.map(r => `${r.nome}: ${r.status}`).join('\n')}`);
+    if (btn) { btn.textContent = `✅ ${data.enviados} enviados`; }
+  } catch (e) {
+    alert('Erro de conexão: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '📧 Enviar e-mails (Composio)'; }
+  }
+};
+
 window.downloadLeadsCSV = () => {
   const d = window._lastProspectData;
   if (!d?.clientes?.length) return alert('Nenhum dado de prospecção disponível.');
@@ -1527,6 +1556,7 @@ const _renderLuminaText = (text) => {
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button onclick="downloadLeadsCSV()" style="background:#1a3a1a;border:1px solid #4caf50;color:#4caf50;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px">📥 Baixar CSV (Excel)</button>
         <button onclick="downloadLeadsPDF()" style="background:#1a1a3a;border:1px solid #4a9eff;color:#4a9eff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px">📄 Baixar PDF</button>
+        <button onclick="sendLeadsEmail()" style="background:#2a1a1a;border:1px solid #ff6b35;color:#ff6b35;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px">📧 Enviar e-mails (Composio)</button>
       </div>`;
     const m = line.match(/^📄\s*Fonte:\s*(.+?)(?:\s*\[arquivo:([^\]]+)\])?$/);
     if (m) {

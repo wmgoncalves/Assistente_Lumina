@@ -20,6 +20,22 @@ const pdfParse  = require('pdf-parse');
 const notifier   = require('node-notifier');
 let puppeteer = null; // lazy load — carregado só quando /api/browser for usado
 
+// ── Composio (lazy load — só se composioKey estiver no config) ──────────────
+let _composio = null;
+const getComposio = async () => {
+  if (_composio) return _composio;
+  const c = getCfg();
+  if (!c.composioKey) return null;
+  try {
+    const { Composio } = require('composio-core');
+    _composio = new Composio({ apiKey: c.composioKey });
+    return _composio;
+  } catch (e) {
+    console.warn('[composio] não inicializado:', e.message);
+    return null;
+  }
+};
+
 const LUMINA_PRINTS_DIR    = path.join(os.homedir(), 'Pictures', 'Lumina Prints');
 const LUMINA_GRAVACOES_DIR = path.join(os.homedir(), 'Pictures', 'Lumina Gravacoes');
 [LUMINA_PRINTS_DIR, LUMINA_GRAVACOES_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
@@ -1635,6 +1651,65 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         ? 'A busca demorou demais. Tente com menos candidatos ou um cargo mais específico.'
         : e.message
     });
+  }
+});
+
+// ── Composio — enviar e-mails dos leads prospectados ─────────────────────────
+app.post('/api/composio/send-leads', async (req, res) => {
+  const c = getCfg();
+  if (!c.composioKey) return res.status(400).json({ error: 'composioKey não configurada. Acesse composio.dev, crie conta e cole a chave em config.json.' });
+
+  const { clientes = [], de = '', assinar_como = 'Scapini Transportes' } = req.body;
+  if (!clientes.length) return res.status(400).json({ error: 'Nenhum lead enviado.' });
+  if (!de) return res.status(400).json({ error: 'Informe o campo "de" (seu e-mail).' });
+
+  try {
+    const composio = await getComposio();
+    if (!composio) return res.status(500).json({ error: 'Composio não inicializou.' });
+
+    const tools = await composio.tools.get({ apps: ['GMAIL'] });
+    const { OpenAI } = require('openai'); // Composio usa OpenAI SDK por baixo
+    const openai = new OpenAI({ apiKey: 'composio-proxy' }); // proxy interno
+
+    const results = [];
+    for (const lead of clientes) {
+      if (!lead.email || !lead.email_assunto || !lead.email_corpo) {
+        results.push({ nome: lead.nome, status: 'pulado — sem e-mail' });
+        continue;
+      }
+      try {
+        const corpo = `${lead.email_corpo}\n\n---\n${assinar_como}`;
+        const res2 = await composio.tools.execute('GMAIL_SEND_EMAIL', {
+          to: lead.email,
+          subject: lead.email_assunto,
+          body: corpo,
+        });
+        results.push({ nome: lead.nome, email: lead.email, status: res2?.success ? 'enviado' : 'falhou', detail: res2 });
+        console.log(`[composio] e-mail enviado → ${lead.email}`);
+        await new Promise(r => setTimeout(r, 1500)); // anti-spam rate limit
+      } catch (err) {
+        results.push({ nome: lead.nome, email: lead.email, status: 'erro', detail: err.message });
+      }
+    }
+
+    const enviados = results.filter(r => r.status === 'enviado').length;
+    res.json({ ok: true, enviados, total: clientes.length, results });
+  } catch (e) {
+    console.error('[composio/send-leads]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Composio — status / conectar apps ────────────────────────────────────────
+app.get('/api/composio/status', async (req, res) => {
+  const c = getCfg();
+  if (!c.composioKey) return res.json({ ok: false, msg: 'composioKey não configurada' });
+  try {
+    const composio = await getComposio();
+    const connections = await composio.connectedAccounts.list();
+    res.json({ ok: true, connections: connections?.items?.map(i => ({ app: i.appName, status: i.status })) || [] });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
