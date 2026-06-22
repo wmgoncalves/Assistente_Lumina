@@ -1494,8 +1494,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.7, responseMimeType: 'application/json' },
-          thinkingConfig: { thinkingBudget: 0 }
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.7, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } },
         }),
         signal: AbortSignal.timeout(45000)
       }
@@ -1598,8 +1597,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 3000, temperature: 0.7, responseMimeType: 'application/json' },
-          thinkingConfig: { thinkingBudget: 0 }
+          generationConfig: { maxOutputTokens: 3000, temperature: 0.7, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } },
         }),
         signal: AbortSignal.timeout(45000)
       }
@@ -2011,7 +2009,7 @@ Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem 
     const gr = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: structPrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.4, responseMimeType: 'application/json' }, thinkingConfig: { thinkingBudget: 0 } }) }
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: structPrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.4, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }) }
     );
     if (!gr.ok) { const e = await gr.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${gr.status}`); }
     const gd   = await gr.json();
@@ -2162,7 +2160,7 @@ Use KPIs reais do setor de transporte rodoviário brasileiro. Se não houver dad
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.3, responseMimeType: 'application/json' }, thinkingConfig: { thinkingBudget: 0 } }) }
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.3, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }) }
     );
     if (!gr.ok) throw new Error(`Gemini HTTP ${gr.status}`);
     const gd  = await gr.json();

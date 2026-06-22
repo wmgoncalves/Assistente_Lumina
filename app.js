@@ -1466,17 +1466,75 @@ const setUserSaid = (t) => { const el = document.getElementById('user-said'); if
 
 const _escHtml = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+window._lastProspectData = null;
+
+window.downloadLeadsCSV = () => {
+  const d = window._lastProspectData;
+  if (!d?.clientes?.length) return alert('Nenhum dado de prospecção disponível.');
+  const header = ['#','Empresa','Cidade','Segmento','Prioridade','Telefone','Email','Site','Dor','Servico Ideal','Assunto Email','Email Corpo','WhatsApp'];
+  const rows = d.clientes.map((c, i) => [
+    i+1, c.nome||'', c.cidade||'', d.segmento||'', c.prioridade||'',
+    c.telefone||'', c.email||'', c.site||'', c.dor||'',
+    c.servico||'', c.email_assunto||'',
+    (c.email_corpo||'').replace(/\n/g,' '), (c.whatsapp||'').replace(/\n/g,' ')
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(','), ...rows].join('\r\n');
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  const dt = new Date().toISOString().slice(0,10);
+  a.download = `leads-scapini-${dt}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+window.downloadLeadsPDF = () => {
+  const d = window._lastProspectData;
+  if (!d?.clientes?.length) return alert('Nenhum dado de prospecção disponível.');
+  const dt = new Date().toLocaleDateString('pt-BR');
+  const rows = d.clientes.map((c, i) => `
+    <div style="border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:16px;page-break-inside:avoid">
+      <h3 style="margin:0 0 6px">${i+1}. ${c.nome} — ${c.cidade} <span style="font-size:12px;color:${c.prioridade==='alta'?'#c00':c.prioridade==='media'?'#a80':'#080'}">(${c.prioridade||'-'})</span></h3>
+      <p style="margin:2px 0"><strong>Dor:</strong> ${c.dor||'-'}</p>
+      <p style="margin:2px 0"><strong>Serviço ideal:</strong> ${c.servico||'-'}</p>
+      ${c.telefone?`<p style="margin:2px 0"><strong>Tel:</strong> ${c.telefone}</p>`:''}
+      ${c.email?`<p style="margin:2px 0"><strong>Email:</strong> ${c.email}</p>`:''}
+      ${c.site?`<p style="margin:2px 0"><strong>Site:</strong> ${c.site}</p>`:''}
+      <p style="margin:8px 0 2px"><strong>Assunto email:</strong> ${c.email_assunto||'-'}</p>
+      <p style="white-space:pre-wrap;background:#f9f9f9;padding:8px;border-radius:4px;font-size:12px">${c.email_corpo||''}</p>
+      <p style="margin:8px 0 2px"><strong>WhatsApp:</strong></p>
+      <p style="white-space:pre-wrap;background:#e8f5e9;padding:8px;border-radius:4px;font-size:12px">${c.whatsapp||''}</p>
+    </div>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Leads Scapini</title>
+    <style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}h1{color:#1a237e}</style>
+    </head><body>
+    <h1>Prospecção Scapini Transportes</h1>
+    <p><strong>Segmento:</strong> ${d.segmento||'-'} | <strong>Região:</strong> ${d.regiao||'-'} | <strong>Data:</strong> ${dt}</p>
+    <hr>${rows}</body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html); w.document.close();
+  setTimeout(() => w.print(), 500);
+};
+
 const _renderLuminaText = (text) => {
   const notes = getNotes();
   return text.split('\n').map(line => {
+    if (line === '---') return '<hr style="border:none;border-top:1px solid #333;margin:6px 0">';
+    if (line === '[[BAIXAR_LEADS]]') return `
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button onclick="downloadLeadsCSV()" style="background:#1a3a1a;border:1px solid #4caf50;color:#4caf50;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px">📥 Baixar CSV (Excel)</button>
+        <button onclick="downloadLeadsPDF()" style="background:#1a1a3a;border:1px solid #4a9eff;color:#4a9eff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px">📄 Baixar PDF</button>
+      </div>`;
     const m = line.match(/^📄\s*Fonte:\s*(.+?)(?:\s*\[arquivo:([^\]]+)\])?$/);
-    if (!m) return _escHtml(line);
-    const title = m[1].replace(/\s*\[arquivo:[^\]]*\]/g, '').trim();
-    const file  = m[2]?.trim() || notes.find(n => n.title === title)?.file;
-    if (file) {
-      return `<a class="source-chip" href="/api/download-doc/${encodeURIComponent(file)}" target="_blank">📄 ${_escHtml(title)} ⬇</a>`;
+    if (m) {
+      const title = m[1].replace(/\s*\[arquivo:[^\]]*\]/g, '').trim();
+      const file  = m[2]?.trim() || notes.find(n => n.title === title)?.file;
+      if (file) return `<a class="source-chip" href="/api/download-doc/${encodeURIComponent(file)}" target="_blank">📄 ${_escHtml(title)} ⬇</a>`;
+      return `<span class="source-chip">📄 ${_escHtml(title)}</span>`;
     }
-    return `<span class="source-chip">📄 ${_escHtml(title)}</span>`;
+    let html = _escHtml(line);
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+    return html;
   }).join('\n');
 };
 
@@ -2764,6 +2822,7 @@ const executeTool = async (name, args) => {
       const d = await r.json();
       if (!d.clientes?.length) return 'Nenhuma empresa encontrada para esse segmento.';
 
+      window._lastProspectData = d;
       const prioIcon = { alta: '🔴', media: '🟡', baixa: '🟢' };
       const fonte = d.source === 'ollama' ? ' *(via Ollama)*' : '';
       const reais = d.temDadosReais ? ' *(dados reais do Google Maps)*' : '';
@@ -2784,7 +2843,7 @@ const executeTool = async (name, args) => {
                `\n   💬 **WhatsApp:**\n${c.whatsapp}`;
       }).join('\n\n---\n\n');
 
-      return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa\n\nQuer que eu gere um **PDF** ou **Excel** com esses leads para você salvar?`;
+      return `Encontrei ${d.total} empresas de **${d.segmento}** em **${d.regiao}**${reais}${fonte}:\n\n${linhas}\n\n🔴 Alta prioridade | 🟡 Média | 🟢 Baixa\n[[BAIXAR_LEADS]]`;
     }
 
     case 'prospectCandidatos': {
@@ -2806,7 +2865,8 @@ const executeTool = async (name, args) => {
         const contato = [c.telefone && `📞 ${c.telefone}`, c.email && `✉️ ${c.email}`, c.linkedin && `🔗 ${c.linkedin}`].filter(Boolean).join('  ');
         return `${fit} **${i+1}. ${c.nome}** — ${c.cargo_atual} | ${c.experiencia_anos} anos | ${c.cidade}\n   Pontos fortes: ${c.pontos_fortes}\n${contato ? `   ${contato}\n` : ''}   💬 **Contato:** ${c.mensagem_contato}`;
       }).join('\n\n---\n\n');
-      return `Encontrei **${d.total} candidatos** para **${d.cargo || 'a vaga'}** em ${d.regiao}:\n\n${linhas}\n\nQuer que eu gere um **PDF** ou **Excel** com esses candidatos?`;
+      window._lastProspectData = { ...d, clientes: d.candidatos.map(c => ({ nome: c.nome, cidade: c.cidade, dor: c.pontos_fortes, servico: c.cargo_atual, telefone: c.telefone||'', email: c.email||'', site: c.linkedin||'', prioridade: c.fit_score>=8?'alta':c.fit_score>=6?'media':'baixa', email_assunto: `Oportunidade ${d.cargo}`, email_corpo: c.mensagem_contato, whatsapp: c.mensagem_contato })), segmento: d.cargo, regiao: d.regiao };
+      return `Encontrei **${d.total} candidatos** para **${d.cargo || 'a vaga'}** em ${d.regiao}:\n\n${linhas}\n\n[[BAIXAR_LEADS]]`;
     }
 
     case 'generateFile': {
