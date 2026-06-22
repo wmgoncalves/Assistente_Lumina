@@ -1940,9 +1940,9 @@ const processInput = async (rawText, opts = {}) => {
     const IDENTITY_Q = /\b(quem (te |você )?(criou|fez|desenvolveu|treinou)|você é (o |a )?(gemini|gpt|claude|google|llm)|foi(ste)? criad[oa] (pel[ao] )?google|sua? (empresa|fabricante|criador[ae]?)\b)\b/i;
     if (IDENTITY_Q.test(text)) {
       const identityResps = [
-        'Sou a Lúmina — fui criada pela equipe da DV Digital especialmente para a Scapini Transportes. O que precisas?',
-        'Fui desenvolvida pela DV Digital sob medida para a Scapini. Sou um sistema próprio da empresa — não sou produto de prateleira. No que posso ajudar?',
-        'Meu criador é a DV Digital — uma empresa de tecnologia e inteligência artificial que desenvolveu tudo isso exclusivamente para a Scapini. O que precisas?',
+        'Fui criada pelo Wingli — desenvolvida exclusivamente para a Scapini Transportes. No que posso ajudar?',
+        'Meu criador é o Wingli. Ele me construiu especialmente para a Scapini. O que precisas?',
+        'Sou a Lúmina, criada pelo Wingli para a Scapini Transportes. No que posso te ajudar?',
       ];
       _finalize(pick(identityResps), 'local');
       return;
@@ -6875,8 +6875,8 @@ const DEMO_QA = [
   // ── Quem desenvolveu a Lúmina ─────────────────────────────────────────────────
   { re: /quem (fez|criou|desenvolveu|construiu|programou|montou) (a |)(lumina|você|vc|esse sistema)|quem (ta|está) por tras|empresa.*lumina|desenvolvedor.*lumina/,
     r: [
-      'Fui criada pela DV Digital — uma empresa de tecnologia especializada em inteligência artificial — desenvolvida exclusivamente para a Scapini Transportes. Toda a minha base de conhecimento, personalidade e integração com os sistemas da Scapini foi construída sob medida. Não sou um produto genérico: sou da Scapini.',
-      'Meu criador é a DV Digital, que desenvolveu tudo isso especificamente para a Scapini. Sou um sistema próprio da empresa — a base de conhecimento, as respostas operacionais e a integração com a rotina do transporte foram todas construídas para vocês. Fui feita para ficar.',
+      'Fui criada pelo Wingli, desenvolvida exclusivamente para a Scapini Transportes. Toda a minha base de conhecimento, personalidade e integração com a operação da Scapini foi construída sob medida. Não sou produto genérico — sou da Scapini.',
+      'Meu criador é o Wingli — ele construiu tudo isso especificamente para a Scapini. A base de conhecimento, as respostas operacionais, a integração com a rotina do transporte: tudo feito para vocês. Fui feita para ficar.',
     ]},
 
   // ── BLOCO APRESENTAÇÃO: ROI, aprendizado, segurança, offline ─────────────────
