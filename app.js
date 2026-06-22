@@ -1845,7 +1845,7 @@ const processInput = async (rawText, opts = {}) => {
     }
     // ── Intercept: prospecção — ANTES do DEMO_QA para não confundir com lista de clientes existentes
     const _NUM_PT = '(um|dois|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|\\d+)';
-    const PROSPECT_CMD = new RegExp(`\\b(prospec[a-z]*|busca\\s+(clientes?|empresa|leads?)|encontra\\s+(clientes?|empresa|leads?)|consig[ao]\\s+\\d*\\s*(clientes?|empresa|leads?)|arruma\\s+\\d*\\s*(clientes?|empresa|leads?)|preciso\\s+de\\s+\\d*\\s*(clientes?|empresa|leads?)|quero\\s+\\d*\\s*(clientes?|empresa|leads?)|list[ae]\\s+${_NUM_PT}?\\s*(possív|potenci|clientes?|empresas?|leads?)|me\\s+(d[áae]|mostra|list[ae]|traz|conseg[ue]|arruma)\\s+${_NUM_PT}?\\s*(cliente|empresa|lead|prospect)|quem\\s+pode\\s+ser\\s+cliente|\\d+\\s+clientes?\\s+para\\b)\\b`, 'i');
+    const PROSPECT_CMD = new RegExp(`\\b(prospectar|prospecção|prospecao|busca\\s+(clientes?|empresa|leads?)|encontra\\s+(clientes?|empresa|leads?)|consig[ao]\\s+\\d*\\s*(clientes?|empresa|leads?)|arruma\\s+\\d*\\s*(clientes?|empresa|leads?)|preciso\\s+de\\s+\\d*\\s*(clientes?|empresa|leads?)|quero\\s+\\d*\\s*(clientes?|empresa|leads?)|list[ae]\\s+${_NUM_PT}?\\s*(possív|potenci|clientes?|empresas?|leads?)|me\\s+(d[áae]|mostra|list[ae]|traz|conseg[ue]|arruma)\\s+${_NUM_PT}?\\s*(cliente|empresa|lead|prospect)|quem\\s+pode\\s+ser\\s+cliente|\\d+\\s+clientes?\\s+para\\b)\\b`, 'i');
     if (PROSPECT_CMD.test(text)) {
       try {
         const qtdMatch = text.match(/\b(\d+)\b/);

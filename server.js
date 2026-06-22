@@ -1426,13 +1426,13 @@ app.post('/api/prospect', async (req, res) => {
   try {
     const browser = await getBrowser();
     page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(15000);
+    await page.setDefaultNavigationTimeout(8000);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'pt-BR,pt;q=0.9' });
 
     const q = encodeURIComponent(`${segmento} ${regiao}`);
-    await page.goto(`https://www.google.com/maps/search/${q}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await new Promise(r => setTimeout(r, 2500));
+    await page.goto(`https://www.google.com/maps/search/${q}`, { waitUntil: 'domcontentloaded', timeout: 8000 });
+    await new Promise(r => setTimeout(r, 1200));
 
     scrapedText = await page.evaluate(() => {
       for (const sel of ['[role="feed"]', 'div[aria-label*="Resultados"]', 'div[aria-label*="Results"]', '#searchresultbox']) {
@@ -1496,7 +1496,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: 4000, temperature: 0.7, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } },
         }),
-        signal: AbortSignal.timeout(45000)
+        signal: AbortSignal.timeout(20000)
       }
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
@@ -1599,7 +1599,7 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: { maxOutputTokens: 3000, temperature: 0.7, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } },
         }),
-        signal: AbortSignal.timeout(45000)
+        signal: AbortSignal.timeout(20000)
       }
     );
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
