@@ -468,6 +468,8 @@ ENSINO ATIVO — REGRA OBRIGATÓRIA: Se a BASE DE CONHECIMENTO tiver notas relev
 • fechamentoMensal → USE quando pedir fechamento do mês, variação mensal, resultado do mês, comparar com mês anterior, accruals
 • conferirDemonstrativo → USE quando pedir para conferir se os números fecham, verificar se a matemática está certa, validar totais, checar se DRE ou balancete fecha
 • relatorioKPI → USE quando pedir "gera relatório", "relatório de KPIs", "resumo do mês", "relatório gerencial", "exporta indicadores", "gera PDF dos KPIs". Passa o período e as áreas desejadas.
+• consultarCRM → USE quando perguntar sobre chamados, CRM, portal interno, tickets abertos, chamados pendentes, situação do RH ou de um departamento. Filtra por status/departamento/prioridade.
+• criarChamadoCRM → USE quando pedir para abrir chamado, registrar ocorrência, criar ticket, reportar problema para um departamento (TI, RH, Financeiro, Manutenção, Operacional, Compras, Segurança). Extrai título, departamento e prioridade da fala.
 
 PLANILHA / DRE — REGRAS OBRIGATÓRIAS:
 • Se perguntarem sobre um mês específico (ex: "janeiro", "março", "dados de fev"), responda SOMENTE com os dados desse mês. Nunca liste todos os meses juntos.
@@ -1868,17 +1870,32 @@ const processInput = async (rawText, opts = {}) => {
   try {
     // ── Abrir projetos localhost por comando de voz/texto ─────────────────────
     const PROJETOS = {
-      'n8n':          'http://localhost:5678',
-      'automação':    'http://localhost:5678',
-      'automacao':    'http://localhost:5678',
-      'entrevista':   'http://localhost:8080/candidaturas',
-      'entrevistas':  'http://localhost:8080/candidaturas',
-      'candidatos':   'http://localhost:8080/candidaturas',
-      'candidaturas': 'http://localhost:8080/candidaturas',
-      'rh':           'http://localhost:8080/candidaturas',
-      'vagas':        'https://www.scapini.com.br/trabalhe-conosco',
-      'site':         'https://www.scapini.com.br',
-      'composio':     'https://app.composio.dev',
+      'n8n':              'http://localhost:5678',
+      'automação':        'http://localhost:5678',
+      'automacao':        'http://localhost:5678',
+      'entrevista':       'http://localhost:8080/candidaturas',
+      'entrevistas':      'http://localhost:8080/candidaturas',
+      'candidatos':       'http://localhost:8080/candidaturas',
+      'candidaturas':     'http://localhost:8080/candidaturas',
+      // CRM / Portal Interno
+      'crm':              'http://localhost:5173',
+      'portal':           'http://localhost:5173',
+      'portal interno':   'http://localhost:5173',
+      'chamados':         'http://localhost:5173',
+      'chamado':          'http://localhost:5173',
+      // App Motoristas
+      'app motoristas':   'https://projeto-scapini-api.onrender.com',
+      'motoristas':       'https://projeto-scapini-api.onrender.com',
+      'app':              'https://projeto-scapini-api.onrender.com',
+      // Manutenção
+      'manutencao':       'http://localhost:4001',
+      'manutenção':       'http://localhost:4001',
+      'plataforma':       'http://localhost:4001',
+      // RH
+      'rh':               'http://localhost:8080/candidaturas',
+      'vagas':            'https://www.scapini.com.br/trabalhe-conosco',
+      'site':             'https://www.scapini.com.br',
+      'composio':         'https://app.composio.dev',
     };
     const abreMatch = text.match(/\b(abr[ae]|abre[i]?|vai para|acessa|entra no?|mostra o?|abre o?)\b\s+(.+)/i);
     if (abreMatch) {
@@ -2512,6 +2529,36 @@ const TOOL_DECLARATIONS = {
         },
         required: ['periodo']
       }
+    },
+    {
+      name: 'consultarCRM',
+      description: 'Consulta chamados e status do CRM Portal Interno da Scapini. Use quando perguntar sobre chamados abertos, tickets pendentes, situação do CRM, chamados de um departamento específico.',
+      parameters: {
+        type: 'object',
+        properties: {
+          status:       { type: 'string', description: 'Filtrar por status: "open", "attending", "resolved". Omita para todos.' },
+          departamento: { type: 'string', description: 'Nome do departamento: TI, RH, Financeiro, Manutenção, Operacional, Compras, Segurança.' },
+          prioridade:   { type: 'string', description: 'Filtrar por prioridade: "high", "medium", "low".' },
+          limite:       { type: 'number', description: 'Quantidade máxima de chamados a retornar. Padrão: 10.' }
+        },
+        required: []
+      }
+    },
+    {
+      name: 'criarChamadoCRM',
+      description: 'Abre um novo chamado no CRM Portal Interno da Scapini. Use quando pedir para abrir chamado, registrar ocorrência, criar ticket ou reportar problema para um departamento.',
+      parameters: {
+        type: 'object',
+        properties: {
+          titulo:      { type: 'string', description: 'Título curto do chamado.' },
+          descricao:   { type: 'string', description: 'Descrição detalhada do problema ou solicitação.' },
+          departamento: { type: 'string', description: 'Departamento destino: TI, RH, Financeiro, Manutenção, Operacional, Compras, Segurança.' },
+          prioridade:  { type: 'string', description: 'Prioridade: "high" (urgente), "medium" (normal), "low" (baixa). Padrão: medium.' },
+          solicitante: { type: 'string', description: 'Nome de quem está abrindo o chamado. Padrão: Wingli.' },
+          unidade:     { type: 'string', description: 'Unidade: Matriz, Filial. Padrão: Matriz.' }
+        },
+        required: ['titulo', 'departamento']
+      }
     }
   ]
 };
@@ -2531,6 +2578,8 @@ const TOOL_LABELS = {
   consultarBanco:   'Consultando banco de dados…',
   estimarFrete:     'Calculando estimativa de frete…',
   prospectClients:  'Buscando empresas para prospectar…',
+  consultarCRM:     'Consultando chamados do CRM…',
+  criarChamadoCRM:  'Abrindo chamado no CRM…',
   generateFile:     'Gerando arquivo…',
   readFile:         'Lendo arquivo…',
   editFile:         'Editando arquivo…',
@@ -3387,6 +3436,42 @@ const executeTool = async (name, args) => {
         link.click();
         return `Relatório de KPIs gerado com sucesso! O arquivo **${d.filename}** foi baixado automaticamente. Período: ${periodo}. Páginas: seções de ${(areas?.length ? areas : ['Operacional','Financeiro','Frota','RH']).join(', ')}.`;
       } catch (e) { return `Erro ao gerar relatório de KPIs: ${e.message}`; }
+    }
+
+    case 'consultarCRM': {
+      try {
+        const { status, departamento, prioridade, limite } = args;
+        const params = new URLSearchParams();
+        if (status)      params.set('status', status);
+        if (departamento) params.set('departamento', departamento);
+        if (prioridade)  params.set('prioridade', prioridade);
+        if (limite)      params.set('limite', String(limite || 10));
+        const [statusR, ticketsR] = await Promise.all([
+          fetch(`http://localhost:3001/api/lumina/status?token=lumina-crm-2026`).then(r => r.json()).catch(() => null),
+          fetch(`http://localhost:3001/api/lumina/tickets?${params}&token=lumina-crm-2026`).then(r => r.json()).catch(() => []),
+        ]);
+        if (!Array.isArray(ticketsR)) return 'CRM não está rodando. Inicie o Portal Interno primeiro (porta 3001).';
+        let out = '';
+        if (statusR) out += `📊 CRM: ${statusR.abertos} abertos · ${statusR.atendendo} em atendimento · ${statusR.resolvidos} resolvidos\n\n`;
+        if (ticketsR.length === 0) return out + 'Nenhum chamado encontrado com esses filtros.';
+        out += ticketsR.map(t => `• **#${t.numero}** — ${t.titulo} (${t.departamento} · ${t.prioridade === 'high' ? '🔴 alta' : t.prioridade === 'medium' ? '🟡 média' : '🟢 baixa'} · ${t.status === 'open' ? 'aberto' : t.status === 'attending' ? 'em atendimento' : 'resolvido'}) — ${t.solicitante}`).join('\n');
+        return out;
+      } catch (e) { return `Erro ao consultar CRM: ${e.message}`; }
+    }
+
+    case 'criarChamadoCRM': {
+      try {
+        const { titulo, descricao, departamento, prioridade, solicitante, email, telefone, unidade } = args;
+        if (!titulo || !departamento) return 'Para abrir um chamado preciso no mínimo do título e do departamento.';
+        const r = await fetch('http://localhost:3001/api/lumina/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-lumina-token': 'lumina-crm-2026' },
+          body: JSON.stringify({ titulo, descricao, departamento, prioridade, solicitante, email, telefone, unidade }),
+        });
+        const d = await r.json();
+        if (!r.ok) return `Não consegui abrir o chamado: ${d.error || 'Erro no CRM.'}`;
+        return `✅ Chamado **#${d.numero}** aberto com sucesso no CRM!\n• Título: ${titulo}\n• Departamento: ${departamento}\n• Prioridade: ${prioridade || 'média'}\nO time responsável foi notificado.`;
+      } catch (e) { return 'CRM não está rodando. Inicie o Portal Interno primeiro (porta 3001).'; }
     }
 
     default:
