@@ -536,10 +536,10 @@ const chunkText = (text, size = 800, overlap = 100) => {
 };
 
 // ── Transcrição de áudio via Gemini ──────────────────────────────────────────
-const AUDIO_EXTS = ['opus', 'ogg', 'm4a', 'mp3', 'wav', 'aac', 'webm', 'mp4', 'oga'];
+const AUDIO_EXTS = ['opus', 'ogg', 'm4a', 'mp3', 'wav', 'aac', 'webm', 'mp4', 'oga', 'ptt', 'flac', 'amr'];
 const AUDIO_MIME = { opus:'audio/ogg', ogg:'audio/ogg', m4a:'audio/mp4', mp3:'audio/mpeg',
                      wav:'audio/wav', aac:'audio/aac', webm:'audio/webm', mp4:'audio/mp4',
-                     oga:'audio/ogg' };
+                     oga:'audio/ogg', ptt:'audio/ogg', flac:'audio/flac', amr:'audio/amr' };
 
 app.post('/api/transcribe-audio', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -569,13 +569,21 @@ app.post('/api/transcribe-audio', upload.single('file'), async (req, res) => {
           }],
           generationConfig: { maxOutputTokens: 2000, temperature: 0, thinkingConfig: { thinkingBudget: 0 } }
         }),
-        signal: AbortSignal.timeout(30000)
+        signal: AbortSignal.timeout(60000)
       }
     );
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || `Gemini HTTP ${r.status}`); }
+    if (!r.ok) {
+      const e = await r.json().catch(()=>({}));
+      const msg = e.error?.message || `Gemini HTTP ${r.status}`;
+      console.error('[transcribe] Gemini error:', msg, JSON.stringify(e).substring(0,300));
+      throw new Error(msg);
+    }
     const d = await r.json();
     const transcription = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    if (!transcription) throw new Error('Gemini não retornou transcrição.');
+    if (!transcription) {
+      console.error('[transcribe] resposta vazia:', JSON.stringify(d).substring(0,300));
+      throw new Error('Gemini não retornou transcrição.');
+    }
     console.log(`[transcribe] ${req.file.originalname} (${(req.file.size/1024).toFixed(0)}kb) → ${transcription.length} chars`);
     res.json({ ok: true, transcription, filename: req.file.originalname, duration_kb: Math.round(req.file.size/1024) });
   } catch (e) {

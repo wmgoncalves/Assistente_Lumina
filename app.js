@@ -7891,7 +7891,7 @@ const analyzeFile = async (file) => {
       addMsgUI('user', `[Arquivo: ${file.name}]`); addMsgUI('lumina', response);
       saveHist(); speak(response); return;
 
-    } else if (/\.(opus|ogg|m4a|mp3|wav|aac|webm|oga)$/i.test(file.name) || file.type.startsWith('audio/')) {
+    } else if (/\.(opus|ogg|m4a|mp3|wav|aac|webm|oga|ptt|flac|amr)$/i.test(file.name) || file.type.startsWith('audio/')) {
       // ── Transcrição de áudio via Gemini ───────────────────────────────────
       addMsgUI('user', `[Áudio: ${file.name}]`);
       addMsgUI('lumina', '🎙️ Transcrevendo áudio...');
