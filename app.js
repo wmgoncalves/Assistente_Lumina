@@ -8166,9 +8166,45 @@ document.addEventListener('DOMContentLoaded', () => {
   if (audioFileInput) {
     audioFileInput.addEventListener('change', async () => {
       const file = audioFileInput.files?.[0];
-      audioFileInput.value = ''; // reset para permitir mesmo arquivo de novo
+      audioFileInput.value = '';
       if (!file) return;
-      await analyzeFile(file);
+
+      // vai direto para transcrição, sem detecção de tipo
+      addMsgUI('user', `[Áudio: ${file.name}]`);
+      addMsgUI('lumina', '🎙️ Transcrevendo áudio...');
+      setFace('thinking');
+
+      let tj;
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const tr = await fetch('/api/transcribe-audio', { method: 'POST', body: fd });
+        tj = await tr.json();
+        if (!tr.ok || !tj.transcription) throw new Error(tj.error || 'Falha na transcrição');
+      } catch (err) {
+        document.querySelectorAll('#chat .lumina-msg').forEach(el => { if (el.textContent.includes('Transcrevendo')) el.remove(); });
+        addMsgUI('lumina', `Não consegui transcrever. Erro: ${err.message}`);
+        setFace('idle');
+        console.error('[audio-btn]', err);
+        return;
+      }
+
+      const transcricao = tj.transcription;
+      document.querySelectorAll('#chat .lumina-msg').forEach(el => { if (el.textContent.includes('Transcrevendo')) el.remove(); });
+      addMsgUI('lumina', `**Transcrição:**\n\n"${transcricao}"`);
+      speak(`Transcrevi. O áudio diz: ${transcricao.substring(0, 200)}`);
+
+      try {
+        app.history.push({ role: 'user', content: `Áudio transcrito: "${transcricao}"\n\nAnalise e responda de forma útil para a Scapini Transportes.` });
+        const analise = await callGemini();
+        app.history.push({ role: 'model', content: analise });
+        addMsgUI('lumina', analise);
+        speak(analise);
+        saveHist();
+      } catch (e) {
+        console.warn('[audio-btn] análise falhou:', e);
+        setFace('idle');
+      }
     });
   }
 
