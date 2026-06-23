@@ -1736,6 +1736,17 @@ Retorne APENAS um array JSON válido. Sem markdown, sem explicações, sem \`\`\
 const Database = require('better-sqlite3');
 const nodemailer = require('nodemailer');
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+})[char]);
+
+const normalizeCandidateText = (value) => String(value ?? '').trim().replace(/\s+/g, ' ');
+const isValidCandidateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
+const maskEmail = (value) => {
+  const [local = '', domain = ''] = String(value || '').split('@');
+  return domain ? `${local.slice(0, 2)}***@${domain}` : 'email-inválido';
+};
+
 const recrutaDB = new Database(path.join(__dirname, 'data', 'recrutamento.db'));
 recrutaDB.exec(`
   CREATE TABLE IF NOT EXISTS candidaturas (
@@ -1764,7 +1775,7 @@ try { recrutaDB.exec(`ALTER TABLE candidaturas ADD COLUMN proxima_notificacao TE
 // Perguntas por tipo de vaga
 const PERGUNTAS = {
   motorista: [
-    'Qual é o número da sua CNH?',
+    'Sua CNH está válida? Informe apenas a categoria e a validade aproximada — não envie o número do documento.',
     'Qual a categoria da sua CNH e há quanto tempo você a possui?',
     'Você tem experiência com carreta ou bitrem? Em quais rotas costumava rodar?',
     'Você tem disponibilidade para viagens longas, como para São Paulo ou outros estados?',
@@ -1819,12 +1830,20 @@ const BASE_URL = () => {
 // ── POST /api/candidatura — recebe candidatura do site e envia email ──────────
 app.post('/api/candidatura', async (req, res) => {
   const { nome, email, vaga } = req.body || {};
-  if (!nome || !email || !vaga)
+  const nomeLimpo = normalizeCandidateText(nome);
+  const emailLimpo = normalizeCandidateText(email).toLowerCase();
+  const vagaLimpa = normalizeCandidateText(vaga);
+
+  if (!nomeLimpo || !emailLimpo || !vagaLimpa)
     return res.status(400).json({ error: 'nome, email e vaga são obrigatórios.' });
+  if (nomeLimpo.length < 2 || nomeLimpo.length > 120 || vagaLimpa.length < 2 || vagaLimpa.length > 120)
+    return res.status(400).json({ error: 'Nome e vaga devem ter entre 2 e 120 caracteres.' });
+  if (!isValidCandidateEmail(emailLimpo))
+    return res.status(400).json({ error: 'E-mail inválido.' });
 
   const token = crypto.randomBytes(24).toString('hex');
   recrutaDB.prepare(`INSERT INTO candidaturas (token,nome,email,vaga) VALUES (?,?,?,?)`)
-           .run(token, nome.trim(), email.trim().toLowerCase(), vaga.trim());
+           .run(token, nomeLimpo, emailLimpo, vagaLimpa);
 
   const link = `${BASE_URL()}/entrevista/${token}`;
   const mailer = getMailer();
@@ -1832,15 +1851,15 @@ app.post('/api/candidatura', async (req, res) => {
     try {
       await mailer.sendMail({
         from: `"Scapini Transportes RH" <${getCfg().smtpUser}>`,
-        to: email,
-        subject: `Sua entrevista para ${vaga} — Scapini Transportes`,
+        to: emailLimpo,
+        subject: `Sua entrevista para ${vagaLimpa} — Scapini Transportes`,
         html: `
           <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
             <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="160" alt="Scapini" style="margin-bottom:16px">
-            <h2 style="color:#cc1c1c">Olá, ${nome}!</h2>
-            <p>Recebemos sua candidatura para a vaga de <strong>${vaga}</strong> na Scapini Transportes.</p>
+            <h2 style="color:#cc1c1c">Olá, ${escapeHtml(nomeLimpo)}!</h2>
+            <p>Recebemos sua candidatura para a vaga de <strong>${escapeHtml(vagaLimpa)}</strong> na Scapini Transportes.</p>
             <p>Para dar continuidade ao processo seletivo, clique no botão abaixo e responda algumas perguntas rápidas. Leva cerca de <strong>5 a 10 minutos</strong>.</p>
-            <a href="${link}" style="display:inline-block;background:#cc1c1c;color:#fff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;margin:16px 0">
+            <a href="${escapeHtml(link)}" style="display:inline-block;background:#cc1c1c;color:#fff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;margin:16px 0">
               Iniciar Entrevista Online →
             </a>
             <p style="color:#666;font-size:13px">Este link é válido por 7 dias e é exclusivo para você. Não compartilhe.</p>
@@ -1848,7 +1867,7 @@ app.post('/api/candidatura', async (req, res) => {
             <p style="color:#999;font-size:12px">Scapini Transportes • Lajeado/RS • scapini.com.br</p>
           </div>`,
       });
-      console.log(`[recruta] email enviado → ${email} (${vaga})`);
+      console.log(`[recruta] email enviado → ${maskEmail(emailLimpo)} (${vagaLimpa})`);
     } catch (e) {
       console.warn('[recruta] email falhou:', e.message);
     }
@@ -1867,27 +1886,46 @@ app.get('/api/candidatura/:token', (req, res) => {
   const respostas = JSON.parse(row.respostas || '[]');
   const proxima   = respostas.length < perguntas.length ? perguntas[respostas.length] : null;
   res.json({ nome: row.nome, vaga: row.vaga, status: row.status, total: perguntas.length,
-             respondidas: respostas.length, proxima, concluida: !proxima, laudo: row.laudo });
+             respondidas: respostas.length, proxima, concluida: !proxima,
+             emAvaliacao: row.status === 'avaliando' });
 });
 
 // ── POST /api/candidatura/:token/responder — salva resposta + avança ─────────
 app.post('/api/candidatura/:token/responder', async (req, res) => {
   const row = recrutaDB.prepare('SELECT * FROM candidaturas WHERE token=?').get(req.params.token);
   if (!row) return res.status(404).json({ error: 'Token inválido.' });
-  if (row.status === 'concluida') return res.json({ ok: true, concluida: true, laudo: row.laudo });
+  if (['concluida', 'banco_talentos'].includes(row.status)) {
+    return res.json({ ok: true, concluida: true });
+  }
+  if (row.status === 'avaliando') {
+    return res.status(409).json({ error: 'A entrevista já foi respondida e está sendo avaliada.' });
+  }
 
   const { resposta } = req.body || {};
-  if (!resposta?.trim()) return res.status(400).json({ error: 'Resposta vazia.' });
+  const respostaLimpa = String(resposta || '').trim();
+  if (!respostaLimpa) return res.status(400).json({ error: 'Resposta vazia.' });
+  if (respostaLimpa.length > 5000) return res.status(400).json({ error: 'Resposta muito longa. Use no máximo 5.000 caracteres.' });
 
   const perguntas = getPerguntasVaga(row.vaga);
   const respostas = JSON.parse(row.respostas || '[]');
-  respostas.push({ pergunta: perguntas[respostas.length], resposta: resposta.trim() });
-  recrutaDB.prepare('UPDATE candidaturas SET respostas=? WHERE token=?')
-           .run(JSON.stringify(respostas), row.token);
-
   if (respostas.length >= perguntas.length) {
+    return res.status(409).json({ error: 'Todas as perguntas já foram respondidas.' });
+  }
+
+  respostas.push({ pergunta: perguntas[respostas.length], resposta: respostaLimpa });
+  const finalizada = respostas.length >= perguntas.length;
+  const updated = recrutaDB.prepare(`UPDATE candidaturas SET respostas=?, status=? WHERE token=? AND status='pendente'`)
+    .run(JSON.stringify(respostas), finalizada ? 'avaliando' : 'pendente', row.token);
+  if (updated.changes !== 1) {
+    return res.status(409).json({ error: 'A entrevista foi atualizada em outra sessão. Recarregue a página.' });
+  }
+
+  if (finalizada) {
     const c = getCfg();
-    let laudo = '', nota = 0, faixa = 'reprovado';
+    let laudo = '';
+    let nota = null;
+    let faixa = 'atencao';
+    let avaliacaoAutomaticaOk = false;
 
     // ── Gerar laudo + nota 1-10 com Gemini ───────────────────────────────────
     try {
@@ -1929,19 +1967,28 @@ Seja direto. Foco no que importa para a vaga.`;
         { method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:800,temperature:0.2,thinkingConfig:{thinkingBudget:512}} }),
           signal: AbortSignal.timeout(30000) });
+      if (!r.ok) throw new Error(`Gemini HTTP ${r.status}`);
       const d = await r.json();
       laudo = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Laudo não gerado.';
       const notaMatch = laudo.match(/NOTA:\s*(\d+)/i);
-      nota = notaMatch ? Math.min(10, Math.max(1, parseInt(notaMatch[1]))) : 5;
-    } catch(e) { laudo = 'Erro ao gerar laudo: ' + e.message; nota = 0; }
+      if (!notaMatch) throw new Error('A resposta da IA não contém uma nota válida.');
+      nota = Math.min(10, Math.max(1, parseInt(notaMatch[1])));
+      avaliacaoAutomaticaOk = true;
+    } catch(e) {
+      console.warn('[recruta] avaliação automática indisponível:', e.message);
+      laudo = 'Avaliação automática indisponível. Encaminhar para revisão manual do RH.';
+    }
 
     // Classificar faixa
-    if      (nota >= 8) faixa = 'aprovado';
-    else if (nota >= 5) faixa = 'atencao';
-    else                faixa = 'reprovado';
+    if (avaliacaoAutomaticaOk) {
+      if      (nota >= 8) faixa = 'aprovado';
+      else if (nota >= 5) faixa = 'atencao';
+      else                faixa = 'reprovado';
+    }
 
-    const emoji = nota >= 8 ? '🟢' : nota >= 5 ? '🟡' : '🔴';
-    const rejeicaoEm = faixa === 'reprovado'
+    const emoji = faixa === 'aprovado' ? '🟢' : faixa === 'atencao' ? '🟡' : '🔴';
+    const notaLabel = nota === null ? 'revisão manual' : `${nota}/10`;
+    const rejeicaoEm = avaliacaoAutomaticaOk && faixa === 'reprovado'
       ? new Date(Date.now() + 2*24*60*60*1000).toISOString()
       : null;
 
@@ -1949,7 +1996,7 @@ Seja direto. Foco no que importa para a vaga.`;
       SET status=?, laudo=?, nota=?, faixa=?, concluido_em=datetime('now','localtime'), rejeicao_em=?
       WHERE token=?`).run('concluida', laudo, nota, faixa, rejeicaoEm, row.token);
 
-    console.log(`[recruta] ${row.nome} (${row.vaga}) → nota ${nota} ${emoji} ${faixa}`);
+    console.log(`[recruta] ${row.nome} (${row.vaga}) → ${notaLabel} ${emoji} ${faixa}`);
 
     // ── Email para Marjorie (aprovados e atenção) ─────────────────────────────
     if (faixa !== 'reprovado') {
@@ -1957,8 +2004,8 @@ Seja direto. Foco no que importa para a vaga.`;
       if (mailer) {
         const marjorieEmail = getCfg().rhEmail || getCfg().smtpUser;
         const assunto = faixa === 'aprovado'
-          ? `${emoji} [RH] APROVADO — ${row.nome} (${row.vaga}) — Nota ${nota}/10`
-          : `${emoji} [RH] ATENÇÃO — ${row.nome} (${row.vaga}) — Nota ${nota}/10`;
+          ? `${emoji} [RH] APROVADO — ${row.nome} (${row.vaga}) — ${notaLabel}`
+          : `${emoji} [RH] ATENÇÃO — ${row.nome} (${row.vaga}) — ${notaLabel}`;
         try {
           await mailer.sendMail({
             from: `"Lúmina RH" <${getCfg().smtpUser}>`,
@@ -1967,17 +2014,17 @@ Seja direto. Foco no que importa para a vaga.`;
             html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
               <div style="background:${faixa==='aprovado'?'#2a9d2a':'#e8a000'};color:#fff;padding:16px 20px;border-radius:8px 8px 0 0">
                 <h2 style="margin:0">${emoji} Candidato ${faixa==='aprovado'?'Aprovado':'Para Verificar'}</h2>
-                <p style="margin:4px 0 0">Nota: <strong>${nota}/10</strong></p>
+                <p style="margin:4px 0 0">Resultado: <strong>${escapeHtml(notaLabel)}</strong></p>
               </div>
               <div style="border:1px solid #ddd;border-top:none;padding:20px;border-radius:0 0 8px 8px">
-                <p><strong>Nome:</strong> ${row.nome}</p>
-                <p><strong>Vaga:</strong> ${row.vaga}</p>
-                <p><strong>E-mail:</strong> ${row.email}</p>
+                <p><strong>Nome:</strong> ${escapeHtml(row.nome)}</p>
+                <p><strong>Vaga:</strong> ${escapeHtml(row.vaga)}</p>
+                <p><strong>E-mail:</strong> ${escapeHtml(row.email)}</p>
                 <h3>Laudo da Lúmina</h3>
-                <pre style="background:#f5f5f5;padding:16px;border-radius:6px;white-space:pre-wrap;font-size:14px">${laudo}</pre>
+                <pre style="background:#f5f5f5;padding:16px;border-radius:6px;white-space:pre-wrap;font-size:14px">${escapeHtml(laudo)}</pre>
                 <hr>
                 <h3>Respostas completas</h3>
-                ${respostas.map((r,i)=>`<p><strong>${i+1}. ${r.pergunta}</strong><br><em>${r.resposta}</em></p>`).join('')}
+                ${respostas.map((r,i)=>`<p><strong>${i+1}. ${escapeHtml(r.pergunta)}</strong><br><em>${escapeHtml(r.resposta)}</em></p>`).join('')}
               </div>
             </div>`,
           });
@@ -1986,7 +2033,7 @@ Seja direto. Foco no que importa para a vaga.`;
       }
     }
 
-    return res.json({ ok: true, concluida: true, laudo, nota, faixa });
+    return res.json({ ok: true, concluida: true });
   }
 
   const proxima = perguntas[respostas.length];
@@ -2000,7 +2047,7 @@ const enviarRejeicoesPendentes = async () => {
   const pendentes = recrutaDB.prepare(`
     SELECT * FROM candidaturas
     WHERE faixa='reprovado' AND status='concluida' AND rejeicao_em IS NOT NULL
-      AND rejeicao_em <= datetime('now') AND status != 'rejeitado_enviado'
+      AND datetime(rejeicao_em) <= datetime('now')
   `).all();
   for (const c of pendentes) {
     try {
@@ -2012,9 +2059,9 @@ const enviarRejeicoesPendentes = async () => {
         subject: `Obrigado pelo seu contato — Scapini Transportes`,
         html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
           <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="140" alt="Scapini" style="margin-bottom:16px">
-          <p>Olá, <strong>${c.nome}</strong>!</p>
+          <p>Olá, <strong>${escapeHtml(c.nome)}</strong>!</p>
           <p>Agradecemos seu contato e interesse em fazer parte do time Scapini Transportes.</p>
-          <p>No momento <strong>não temos vaga disponível</strong> para ${c.vaga}, mas seu cadastro ficará em nosso banco de talentos.</p>
+          <p>No momento <strong>não temos vaga disponível</strong> para ${escapeHtml(c.vaga)}, mas seu cadastro ficará em nosso banco de talentos.</p>
           <p>Assim que surgir uma nova oportunidade alinhada ao seu perfil, entraremos em contato com você diretamente.</p>
           <p>Obrigado e sucesso!</p>
           <p style="color:#666;font-size:13px;margin-top:24px">Atenciosamente,<br><strong>Equipe de RH — Scapini Transportes</strong><br>Lajeado/RS • scapini.com.br</p>
@@ -2022,8 +2069,8 @@ const enviarRejeicoesPendentes = async () => {
       });
       recrutaDB.prepare(`UPDATE candidaturas SET status='banco_talentos', rejeicao_em=NULL, proxima_notificacao=? WHERE id=?`)
                .run(proximaNotif, c.id);
-      console.log(`[recruta] banco de talentos → ${c.email} | próx. notif: ${proximaNotif.substring(0,10)}`);
-    } catch(e) { console.warn('[recruta] rejeição falhou:', c.email, e.message); }
+      console.log(`[recruta] banco de talentos → ${maskEmail(c.email)} | próx. notif: ${proximaNotif.substring(0,10)}`);
+    } catch(e) { console.warn('[recruta] rejeição falhou:', maskEmail(c.email), e.message); }
   }
 };
 setInterval(enviarRejeicoesPendentes, 60 * 60 * 1000);
@@ -2036,7 +2083,7 @@ const recontатarBancoTalentos = async () => {
   const candidatos = recrutaDB.prepare(`
     SELECT * FROM candidaturas
     WHERE status='banco_talentos' AND proxima_notificacao IS NOT NULL
-      AND proxima_notificacao <= datetime('now')
+      AND datetime(proxima_notificacao) <= datetime('now')
   `).all();
   for (const c of candidatos) {
     try {
@@ -2047,8 +2094,8 @@ const recontатarBancoTalentos = async () => {
         subject: `Scapini Transportes — Ainda temos interesse no seu perfil!`,
         html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto">
           <img src="https://www.scapini.com.br/wp-content/uploads/2023/04/logo-scapini.png" width="140" alt="Scapini" style="margin-bottom:16px">
-          <p>Olá, <strong>${c.nome}</strong>!</p>
-          <p>A equipe de RH da Scapini Transportes está sempre em busca de bons profissionais para a área de <strong>${c.vaga}</strong>.</p>
+          <p>Olá, <strong>${escapeHtml(c.nome)}</strong>!</p>
+          <p>A equipe de RH da Scapini Transportes está sempre em busca de bons profissionais para a área de <strong>${escapeHtml(c.vaga)}</strong>.</p>
           <p>Você tem interesse em novas oportunidades? Acesse nosso site para ver as vagas abertas:</p>
           <a href="https://www.scapini.com.br/trabalhe-conosco"
             style="display:inline-block;background:#cc1c1c;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin:12px 0">
@@ -2058,8 +2105,8 @@ const recontатarBancoTalentos = async () => {
         </div>`,
       });
       recrutaDB.prepare(`UPDATE candidaturas SET proxima_notificacao=? WHERE id=?`).run(proximaNotif, c.id);
-      console.log(`[recruta] re-contato mensal → ${c.email}`);
-    } catch(e) { console.warn('[recruta] re-contato falhou:', c.email, e.message); }
+      console.log(`[recruta] re-contato mensal → ${maskEmail(c.email)}`);
+    } catch(e) { console.warn('[recruta] re-contato falhou:', maskEmail(c.email), e.message); }
   }
 };
 setInterval(recontатarBancoTalentos, 60 * 60 * 1000);
@@ -2082,20 +2129,23 @@ app.get('/entrevista/:token', (req, res) => {
 // ── Painel de candidaturas (interno) ─────────────────────────────────────────
 app.get('/candidaturas', (req, res) => {
   const rows = recrutaDB.prepare(`SELECT * FROM candidaturas ORDER BY id DESC`).all();
-  const cores = { aprovado: '#22c55e', atencao: '#f59e0b', reprovado: '#ef4444', pendente: '#94a3b8', banco_talentos: '#6366f1' };
-  const emoji = { aprovado: '🟢', atencao: '🟡', reprovado: '🔴', pendente: '⏳', banco_talentos: '📦' };
-  const cards = rows.map(r => `
+  const cores = { aprovado: '#22c55e', atencao: '#f59e0b', reprovado: '#ef4444', pendente: '#94a3b8', avaliando: '#3b82f6', banco_talentos: '#6366f1' };
+  const emoji = { aprovado: '🟢', atencao: '🟡', reprovado: '🔴', pendente: '⏳', avaliando: '🔎', banco_talentos: '📦' };
+  const cards = rows.map(r => {
+    const classificacao = r.faixa || r.status || 'pendente';
+    return `
     <div style="background:#1e1e2e;border-radius:10px;padding:20px;border-left:4px solid ${cores[r.faixa||r.status]||'#555'}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="font-size:16px">${r.nome}</strong>
+        <strong style="font-size:16px">${escapeHtml(r.nome)}</strong>
         <span style="font-size:22px;font-weight:700;color:${cores[r.faixa||r.status]||'#fff'}">${r.nota ? r.nota+'/10' : '—'}</span>
       </div>
       <div style="color:#aaa;font-size:13px;margin-bottom:10px">
-        ${emoji[r.faixa||r.status]||'⏳'} ${(r.faixa||r.status||'pendente').toUpperCase()} &nbsp;·&nbsp; Vaga: <strong style="color:#fff">${r.vaga}</strong> &nbsp;·&nbsp; ${r.email}
+        ${emoji[classificacao]||'⏳'} ${escapeHtml(classificacao.toUpperCase())} &nbsp;·&nbsp; Vaga: <strong style="color:#fff">${escapeHtml(r.vaga)}</strong> &nbsp;·&nbsp; ${escapeHtml(r.email)}
       </div>
-      ${r.laudo ? `<details><summary style="cursor:pointer;color:#cc1c1c;font-size:13px">Ver laudo completo</summary><pre style="margin-top:10px;font-size:12px;color:#ccc;white-space:pre-wrap">${r.laudo}</pre></details>` : ''}
-      <div style="color:#555;font-size:11px;margin-top:8px">${r.criado_em||''}</div>
-    </div>`).join('');
+      ${r.laudo ? `<details><summary style="cursor:pointer;color:#cc1c1c;font-size:13px">Ver laudo completo</summary><pre style="margin-top:10px;font-size:12px;color:#ccc;white-space:pre-wrap">${escapeHtml(r.laudo)}</pre></details>` : ''}
+      <div style="color:#555;font-size:11px;margin-top:8px">${escapeHtml(r.criado_em||'')}</div>
+    </div>`;
+  }).join('');
 
   res.send(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
     <title>Candidaturas — Scapini</title>

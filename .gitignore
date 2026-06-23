@@ -21,6 +21,14 @@ sky.db-wal
 Lúmina.db
 Lúmina.db-shm
 Lúmina.db-wal
+# Bancos dos módulos locais
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/*.db-journal
+# Saídas temporárias de testes
+test_*_out.txt
+test_*_err.txt
 # IDE / Claude Code internals
 .agents/
 .codex/
