@@ -4995,6 +4995,30 @@ const tryLocalResponse = (text) => {
       'Vida útil de pneu de caminhão: 100.000 a 150.000 km em condições normais. Recapagem pode ser feita 1-2 vezes (para eixos traseiros e reboques) com economia de até 40% vs pneu novo. Pneus do eixo dianteiro: nunca recapados (segurança). A Scapini faz rodízio e controla quilometragem por pneu no sistema de frota.',
     ]);
 
+  if (/como.*candidatar.*scapini|candidatura.*digital.*scapini|me candidatar.*scapini|candidatar.*vaga.*scapini|se candidatar.*scapini/.test(t))
+    return pick([
+      'Para se candidatar a uma vaga na Scapini, acesse o site scapini.com.br ou o Instagram da empresa e clique em "Quero trabalhar na Scapini". A Lúmina inicia uma entrevista pelo WhatsApp — são 10 perguntas, menos de 15 minutos, sem precisar criar conta. O RH recebe o resultado e contata os candidatos aprovados.',
+      'Candidatura na Scapini: site ou Instagram → clica em candidatar → entrevista pelo WhatsApp com a Lúmina → 10 perguntas sobre experiência e perfil → pronto. Sem formulário complicado, sem criar conta em sistema. O RH avalia e contata os aprovados. Processo 100% pelo celular.',
+    ]);
+
+  if (/portal.*rh.*scapini|painel.*rh.*scapini|rh\.scapini|sistema.*rh.*scapini|site.*rh.*scapini/.test(t))
+    return pick([
+      'O portal rh.scapini.com.br é o painel interno do RH da Scapini. A equipe acessa lá: candidatos entrevistados pela Lúmina, notas Gemini, laudos completos, banco de talentos e histórico de processos seletivos. Acesso restrito — login com usuário e senha.',
+      'rh.scapini.com.br é o dashboard do recrutamento digital da Scapini. Centraliza tudo que a Lúmina coleta nas entrevistas: candidatos, notas, laudos e banco de talentos aprovados. Só a equipe de RH e a diretoria acessam.',
+    ]);
+
+  if (/nota.*minima.*candidato|nota.*minima.*aprovacao|criterio.*aprovacao.*entrevista|minimo.*aprovado.*entrevista|nota.*passar.*entrevista|precisa.*nota.*aprovado/.test(t))
+    return pick([
+      'Na entrevista Lúmina, a nota mínima para aprovação é 7,0 (escala 0–10). Candidatos com nota entre 5,0 e 6,9 ficam como "em avaliação" e o RH decide com contexto adicional. Abaixo de 5,0, o candidato é reprovado. Os aprovados entram no banco de talentos e podem ser chamados para entrevista presencial.',
+      'Aprovado: nota >= 7,0. Em avaliação: 5,0 a 6,9. Reprovado: < 5,0. A nota é calculada pelo Gemini com base nas 10 respostas — experiência técnica, postura, segurança, situações de risco e motivação. Candidatos aprovados ficam no banco de talentos da Scapini.',
+    ]);
+
+  if (/banco.*talentos.*como|como.*funciona.*banco.*talentos|recontato.*automatico.*candidato|candidato.*aprovado.*recontato|lumina.*recontato.*candidato/.test(t))
+    return pick([
+      'O banco de talentos guarda automaticamente todos os candidatos aprovados (nota >= 7). A Lúmina faz recontato automático mensal pelo WhatsApp perguntando se ainda têm interesse em uma vaga na Scapini. Quando surge uma vaga urgente, o RH já tem candidatos pré-qualificados prontos.',
+      'Candidatos aprovados entram no banco de talentos e recebem recontato automático todo mês pela Lúmina. Na hora de uma contratação urgente, a Scapini já tem fila de candidatos qualificados esperando — sem precisar anunciar do zero.',
+    ]);
+
   return null;
 };
 
@@ -7486,6 +7510,54 @@ const DEMO_QA = [
     r: [
       'Sim — a Lúmina gera documentos em Word, Excel e PDF. Exemplos: relatório de KPI de transporte, lista de candidatos prospectados, análise de DRE formatada, e-mail profissional, ata de reunião, check-list de procedimento. Basta pedir: "gera um relatório de fretes do mês em PDF" ou "exporta a lista de candidatos para Excel". Os arquivos são gerados e disponibilizados para download.',
       'Geração de documentos é um dos recursos prontos. Tipos disponíveis: (1) PDF — relatórios de KPI, análises, atas; (2) Excel — listas de candidatos, planilhas de frete, tabelas comparativas; (3) Word — cartas, contratos modelo, comunicados internos. Ideal para formalizar análises que antes precisavam de horas de formatação manual. Diga o que precisa e eu monto.',
+    ]},
+
+  { re: /portal.*entrevista|entrevista.*online|entrevista.*digital|candidato.*entrevista.*lumina|lumina.*entrevista.*candidato|entrevista.*site.*scapini|lumina.*conduz.*entrevista|entrevista.*automatica.*scapini/,
+    r: [
+      'O portal de entrevistas online da Scapini é um diferencial no setor. O candidato se candidata pelo site ou Instagram, e a Lúmina conduz automaticamente uma entrevista de 10 perguntas — por texto, sem abrir links complicados. O Gemini avalia as respostas e gera um laudo automático. Marjorie, do RH, recebe tudo no dashboard em rh.scapini.com.br: nota, pontos fortes, pontos de atenção e recomendação de aprovação.',
+      'Funciona assim: candidato vê a vaga no site ou Instagram da Scapini → clica para se candidatar → Lúmina inicia a entrevista com 10 perguntas personalizadas para o cargo → candidato responde no celular → Gemini avalia tudo e gera o laudo → Marjorie abre o painel e vê a fila de candidatos com nota e laudo prontos. O RH ganha agilidade: entrevista inicial feita 100% automaticamente, 24h por dia.',
+    ]},
+
+  { re: /entrevista.*whatsapp|whatsapp.*entrevista|candidato.*responde.*whatsapp|processo.*seletivo.*whatsapp|selecao.*whatsapp|lumina.*whatsapp.*motorista|motorista.*entrevista.*celular/,
+    r: [
+      'A entrevista pelo WhatsApp é pensada para o motorista: ele não precisa abrir nenhum link, criar conta ou instalar app. Basta responder as perguntas da Lúmina no chat do WhatsApp — o mesmo jeito que ele já usa para falar com a família. O processo é natural, no celular, sem burocracia. Isso elimina uma barreira enorme: muitos candidatos desistem quando precisam criar conta em sistema de RH.',
+      'Pelo WhatsApp, o candidato a motorista vive a entrevista como uma conversa — não como uma prova online. A Lúmina faz 10 perguntas sobre experiência, composição operada, rotas, situações de risco e motivação. O candidato responde em texto simples, sem formatar nada. O sistema captura tudo, envia ao Gemini para avaliação e entrega o laudo ao RH. Candidatura completa em menos de 15 minutos, pelo celular.',
+    ]},
+
+  { re: /banco.*talentos|banco.*candidatos.*aprovados|candidatos.*aprovados.*banco|recontato.*mensal.*candidato|candidato.*aprovado.*guardado|talent.*pool.*scapini|lumina.*banco.*talentos/,
+    r: [
+      'O banco de talentos da Scapini funciona assim: candidatos que atingem nota >= 7,0 na entrevista são automaticamente registrados no painel com status "aprovado". Quando uma nova vaga de motorista abre, o RH não precisa anunciar do zero — a Lúmina faz o recontato automático mensal com esses candidatos, perguntando se ainda têm interesse. Isso reduz drasticamente o tempo de preenchimento de uma vaga urgente.',
+      'Em vez de começar do zero a cada processo seletivo, a Scapini constrói um banco de candidatos pré-qualificados. Candidatos aprovados (nota >= 7) ficam no sistema com dados completos e avaliação. A Lúmina faz recontato automático mensalmente: "Olá [nome], ainda tem interesse em uma oportunidade na Scapini?" Quando precisamos contratar rápido — especialmente em alta temporada — a resposta já está no banco.',
+    ]},
+
+  { re: /quais.*vagas.*abertas|vagas.*abertas.*agora|vagas.*abertas.*momento|motorista carreteiro.*scapini|scapini.*motorista carreteiro|vaga.*comprador|vagas.*lajeado.*pr/,
+    r: [
+      'As vagas abertas agora na Scapini Transportes (junho/2026): (1) Motorista Carreteiro — bases Lajeado/RS e Maringá/PR, CNH E, experiência com bitrem ou rodotrem; (2) Comprador — área de suprimentos, Lajeado/RS, experiência em compras para frota ou logística. Candidatos interessados podem se candidatar pelo site da Scapini ou via Instagram. A entrevista inicial é feita pela Lúmina.',
+      'Scapini está contratando! Vagas abertas: Motorista Carreteiro (Lajeado/RS e PR) — rotas longas, bitrem/rodotrem, CNH E obrigatória; e Comprador (Lajeado/RS) — suprimentos da frota. Para se candidatar: site scapini.com.br ou DM no Instagram. A entrevista inicial acontece pelo WhatsApp com a Lúmina — rápido, sem burocracia.',
+    ]},
+
+  { re: /nota.*candidato|candidato.*nota|escala.*avaliacao.*candidato|pontuacao.*candidato|aprovado.*nota.*entrevista|resultado.*entrevista.*nota|faixa.*nota.*candidato|criterio.*nota.*candidato|nota.*0.*10/,
+    r: [
+      'A Lúmina avalia candidatos em escala de 0 a 10. As faixas: >= 7,0 = Aprovado (recomendado para entrevista presencial ou contratação direta); 5,0 a 6,9 = Em avaliação (RH decide com contexto adicional); < 5,0 = Reprovado (não atende critérios mínimos). O Gemini analisa as 10 respostas considerando: experiência técnica, postura profissional, conhecimento de segurança, situações de risco e motivação para a vaga.',
+      'A nota do candidato é gerada automaticamente pelo Gemini após a entrevista de 10 perguntas. Escala 0–10: aprovado (>= 7), em avaliação (5–6,9), reprovado (< 5). O laudo mostra a nota final, os pontos fortes, os pontos de atenção e a recomendação da IA. Marjorie vê tudo isso no dashboard e decide o próximo passo — a IA ajuda, mas a decisão final é sempre humana.',
+    ]},
+
+  { re: /lumina.*rh.*hoje|rh.*lumina.*hoje|lumina.*recrutamento|recrutamento.*lumina|lumina.*selecao.*digital|selecao.*digital.*lumina|lumina.*chegando.*rh|lumina.*novas.*funcoes.*rh/,
+    r: [
+      'Hoje a Lúmina no RH da Scapini: responde dúvidas de colaboradores (benefícios, documentos, CLT) 24h sem sobrecarregar a equipe, acessa a base de conhecimento interna com procedimentos de RH e orienta sobre processo seletivo. Chegando em breve: entrevistas automáticas via WhatsApp, banco de talentos, laudo Gemini e dashboard para Marjorie em rh.scapini.com.br.',
+      'A evolução da Lúmina no RH tem duas fases. Fase 1 (ativa): resposta a colaboradores sobre benefícios, políticas e documentos — sem sobrecarregar o setor. Fase 2 (em implementação): entrevista digital de candidatos via WhatsApp, avaliação automática com Gemini, banco de talentos e painel completo em rh.scapini.com.br. O recrutamento de motoristas vai ganhar velocidade e dados que hoje ninguém tem.',
+    ]},
+
+  { re: /gemini.*avalia.*candidato|avaliacao.*gemini.*candidato|como.*gemini.*avalia|gemini.*entrevista.*candidato|lumina.*avaliar.*candidato|avaliacao.*ia.*candidato|gemini.*laudo.*candidato|ia.*avalia.*entrevista/,
+    r: [
+      'Após o candidato responder as 10 perguntas, todas as respostas são enviadas ao Gemini com um prompt estruturado. O Gemini analisa: (1) experiência e qualificação técnica; (2) postura e comunicação; (3) conhecimento de segurança e regulamentações; (4) situações de risco e tomada de decisão; (5) motivação e fit com a Scapini. O resultado é uma nota de 0–10 e um laudo em texto com pontos fortes e pontos de atenção.',
+      'O Gemini recebe as 10 respostas da entrevista e gera um laudo completo: nota final (0–10), análise por critério, pontos fortes do candidato, pontos de atenção e recomendação (aprovado / em avaliação / reprovado). Esse laudo aparece no painel da Marjorie em segundos — o que antes levaria 40 minutos de entrevista manual, agora é feito automaticamente e fica registrado para consulta futura.',
+    ]},
+
+  { re: /painel.*marjorie|marjorie.*painel|dashboard.*rh|painel.*rh|rh\.scapini|dashboard.*candidatos|painel.*candidatos.*rh|lumina.*painel.*rh|diretoria.*ver.*candidatos/,
+    r: [
+      'O dashboard em rh.scapini.com.br é o centro de comando do recrutamento digital da Scapini. Marjorie e a diretoria acessam: fila de candidatos com nota e laudo Gemini, banco de talentos aprovados, histórico de todos os processos seletivos e botão para entrar em contato com os aprovados. Cada candidatura vira um dado — nada se perde.',
+      'No painel em rh.scapini.com.br: Marjorie vê todos os candidatos que passaram pela entrevista Lúmina, com nota, laudo completo e status (aprovado / em avaliação / reprovado). A diretoria tem uma visão consolidada do processo seletivo — quantas candidaturas, qual o perfil médio, quantos aprovados no banco. Todo processo fica registrado e consultável.',
     ]},
 ];
 
