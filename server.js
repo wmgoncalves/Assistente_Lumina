@@ -1275,7 +1275,7 @@ let browserInstance = null;
 const getBrowser = async () => {
   if (!puppeteer) puppeteer = require('puppeteer');
   if (!browserInstance || !browserInstance.connected) {
-    browserInstance = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    browserInstance = await puppeteer.launch({ headless: true });
   }
   return browserInstance;
 };
@@ -2484,6 +2484,7 @@ function searchFiles({ pattern, dir, glob, caseSensitive }) {
 }
 
 app.post('/api/dev/grep', (req, res) => {
+  if (!ensureDevToolsEnabled(res)) return;
   const { pattern, dir = '.', glob: fileGlob = '**/*', caseSensitive = false } = req.body;
   if (!pattern) return res.status(400).json({ error: 'pattern required' });
   try {
@@ -2496,6 +2497,7 @@ app.post('/api/dev/grep', (req, res) => {
 });
 
 app.post('/api/dev/read', (req, res) => {
+  if (!ensureDevToolsEnabled(res)) return;
   const { path: filePath, offset = 0, limit = 300 } = req.body;
   if (!filePath) return res.status(400).json({ error: 'path required' });
   try {
@@ -2542,6 +2544,7 @@ app.post('/api/dev/edit', (req, res) => {
 });
 
 app.post('/api/dev/ls', (req, res) => {
+  if (!ensureDevToolsEnabled(res)) return;
   const { path: dirPath = '.' } = req.body;
   try {
     const safePath = resolveWorkspacePath(dirPath);
@@ -3329,14 +3332,17 @@ function _checkAutoTrain() {
 // Também verifica 5 min após o servidor subir (capta o que ficou pendente)
 setTimeout(_checkAutoTrain, 5 * 60 * 1000);
 
-// ── Start — libera a porta antes de subir ─────────────────────────────────────
-const killPort = (port) => new Promise(resolve => {
-  exec(`powershell -c "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"`, () => resolve());
-});
-
-killPort(PORT).then(() => app.listen(PORT, HOST, () => {
+// ── Start ─────────────────────────────────────────────────────────────────────
+app.listen(PORT, HOST, () => {
   console.log('\n╔═══════════════════════════════════════╗');
   console.log(`║  Lúmina  →  http://${HOST}:${PORT}    ║`);
   console.log('╚═══════════════════════════════════════╝\n');
   console.log('  Pressione Ctrl+C para encerrar.\n');
-}));
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n[Lúmina] Porta ${PORT} já está em uso. Encerre o processo que a ocupa e tente novamente.\n`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
+});
