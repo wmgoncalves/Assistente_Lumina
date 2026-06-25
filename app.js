@@ -1807,6 +1807,21 @@ const _finalize = (raw, source = 'unknown') => {
   } else {
     addMsgUI('lumina', finalResponse);
   }
+  // Badge sutil quando usando Ollama local (Gemini indisponível)
+  if (source === 'ollama') {
+    setTimeout(() => {
+      const msgs = document.getElementById('hmessages');
+      const last = msgs?.querySelector('.hmsg.lumina:last-child');
+      if (last && !last.querySelector('.ollama-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'ollama-badge';
+        badge.title = 'Respondendo com modelo local (Gemini indisponível)';
+        badge.textContent = '⚡ local';
+        badge.style.cssText = 'font-size:10px;color:#9ca3af;margin-left:8px;opacity:.7;';
+        last.appendChild(badge);
+      }
+    }, 100);
+  }
   saveHist();
   const afterSpeak = app._afterSpeak || null;
   app._afterSpeak = null;
