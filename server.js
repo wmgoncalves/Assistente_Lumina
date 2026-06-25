@@ -352,30 +352,63 @@ Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúd
 });
 
 // ── Gemini Chat ───────────────────────────────────────────────────────────────
+const _ollamaChat = async (messages, system) => {
+  const c = getCfg();
+  const model = c.ollamaModel || 'lumina-treinada';
+  // Converte histórico para prompt único (Ollama /api/generate)
+  const history = (messages || []).map(m => {
+    const role = m.role === 'user' ? 'Usuário' : 'Lúmina';
+    const text = m.parts?.[0]?.text ?? '';
+    return `${role}: ${text}`;
+  }).join('\n');
+  const prompt = system ? `${system}\n\n${history}\nLúmina:` : `${history}\nLúmina:`;
+  const r = await fetch('http://localhost:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, stream: false }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) throw new Error(`Ollama HTTP ${r.status}`);
+  const d = await r.json();
+  return d.response?.trim() ?? '';
+};
+
 app.post('/api/chat', async (req, res) => {
   const c = getCfg();
-  if (!c.geminiKey) return res.status(400).json({ error: 'no_key', message: 'Chave Gemini não configurada.' });
-
   const { messages, system } = req.body;
-  try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: messages,
-          generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
-        })
+
+  // Tenta Gemini primeiro
+  if (c.geminiKey) {
+    try {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: system }] },
+            contents: messages,
+            generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
+          })
+        }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+        if (text) return res.json({ text, source: 'gemini' });
       }
-    );
-    if (!r.ok) { const e = await r.json().catch(() => ({})); return res.status(r.status).json({ error: e.error?.message || `HTTP ${r.status}` }); }
-    const d = await r.json();
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-    if (!text) return res.status(502).json({ error: 'Resposta vazia do Gemini' });
-    res.json({ text });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (_) { /* cai no fallback */ }
+  }
+
+  // Fallback: Ollama local
+  try {
+    const text = await _ollamaChat(messages, system);
+    if (!text) return res.status(502).json({ error: 'Resposta vazia do Ollama' });
+    console.log('[chat] Gemini indisponível — usando Ollama local.');
+    return res.json({ text, source: 'ollama' });
+  } catch (e) {
+    return res.status(503).json({ error: 'Gemini e Ollama indisponíveis.', detail: e.message });
+  }
 });
 
 // ── Gemini Vision ─────────────────────────────────────────────────────────────
