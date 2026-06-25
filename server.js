@@ -5,6 +5,8 @@ const crypto     = require('crypto');
 const { exec, execFile, spawn } = require('child_process');
 const os         = require('os');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+const helmet     = require('helmet');
+const { rateLimit } = require('express-rate-limit');
 
 // Quando rodando como filho do Electron: encerra junto com o pai
 if (process.channel) {
@@ -168,6 +170,23 @@ const ensureDevToolsEnabled = (res) => {
 // ── Express ───────────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json({ limit: '20mb' }));
+
+// ── Segurança: headers + rate limiting ───────────────────────────────────────
+app.use(helmet({ contentSecurityPolicy: false })); // CSP desativado — app local com scripts inline
+
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,   // 1 minuto
+  max: 30,                // máx 30 req/min em /api/chat e /api/tts
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Aguarde um momento.' },
+});
+app.use('/api/chat', chatLimiter);
+app.use('/api/tts',  chatLimiter);
+app.use('/api/tts-piper', chatLimiter);
+app.use('/api/tts-edge',  chatLimiter);
+app.use('/api/browser',   rateLimit({ windowMs: 60 * 1000, max: 10, message: { error: 'Limite do browser atingido.' } }));
+
 // Serve arquivos da raiz (versão atual da Lúmina) antes do public/
 const noCache = (res) => res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 app.get('/',          (_, res) => { noCache(res); res.sendFile(path.join(__dirname, 'index.html')); });

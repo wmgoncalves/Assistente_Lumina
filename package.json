@@ -15,6 +15,8 @@
     "composio-core": "^0.5.39",
     "docx": "^9.7.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
     "mammoth": "^1.12.0",
     "msedge-tts": "^2.0.5",
     "multer": "^2.1.1",
