@@ -6,11 +6,25 @@ config.json
 Lumina.db
 Lumina.db-shm
 Lumina.db-wal
+Lúmina.db
+Lúmina.db-shm
+Lúmina.db-wal
 data/recrutamento.db
 memory.json
 embeddings.json
 ollama-train-state.json
+notes.json
+tasks.json
+habits.json
+finances.json
 uploads/
+
+# Logs e datasets
+*.log
+*.jsonl
+audit_full.json
+learner.log
+backup-lumina.log
 
 # Node
 node_modules/
@@ -18,3 +32,8 @@ node_modules/
 # Electron build
 dist/
 out/
+
+# IDE
+.agents/
+.codex/
+*.code-workspace
