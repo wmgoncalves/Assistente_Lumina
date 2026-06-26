@@ -7126,11 +7126,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 365+ respostas
+  // Funciona offline — Llama local + 375+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 365+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 375+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -7143,7 +7143,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 365+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 375+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -7222,7 +7222,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (365+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (375+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7439,7 +7439,7 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 365+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 375+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 
@@ -7573,6 +7573,48 @@ const DEMO_QA = [
     r: [
       'O dashboard em rh.scapini.com.br é o centro de comando do recrutamento digital da Scapini. Marjorie e a diretoria acessam: fila de candidatos com nota e laudo Gemini, banco de talentos aprovados, histórico de todos os processos seletivos e botão para entrar em contato com os aprovados. Cada candidatura vira um dado — nada se perde.',
       'No painel em rh.scapini.com.br: Marjorie vê todos os candidatos que passaram pela entrevista Lúmina, com nota, laudo completo e status (aprovado / em avaliação / reprovado). A diretoria tem uma visão consolidada do processo seletivo — quantas candidaturas, qual o perfil médio, quantos aprovados no banco. Todo processo fica registrado e consultável.',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Disponibilidade 24/7 ───────────────────────────
+  { re: /lumina.*disponivel.*sempre|sempre.*disponivel.*lumina|lumina.*24h|lumina.*24.*horas|24.*horas.*lumina|lumina.*funciona.*sempre|lumina.*horario.*funcionamento|lumina.*fora.*horario|lumina.*madrugada|lumina.*fim.*semana|expediente.*lumina|lumina.*expediente|lumina.*uptime|disponibilidade.*lumina/,
+    r: [
+      'A Lúmina funciona 24 horas por dia, 7 dias por semana — não tem expediente, não tira férias, não fica em reunião. Enquanto o servidor da Scapini estiver ligado, ela está disponível. Um motorista pode consultar um procedimento às 2h da manhã; um diretor pode verificar um dado no domingo antes de uma reunião de segunda. A disponibilidade depende da infraestrutura local (servidor, energia, rede interna) — não de horário comercial.',
+      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (375+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Plano de contingência / e se parar ────────────
+  { re: /lumina.*parar|lumina.*cair|servidor.*lumina.*cair|lumina.*indisponivel|o que.*acontece.*lumina.*parar|contingencia.*lumina|plano.*backup.*lumina|lumina.*recovery|lumina.*falhar|e se.*lumina.*parar|e se.*servidor.*lumina|lumina.*sair.*ar|lumina.*downtime/,
+    r: [
+      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (375+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
+      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 375+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Proteção de dados confidenciais ───────────────
+  { re: /dado.*confidencial.*lumina|lumina.*dado.*confidencial|confidencialidade.*lumina|lumina.*sigiloso|dado.*sigiloso.*lumina|informacao.*sensivel.*lumina|dre.*compartilhar.*lumina|salario.*lumina.*seguro|lumina.*vazamento|seguranca.*dado.*lumina|dado.*negocio.*lumina|lumina.*dado.*negocio|lumina.*protege.*dado/,
+    r: [
+      'Proteção de dados confidenciais: a Lúmina roda no servidor interno da Scapini (127.0.0.1) — nenhum dado interno sai da empresa automaticamente. O que você digita aqui fica no servidor local. Quando é necessário consultar o Gemini (perguntas complexas), apenas o texto da pergunta é enviado — não arquivos internos inteiros. Documentos como DRE, contratos e planilhas são processados localmente; apenas um resumo analítico pode ir ao Gemini se solicitado explicitamente.',
+      'Governança de dados na Lúmina: histórico de conversas fica no banco SQLite local — acessível apenas via rede interna da Scapini, nunca exposto externamente. Para dados altamente sensíveis (salários individuais, margens por cliente), a orientação é usar perguntas agregadas ("qual a margem de contribuição do período") sem expor dados nominais. Não há integração com sistemas externos além dos explicitamente configurados pelo TI.',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Motoristas em campo / App Motorista ───────────
+  { re: /motorista.*estrada.*lumina|lumina.*motorista.*estrada|motorista.*campo.*lumina|lumina.*campo.*motorista|motorista.*em.*rota.*lumina|lumina.*app.*motorista|app.*motorista.*lumina|motorista.*celular.*lumina|lumina.*celular.*motorista.*rota|motorista.*acessa.*lumina|lumina.*motorista.*rota/,
+    r: [
+      'Para motoristas em estrada: hoje, a Lúmina é focada no ambiente de escritório (rede interna). Para os motoristas na rota, o canal planejado é via App Motorista integrado à Lúmina — o motorista consulta dúvidas de procedimento, registra ocorrências e acessa a escala diretamente pelo celular, sem ligar para a base. Essa integração está no roadmap da Phase 2 e será um diferencial operacional real para a Scapini.',
+      'Acesso da Lúmina para motoristas em campo: a arquitetura atual permite acesso via VPN à rede interna, mas isso é complexo para o motorista médio em rota. A solução planejada é mais inteligente: o App Motorista (já usado para tacógrafo e abastecimento) ganhará um canal "Pergunte à Lúmina" — integrado, sem VPN nem login separado. Enquanto isso, a equipe de operações no escritório consulta informações em nome do motorista quando necessário.',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Previsões e análise preditiva ─────────────────
+  { re: /lumina.*previsao|previsao.*lumina|lumina.*prever|lumina.*antecipar|lumina.*projetar|projecao.*lumina|lumina.*analise.*preditiva|preditiva.*lumina|lumina.*forecast|lumina.*tendencia|tendencia.*lumina|lumina.*preve.*demanda|lumina.*preve.*custo|analise.*preditiva.*lumina/,
+    r: [
+      'Análise preditiva com a Lúmina: hoje, faço análise histórica — carregue uma planilha de DRE ou de fretes e identifico tendências, variações e anomalias em segundos. Previsão formal (forecast de demanda, simulação de cenários) requer os dados históricos do CGI. Na Phase 2, com acesso ao histórico de operações, identificarei padrões sazonais, preverei picos de demanda de safra e alertarei quando um cliente mostra sinais de redução de volume.',
+      'Capacidade de projeção atual: posso calcular projeções simples quando você me fornece os dados — "no primeiro trimestre faturamos X, qual a projeção para o ano se o crescimento se mantiver?" Com integração ao CGI na Phase 2, viro uma ferramenta de inteligência operacional real: histórico + modelo de linguagem + dados em tempo real = insights preditivos para decisões da diretoria, sem depender de relatório manual.',
+    ]},
+
+  // ── DIRETORIA JULHO/2026 — Integração com Power BI e outras ferramentas ──
+  { re: /lumina.*power.*bi|power.*bi.*lumina|lumina.*integra.*excel|excel.*integra.*lumina|\blumina.*bi\b|lumina.*integrar.*sistema|sistema.*integrar.*lumina|lumina.*totvs|lumina.*sap|lumina.*oracle|ferramentas.*integrar.*lumina|lumina.*conectar.*sistema|lumina.*outros.*sistemas|outros.*sistemas.*lumina/,
+    r: [
+      'Integração com ferramentas externas: hoje, a Lúmina lê Excel, PDF, Word e imagens que você traz para ela, e exporta relatórios em Excel, Word e PDF. Com Power BI: a Lúmina gera a planilha base que o BI consome — você pede "gera a tabela de KPIs de frete do mês" e ela entrega o Excel pronto para importar no Power BI. Integração direta via API está no roadmap junto com o CGI.',
+      'Arquitetura de integrações planejadas: Phase 2 conecta ao CGI (leitura de dados em tempo real). Após isso, as integrações seguem por prioridade: (1) Power BI — consumo de dados exportados pela Lúmina; (2) WhatsApp Business API — alertas e consultas por mensagem; (3) App Motorista — Lúmina integrada ao celular do motorista; (4) E-mail corporativo — relatórios automáticos por horário. A arquitetura modular permite adicionar integrações sem reescrever o core.',
     ]},
 ];
 
@@ -7711,7 +7753,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 365+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 375+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',

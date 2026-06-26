@@ -1161,3 +1161,70 @@ Dos 8 itens listados na missão: 6 já existiam em sessões anteriores. Adiciona
 4. **`npm run build-dataset`** — executar na máquina local quando ≥ 500 exemplos
 5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 6. **Apresentação julho/2026** — verificar fluxo completo da demo antes da reunião com diretor
+
+---
+
+# Sessão Sexta 2026-06-26 (Sessão 17 — Kick-off do Fim de Semana)
+
+## Resumo
+Sessão de kick-off autônoma (sexta à noite). Leitura completa do NOTURNO.md (16 sessões anteriores), diagnóstico do estado atual, auditoria null-safety PRIORIDADE 1 e adição de 6 novos pares DEMO_QA focados em perguntas de diretoria para a apresentação de julho/2026. Total: 1 commit.
+
+## Diagnóstico do estado atual (Passo 2)
+
+| Item | Resultado |
+|------|-----------|
+| Linhas em app.js | **9.587** |
+| Entradas DEMO_QA | **376** (era 370 → sessão 16 estimou 365+) |
+| MOTORISTAS_DEMO | **19 registros** (missão pede ≥8 ✓) |
+| Bugs pendentes críticos | Nenhum novo encontrado |
+| node --check app.js | ✅ OK |
+| node --check server.js | ✅ OK |
+
+## Auditoria null-safety PRIORIDADE 1 (Passo 3)
+
+Todos os itens verificados — nenhum bug novo:
+- **`getElementById` sem null-guard**: todos em elementos estáticos do HTML ou protegidos por `?.classList` / guarded assignment ✓
+- **`JSON.parse` sem try/catch**: linha 1367 (app.js wake word) protegida por `try {} catch {}` desde linha 1353; linha 9555 protegida por `catch {}` linha 9561; server.js linhas 368/513/2695/2846 — todas em try/catch ✓
+- **`fetch()` sem `.catch()`**: todos em try/catch (verificados: linhas 181, 1241, 1497) ✓
+- **`speak(undefined)`**: `cleanForTTS` tem `String(raw ?? '')` na linha 1028 ✓
+- **`_finalize(undefined)`**: guard `raw ?? ''` confirmado ✓
+- **DEMO_QA regex genérico**: linha 5540 tem `argentina|uruguai|paraguai` sem `\b`, mas `detectLocalInfo` executa ANTES (`processInput` linha 2034-2035), capturando cotações de câmbio antes que DEMO_QA seja alcançado — risco operacional baixo ✓
+
+## 6 novos pares DEMO_QA — Diretoria Julho/2026 (Passo 4)
+
+Inseridos antes do fechamento `];` do array (linha 7577 → 7641):
+
+| # | Tema | Regex principal |
+|---|------|-----------------|
+| 1 | **Disponibilidade 24/7** | `lumina.*24h\|lumina.*24.*horas\|disponibilidade.*lumina\|lumina.*uptime` |
+| 2 | **Plano de contingência / e se parar** | `lumina.*parar\|lumina.*cair\|contingencia.*lumina\|lumina.*recovery` |
+| 3 | **Proteção de dados confidenciais** | `dado.*confidencial.*lumina\|confidencialidade.*lumina\|lumina.*sigiloso` |
+| 4 | **Motoristas em campo / App Motorista** | `motorista.*estrada.*lumina\|motorista.*campo.*lumina\|app.*motorista.*lumina` |
+| 5 | **Previsões e análise preditiva** | `lumina.*previsao\|previsao.*lumina\|lumina.*forecast\|preditiva.*lumina` |
+| 6 | **Integração com Power BI e outras ferramentas** | `lumina.*power.*bi\|power.*bi.*lumina\|lumina.*integrar.*sistema` |
+
+### Contador atualizado: 365+ → 375+ (em 5 ocorrências no código)
+
+## Commits desta sessão
+- `(pendente)` — feat: DEMO_QA +6 pares diretoria — disponibilidade, contingência, dados, motoristas, preditiva, Power BI
+
+## Pendências / próximas sessões (sábado e domingo)
+
+### PRIORIDADE 1 (bugs) — estado atual
+- Nenhum bug crítico pendente. Todos os itens de null-safety verificados em sessões anteriores e reconfirmados nesta sessão.
+- Linha 5540: `argentina|uruguai|paraguai` sem `\b` — baixo risco (detectLocalInfo executa antes). Monitorar.
+
+### PRIORIDADE 2 (dados reais)
+1. **Tabela ANTT por eixo (R$/km)** — herdado 13x. SUROC 6/2026 em código (Carga Geral R$4,00-9,25/km), mas valores específicos por eixo (truck/carreta/bitrem) ainda inacessíveis. Acesso manual em calculadorafrete.antt.gov.br na máquina do usuário.
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 13x. Dado confirmado: bitrem R$3.508,49/mês. Tabela completa bloqueada por HTTP 403 em todos os sites testados.
+
+### PRIORIDADE 3 (DEMO_QA / base de conhecimento)
+- 376 entradas — bom volume. Sessão de sábado pode focar em perguntas práticas do workshop (não apresentação executiva), ex.: procedimentos operacionais específicos, manutenção preventiva vs preditiva, gestão de documentação de frota.
+
+### PRIORIDADE 4 (local pendente)
+- **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+- **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+- **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+
+### PRIORIDADE 5 (UX/CSS)
+- Nenhum bug UX encontrado. Verificar fluxo completo da demo antes da reunião com diretoria em julho/2026.
