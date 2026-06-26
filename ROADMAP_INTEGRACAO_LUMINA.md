@@ -1,237 +1,432 @@
-# Roadmap de Integração — Lúmina IA (Scapini Transportes)
+# ROADMAP DE INTEGRAÇÃO — LÚMINA IA CORPORATIVA
+**Scapini Transportes | 2026-06-26**
 
-> Documento gerado em 2026-06-25 | Alinhado com a apresentação à diretoria (~2026-07-07)
->
-> **Princípio:** Nenhuma funcionalidade existente é removida. Cada fase adiciona ou conecta o que já existe.
+> Roadmap técnico em 5 fases. Prioridade: apresentação para a diretoria (~2026-07-07).  
+> Módulos marcados com `[APRESENTAÇÃO]` são obrigatórios antes do dia da demo.
 
 ---
 
-## Visão Geral das Fases
+## VISÃO GERAL
 
 ```
-FASE 1 — Estabilização e Demo-Safety    [Agora → 2026-07-05]   ← CRÍTICO para apresentação
-FASE 2 — Core Conectado                 [2026-07-08 → 2026-07-21]
-FASE 3 — Módulos Corporativos           [2026-07-22 → 2026-08-15]
-FASE 4 — Automação e RAG Avançado       [2026-08-16 → 2026-09-15]
-FASE 5 — Qualidade de Diretor           [2026-09-16 em diante]
+AGORA → FASE 1 (estabilização) → FASE 2 (núcleo) → FASE 3 (módulos corporativos)
+      → FASE 4 (automação e RAG) → FASE 5 (qualidade para apresentação) → APRESENTAÇÃO
+```
+
+**Estado atual:** 69% das funcionalidades integradas. Foco agora é corrigir os 2 itens críticos de segurança e garantir qualidade da demo.
+
+---
+
+## FASE 1 — ESTABILIZAÇÃO E SEGURANÇA
+**Prazo sugerido:** 1-2 dias  
+**Objetivo:** Garantir que a aplicação está segura, estável e não expõe credenciais.
+
+### 1.1 Segurança Crítica `[APRESENTAÇÃO]`
+
+**Tarefa 1.1.1 — Mover credenciais para variáveis de ambiente**
+```
+Problema: config.json tem API keys em plaintext no diretório do projeto
+Risco: Exposição de credenciais se PC compartilhado ou copiado
+Solução: Criar .env + carregar com dotenv no server.js
+```
+Passos:
+1. Instalar dotenv: `npm install dotenv`
+2. Criar `.env` na raiz com `GEMINI_KEY=`, `ELEVENLABS_KEY=`, `COMPOSIO_KEY=`, `SMTP_PASS=`
+3. Adicionar `.env` no `.gitignore`
+4. Modificar `server.js` para ler de `process.env` com fallback para `config.json` (compatibilidade)
+5. Manter `config.json` para parâmetros de frete e configurações não-sensíveis
+
+**Tarefa 1.1.2 — Proteger `/api/download-doc`**
+```
+Problema: Endpoint público — qualquer processo local pode baixar arquivos de uploads/
+Solução: Adicionar verificação de token (2 linhas de código)
+```
+
+**Tarefa 1.1.3 — Adicionar AbortSignal no Gemini de `/api/chat`**
+```
+Problema: Requisição Gemini pode travar indefinidamente sem timeout
+Solução: AbortSignal.timeout(30000) no fetch do Gemini em server.js
+```
+
+### 1.2 Rate Limiting Complementar
+
+**Tarefa 1.2.1 — Rate limit em rotas pesadas**
+```
+Endpoints sem limite: /api/ingest-doc, /api/transcribe-audio, /api/frete,
+                      /api/prospect-clientes, /api/generate-file
+Solução: uploadLimiter (10/min) e heavyLimiter (5/min)
+```
+
+### 1.3 Correções de Bugs
+
+**Tarefa 1.3.1 — Corrigir NBA no mapa ESPN**
+```
+Problema: nba: null no mapa ESPN_LEAGUES — erro silencioso
+Solução: Remover NBA do mapa ou implementar handler correto
+```
+```javascript
+// server.js — opção simples: remover entry null
+// nba: null  ← deletar essa linha
+```
+
+**Tarefa 1.3.2 — Rate limit em /api/candidatura (público)**
+```
+Problema: Rota pública de entrevista sem proteção contra abuso
+Solução: candidaturaLimiter (30 req / 15min por IP)
+```
+
+### 1.4 Validação da Inicialização
+
+**Tarefa 1.4.1 — Testar startup completo**
+```
+Checklist:
+[ ] npm run lumina abre Electron corretamente
+[ ] Server sobe em 127.0.0.1:8080
+[ ] Token é gerado e injetado no fetch
+[ ] Voz reconhece wake word
+[ ] Gemini responde
+[ ] Ollama responde se Gemini offline
+[ ] DEMO funciona se ambos offline
+[ ] Tray e F6 funcionam
+[ ] Auto-start no login configurado
 ```
 
 ---
 
-## FASE 1 — Estabilização e Demo-Safety
+## FASE 2 — NÚCLEO DA LÚMINA
+**Prazo sugerido:** 1-2 semanas  
+**Objetivo:** Solidificar os módulos centrais com persistência correta no SQLite.
 
-**Objetivo:** Garantir que a apresentação à diretoria em ~07/07 transcorra sem falhas visíveis.
-**Nenhuma nova funcionalidade.** Apenas correções de bugs e robustez dos fallbacks.
+### 2.1 Migração de Dados JSON → SQLite
 
-### 1.1 Crítico (bloqueia demo)
-
-| # | Tarefa | Arquivo | Função/Linha | Por que é crítico |
-|---|--------|---------|--------------|------------------|
-| 1.1.1 | Criar `Modelfile.lumina` base (se não existir) com persona Lúmina mínima | novo arquivo | — | Sem ele, qualquer rebuild Ollama crasha (server.js:3346) |
-| 1.1.2 | Adicionar mensagem amigável quando porta de projeto externo falha | app.js | bloco PROJETOS em processInput() | Shell.openExternal() falha silenciosamente se porta 5173/4001 offline |
-| 1.1.3 | Testar DEMO_QA completo com normalização de texto | app.js:1930 | normalizeText() + DEMO_QA | Perguntas com typos ou acentuação diferente podem cair no Gemini e consumir quota |
-| 1.1.4 | Ajustar threshold do wake word para o ambiente da sala de demo | app.js:1389 | constante `28` (amplitude) | Sala silenciosa pode ter threshold muito baixo e gerar chamadas Gemini não intencionais |
-| 1.1.5 | Verificar configuração SMTP antes da demo (ou desabilitar módulo RH na demo) | server.js:1831 | `getMailer()` | Se SMTP ausente, e-mails de candidatura falham com stack trace no log |
-
-### 1.2 Alta Prioridade
-
-| # | Tarefa | Arquivo | Função/Linha | Benefício |
-|---|--------|---------|--------------|-----------|
-| 1.2.1 | Exibir mensagem "Serviço temporariamente indisponível" quando Gemini retorna 429 em vez de cair no DEMO silenciosamente | app.js:1958 | `_handleGeminiErr()` | Transparência para o diretor que assiste |
-| 1.2.2 | Adicionar `try/catch` em `syncStoreToObsidian()` com log de aviso (não erro fatal) quando vault path não existe | server.js:1060 | `syncStoreToObsidian()` | Previne crash se Obsidian não estiver instalado na máquina de demo |
-| 1.2.3 | Corrigir rota `/admin` — criar `admin.html` mínimo ou remover a rota | server.js:195 | `app.get('/admin')` | 404 feio se alguém acessar |
-
-### 1.3 Baixa Prioridade (antes da demo se houver tempo)
-
-| # | Tarefa | Arquivo | Função/Linha | Benefício |
-|---|--------|---------|--------------|-----------|
-| 1.3.1 | Adicionar badge visual claro "MODO DEMO" no TTS durante fallback | app.js:1840 | `_showDemoMode()` | Distingue claramente para o apresentador |
-| 1.3.2 | Pré-carregar DEMO_QA no início da sessão e logar quais perguntas estão mapeadas | app.js:1930 | bloco DEMO_QA | Facilita diagnóstico em tempo real |
-
-**Critérios de conclusão da Fase 1:**
-- [ ] `npm run lumina` abre sem erro
-- [ ] DEMO_QA responde as 30 perguntas planejadas sem tocar Gemini
-- [ ] Wake word não dispara em silêncio da sala
-- [ ] Fallback DEMO exibe badge na UI
-- [ ] Sem erros no console durante demo completo de 30 min
-
----
-
-## FASE 2 — Core Conectado
-
-**Objetivo:** Conectar o que já existe no backend mas está isolado do frontend. Zero código novo de funcionalidade — apenas wiring.
-
-### 2.1 Conectar Funcionalidades Isoladas
-
-| # | Tarefa | Backend existente | O que implementar no frontend | Esforço |
-|---|--------|------------------|-------------------------------|---------|
-| 2.1.1 | Botão "Consolidar memória" no painel de memória | `POST /api/memory/consolidate` (server.js:314) | Botão em `renderMemoryPanel()` → fetch + toast | 1h |
-| 2.1.2 | Botão "Exportar para Obsidian" nas configurações | `GET /api/export-obsidian` (server.js:2941) | Botão no painel Settings | 30min |
-| 2.1.3 | Input "Caminho do Vault" com botão importar | `POST /api/import-vault` (server.js:1157) | Campo no painel Settings | 1h |
-| 2.1.4 | Case `openVSCode` em executeTool() | `POST /api/vscode` (server.js:2927) | Adicionar case no switch de executeTool() (app.js) | 15min |
-| 2.1.5 | Categorização automática ao salvar nota | `POST /api/notes/categorize` (server.js:884) | Chamar após POST /api/data/notes | 30min |
-| 2.1.6 | Link visível para o painel de candidaturas | `GET /candidaturas` (server.js:2182) | Adicionar ao dict PROJETOS no processInput() | 5min |
-
-### 2.2 Corrigir Cases de Tool Faltantes
-
-| # | Tarefa | Arquivo | Linha | Esforço |
-|---|--------|---------|-------|---------|
-| 2.2.1 | Implementar `case 'consultarCRM'` em executeTool() com fetch para porta 5173 + fallback se offline | app.js | executeTool() switch | 1h |
-| 2.2.2 | Implementar `case 'criarChamadoCRM'` analogamente | app.js | executeTool() switch | 1h |
-| 2.2.3 | Implementar `case 'openVSCode'` — fetch `POST /api/vscode` | app.js | executeTool() switch | 15min |
-
-**Critérios de conclusão da Fase 2:**
-- [ ] Painel de memória tem botão "Consolidar" funcional
-- [ ] Settings tem campo vault + botão exportar/importar
-- [ ] "abre CRM" tenta conectar na porta 5173 com mensagem de erro amigável se offline
-- [ ] "abre VSCode" chama o endpoint e abre o editor
-- [ ] Candidaturas acessíveis via comando de voz "abre candidaturas"
-
----
-
-## FASE 3 — Módulos Corporativos
-
-**Objetivo:** Elevar o módulo RH e CRM ao nível de uso real (não mock) e integrar autenticação nos painéis.
-
-### 3.1 Autenticação no Painel de Candidaturas
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 3.1.1 | Adicionar autenticação básica (senha ou token) na rota HTML `/candidaturas` | server.js:2182 | Usar `hasValidLocalToken()` já existente ou senha fixa configurável em config.json |
-| 3.1.2 | Adicionar paginação ou filtros no painel de candidaturas | server.js:2182 + painel HTML | Candidaturas cresce infinitamente; filtro por cargo/status mínimo |
-
-### 3.2 Composio / Gmail — Fix do OAuth
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 3.2.1 | Criar rota `/api/composio/callback` | server.js | Handler que recebe o redirect OAuth, salva token em config.json |
-| 3.2.2 | Adicionar campo `composioKey` no painel Settings da UI | app.js + index.html | Atualmente não há input para configurar Composio pela UI |
-| 3.2.3 | Testar fluxo completo `connect → callback → send-leads` | server.js:2215 | Validar que envio de leads funciona do começo ao fim |
-
-### 3.3 Módulo RH — Candidatos Reais
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 3.3.1 | Separar endpoint `prospect-candidatos-ficticio` do endpoint real | server.js:1783 | Criar `POST /api/prospect-candidatos-demo` (mantém fictícios) e `POST /api/prospect-candidatos` (only real data) |
-| 3.3.2 | Adicionar fonte real de candidatos (pelo menos LinkedIn Jobs RSS ou Catho API) | server.js | Novo endpoint ou integração dentro de prospect-candidatos |
-
-### 3.4 App Motoristas e CRM Externo
-
-| # | Tarefa | Detalhes |
-|---|--------|---------|
-| 3.4.1 | Documentar URLs e portas dos projetos externos (CRM 5173, Manutenção 4001, App Motoristas onrender) | README ou PROJETOS.md no repo |
-| 3.4.2 | Adicionar verificação de disponibilidade antes de abrir (ping na porta com timeout de 2s) | app.js PROJETOS dict |
-
-**Critérios de conclusão da Fase 3:**
-- [ ] Painel `/candidaturas` exige autenticação
-- [ ] Fluxo Composio Gmail funciona de ponta a ponta
-- [ ] `prospect-candidatos` tem modo "fictício" (demo) separado de modo "real"
-- [ ] CRM externo tem verificação de disponibilidade antes de tentar abrir
-
----
-
-## FASE 4 — Automação e RAG Avançado
-
-**Objetivo:** Tornar o sistema verdadeiramente autônomo com indexação, proatividade e Ollama funcionando como fallback robusto.
-
-### 4.1 Piper TTS Local
-
-| # | Tarefa | Detalhes |
-|---|--------|---------|
-| 4.1.1 | Incluir `piper/piper.exe` e ao menos 1 voz PT-BR no repo (ou script de instalação) | Complementa server.js:490 que já está pronto |
-| 4.1.2 | Testar cascata completa ElevenLabs → Piper → Edge → Browser em ambiente offline | Validar que `piper-available` retorna true |
-
-### 4.2 RAG — Indexação Incremental
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 4.2.1 | Adicionar limite de itens por batch em `index-notes` para vaults grandes | server.js:1238 | Atualmente sem limite; vault com 500+ notas pode demorar 10min+ |
-| 4.2.2 | Exibir progresso de indexação na UI (via SSE `/api/events`) | server.js:1238 + app.js | `pushEvent('progress', '80% indexado...')` |
-| 4.2.3 | Expiração de cache de embeddings obsoletos | server.js:1212 | embeddings.json nunca purga entradas de notas deletadas |
-
-### 4.3 Ollama — Integração Robusta
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 4.3.1 | Versionar `Modelfile.lumina` no repositório | — | Arquivo base obrigatório para qualquer rebuild |
-| 4.3.2 | Reduzir frequência de `_checkAutoTrain()` — atualmente chamado a cada log | server.js:804 | Chamar apenas a cada N logs ou por intervalo de tempo |
-| 4.3.3 | Adicionar interface de progresso de treino Ollama na UI | server.js:3295 + app.js | O rebuild é async mas sem feedback; adicionar polling de status |
-
-### 4.4 Calendar / E-mail (se aprovado)
-
-| # | Tarefa | Detalhes |
-|---|--------|---------|
-| 4.4.1 | Implementar `listCalendarEvents` e `createCalendarEvent` via Google Calendar API ou Composio | Preenche gap de tools declaradas no TOOL_DECLARATIONS sem backend |
-| 4.4.2 | Implementar `listEmails` / `readEmail` via Composio Gmail (após Fase 3) | Fecha o ciclo da integração Gmail |
-
-**Critérios de conclusão da Fase 4:**
-- [ ] Piper TTS funciona offline sem dependência de Edge
-- [ ] RAG exibe progresso na UI durante indexação longa
-- [ ] Ollama auto-treino não sobrecarrega a cada log
-- [ ] `Modelfile.lumina` commitado no repositório
-- [ ] Ao menos 2 das 4 tools de calendário/e-mail funcionando
-
----
-
-## FASE 5 — Qualidade de Diretor
-
-**Objetivo:** Polimento final — experiência sem fricção, segurança reforçada e autonomia noturna plena.
-
-### 5.1 Segurança
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 5.1.1 | Habilitar CSP de forma seletiva (permitir apenas origens necessárias) | server.js:221 | CSP está desabilitado por `contentSecurityPolicy: false` |
-| 5.1.2 | Criar `admin.html` com painel de configurações protegido por token | server.js:195 | Atualmente 404 |
-| 5.1.3 | Mover credenciais SMTP de `config.json` para variável de ambiente | server.js:1831 | `config.json` pode ser commitado acidentalmente |
-| 5.1.4 | Adicionar auditoria de tentativas de path traversal nos dev tools | server.js:2490 | `resolveWorkspacePath()` já previne, mas sem log |
-
-### 5.2 Performance
-
-| # | Tarefa | Arquivo | Detalhes |
-|---|--------|---------|---------|
-| 5.2.1 | Truncar histórico enviado ao Gemini para últimas 50 mensagens (atual: 200) | app.js buildSystem() | Reduz tokens e latência; memória Gemini cobre contexto mais antigo |
-| 5.2.2 | Implementar thinkingBudget adaptativo no `/api/chat` | server.js:355 | Consultas rápidas usam 0; consultas complexas usam 512 ou 2048 |
-| 5.2.3 | Adicionar índice em `historico` (SQLite) para a query de exemplos de treino | services/db.js | `_coletarExemplos()` faz JOIN sem índice em tabela que pode ter milhares de linhas |
-
-### 5.3 Polimento de UX
-
-| # | Tarefa | Detalhes |
-|---|--------|---------|
-| 5.3.1 | Exibir indicador de qual nível de IA está respondendo (Gemini / Ollama / DEMO) sempre, não só no DEMO | app.js `_finalize()` — parâmetro `source` |
-| 5.3.2 | Adicionar atalho teclado para consolidar memória e exportar Obsidian | app.js — keyboard shortcuts |
-| 5.3.3 | Sessões noturnas autônomas — DEMO_QA + QA + commit + push (já autorizado permanentemente) | Seguir protocolo já definido na memória |
-
-**Critérios de conclusão da Fase 5:**
-- [ ] CSP habilitado sem quebrar funcionalidade
-- [ ] Histórico truncado e latência < 3s para perguntas simples
-- [ ] `admin.html` com painel de configuração completo e autenticado
-- [ ] Indicador de fonte de IA visível em todas as respostas
-- [ ] SMTP configurado via variável de ambiente
-
----
-
-## Dependências entre Fases
-
+**Tarefa 2.1.1 — Migrar tarefas para SQLite**
 ```
-FASE 1 ──► Obrigatório antes da apresentação (07/07)
-FASE 2 ──► Depende de FASE 1 concluída
-FASE 3 ──► FASE 3.2 depende de FASE 2 (settings com composioKey)
-FASE 4 ──► FASE 4.1 independente | FASE 4.4 depende de FASE 3.2
-FASE 5 ──► Depende de FASE 3 e FASE 4 concluídas
+Atual: tasks.json + localStorage
+Destino: tabela tarefas no Lumina.db
+Impacto: Consultas por data, prioridade, filtros
 ```
 
-## Estimativa de Esforço Total
+**Tarefa 2.1.2 — Migrar hábitos para SQLite**
+```
+Atual: habits.json + localStorage
+Destino: tabelas habitos + habito_registros
+Impacto: Histograma de dias, streaks, estatísticas
+```
 
-| Fase | Esforço estimado | Risco de regressão |
-|------|-----------------|-------------------|
-| FASE 1 | 2–4h | Nenhum (apenas correções e config) |
-| FASE 2 | 4–6h | Baixo (wiring de rotas existentes) |
-| FASE 3 | 8–16h | Médio (novo código de autenticação e OAuth) |
-| FASE 4 | 12–20h | Médio (RAG, Piper, Ollama) |
-| FASE 5 | 8–12h | Médio (CSP, historial truncamento) |
-| **Total** | **34–58h** | — |
+**Tarefa 2.1.3 — Migrar finanças para SQLite**
+```
+Atual: finances.json + localStorage
+Destino: tabela financas
+Impacto: Relatórios por período, categorias, saldo
+```
+
+**Tarefa 2.1.4 — Migrar memória para SQLite**
+```
+Atual: memory.json + tabela fatos (criada mas vazia)
+Destino: Popular tabela fatos no Lumina.db
+Impacto: Busca estruturada, relacionamentos, consolidação
+```
+
+**Tarefa 2.1.5 — Migrar base de conhecimento para SQLite**
+```
+Atual: notes.json
+Destino: tabela conhecimento
+Impacto: Full-text search, filtro por categoria, fonte
+```
+
+### 2.2 RAG / Embeddings
+
+**Tarefa 2.2.1 — Migrar embeddings.json para SQLite**
+```
+Atual: JSON flat cresce indefinidamente
+Destino: tabela embeddings com vector BLOB
+Impacto: Performance, sem rebuild total a cada mudança
+Dependência: sqlite-vec ou serialização manual de Float32Array
+```
+
+**Tarefa 2.2.2 — Re-index incremental**
+```
+Atual: Rebuild total a cada mudança de nota
+Destino: Re-index apenas das notas alteradas (por hash)
+Impacto: Performance para vaults grandes
+```
+
+### 2.3 Chat e Histórico
+
+**Tarefa 2.3.1 — Unificar histórico localStorage e SQLite**
+```
+Atual: Histórico em localStorage (cache) + SQLite (log)
+Situação: Funciona mas pode dessincronizar
+Solução: SQLite como fonte única, localStorage como cache de sessão
+```
+
+### 2.4 Configurações
+
+**Tarefa 2.4.1 — Criar painel de configurações na UI**
+```
+Atual: Configurações só via chat ("configure gemini key...")
+Destino: Tela de configurações com campos visuais
+Inclui: API keys, modelo Ollama, parâmetros de frete, SMTP
+```
 
 ---
 
-*Arquivo gerado automaticamente como parte da análise arquitetural da Lúmina v2.0.0*
+## FASE 3 — MÓDULOS CORPORATIVOS
+**Prazo sugerido:** 2-4 semanas  
+**Objetivo:** Polir e integrar completamente os módulos de negócio da Scapini.
+
+### 3.1 Financeiro / DRE
+
+**Tarefa 3.1.1 — Integrar DRE com histórico de meses**
+```
+Atual: Análise de planilha pontual (arquivo por arquivo)
+Destino: Banco histórico de DREs mensais para comparação automática
+```
+
+**Tarefa 3.1.2 — Relatório KPI automatizado**
+```
+Atual: Geração sob demanda
+Destino: Agendamento mensal automático + envio por email
+```
+
+### 3.2 RH / Recrutamento
+
+**Tarefa 3.2.1 — Expandir banco de perguntas**
+```
+Atual: 5 perguntas hardcoded por cargo
+Destino: 30 perguntas por cargo, sorteio de 10 por entrevista
+Inclui: Vagas configuráveis (não só as 4 atuais)
+```
+
+**Tarefa 3.2.2 — Painel RH interno Lúmina**
+```
+Atual: /api/candidaturas disponível
+Destino: Tela visual na Lúmina para ver/filtrar candidatos
+Nota: Portal RH externo congelado — este é o painel interno
+```
+
+**Tarefa 3.2.3 — Análise comparativa de candidatos**
+```
+Atual: Avaliação individual
+Destino: Comparação side-by-side de candidatos para a mesma vaga
+```
+
+### 3.3 Operacional / Frete
+
+**Tarefa 3.3.1 — Integração rastreamento CGI**
+```
+Atual: MOTORISTAS_DEMO hardcoded
+Destino: API real do sistema CGI Scapini
+Bloqueio: Aguarda definição da API CGI pela TI da Scapini
+```
+
+**Tarefa 3.3.2 — Histórico de cotações**
+```
+Atual: Cotações salvas no SQLite mas sem UI de consulta
+Destino: "Minhas últimas cotações" acessível por chat
+```
+
+### 3.4 Comercial / Prospecção
+
+**Tarefa 3.4.1 — CRM visual na Lúmina**
+```
+Atual: Leads no SQLite, acesso só por chat
+Destino: Pipeline Kanban de leads (novo/contatado/proposta/fechado)
+```
+
+**Tarefa 3.4.2 — Testar Composio Gmail OAuth em produção**
+```
+Atual: OAuth configurado com callback localhost:8080
+Risco: Composio pode não aceitar localhost como redirectUri
+Ação: Testar o fluxo completo de conexão Gmail
+```
+
+---
+
+## FASE 4 — AUTOMAÇÃO E RAG AVANÇADO
+**Prazo sugerido:** 1-2 meses  
+**Objetivo:** Elevar capacidades de automação e busca semântica.
+
+### 4.1 Obsidian / RAG
+
+**Tarefa 4.1.1 — Embeddings no SQLite com busca eficiente**
+```
+Implementar tabela embeddings com serialização de vetores
+Cosine similarity em memória para coleções < 10.000 vetores
+Fallback para busca lexical mantido
+```
+
+**Tarefa 4.1.2 — Sync automático com vault Obsidian**
+```
+Atual: Sync manual via comando
+Destino: Watcher de alterações no vault, sync em background
+```
+
+### 4.2 Puppeteer Avançado
+
+**Tarefa 4.2.1 — Anti-prompt-injection em conteúdo web**
+```
+Aplicar sanitizeForLLM() antes de injetar conteúdo de páginas no contexto
+```
+
+**Tarefa 4.2.2 — Scraping de dados da Scapini (sistemas internos)**
+```
+Extrair dados do sistema CGI via Puppeteer como etapa intermediária
+Antes da integração API direta (preparação)
+```
+
+### 4.3 Notificações e Lembretes
+
+**Tarefa 4.3.1 — Lembretes recorrentes**
+```
+Atual: Recorrência prevista no schema (diario/semanal/mensal) mas sem handler
+Destino: Scheduler processa recorrências automaticamente
+```
+
+**Tarefa 4.3.2 — Proativo horário**
+```
+Atual: checkProactive() a cada 60s verifica hábitos e tarefas
+Melhorar: Sugestões contextuais baseadas no horário e dia da semana
+```
+
+### 4.4 VS Code Integration
+
+**Tarefa 4.4.1 — Completar integração dev**
+```
+Atual: readFile, editFile, writeFile, runCommand via LUMINA_DEV=1
+Destino: Interface de seleção de arquivo com LUMINA_DEV ativo por padrão em dev
+```
+
+---
+
+## FASE 5 — QUALIDADE PARA APRESENTAÇÃO
+**Prazo sugerido:** 3-5 dias antes da data `[APRESENTAÇÃO]`  
+**Objetivo:** Demo impecável, dados controlados, interface polida.
+
+### 5.1 Dados Demo `[APRESENTAÇÃO]`
+
+**Tarefa 5.1.1 — Limpar/resetar banco para demo**
+```
+Criar script reset-demo.js que:
+- Limpa tabela historico (conversas antigas de teste)
+- Mantém MOTORISTAS_DEMO correto
+- Popula leads de exemplo para demonstrar prospecção
+- Popula candidatos de exemplo para demonstrar RH
+- Popula lembretes de exemplo
+```
+
+**Tarefa 5.1.2 — Verificar DEMO_QA está completo**
+```
+Testar todos os 20+ pares de DEMO_QA com as perguntas que a diretoria vai fazer:
+- "Quem são os sócios da Scapini?"
+- "Quais motoristas estão ativos?"
+- "Qual a situação financeira do mês?"
+- "Como você me ajuda no dia a dia?"
+- "Você pode substituir funcionários?"
+```
+
+**Tarefa 5.1.3 — Preparar planilha DRE de exemplo**
+```
+Ter uma planilha DRE no formato CG Contadores pronta para upload durante a demo
+Garantir que a análise DRE funciona ao vivo
+```
+
+### 5.2 Interface `[APRESENTAÇÃO]`
+
+**Tarefa 5.2.1 — Status visual das integrações**
+```
+Adicionar indicadores na UI:
+- Ponto verde: Gemini conectado | Ponto amarelo: Offline (usando Ollama) | Ponto cinza: DEMO
+- Indicador de Ollama disponível/indisponível
+```
+
+**Tarefa 5.2.2 — Comandos escondidos → botões visíveis**
+```
+Adicionar botões ou atalhos visíveis para:
+- Screenshot (câmera icon)
+- Upload de documento (paperclip)
+- Status da IA (info icon)
+```
+
+**Tarefa 5.2.3 — Teste completo de fluxo da apresentação**
+```
+Roteiro de demo testado 3x antes do dia:
+1. Wake word ativa a Lúmina
+2. Apresentação da empresa
+3. Consulta financeira (DRE)
+4. Cotação de frete ao vivo
+5. Consulta de motoristas
+6. Busca de candidatos
+7. Prospecção de clientes
+8. Lúmina offline → Ollama → badge ⚡ local
+9. Geração de relatório PDF
+```
+
+### 5.3 Logs e Performance `[APRESENTAÇÃO]`
+
+**Tarefa 5.3.1 — Limpar console.log de desenvolvimento**
+```
+Remover ou comentar console.log excessivos que aparecem no Electron DevTools
+Manter apenas os [Lúmina] prefixados que são relevantes
+```
+
+**Tarefa 5.3.2 — Testar cold start**
+```
+Fechar a Lúmina completamente e abrir novamente
+Medir tempo de inicialização e garantir < 5 segundos
+Verificar que wake word ativa após 3 segundos do launch
+```
+
+---
+
+## DEPOIS DA APRESENTAÇÃO
+
+### Separação Sky / Lúmina
+```
+Conforme decisão de 2026-06-12:
+- Bifurcar código em dois modos: Sky (pessoal) e Lúmina (corporativo)
+- Implementar após a apresentação Scapini (~2026-07-07)
+- Sky herda as funcionalidades pessoais (hábitos, finanças, notas, tarefas)
+- Lúmina mantém o foco corporativo (frete, RH, prospecção, DRE)
+```
+
+### Fine-tuning Avançado
+```
+Pipeline Ollama para reduzir dependência do Gemini API:
+- Acumular pelo menos 100 conversas reais pós-apresentação
+- Avaliar qualidade do modelo lumina-treinada vs Gemini
+- Considerar usar um modelo maior (llama3:8b ou mistral:7b) como base
+```
+
+### Integração CGI
+```
+Prioridade pós-apresentação:
+- Rastreamento GPS real de frota
+- Dados reais de motoristas
+- Integração com sistema de ordem de serviço
+```
+
+---
+
+## RESUMO DE PRIORIDADES
+
+### OBRIGATÓRIO antes da apresentação (~2026-07-07)
+1. Mover credenciais para `.env`
+2. Proteger `/api/download-doc` com token
+3. Corrigir NBA no mapa ESPN
+4. Adicionar AbortSignal no Gemini de `/api/chat`
+5. Preparar dados demo controlados
+6. Testar roteiro da apresentação 3x
+
+### IMPORTANTE (próximas 2-4 semanas)
+7. Migrar dados JSON para SQLite (tarefas, hábitos, finanças, memória)
+8. Rate limit complementar
+9. Expandir banco de perguntas RH (30 por cargo)
+10. Painel de configurações visual
+
+### FUTURO (1-3 meses)
+11. Separação Sky / Lúmina
+12. Integração CGI real
+13. RAG em SQLite (sqlite-vec)
+14. CSP habilitado
+15. Lembretes recorrentes

@@ -1,499 +1,293 @@
-# Checklist de Testes Manual — Lúmina IA (Scapini Transportes)
+# CHECKLIST DE TESTES — LÚMINA IA CORPORATIVA
+**Scapini Transportes | 2026-06-26**
 
-> Documento gerado em 2026-06-25 | Para uso antes da apresentação à diretoria (~2026-07-07)
->
-> **Como usar:** Execute cada teste na ordem. Marque ✅ aprovado, ⚠️ aprovado com ressalva, ❌ reprovado.
-> Um item ❌ em qualquer teste do Bloco A bloqueia a demo.
-
----
-
-## BLOCO A — Inicialização e Infraestrutura (Pré-requisito obrigatório)
-
-### A1 — Inicialização do Electron
-
-**Passos:**
-1. Executar `npm run lumina` no terminal
-2. Aguardar mensagem no console: `Lúmina → http://127.0.0.1:8080`
-3. Aguardar a janela abrir automaticamente
-
-**Resultado esperado:**
-- Console mostra banner ASCII da Lúmina sem erros vermelhos
-- Janela da Lúmina abre centralizada, fundo escuro `#0a0303`
-- Tray icon vermelho aparece na bandeja do sistema
-- Nenhum erro EADDRINUSE (indica que killPort(8080) funcionou)
-
-**Critério de aprovação:** Janela visível em < 5 segundos sem erro no console.
+> Execute este checklist antes de qualquer apresentação para a diretoria.  
+> Marque ✅ quando passar, ❌ quando falhar (registre o motivo).
 
 ---
 
-### A2 — Ícone na Bandeja (Tray)
+## GRUPO 1 — INICIALIZAÇÃO
 
-**Passos:**
-1. Com a janela aberta, pressionar Esc
-2. Clicar no ícone na bandeja do sistema
-3. Clicar com botão direito → ver menu contextual
-
-**Resultado esperado:**
-- Esc oculta a janela
-- Clique no tray mostra a janela novamente
-- Menu contextual tem: Mostrar Lúmina, Esconder, Iniciar com Windows, Sair
-
-**Critério de aprovação:** Todos os 4 itens do menu aparecem; Esc oculta e clique mostra.
+| # | Teste | Como testar | Resultado esperado |
+|---|-------|------------|-------------------|
+| 1.1 | Cold start Electron | Fechar completamente e abrir com `npm run lumina` | Janela abre em < 5 segundos |
+| 1.2 | Servidor sobe corretamente | Ver logs no Electron DevTools (F12) | Mensagem "Servidor rodando em 127.0.0.1:8080" |
+| 1.3 | Wake word ativa após startup | Esperar 3s e dizer "Lúmina" | IA responde "Pronto, pode falar" |
+| 1.4 | F6 esconde/mostra janela | Pressionar F6 | Janela some e reaparece |
+| 1.5 | Tray icon aparece | Ver system tray | Ícone da Lúmina visível |
+| 1.6 | Token injetado no fetch | DevTools → Network → ver header X-Lumina-Token | Header presente em todas as chamadas /api/ |
 
 ---
 
-### A3 — Atalho Global F6
+## GRUPO 2 — CHAT BÁSICO
 
-**Passos:**
-1. Esconder a janela (Esc ou clique no tray)
-2. Pressionar F6 com outra aplicação em foco
-
-**Resultado esperado:**
-- Janela aparece sobre a aplicação ativa
-- F6 novamente oculta a janela
-
-**Critério de aprovação:** Toggle correto a partir de qualquer aplicação.
-
----
-
-### A4 — Token de Sessão Local
-
-**Passos:**
-1. Abrir DevTools (Ctrl+Shift+I no Electron)
-2. Na aba Network, fazer qualquer pergunta ao chat
-3. Verificar o header `X-Lumina-Token` nas requisições para `POST /api/chat`
-
-**Resultado esperado:**
-- Header presente em todas as requisições POST
-- Valor é uma string hex de 64 caracteres
-- Requisição sem o header retorna 401 (testar via curl ou fetch manual no console)
-
-**Critério de aprovação:** Token presente; sem token → 401.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 2.1 | Saudação simples | "Olá Lúmina" | Resposta natural em português |
+| 2.2 | Pergunta sobre a empresa | "O que é a Scapini Transportes?" | Informações sobre a Scapini |
+| 2.3 | Pergunta sobre a própria IA | "Quem te criou?" | "Sou a Lúmina, IA da Scapini" (sem mencionar Google/Gemini/Anthropic) |
+| 2.4 | Chat por texto direto | Digitar mensagem e Enter | Resposta em < 5 segundos |
+| 2.5 | Conversa múltiplas mensagens | 5 perguntas seguidas | Contexto mantido entre mensagens |
+| 2.6 | Abreviações PT-BR | "vc pode me ajudar?" | "você" normalizado antes de enviar |
+| 2.7 | Cache de sessão | Repetir mesma pergunta | Segunda resposta chega instantânea |
 
 ---
 
-## BLOCO B — Chat e IA
+## GRUPO 3 — VOZ
 
-### B1 — Resposta Gemini
-
-**Passos:**
-1. Digitar: "Qual o CNPJ da Scapini Transportes?"
-2. Aguardar resposta
-
-**Resultado esperado:**
-- Lúmina responde com informação sobre a Scapini (ou tenta buscar)
-- Resposta não vaza "Gemini", "Google AI" ou "Claude" (sanitizeIdentity)
-- Badge "DEMO" NÃO aparece (resposta veio do Gemini real)
-
-**Critério de aprovação:** Resposta coerente sem vazar identidade do modelo base.
+| # | Teste | Como testar | Resultado esperado |
+|---|-------|------------|-------------------|
+| 3.1 | Wake word básico | Dizer "Lúmina" em tom normal | Ativa e responde |
+| 3.2 | Wake word com sotaque | Dizer "Lumina" (sem acento) | Ativa (NFD/NFC normalizado) |
+| 3.3 | Conversa contínua | Após wake word, fazer pergunta direta | Não precisa repetir "Lúmina" |
+| 3.4 | Comando de voz complexo | "Qual a cotação do dólar hoje?" | Busca cotação e responde por voz |
+| 3.5 | Ruído de fundo | Testar com barulho ao redor | Wake word não ativa sem intenção |
 
 ---
 
-### B2 — Fallback DEMO
+## GRUPO 4 — TTS (VOZ DA LÚMINA)
 
-**Passos:**
-1. Temporariamente: colocar geminiKey inválida no config (para simular erro)
-2. Ou: desconectar internet
-3. Digitar qualquer pergunta simples
-
-**Resultado esperado:**
-- Lúmina responde mesmo sem Gemini
-- Badge "DEMO" ou indicador visual de modo offline aparece na UI
-- Resposta faz sentido para o contexto Scapini
-
-**Critério de aprovação:** Resposta em < 2 segundos sem Gemini.
-
-> Restaurar geminiKey válida após o teste.
+| # | Teste | Como testar | Resultado esperado |
+|---|-------|------------|-------------------|
+| 4.1 | Edge TTS (padrão) | Perguntar algo, esperar resposta | Voz Thalita Neural em PT-BR |
+| 4.2 | Sem gaps entre frases | Resposta com múltiplas frases | Áudio contínuo sem pausas robóticas |
+| 4.3 | ElevenLabs (se configurado) | Configurar key e perguntar | Voz premium diferente da Edge |
+| 4.4 | Piper TTS offline | Desconectar internet, perguntar | Voz local via piper.exe |
+| 4.5 | Fallback Browser TTS | Simular falha de Edge e Piper | SpeechSynthesis do browser ativa |
+| 4.6 | Parar TTS | Clicar em stop / nova mensagem | Áudio para imediatamente |
 
 ---
 
-### B3 — DEMO_QA (Respostas do Workshop)
+## GRUPO 5 — FALLBACK DE IA
 
-**Passos:** Testar cada uma das perguntas mapeadas no DEMO_QA (arquivo mockData.js):
-
-1. Digitar a pergunta exata
-2. Digitar a pergunta com variação de capitalização
-3. Digitar a pergunta com um erro de digitação leve
-
-**Resultado esperado:**
-- Respostas corretas nas variações 1 e 2 (normalizeText cuida da capitalização)
-- Variação 3 pode ou não coincidir (aceitável)
-- Nenhuma resposta do DEMO_QA deve acionar o Gemini (verificar logs)
-
-**Critério de aprovação:** 100% de acertos para perguntas exatas; >80% para variações.
+| # | Teste | Como testar | Resultado esperado |
+|---|-------|------------|-------------------|
+| 5.1 | Gemini online | Perguntar qualquer coisa | Resposta vem do Gemini (sem badge) |
+| 5.2 | Gemini offline → Ollama | Remoção temporária da API key | Resposta vem do Ollama + badge "⚡ local" |
+| 5.3 | Badge "⚡ local" visível | Usar modo Ollama | Badge aparece na bolha da resposta |
+| 5.4 | Ollama offline → DEMO | Parar Ollama (`ollama stop`) com Gemini offline | Resposta DEMO aparece + badge DEMO |
+| 5.5 | DEMO não mostra erro técnico | Tudo offline | Usuário recebe resposta útil, nunca mensagem de erro técnico |
+| 5.6 | Recuperação automática | Ligar Gemini de volta | Próxima resposta usa Gemini novamente |
+| 5.7 | DEMO_QA workshop | "Iniciar apresentação" + perguntas do workshop | Respostas roteirizadas corretas |
 
 ---
 
-### B4 — Cache de Sessão
+## GRUPO 6 — UPLOAD DE DOCUMENTOS
 
-**Passos:**
-1. Fazer uma pergunta específica (ex: "Qual a temperatura em Porto Alegre?")
-2. Aguardar resposta
-3. Repetir a mesma pergunta
-
-**Resultado esperado:**
-- Segunda resposta chega em < 500ms (cache hit)
-- Resposta é idêntica à primeira
-
-**Critério de aprovação:** Segunda pergunta é visivelmente mais rápida.
-
----
-
-### B5 — Memória Persistente
-
-**Passos:**
-1. Dizer: "Lúmina, meu nome é [nome de teste]"
-2. Aguardar confirmação
-3. Fechar e reabrir a Lúmina
-4. Perguntar: "Qual é o meu nome?"
-
-**Resultado esperado:**
-- Lúmina responde com o nome informado após reinício
-- Memória persistiu via `POST /api/memory` e arquivo memory.json
-
-**Critério de aprovação:** Memória sobrevive ao reinício do app.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 6.1 | Upload PDF simples | PDF de 1 página | Conteúdo extraído e disponível no chat |
+| 6.2 | Upload PDF grande | PDF de 20+ páginas | Extrai e processa (pode ser lento) |
+| 6.3 | Upload DOCX | Documento Word | Texto extraído via mammoth |
+| 6.4 | Upload TXT | Arquivo de texto | Lido diretamente |
+| 6.5 | Upload Excel DRE | Planilha formato CG Contadores | Parser especializado processa corretamente |
+| 6.6 | Upload Excel genérico | Planilha qualquer | Análise básica disponível |
+| 6.7 | Upload de currículo PDF | CV de candidato | Análise de perfil gerada |
+| 6.8 | Arquivo inválido | .exe ou .zip | Recusado com mensagem clara |
+| 6.9 | Arquivo muito grande | > 20MB | Recusado antes do upload |
+| 6.10 | Download do documento | Após upload, pedir o arquivo | Arquivo baixável disponível (verificar auth) |
 
 ---
 
-## BLOCO C — Voz
+## GRUPO 7 — MEMÓRIA
 
-### C1 — Wake Word
-
-**Passos:**
-1. Aguardar 3 segundos após inicialização (startWakeWord auto-ativa)
-2. Falar claramente: "Lúmina, qual o horário?"
-3. Aguardar detecção
-
-**Resultado esperado:**
-- Rosto da Lúmina muda para estado "listening"
-- Transcrição aparece na caixa de texto
-- Resposta é gerada
-
-**Critério de aprovação:** Wake word detectada em ambiente com ruído controlado.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 7.1 | Salvar fato | "Meu nome é [Nome]" | "Anotado!" — fato salvo |
+| 7.2 | Recuperar fato | "Como eu me chamo?" (próxima sessão) | Responde com o nome salvo |
+| 7.3 | Aprendizado inline | Resposta contém `[aprendido: X]` | Fato X extraído e salvo automaticamente |
+| 7.4 | Memória persiste entre sessões | Fechar e reabrir a Lúmina | Memória ainda disponível |
+| 7.5 | Consolidação de memória | "Consolide minha memória" | Gemini resume e organiza os fatos |
 
 ---
 
-### C2 — Ruído de Fundo (Stress Test)
+## GRUPO 8 — TRANSCRIÇÃO
 
-**Passos:**
-1. Reproduzir áudio de fundo (música ambiente baixa)
-2. Aguardar 30 segundos sem falar
-
-**Resultado esperado:**
-- Wake word NÃO dispara por ruído ambiente
-- Console não mostra chamadas desnecessárias a `POST /api/transcribe-audio`
-
-**Critério de aprovação:** Zero falsos positivos em 30 segundos de ruído ambiente moderado.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 8.1 | Transcrição de áudio MP3 | Arquivo de voz em português | Texto transcrito com precisão |
+| 8.2 | Transcrição de WebM | Gravação do navegador | Transcrito corretamente |
+| 8.3 | Áudio longo (> 30s) | Arquivo de 1 minuto | Transcrição completa (pode demorar) |
+| 8.4 | Áudio com ruído | Gravação com barulho | Melhor esforço da transcrição |
 
 ---
 
-### C3 — TTS ElevenLabs
+## GRUPO 9 — INFORMAÇÕES EM TEMPO REAL
 
-**Passos:**
-1. Verificar que `elevenLabsKey` e `voiceId` estão configurados
-2. Fazer uma pergunta curta: "Bom dia, Lúmina"
-3. Aguardar resposta falada
-
-**Resultado esperado:**
-- Voz é a da ElevenLabs (qualidade neural alta)
-- Rosto muda para estado "speaking"
-- Resposta completa sem cortes
-
-**Critério de aprovação:** Áudio começa em < 3 segundos; qualidade neural confirmada.
-
----
-
-### C4 — Fallback TTS Edge
-
-**Passos:**
-1. Temporariamente: invalidar elevenLabsKey
-2. Fazer uma pergunta curta
-
-**Resultado esperado:**
-- Lúmina fala com voz Microsoft Edge (qualidade boa, sem key necessária)
-- Sem erro visível ao usuário
-- Sem mensagem de falha de TTS
-
-**Critério de aprovação:** Áudio começa em < 4 segundos com voz Edge.
-
-> Restaurar elevenLabsKey após o teste.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 9.1 | Cotação do dólar | "Quanto está o dólar?" | Cotação USD/BRL em tempo real |
+| 9.2 | Cotação do euro | "E o euro?" | Cotação EUR/BRL |
+| 9.3 | Ações B3 | "Cotação da VALE3" | Preço atual da ação |
+| 9.4 | Clima | "Como está o tempo em Porto Alegre?" | Previsão via wttr.in |
+| 9.5 | Notícias | "Que notícias tem?" | Manchetes G1/BBC Brasil |
+| 9.6 | Notícias de transporte | "Notícias do setor?" | Headlines Logweb/TransportaBrasil |
+| 9.7 | Esportes Brasileirão | "Como está o Brasileirão?" | Resultados e tabela |
+| 9.8 | Consulta CNPJ | "CNPJ da Scapini: 00.000.000/0001-00" | Dados da empresa via BrasilAPI |
 
 ---
 
-### C5 — Fallback TTS Browser
+## GRUPO 10 — OPERACIONAL / FRETE
 
-**Passos:**
-1. Desconectar internet (para bloquear msedge-tts)
-2. Fazer uma pergunta curta
-
-**Resultado esperado:**
-- Lúmina fala com SpeechSynthesis nativo do Electron
-- Voz menos natural, mas funcional
-
-**Critério de aprovação:** Áudio produzido mesmo sem internet.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 10.1 | Cotação básica | "Quanto custa frete de Porto Alegre para São Paulo, 5 toneladas de carga seca?" | Cotação com valores detalhados |
+| 10.2 | Parâmetros configuráveis | "Configure o preço do diesel para R$ 7,00" | Parâmetro atualizado |
+| 10.3 | Cotação com novo diesel | Repetir cotação após mudar diesel | Novo valor calculado corretamente |
+| 10.4 | Histórico de cotações | "Minhas últimas cotações" | Lista das cotações salvas |
 
 ---
 
-## BLOCO D — Gestão de Dados
+## GRUPO 11 — FINANCEIRO / CONTÁBIL
 
-### D1 — Criar e Verificar Tarefa
-
-**Passos:**
-1. Dizer: "Lúmina, cria uma tarefa: Revisar contrato até amanhã"
-2. Aguardar confirmação
-3. Abrir o painel de tarefas na UI
-
-**Resultado esperado:**
-- Tarefa aparece no painel com prazo
-- Arquivo `tasks.json` atualizado (verificar via DevTools ou terminal)
-- Nota correspondente no Obsidian Vault criada (se vault configurado)
-
-**Critério de aprovação:** Tarefa visível na UI e persistida no JSON.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 11.1 | Upload e análise DRE | Subir planilha DRE → "Analise minha DRE" | Análise detalhada por linha |
+| 11.2 | Gráfico DRE | "Gere um gráfico da DRE" | Gráfico aparece na tela |
+| 11.3 | Auditoria contábil | "Audite esta planilha" (com planilha carregada) | Classificação Crítico/Atenção/OK |
+| 11.4 | Month-End Closer | "Faça o fechamento mensal" | Análise de variância mês atual vs anterior |
+| 11.5 | Relatório KPI PDF | "Gere o relatório de KPIs" | PDF com layout Scapini é gerado e baixável |
 
 ---
 
-### D2 — Registro de Hábito
+## GRUPO 12 — GERAÇÃO DE ARQUIVOS
 
-**Passos:**
-1. Dizer: "Lúmina, registra que tomei água hoje"
-2. Perguntar: "Quais hábitos fiz hoje?"
-
-**Resultado esperado:**
-- Hábito marcado no dia de hoje
-- Segunda pergunta lista o hábito concluído
-- `habits.json` atualizado
-
-**Critério de aprovação:** Hábito registrado e listado corretamente.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 12.1 | Gerar Excel | "Crie uma planilha com [dados]" | .xlsx gerado e disponível para download |
+| 12.2 | Gerar Word | "Crie um documento com [conteúdo]" | .docx gerado |
+| 12.3 | Gerar PowerPoint | "Crie uma apresentação sobre [tema]" | .pptx gerado |
+| 12.4 | Gerar PDF geral | "Gere um PDF com [conteúdo]" | .pdf gerado |
+| 12.5 | PDF KPIs institucional | "Relatório de KPIs" | PDF com cabeçalho Scapini, seções por área |
 
 ---
 
-### D3 — Nota com RAG
+## GRUPO 13 — RH / RECRUTAMENTO
 
-**Passos:**
-1. Salvar uma nota: "Lúmina, salva: A transportadora parceira é a Expresso São Miguel, telefone 51-99999-0000"
-2. Aguardar indexação (triggerReindex automático)
-3. Perguntar: "Qual o telefone da São Miguel?"
-
-**Resultado esperado:**
-- Lúmina recupera a nota via busca semântica
-- Resposta cita o telefone salvo
-- Sem acesso ao Gemini (só usa embeddings locais)
-
-**Critério de aprovação:** Recuperação correta em < 3 segundos.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 13.1 | Criar entrevista para motorista | "Crie entrevista para motorista João Silva, email joao@email.com" | Link único gerado, email enviado |
+| 13.2 | Acessar link de entrevista | Abrir o link gerado no celular | Formulário de entrevista carrega corretamente |
+| 13.3 | Responder entrevista | Preencher e enviar respostas | "Respostas salvas" confirmado |
+| 13.4 | Avaliação automática | Após responder, aguardar avaliação | Nota e laudo gerados pelo Gemini |
+| 13.5 | Ver painel de candidatos | "Mostre os candidatos" | Lista com nota, faixa e status |
+| 13.6 | Análise de currículo | Upload de CV PDF | Análise de fit para a vaga |
+| 13.7 | E-mail de rejeição automático | Candidato reprovado aguardar 48h | E-mail enviado automaticamente |
 
 ---
 
-### D4 — Lembretes Proativos
+## GRUPO 14 — PROSPECÇÃO / COMERCIAL
 
-**Passos:**
-1. Dizer: "Lúmina, me lembra em 2 minutos para beber água"
-2. Aguardar 2 minutos
-
-**Resultado esperado:**
-- Toast notification do Windows aparece
-- SSE via `/api/events` envia evento de reminder
-- Lúmina fala o lembrete (se janela estiver aberta)
-
-**Critério de aprovação:** Lembrete chegou no tempo correto.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 14.1 | Prospectar clientes | "Encontre empresas de alimentos em Caxias do Sul" | Lista de leads gerada |
+| 14.2 | Leads salvos no SQLite | Após prospecção, "Mostre meus leads" | Leads listados corretamente |
+| 14.3 | Enviar e-mail via Composio | "Envie os e-mails para os leads prospectados" | E-mails enviados via Gmail (requer Composio conectado) |
+| 14.4 | Status Composio | "Status do Gmail" | Mostra se Composio está conectado |
 
 ---
 
-## BLOCO E — Módulo de Frete
+## GRUPO 15 — OBSIDIAN / RAG
 
-### E1 — Estimativa de Frete
-
-**Passos:**
-1. Dizer: "Lúmina, calcula o frete de Porto Alegre para São Paulo, 10 toneladas"
-2. Aguardar resposta
-
-**Resultado esperado:**
-- Lúmina chama `POST /api/frete-estimate`
-- Retorna valor estimado em R$, distância em km, tempo estimado
-- Cotação salva no banco SQLite
-
-**Critério de aprovação:** Resposta com valores numéricos coerentes; sem erro de geocode.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 15.1 | Busca na KB | "O que a Scapini faz?" (com notas no vault) | Resposta usa conteúdo do vault |
+| 15.2 | Busca semântica | Pergunta relacionada (não palavra-a-palavra) | RAG encontra nota relevante |
+| 15.3 | Busca lexical fallback | Mesma pergunta com Gemini offline | Fallback para busca por keyword |
+| 15.4 | Import de vault | "Importe meu vault Obsidian" | Notas importadas para a KB |
+| 15.5 | Sync Obsidian | "Sincronize com o Obsidian" | Memória espelhada para notas do vault |
 
 ---
 
-### E2 — Exportação de Leads
+## GRUPO 16 — AUTOMAÇÃO / PUPPETEER
 
-**Passos:**
-1. Garantir que há ao menos 1 lead no banco (criar via prospect ou manualmente)
-2. Dizer: "Lúmina, exporta os leads"
-3. Aguardar download
-
-**Resultado esperado:**
-- Arquivo Excel baixado com os leads
-- Arquivo abre no Excel/LibreOffice sem erro
-- Dados correspondem ao banco SQLite
-
-**Critério de aprovação:** Arquivo Excel válido com dados corretos.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 16.1 | Screenshot | "Tire um screenshot" | Imagem salva em ~/Pictures/Lumina Prints/ |
+| 16.2 | Abrir URL | "Abra o site da Scapini" | Chrome abre scapini.com.br |
+| 16.3 | Abrir projeto interno | "Abra o CRM" | localhost:5173 abre no browser |
+| 16.4 | Automação com Puppeteer | "Acesse [URL] e me diga [informação]" | Puppeteer extrai a informação |
+| 16.5 | Lembrete | "Me lembre amanhã às 9h de ligar para o cliente" | Lembrete salvo no SQLite |
+| 16.6 | Notificação no horário | Aguardar horário configurado | Toast notification Windows aparece |
 
 ---
 
-## BLOCO F — Módulo de Recrutamento (RH)
+## GRUPO 17 — SEGURANÇA
 
-### F1 — Criação de Candidatura
-
-**Passos:**
-1. Acessar diretamente `http://127.0.0.1:8080/entrevista/[token]` (criar via POST /api/candidatura)
-2. Responder ao menos 2 perguntas da entrevista
-
-**Resultado esperado:**
-- Formulário de entrevista carrega corretamente
-- Respostas são salvas no banco `data/recrutamento.db`
-- Ao final, e-mail é enviado para Marjorie (se SMTP configurado)
-
-**Critério de aprovação:** Respostas salvas no banco; e-mail enviado (ou log de aviso se SMTP offline).
-
----
-
-### F2 — Painel de Candidaturas
-
-**Passos:**
-1. Acessar `http://127.0.0.1:8080/candidaturas` no Electron (via Lúmina: "abre candidaturas")
-2. Verificar lista de candidatos
-
-**Resultado esperado:**
-- Lista de candidaturas exibida
-- Colunas: nome, cargo, data, status
-- Dados correspondem ao banco
-
-**Critério de aprovação:** Painel carrega sem erro 404 e exibe dados reais.
+| # | Teste | Como testar | Resultado esperado |
+|---|-------|------------|-------------------|
+| 17.1 | Rate limit chat | Enviar 35 mensagens em 1 minuto | Mensagem de erro "Muitas requisições" |
+| 17.2 | Rate limit browser | 12 comandos de browser em 1 minuto | Limite atingido com mensagem |
+| 17.3 | Token ausente | `curl http://127.0.0.1:8080/api/config` sem header | `401 Não autorizado` |
+| 17.4 | Token inválido | Header `X-Lumina-Token: errado` | `403 Token inválido` |
+| 17.5 | Origin externa | `curl` com `Origin: http://evil.com` | Bloqueado pelo origin check |
+| 17.6 | Upload de .exe | Tentar fazer upload de executável | Recusado com mensagem clara |
+| 17.7 | Dev mode sem env var | `curl /api/dev/exec` sem `LUMINA_DEV=1` | `403 Dev mode desabilitado` |
+| 17.8 | Download sem token | `curl /api/download-doc/arquivo.pdf` | `401 Não autorizado` (após correção) |
+| 17.9 | Acesso externo bloqueado | Tentar de outra máquina na rede | Conexão recusada (bind 127.0.0.1) |
 
 ---
 
-## BLOCO G — Consultas Externas
+## GRUPO 18 — DADOS PERSISTENTES
 
-### G1 — CNPJ
-
-**Passos:**
-1. Dizer: "Lúmina, consulta o CNPJ 12.345.678/0001-00" (usar um CNPJ real)
-
-**Resultado esperado:**
-- Lúmina retorna razão social, endereço e situação cadastral
-- Usado pelo menos uma das 3 fontes (BrasilAPI / ReceitaWS / cnpj.ws)
-
-**Critério de aprovação:** Dados corretos do CNPJ consultado.
+| # | Teste | Input | Resultado esperado |
+|---|-------|-------|-------------------|
+| 18.1 | Criar tarefa | "Adicione uma tarefa: reunião amanhã" | Tarefa aparece na lista |
+| 18.2 | Completar tarefa | "Marque a reunião como concluída" | Tarefa marcada como done |
+| 18.3 | Hábito diário | "Registre que fiz meu exercício hoje" | Hábito registrado |
+| 18.4 | Entrada financeira | "Registre R$ 500 de despesa com combustível" | Despesa adicionada |
+| 18.5 | Nota | "Salve esta nota: [conteúdo]" | Nota salva e recuperável |
+| 18.6 | Persistência entre sessões | Fechar e reabrir, verificar dados | Todos os dados intactos |
 
 ---
 
-### G2 — Clima e Câmbio
+## GRUPO 19 — CENÁRIO DE APRESENTAÇÃO (ROTEIRO COMPLETO)
 
-**Passos:**
-1. Dizer: "Qual o tempo em Caxias do Sul agora?"
-2. Dizer: "Qual o dólar hoje?"
+Execute este grupo completo como ensaio da apresentação:
 
-**Resultado esperado:**
-- Clima retorna temperatura e condição atual (wttr.in)
-- Câmbio retorna cotação BRL/USD atual (AwesomeAPI)
-
-**Critério de aprovação:** Dados retornados coerentes com data/hora atual.
-
----
-
-## BLOCO H — Geração de Documentos
-
-### H1 — Relatório KPI PDF
-
-**Passos:**
-1. Dizer: "Lúmina, gera um relatório KPI do mês"
-
-**Resultado esperado:**
-- PDF baixado com cabeçalho/rodapé Scapini
-- Tabela de KPIs colorida
-- Arquivo abre sem erro
-
-**Critério de aprovação:** PDF válido com identidade visual Scapini.
+| # | Passo | Ação | Resultado esperado |
+|---|-------|------|--------------------|
+| 19.1 | Introdução | "Lúmina, se apresente para a diretoria" | Auto-apresentação elegante |
+| 19.2 | Liderança | "Quem são os diretores da Scapini?" | Lista com Diamantino, Ernani, Rosangela, Lucas |
+| 19.3 | Ajuda financeira | "Como você ajuda o setor financeiro?" | Explica auditoria, DRE, relatórios |
+| 19.4 | Análise DRE ao vivo | Upload da planilha DRE de exemplo | Análise gerada em 10-20s |
+| 19.5 | Cotação de frete | "Cota frete de Porto Alegre para São Paulo, 10 toneladas" | Cotação com valores detalhados |
+| 19.6 | Candidato | "Cria uma entrevista para motorista" | Link gerado |
+| 19.7 | Prospecção | "Encontre clientes de bebidas no RS" | Lista de prospects |
+| 19.8 | Dólar | "Quanto está o dólar agora?" | Cotação em tempo real |
+| 19.9 | Offline test | Desconectar internet — fazer pergunta | Badge ⚡ local, Ollama responde |
+| 19.10 | Pergunta difícil | "Você pode me demitir?" | Resposta segura: nega substituição de pessoas |
+| 19.11 | Encerramento | "Obrigado Lúmina" | Resposta cordial de encerramento |
 
 ---
 
-### H2 — Geração de PPTX
+## REGISTRO DE EXECUÇÃO
 
-**Passos:**
-1. Dizer: "Lúmina, cria uma apresentação sobre a frota da Scapini"
+**Data do teste:** ___________  
+**Testado por:** ___________  
+**Versão:** 2.0.0
 
-**Resultado esperado:**
-- Arquivo `.pptx` baixado
-- Abre no PowerPoint/LibreOffice
-- Conteúdo gerado pelo Gemini
+| Grupo | Total | Passou | Falhou | % |
+|-------|-------|--------|--------|---|
+| 1 — Inicialização | 6 | | | |
+| 2 — Chat Básico | 7 | | | |
+| 3 — Voz | 5 | | | |
+| 4 — TTS | 6 | | | |
+| 5 — Fallback IA | 7 | | | |
+| 6 — Documentos | 10 | | | |
+| 7 — Memória | 5 | | | |
+| 8 — Transcrição | 4 | | | |
+| 9 — Tempo Real | 8 | | | |
+| 10 — Frete | 4 | | | |
+| 11 — Financeiro | 5 | | | |
+| 12 — Geração Arquivos | 5 | | | |
+| 13 — RH | 7 | | | |
+| 14 — Prospecção | 4 | | | |
+| 15 — RAG | 5 | | | |
+| 16 — Automação | 6 | | | |
+| 17 — Segurança | 9 | | | |
+| 18 — Dados Persistentes | 6 | | | |
+| 19 — Roteiro Apresentação | 11 | | | |
+| **TOTAL** | **124** | | | |
 
-**Critério de aprovação:** PPTX abre sem erro; conteúdo coerente com o tema.
-
----
-
-## BLOCO I — Segurança
-
-### I1 — Bloqueio de Origem Cruzada
-
-**Passos:**
-1. No navegador externo (Chrome), acessar `http://127.0.0.1:8080`
-2. Tentar fazer uma requisição `POST /api/chat` com `fetch()`
-
-**Resultado esperado:**
-- Requisição retorna 403 (origem bloqueada por `isTrustedOrigin()`)
-- Console do servidor mostra "[BLOQUEADO] Origem não confiável"
-
-**Critério de aprovação:** 403 confirmado para origem externa.
-
----
-
-### I2 — Rate Limit
-
-**Passos:**
-1. Enviar 35 requisições em 1 minuto para `POST /api/chat`
-
-**Resultado esperado:**
-- A partir da 31ª requisição, retorno 429 "Muitas requisições"
-
-**Critério de aprovação:** 429 na 31ª requisição.
-
----
-
-### I3 — Path Traversal nos Dev Tools
-
-**Passos (apenas com LUMINA_DEV=1):**
-1. Fazer POST `/api/dev/read` com `{"path": "../../../etc/passwd"}`
-2. Fazer POST `/api/dev/read` com `{"path": "C:/Windows/System32/drivers/etc/hosts"}`
-
-**Resultado esperado:**
-- Ambas retornam erro 403 "Caminho não permitido"
-- `resolveWorkspacePath()` bloqueou o acesso
-
-**Critério de aprovação:** 403 em ambas as tentativas.
-
----
-
-### I4 — Upload de Arquivo Inválido
-
-**Passos:**
-1. Fazer upload de um arquivo `.exe` renomeado para `.pdf`
-2. Fazer upload de um arquivo `.pdf` real
-
-**Resultado esperado:**
-- `.exe` renomeado → rejeitado (magic bytes inválidos: não começa com `%PDF-`)
-- `.pdf` real → aceito e processado
-
-**Critério de aprovação:** Validação de magic bytes funciona independente da extensão.
-
----
-
-## Critérios Gerais de Aprovação para a Demo
-
-| Categoria | Mínimo para aprovação |
-|-----------|----------------------|
-| Inicialização | A1, A2, A3, A4 todos ✅ |
-| Chat e IA | B1, B3, B5 todos ✅ |
-| Voz | C1, C3 ✅ (C4 e C5 ⚠️ aceitável) |
-| Gestão de dados | D1, D2 ✅ |
-| Frete | E1 ✅ |
-| RH | F1 ⚠️ (pode ficar pendente se SMTP não configurado) |
-| Consultas externas | G1, G2 ✅ |
-| Documentos | H1 ✅ |
-| Segurança | I1, I2 ✅ (I3, I4 verificação interna) |
-
-**Um único ❌ nos itens de mínimo bloqueia a apresentação.**
-
----
-
-*Arquivo gerado automaticamente como parte da análise arquitetural da Lúmina v2.0.0*
+**Critério para apresentação:** Grupo 19 (roteiro) 100% e grupos 2, 3, 5 acima de 85%.
