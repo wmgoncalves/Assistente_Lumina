@@ -1,41 +1,20 @@
-node_modules/
+# Credenciais — nunca versionar
+.env
 config.json
+
+# Dados locais
+Lumina.db
+Lumina.db-shm
+Lumina.db-wal
+data/recrutamento.db
 memory.json
-notes.json
-tasks.json
-habits.json
-finances.json
 embeddings.json
-server.log
+ollama-train-state.json
 uploads/
-# Workspaces
-sky.code-workspace
-lumina.code-workspace
-*.code-workspace
-*.log
-*.jsonl
-# Banco SQLite — dados reais, não vai pro git
-sky.db
-sky.db-shm
-sky.db-wal
-Lúmina.db
-Lúmina.db-shm
-Lúmina.db-wal
-# Bancos dos módulos locais
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/*.db-journal
-# Saídas temporárias de testes
-test_*_out.txt
-test_*_err.txt
-# IDE / Claude Code internals
-.agents/
-.codex/
-.claude/
-# Outros arquivos locais
-audit_full.json
-learner.log
-# Build artifacts
+
+# Node
+node_modules/
+
+# Electron build
 dist/
-build/
+out/

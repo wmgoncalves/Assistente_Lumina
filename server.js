@@ -1,4 +1,5 @@
-﻿const express    = require('express');
+﻿require('dotenv').config();
+const express    = require('express');
 const path       = require('path');
 const fs         = require('fs');
 const crypto     = require('crypto');
@@ -74,7 +75,17 @@ let _cfgCache  = null;
 let _memCache  = null;
 let _embedCache = null;
 
-const getCfg  = () => _cfgCache  || (_cfgCache  = readJSON(CONFIG_FILE,  { geminiKey: '', elevenLabsKey: '', username: '' }));
+const getCfg  = () => {
+  if (!_cfgCache) {
+    _cfgCache = readJSON(CONFIG_FILE, { geminiKey: '', elevenLabsKey: '', username: '' });
+    // Variáveis de ambiente sobrepõem config.json (segurança)
+    if (process.env.GEMINI_KEY)      _cfgCache.geminiKey      = process.env.GEMINI_KEY;
+    if (process.env.ELEVENLABS_KEY)  _cfgCache.elevenLabsKey  = process.env.ELEVENLABS_KEY;
+    if (process.env.COMPOSIO_KEY)    _cfgCache.composioKey    = process.env.COMPOSIO_KEY;
+    if (process.env.SMTP_PASS)       _cfgCache.smtpPass       = process.env.SMTP_PASS;
+  }
+  return _cfgCache;
+};
 const getMem  = () => {
   if (!_memCache) {
     _memCache = readJSON(MEMORY_FILE, { userName: null, facts: [], sessions: 0, lastSeen: null, history: [] });
@@ -122,11 +133,12 @@ const hasValidLocalToken = (req) => {
 const PUBLIC_GET_ENDPOINTS = [
   /^\/api\/local-session$/,
   /^\/api\/events$/,
-  /^\/api\/download-doc\//,
   /^\/api\/leads\/export$/,
   /^\/api\/piper-available$/,
   /^\/api\/news$/,
+  /^\/api\/news\//,
   /^\/api\/sports$/,
+  /^\/api\/cnpj\//,
 ];
 
 const SENSITIVE_GET_ENDPOINTS = [
@@ -186,6 +198,17 @@ app.use('/api/tts',  chatLimiter);
 app.use('/api/tts-piper', chatLimiter);
 app.use('/api/tts-edge',  chatLimiter);
 app.use('/api/browser',   rateLimit({ windowMs: 60 * 1000, max: 10, message: { error: 'Limite do browser atingido.' } }));
+
+// Rate limit para rotas pesadas (upload, transcrição, prospecção, geração de arquivos)
+const uploadLimiter = rateLimit({ windowMs: 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { error: 'Limite de uploads atingido. Aguarde um momento.' } });
+const heavyLimiter  = rateLimit({ windowMs: 60 * 1000, max: 5,  standardHeaders: true, legacyHeaders: false, message: { error: 'Aguarde antes de fazer outra solicitação.' } });
+const candidaturaLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: { error: 'Muitas tentativas. Aguarde.' } });
+app.use('/api/ingest-doc',        uploadLimiter);
+app.use('/api/transcribe-audio',  uploadLimiter);
+app.use('/api/generate-file',     heavyLimiter);
+app.use('/api/frete-estimate',    heavyLimiter);
+app.use('/api/prospect',          heavyLimiter);
+app.use('/api/candidatura',       candidaturaLimiter);
 
 // Serve arquivos da raiz (versão atual da Lúmina) antes do public/
 const noCache = (res) => res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -389,7 +412,8 @@ app.post('/api/chat', async (req, res) => {
             system_instruction: { parts: [{ text: system }] },
             contents: messages,
             generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
-          })
+          }),
+          signal: AbortSignal.timeout(30000),
         }
       );
       if (r.ok) {
@@ -735,6 +759,7 @@ app.post('/api/ingest-doc', upload.single('file'), async (req, res) => {
 
 // ── Download de arquivo original da base de conhecimento ─────────────────────
 app.get('/api/download-doc/:filename', (req, res) => {
+  if (!hasValidLocalToken(req)) return res.status(401).json({ error: 'Não autorizado.' });
   const safeName = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
   const filePath = path.join(UPLOADS_DIR, safeName);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Arquivo não encontrado.' });
@@ -2488,7 +2513,7 @@ Verifique especialmente:
 });
 
 // ── Dev Mode — Agente de Desenvolvimento ─────────────────────────────────────
-const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]/i;
+const BLOCKED_CMDS = /rm\s+-rf\s+\/|format\s+[a-z]:|del\s+\/[sq]|Remove-Item.*-Recurse|rmdir\s+\/s|del\s+\*\.\*|format\s+[a-z]|rd\s+\/s|mkfs\.|shred\s|wipefs/i;
 const DEV_SEARCH_SKIP_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.codex', '.agents', '.claude']);
 
 const escapeRegExp = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -3021,7 +3046,7 @@ const ESPN_LEAGUES = {
   champions: 'uefa.champions',
   premier: 'eng.1',
   laliga: 'esp.1',
-  nba: null, // tratado separado
+  // nba: não implementado na ESPN soccer API
 };
 
 const TEAM_PT = {

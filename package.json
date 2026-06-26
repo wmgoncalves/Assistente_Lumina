@@ -14,6 +14,7 @@
     "composio": "^1.0.0",
     "composio-core": "^0.5.39",
     "docx": "^9.7.1",
+    "dotenv": "^17.4.2",
     "express": "^4.18.2",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
