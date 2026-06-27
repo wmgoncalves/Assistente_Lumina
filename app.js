@@ -5279,7 +5279,7 @@ const DEMO_QA = [
     ]},
 
   // NR-17 — ergonomia
-  { re: /\bnr.?17\b|ergonomia|postura.*trabalho|dor.*coluna.*trabalho|lesao.*postura|\bler\/dort\b|dort/,
+  { re: /\bnr.?17\b|ergonomia|postura.*trabalho|dor.*coluna.*trabalho|lesao.*postura|\bler\/dort\b|\bdort\b/,
     r: [
       'NR-17 trata de ergonomia no trabalho — adaptar o ambiente às características físicas do trabalhador. Para motoristas: assento regulável, apoio lombar, altura do volante. Para administrativo: mesa e cadeira reguláveis, monitor na altura dos olhos, pausas de 10 min a cada 50 min de digitação. Dor ou desconforto persistente: comunique o RH e procure o SESMT.',
       'LER/DORT (lesões por esforço repetitivo) são reconhecidas como doença ocupacional — geram CAT e afastamento pelo INSS. Prevenção: pausas regulares, ginástica laboral (quando disponível), posto de trabalho ergonômico. Se sentir dor nos pulsos, ombros ou coluna no trabalho, não espere piorar — comunique o SESMT da Scapini.',
@@ -5528,7 +5528,7 @@ const DEMO_QA = [
     ]},
 
   // Como funciona o CIOT
-  { re: /ciot|como.*gerar.*ciot|ciot.*como|ciot.*pagar|pagar.*autonomo.*ciot/,
+  { re: /\bciot\b|como.*gerar.*ciot|ciot.*como|ciot.*pagar|pagar.*autonomo.*ciot/,
     r: [
       'CIOT (Código Identificador da Operação de Transporte): obrigatório para contratar TAC (autônomo) por mais de 5 dias corridos. Gerado no portal da ANTT (transportes.gov.br). Contém: dados da viagem, valor do frete, dados do motorista e do embarcador. O pagamento ao motorista deve ocorrer via banco (transferência rastreável) — não pode ser dinheiro vivo se o valor > R$ 500. Multa por operar sem CIOT: até R$ 10.000.',
       'Passo a passo do CIOT: 1) Acesse o portal ANTT; 2) Informe CNPJ da transportadora, CPF do motorista, origem, destino, tipo de carga e valor do frete; 3) O sistema gera o código; 4) O motorista recebe a confirmação; 5) Guarde o comprovante — é obrigatório em fiscalização. Para volume alto de viagens, há sistemas que integram a emissão de CIOT automaticamente ao TMS.',
@@ -6608,7 +6608,7 @@ const DEMO_QA = [
     ]},
 
   // DDS e comunicação operacional interna
-  { re: /dds|dialogo.*diario.*seguranca|reuniao.*operacional|briefing.*motorista|comunicacao.*interna.*frota|reuniao.*frota|reuniao.*motorista/,
+  { re: /\bdds\b|dialogo.*diario.*seguranca|reuniao.*operacional|briefing.*motorista|comunicacao.*interna.*frota|reuniao.*frota|reuniao.*motorista/,
     r: [
       'DDS (Diálogo Diário de Segurança): reunião rápida (5-10 min) no início da operação com motoristas e ajudantes. Pauta: alertas de segurança do dia, condições das rodovias, previsão de tempo, checklist do veículo, regras de jornada. O DDS reduz acidentes e aumenta engajamento da equipe. Registre em ata assinada — é evidência para auditoria de segurança e seguro.',
       'Comunicação operacional interna: para frota em rota, use um grupo operacional (WhatsApp ou app de TMS) somente para informações de operação — desvios, atrasos, problemas de carga. Separe do grupo social. Motoristas devem usar o hands-free (Bluetooth) — atender o celular na direção é infração gravíssima. Para alertas urgentes, defina um número de plantão 24h.',
@@ -6871,7 +6871,7 @@ const DEMO_QA = [
   // ── BLOCO OPERACIONAL: Transporte, Regulamentação e Procedimentos ─────────────
 
   // MDFe
-  { re: /mdfe|manifesto eletronico|manifesto de documento/,
+  { re: /\bmdfe\b|manifesto eletronico|manifesto de documento/,
     r: [
       'O MDFe (Manifesto Eletrônico de Documentos Fiscais) é obrigatório para transporte interestadual e intermunicipal. Deve ser emitido antes do veículo sair do estabelecimento, encerrado ao chegar no destino. Contém a placa do veículo, motorista e todos os CT-es vinculados à viagem. Multa por falta: de R$ 500 a R$ 5.000.',
       'MDFe é o documento que "embala" os CT-es de uma viagem. Sem MDFe ativo, o veículo não pode circular com carga interestadual. É emitido pelo embarcador ou transportadora e transmitido à SEFAZ em tempo real. O encerramento deve ser feito assim que a carga for entregue no destino final.',
@@ -6948,7 +6948,7 @@ const DEMO_QA = [
     ]},
 
   // Seguro de carga
-  { re: /seguro.*carga|rctr|rcta|seguro.*roubo|seguro.*avaria|cobertura.*frete|indenizacao.*carga/,
+  { re: /seguro.*carga|\brctr\b|\brcta\b|seguro.*roubo|seguro.*avaria|cobertura.*frete|indenizacao.*carga/,
     r: [
       'O RCTR-C (Responsabilidade Civil do Transportador Rodoviário – Carga) é o seguro obrigatório para transportadoras. Cobre danos à carga por acidentes, incêndio e causas naturais. Além do obrigatório, a Scapini pode oferecer ao cliente o RCTA (seguro adicional contra roubo e extravio). Valores indenizados são calculados pela NF da mercadoria.',
       'Em caso de sinistro (acidente, roubo, avaria): fotografe tudo antes de mover a carga, registre boletim de ocorrência (para roubo: imediato), acione o seguro da Scapini em até 24h e guarde todos os documentos (CT-e, MDFe, BO). O prazo de prescrição para reclamar é de 1 ano. O setor de seguros cuida do processo de indenização.',
