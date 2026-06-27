@@ -518,7 +518,7 @@ SOBRE A SCAPINI:
 • Grupo Scapini — fundado em 1977 por Diamantino Scapini em Lajeado/RS. Quase 50 anos de história no transporte rodoviário de cargas.
 • Empresas do grupo: Scapini Transportes (cargas nacionais e internacionais), Translíquidos (produtos químicos e líquidos a granel, sede Canoas/RS), 365 Log (e-commerce/last-mile), Blue Seguros (corretora), LS TECH (tecnologia interna), Stokkie (armazenagem).
 • Operações internacionais: Argentina, Uruguai, Paraguai + TST Global (EUA, inaugurada set/2024).
-• 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste, Nordeste) + 3 internacionais (Argentina, Paraguai, Uruguai) = 21 unidades Mercosul; frota 500+ equipamentos (idade média 3,4 anos em 2024, 100% rastreada GPS); ~1.100 colaboradores (800 CLT + 300 terceirizados/agregados).
+• 18 filiais no Brasil (Sul, Sudeste, Centro-Oeste, Nordeste) + 3 internacionais + TST Global/EUA = 22 unidades; frota 500+ equipamentos (idade média 3,4 anos, 100% GPS, 16% a GNV — meta 24% descarbonização até 2030, renovação 40-50 caminhões/ano); ~1.100 colaboradores (800 CLT + 300 terceirizados/agregados).
 • Faturamento 2024: ~R$ 440 milhões (crescimento 28% vs 2023); meta 2030: R$ 1 bilhão.
 • Transporte rodoviário de cargas fracionadas e lotação — foco no corredor Sul-Sudeste.
 • Sistemas: CGI (ERP principal), App Motorista, sistema de manutenção, CRM, RH, financeiro, logística e compras.
@@ -3582,7 +3582,7 @@ const _thinkingBudget = (msg) => {
   // Análise pesada — raciocínio profundo (2048): analítico, comparativo, investigativo
   if (/dre|balancete|auditoria|fechamento|demonstrat|ebitda|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo|tabela.*antt|piso.*minimo|custo.*operacional.*km|roi.*frota|inadimplencia|cobrança.*juridica|rescisão.*contrato|multa.*contratual|renegociação|proposta.*comercial|licitação.*transporte|contrato.*cliente|revisão.*tarifaria|imposto.*transporte|difal.*frete|icms.*transporte|pis.*cofins.*transporte|simples.*nacional.*transportadora|auditoria.*cgi|inconsistência.*cgi|divergência.*faturamento|custo.*filial|resultado.*filial|custo.*rota.*analise|rentabilidade.*cliente|margem.*contribuição|acao.*trabalhista|passivo.*trabalhista|verbas.*rescis|processo.*trabalhista|defesa.*trabalhista|reclamacao.*trabalhista|trabalhista.*calculo|indenizacao.*trabalhista|folha.*recalculo|recalculo.*folha|rescisao.*calculo|calculo.*rescisao/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha|gnv.*frota|frota.*gnv|descarboniz.*frota|frota.*sustentavel|scapini.*sede|sede.*scapini|lajeado.*scapini|vale.*taquari.*scapini|renovacao.*frota|frota.*renovacao/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -4943,8 +4943,8 @@ const tryLocalResponse = (text) => {
   // ── Frota / veículos ──
   if (/frota|quantos.*caminh|caminhoes.*scapini|tipo.*veiculo|veiculos.*scapini|truck|carreta|bau|graneleiro/.test(t))
     return pick([
-      'A Scapini opera frota de 500+ equipamentos com rastreamento GPS em 100% dos veículos. Idade média 3,4 anos em 2024 — uma das frotas mais novas do setor no Sul. Mix: carreta SIDER, baú fechado, grade baixa, rodotrem e truck para distribuição regional. Manutenção preventiva programada reduz imobilização.',
-      'Frota Scapini: mais de 500 equipamentos, média de 3,4 anos de uso (2024), 100% rastreados por GPS em tempo real. Composição: própria + agregada (motorista com veículo próprio vinculado) + TAC (terceiros). Tipos: carreta SIDER (principal), baú fechado, grade baixa, rodotrem e truck. Ideal para cargas secas, fracionadas e de grande volume.',
+      'A Scapini opera frota de 500+ equipamentos com rastreamento GPS em 100% dos veículos. Idade média 3,4 anos em 2024 — uma das frotas mais novas do setor no Sul. 16% da frota já roda a GNV (Gás Natural Veicular), com meta de 24% de descarbonização até 2030. Renovação acelerada: 40-50 caminhões adquiridos por ano.',
+      'Frota Scapini: mais de 500 equipamentos, média de 3,4 anos de uso (2024), 100% rastreados por GPS em tempo real. Composição: própria + agregada (motorista com veículo próprio vinculado) + TAC (terceiros). Tipos: carreta SIDER (principal), baú fechado, grade baixa, rodotrem e truck. 16% a GNV — frota com pegada ambiental diferenciada.',
     ]);
 
   // ── Frete / como solicitar ──
@@ -5607,7 +5607,7 @@ const DEMO_QA = [
   { re: /sustentabilidade|\besg\b|carbono|emissao.*co2|co2.*frota|frota.*verde|descarbonizacao|emissao.*diesel|pegada.*carbon/,
     r: [
       'Sustentabilidade no transporte é uma tendência crescente — clientes grandes exigem relatórios de emissão de CO2 dos fornecedores. Um caminhão a diesel emite aproximadamente 2,68 kg CO2/litro de combustível. Estratégias para reduzir: telemetria para reduzir excesso de velocidade e freiadas bruscas (economiza 10-15% de diesel), roteirização eficiente para reduzir km rodado, e no longo prazo, adoção de veículos a biocombustível ou elétrico.',
-      'ESG para a Scapini: na dimensão ambiental (E), o principal indicador é emissão de CO2 por tonelada-km transportada. Na social (S): segurança dos motoristas, geração de emprego, diversidade. Na governança (G): compliance fiscal, transparência, política anticorrupção. Grandes embarcadores estão exigindo relatórios ESG dos transportadores — ter os dados organizados vira diferencial competitivo.',
+      'ESG Scapini: 16% da frota já roda a GNV (Gás Natural Veicular), com meta de 24% de descarbonização até 2030. A empresa renova 40-50 caminhões por ano (~R$1M/unidade), mantendo frota com média de 3,4 anos — uma das mais novas do Sul. Na social (S): saúde e segurança de ~1.100 colaboradores e motoristas. Na governança (G): compliance fiscal via CGI, transparência nos relatórios. Grandes embarcadores exigem ESG dos fornecedores — a Scapini já se posiciona na frente.',
     ]},
 
   // TMS / tecnologia de transporte
@@ -6386,7 +6386,7 @@ const DEMO_QA = [
     ]},
 
   // TMS — sistema de gestão de transporte
-  { re: /tms|sistema.*gestao.*transporte|software.*transportadora|erp.*transportadora|plataforma.*logistica|sistema.*frete.*gestao/,
+  { re: /\btms\b|sistema.*gestao.*transporte|software.*transportadora|erp.*transportadora|plataforma.*logistica|sistema.*frete.*gestao/,
     r: [
       'TMS (Transportation Management System): é o ERP específico de transportadoras. Funções principais: emissão de CT-e e MDFe, rastreamento de frota, gestão de tarifas e cotações, controle de motoristas, faturamento e cobrança, relatórios de KPIs. Principais TMS no mercado brasileiro: Cargo Snap, Transdata, Nuvem TMS, Oracle TMS, SAP TM. Preço: R$500-5.000/mês dependendo do porte da frota e dos módulos contratados.',
       'Integração CGI + TMS: o CGI (ERP geral da Scapini) e o TMS de transporte precisam trocar dados em tempo real — pedido de coleta no CGI gera automaticamente CT-e no TMS, e o status de entrega do TMS atualiza o pedido no CGI. Essa integração elimina redigitação e erros de inconsistência entre sistemas. APIs REST são o padrão atual — qualquer TMS moderno tem documentação de API disponível.',
@@ -6530,7 +6530,7 @@ const DEMO_QA = [
   { re: /\besg\b|sustentabilidade.*transporte|emissao.*co2|carbono.*frota|descarbonizacao|combustivel.*verde|biodiesel|gas.*natural.*veiculo|gnv.*caminhao|caminhao.*eletrico|frota.*sustentavel/,
     r: [
       'ESG no transporte rodoviário: o setor é responsável por ~25% das emissões de CO2 do Brasil. Ações ESG para a Scapini: renovação de frota (caminhões Euro 6 emitem até 80% menos que Euro 3), uso de biodiesel B15/B20 (obrigatório pelo Renovabio), telemetria para reduzir consumo por motorista agressivo, e logística reversa. Relatório de emissões atrai clientes com metas ESG (indústrias, varejistas) que exigem ESG de fornecedores.',
-      'Combustíveis alternativos para frota: GNV (Gás Natural Veicular) — custo até 40% menor que diesel, mas requer adaptação do motor e postos limitados nas rodovias. Biodiesel B100 — disponível em algumas regiões, reduz CO2 em 74% vs diesel fóssil. Caminhão elétrico — ainda inviável para rotas longas (autonomia 300-500 km vs 1.000+ km no diesel). Horizonte real: GNL (Gás Natural Liquefeito) para rotas Sul-Sudeste a partir de 2027.',
+      'Frota GNV na Scapini: 16% dos equipamentos já rodam a GNV (Gás Natural Veicular). GNV: custo até 40% menor que diesel, emissão 20-25% menor de CO2. Meta do Grupo Scapini: 24% de descarbonização até 2030. Desafios: disponibilidade de postos de GNV nas rodovias ainda é limitada fora do Sudeste. GNL (Gás Natural Liquefeito) é a próxima fronteira para rotas Sul-Sudeste a partir de 2027. Caminhão elétrico: ainda inviável para rotas longas (autonomia 300-500 km vs 1.000+ km no diesel).',
     ]},
 
   // Custo real de acidente de trabalho
@@ -6587,14 +6587,14 @@ const DEMO_QA = [
   // ── BLOCO TECNOLOGIA E INOVAÇÃO ────────────────────────────────────────────────
 
   // FTL vs LTL (Carga Lotação vs Fracionada)
-  { re: /ftl|ltl|carga.*lotacao|carga.*fracionada|lotacao.*fracionada|consolidacao.*carga|fracionado.*frete/,
+  { re: /\bftl\b|\bltl\b|carga.*lotacao|carga.*fracionada|lotacao.*fracionada|consolidacao.*carga|fracionado.*frete/,
     r: [
       'FTL (Full Truck Load = carga lotação): o cliente contrata o caminhão inteiro, exclusivo para sua carga. Vantagem: mais rápido, sem transbordo, menos risco de avaria. Desvantagem: custo maior se a carga não ocupar o veículo todo. FTL compensa para cargas acima de 60% da capacidade do veículo. Para a Scapini, FTL é o foco principal nas rotas Sul-Sudeste.',
       'LTL (Less than Truck Load = fracionado): a carga de vários clientes compartilha um caminhão. Custo menor por tonelada, mas com transbordos em CD (centro de distribuição), prazo maior e mais risco de avaria. A Scapini pode oferecer LTL consolidado para clientes menores da região — aumenta o aproveitamento da frota em rotas de retorno.',
     ]},
 
   // ELD / Tacógrafo eletrônico / tecnologia frota
-  { re: /eld|eletronic.*logging|tacografo.*digital|tacografo.*eletronico|tecnologia.*frota|iot.*frota|sensor.*caminhao/,
+  { re: /\beld\b|eletronic.*logging|tacografo.*digital|tacografo.*eletronico|tecnologia.*frota|iot.*frota|sensor.*caminhao/,
     r: [
       'ELD (Electronic Logging Device) e tacógrafo digital: o Brasil obriga tacógrafo eletrônico em veículos com PBT acima de 3.500 kg (CONTRAN). O tacógrafo registra velocidade, aceleração, frenagem, jornada do motorista e paradas. Dados são baixados pela fiscalização via cabo ou bluetooth. Adulteração é crime. Os dados também alimentam o sistema de telemetria da frota para análise de comportamento.',
       'IoT na frota: além do GPS, sensores conectados monitoram nível de combustível (alerta de desvio/furto), temperatura do baú (cadeia do frio), pressão dos pneus (TPMS — reduz furos inesperados e consumo), e diagnóstico do motor via OBD-II (código de falha antes de virar pane). Integração com TMS permite correlacionar dados do veículo com os pedidos e otimizar manutenção preditiva.',
@@ -6714,7 +6714,7 @@ const DEMO_QA = [
     ]},
 
   // SEST SENAT
-  { re: /sest|senat|sest.?senat|contribuicao.*sest|desconto.*sest/,
+  { re: /\bsest\b|\bsenat\b|sest.?senat|contribuicao.*sest|desconto.*sest/,
     r: [
       'SEST/SENAT: contribuição obrigatória das transportadoras (1,5% sobre a remuneração de cada frete pago a TAC/autônomo) e dos motoristas autônomos (1,5% sobre o frete recebido). Essa contribuição financia os centros de saúde e educação profissional do SEST SENAT — o motorista tem direito a consultas médicas, odontológicas e cursos gratuitos em centros de todo o Brasil. O recolhimento é feito junto com o CIOT.',
       'SEST SENAT na prática: quando a Scapini paga um TAC, retém 1,5% do frete para recolher ao SEST SENAT. O TAC também contribui com 1,5%. Esse valor vai para a carteirinha do motorista, que dá acesso gratuito a médicos, dentistas e cursos de direção defensiva, primeiros socorros e transporte de cargas. Motorista que usa os serviços economiza nos planos de saúde.',
@@ -7126,11 +7126,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 375+ respostas
+  // Funciona offline — Llama local + 385+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 375+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 385+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -7143,7 +7143,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 375+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 385+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -7222,7 +7222,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (375+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (385+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7374,7 +7374,7 @@ const DEMO_QA = [
     ]},
 
   // Gestão de segurança de carga / gerenciamento de risco
-  { re: /gerenciamento.*risco.*carga|grc|risco.*carga|segurança.*carga.*transporte|perfil.*carga.*risco|carga.*alto.*valor.*procedimento|como.*proteger.*carga|protocolo.*carga.*segura|carga.*sensivel.*procedimento|avaliacao.*risco.*frete/,
+  { re: /gerenciamento.*risco.*carga|\bgrc\b|risco.*carga|segurança.*carga.*transporte|perfil.*carga.*risco|carga.*alto.*valor.*procedimento|como.*proteger.*carga|protocolo.*carga.*segura|carga.*sensivel.*procedimento|avaliacao.*risco.*frete/,
     r: [
       'GRC (Gerenciamento de Risco de Carga) é obrigatório para cargas de alto valor ou risco (eletrônicos, cigarros, medicamentos, carga frigorificada). O processo inclui: avaliação do perfil de risco da carga, definição de rota segura (evitar trechos críticos), veículo com rastreamento ativo, comunicação de início e fim de viagem, e protocolo de parada (nunca parar em local não autorizado após 22h). Seguradoras exigem GRC documentado para cobertura total.',
       'Procedimentos padrão de GRC na transportadora: 1) Motorista não divulga origem/destino nem tipo de carga a terceiros; 2) Paradas autorizadas apenas em postos conveniados com câmera; 3) Check-in com a central a cada 2h em rotas críticas; 4) Se perder comunicação por >30min: protocolo de busca ativa; 5) Em caso de abordagem (tentativa de roubo): NÃO resista — a vida vale mais que a carga. Acione seguradora e polícia após local seguro.',
@@ -7439,7 +7439,7 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 375+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 385+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 
@@ -7579,14 +7579,14 @@ const DEMO_QA = [
   { re: /lumina.*disponivel.*sempre|sempre.*disponivel.*lumina|lumina.*24h|lumina.*24.*horas|24.*horas.*lumina|lumina.*funciona.*sempre|lumina.*horario.*funcionamento|lumina.*fora.*horario|lumina.*madrugada|lumina.*fim.*semana|expediente.*lumina|lumina.*expediente|lumina.*uptime|disponibilidade.*lumina/,
     r: [
       'A Lúmina funciona 24 horas por dia, 7 dias por semana — não tem expediente, não tira férias, não fica em reunião. Enquanto o servidor da Scapini estiver ligado, ela está disponível. Um motorista pode consultar um procedimento às 2h da manhã; um diretor pode verificar um dado no domingo antes de uma reunião de segunda. A disponibilidade depende da infraestrutura local (servidor, energia, rede interna) — não de horário comercial.',
-      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (375+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
+      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (385+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Plano de contingência / e se parar ────────────
   { re: /lumina.*parar|lumina.*cair|servidor.*lumina.*cair|lumina.*indisponivel|o que.*acontece.*lumina.*parar|contingencia.*lumina|plano.*backup.*lumina|lumina.*recovery|lumina.*falhar|e se.*lumina.*parar|e se.*servidor.*lumina|lumina.*sair.*ar|lumina.*downtime/,
     r: [
-      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (375+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
-      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 375+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
+      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (385+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
+      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 385+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Proteção de dados confidenciais ───────────────
@@ -7615,6 +7615,34 @@ const DEMO_QA = [
     r: [
       'Integração com ferramentas externas: hoje, a Lúmina lê Excel, PDF, Word e imagens que você traz para ela, e exporta relatórios em Excel, Word e PDF. Com Power BI: a Lúmina gera a planilha base que o BI consome — você pede "gera a tabela de KPIs de frete do mês" e ela entrega o Excel pronto para importar no Power BI. Integração direta via API está no roadmap junto com o CGI.',
       'Arquitetura de integrações planejadas: Phase 2 conecta ao CGI (leitura de dados em tempo real). Após isso, as integrações seguem por prioridade: (1) Power BI — consumo de dados exportados pela Lúmina; (2) WhatsApp Business API — alertas e consultas por mensagem; (3) App Motorista — Lúmina integrada ao celular do motorista; (4) E-mail corporativo — relatórios automáticos por horário. A arquitetura modular permite adicionar integrações sem reescrever o core.',
+    ]},
+
+  // ── GNV / descarbonização da Scapini ──────────────────────────────────────
+  { re: /scapini.*gnv|gnv.*scapini|frota.*gnv.*scapini|scapini.*gas.*natural|scapini.*descarboniz|descarboniz.*scapini|scapini.*sustentavel|sustentavel.*scapini|scapini.*meta.*2030|meta.*2030.*scapini|renovacao.*frota.*scapini|scapini.*renovacao.*frota|scapini.*caminhao.*ano|quantos.*caminhao.*scapini.*compra/,
+    r: [
+      'Frota verde da Scapini: 16% dos equipamentos já rodam a GNV (Gás Natural Veicular) — redução de até 40% no custo de combustível e 20-25% menos CO2 por km rodado. A meta do Grupo é atingir 24% de descarbonização até 2030. A renovação é acelerada: 40-50 caminhões adquiridos por ano, com investimento de ~R$1 milhão por unidade. Essa estratégia mantém a frota entre as mais novas do Sul (3,4 anos de média).',
+      'Estratégia de renovação de frota: a Scapini compra 40-50 caminhões por ano (~R$40-50M em aquisições anuais), mantendo a idade média da frota em 3,4 anos. Com 16% a GNV e meta de 24% de descarbonização até 2030, a empresa está à frente das exigências ESG de embarcadores como JTI, Nestlé e CMPC. Caminhões mais novos = menor custo de manutenção + menor consumo + cumprimento de Renovabio e Euro 6.',
+    ]},
+
+  // ── Estratégia 2030 / meta R$1 bilhão ─────────────────────────────────────
+  { re: /meta.*scapini.*2030|2030.*scapini|meta.*bilhao|bilhao.*scapini|scapini.*crescer|crescimento.*scapini|scapini.*estrategia|estrategia.*grupo.*scapini|objetivo.*scapini|scapini.*onde.*quer.*chegar|scapini.*2030|scapini.*plano.*futuro/,
+    r: [
+      'Estratégia Grupo Scapini para 2030: meta de R$1 bilhão de faturamento (vs R$440M em 2024 — crescimento de 128% em 6 anos). O caminho passa por: expansão do e-commerce via 365 Log, crescimento no corredor Sul-Sudeste, operações internacionais via TST Global (EUA) e consolidação dos químicos pela Translíquidos. Diversificação blindou o grupo dos juros altos em 2025.',
+      'Meta 2030 do Grupo Scapini: dobrar o faturamento de R$440M para R$1 bilhão. Os pilares de crescimento: (1) Ampliar presença no Sudeste; (2) Crescer operações internacionais — Mercosul e TST Global/EUA; (3) Aumentar frota de 500 para ~800 equipamentos; (4) Expandir serviços de alto valor agregado (químicos, e-commerce, seguros). A Lúmina entra como alavanca de produtividade — mais resultado com o mesmo time.',
+    ]},
+
+  // ── Sede Lajeado / Vale do Taquari ────────────────────────────────────────
+  { re: /onde.*scapini.*fica|sede.*scapini|scapini.*fica.*onde|scapini.*lajeado|lajeado.*scapini|scapini.*vale.*taquari|vale.*taquari.*scapini|endereco.*scapini|scapini.*rs|scapini.*sul/,
+    r: [
+      'A Scapini Transportes tem sede em Lajeado/RS, no Vale do Taquari — uma das regiões industriais mais produtivas do Rio Grande do Sul. O Vale do Taquari concentra indústrias alimentícias, metalmecânica e calçadista, o que deu origem à Scapini em 1977. Da sede de Lajeado, a empresa gerencia 18 filiais no Brasil + 3 no Mercosul + TST Global nos EUA.',
+      'Lajeado/RS: sede histórica da Scapini, a cerca de 120 km de Porto Alegre. O Vale do Taquari é formado por cidades como Lajeado, Estrela, Encantado, Arroio do Meio — berço industrial do interior gaúcho. A localização privilegiada entre Porto Alegre e Caxias do Sul tornou Lajeado um polo logístico natural, com acesso à BR-386 (corredor para SP e PR).',
+    ]},
+
+  // ── Clientes da Scapini / quem são os clientes ────────────────────────────
+  { re: /clientes.*scapini|scapini.*cliente|quem.*cliente.*scapini|scapini.*atende.*quem|empresa.*cliente.*scapini|scapini.*quem.*atende|parceiro.*scapini|quem.*contrata.*scapini/,
+    r: [
+      'Clientes da Scapini incluem empresas de grande porte como JTI (fumo), Souza Cruz (BAT), Nestlé, CMPC (celulose), Suzano (papel e celulose), Braskem e outros embarcadores do Sul-Sudeste. São clientes que exigem confiabilidade, rastreamento em tempo real, conformidade ANTT e gestão de risco de carga. Esses contratos de longo prazo são a base do faturamento de R$440M (2024).',
+      'Perfil de cliente da Scapini: indústrias com volumes regulares (contratos mensais), exigência de CT-e, MDFe e CIOT corretos, rastreamento GPS, GRC (gerenciamento de risco de carga) documentado e histórico de ocorrências zerado ou baixo. Setores principais: tabaco, papel e celulose, alimentício, químico (via Translíquidos) e e-commerce (via 365 Log).',
     ]},
 ];
 
@@ -7753,7 +7781,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 375+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 385+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
