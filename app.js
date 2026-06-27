@@ -3582,7 +3582,7 @@ const _thinkingBudget = (msg) => {
   // Análise pesada — raciocínio profundo (2048): analítico, comparativo, investigativo
   if (/dre|balancete|auditoria|fechamento|demonstrat|ebitda|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo|tabela.*antt|piso.*minimo|custo.*operacional.*km|roi.*frota|inadimplencia|cobrança.*juridica|rescisão.*contrato|multa.*contratual|renegociação|proposta.*comercial|licitação.*transporte|contrato.*cliente|revisão.*tarifaria|imposto.*transporte|difal.*frete|icms.*transporte|pis.*cofins.*transporte|simples.*nacional.*transportadora|auditoria.*cgi|inconsistência.*cgi|divergência.*faturamento|custo.*filial|resultado.*filial|custo.*rota.*analise|rentabilidade.*cliente|margem.*contribuição|acao.*trabalhista|passivo.*trabalhista|verbas.*rescis|processo.*trabalhista|defesa.*trabalhista|reclamacao.*trabalhista|trabalhista.*calculo|indenizacao.*trabalhista|folha.*recalculo|recalculo.*folha|rescisao.*calculo|calculo.*rescisao/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha|gnv.*frota|frota.*gnv|descarboniz.*frota|frota.*sustentavel|scapini.*sede|sede.*scapini|lajeado.*scapini|vale.*taquari.*scapini|renovacao.*frota|frota.*renovacao|ata.*reuniao|reuniao.*ata|transcrever.*reuniao|gravar.*reuniao|feriado.*motorista|feriado.*transporte|trabalhar.*feriado|escala.*feriado|feriado.*hora.*extra/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha|gnv.*frota|frota.*gnv|descarboniz.*frota|frota.*sustentavel|scapini.*sede|sede.*scapini|lajeado.*scapini|vale.*taquari.*scapini|renovacao.*frota|frota.*renovacao|ata.*reuniao|reuniao.*ata|transcrever.*reuniao|gravar.*reuniao|feriado.*motorista|feriado.*transporte|trabalhar.*feriado|escala.*feriado|feriado.*hora.*extra|vale.?pedagio|pedagio.*tac|tac.*pedagio|pedagio.*motorista.*autonomo|manutencao.*preditiva|preditiva.*manutencao|preventiva.*preditiva|ferias.*motorista|motorista.*ferias|diaria.*motorista|motorista.*diaria|reembolso.*despesa.*motorista|plano.*carreira.*transport|carreira.*motorista|promocao.*cargo.*motorista|cartao.*combustivel.*corporativo/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -7140,11 +7140,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 392+ respostas
+  // Funciona offline — Llama local + 397+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 392+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 397+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -7157,7 +7157,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 392+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 397+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -7236,7 +7236,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (392+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (397+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7453,7 +7453,7 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 392+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 397+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 
@@ -7593,14 +7593,14 @@ const DEMO_QA = [
   { re: /lumina.*disponivel.*sempre|sempre.*disponivel.*lumina|lumina.*24h|lumina.*24.*horas|24.*horas.*lumina|lumina.*funciona.*sempre|lumina.*horario.*funcionamento|lumina.*fora.*horario|lumina.*madrugada|lumina.*fim.*semana|expediente.*lumina|lumina.*expediente|lumina.*uptime|disponibilidade.*lumina/,
     r: [
       'A Lúmina funciona 24 horas por dia, 7 dias por semana — não tem expediente, não tira férias, não fica em reunião. Enquanto o servidor da Scapini estiver ligado, ela está disponível. Um motorista pode consultar um procedimento às 2h da manhã; um diretor pode verificar um dado no domingo antes de uma reunião de segunda. A disponibilidade depende da infraestrutura local (servidor, energia, rede interna) — não de horário comercial.',
-      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (392+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
+      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (397+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Plano de contingência / e se parar ────────────
   { re: /lumina.*parar|lumina.*cair|servidor.*lumina.*cair|lumina.*indisponivel|o que.*acontece.*lumina.*parar|contingencia.*lumina|plano.*backup.*lumina|lumina.*recovery|lumina.*falhar|e se.*lumina.*parar|e se.*servidor.*lumina|lumina.*sair.*ar|lumina.*downtime/,
     r: [
-      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (392+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
-      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 392+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
+      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (397+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
+      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 397+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Proteção de dados confidenciais ───────────────
@@ -7662,8 +7662,8 @@ const DEMO_QA = [
   // Velocidade de resposta / latência da Lúmina
   { re: /velocidade.*lumina|lumina.*velocidade|lumina.*rapida|demora.*lumina|lumina.*demora|tempo.*resposta.*lumina|lumina.*tempo.*resposta|quanto.*tempo.*responde|resposta.*instantanea.*lumina|lumina.*lenta|lenta.*lumina/,
     r: [
-      'No modo offline (392+ respostas locais), a resposta é instantânea — menos de 0,1 segundos. Com o Gemini ativo, a resposta típica leva 2-5 segundos dependendo da complexidade: procedimento simples → 2s; análise de planilha ou auditoria complexa → 5-10s. É mais do que suficiente para o dia a dia — e entrega em 5s o que levaria 20 minutos manualmente.',
-      'A Lúmina prioriza qualidade sobre velocidade. Para 90% das perguntas, a resposta chega em menos de 3 segundos. Para análises mais profundas (DRE, prospecção, sinistro), pode levar até 10-15 segundos — mas entrega uma análise completa. Quando a internet está instável, o modo offline garante resposta imediata para 392+ temas da operação da Scapini.',
+      'No modo offline (397+ respostas locais), a resposta é instantânea — menos de 0,1 segundos. Com o Gemini ativo, a resposta típica leva 2-5 segundos dependendo da complexidade: procedimento simples → 2s; análise de planilha ou auditoria complexa → 5-10s. É mais do que suficiente para o dia a dia — e entrega em 5s o que levaria 20 minutos manualmente.',
+      'A Lúmina prioriza qualidade sobre velocidade. Para 90% das perguntas, a resposta chega em menos de 3 segundos. Para análises mais profundas (DRE, prospecção, sinistro), pode levar até 10-15 segundos — mas entrega uma análise completa. Quando a internet está instável, o modo offline garante resposta imediata para 397+ temas da operação da Scapini.',
     ]},
 
   // Ata de reunião / transcrição de áudio de reunião
@@ -7692,6 +7692,41 @@ const DEMO_QA = [
     r: [
       'Atualizações da Lúmina são feitas pela equipe LS TECH / DV Digital com impacto mínimo para o usuário. O servidor roda localmente na Scapini — se reiniciar por manutenção, fica offline por 1-2 minutos e volta automaticamente. Atualizações de base de conhecimento (novos ATIs, procedimentos, tabelas) entram em vigor imediatamente, sem precisar reiniciar nada.',
       'A Lúmina não tem "update forçado" que interrompe o trabalho. Melhorias acontecem em paralelo — nova versão é ativada em horário de baixo uso (madrugada). Histórico de conversas e base de conhecimento ficam preservados entre versões. Para adicionar novos procedimentos ou políticas, qualquer pessoa com acesso ao ⚙️ Configurações pode incluir na hora, sem suporte técnico.',
+    ]},
+
+  // Vale-pedágio para TAC (autônomo)
+  { re: /vale.?pedagio|pedagio.*tac|tac.*pedagio|quem.*paga.*pedagio|pedagio.*autonomo|lei.*10209|10209.*pedagio|pedagio.*obrigatorio.*transport|vale.?pedagio.*antt|pedagio.*tag.*motorista|motorista.*paga.*pedagio/,
+    r: [
+      'O vale-pedágio é obrigatório (Lei 10.209/2001) toda vez que a Scapini contratar um TAC (autônomo) para operação com pedágio. Quem paga é o embarcador/contratante — NUNCA o motorista. O pagamento deve ser eletrônico (tag, cartão) — proibido em dinheiro. TAC sem vale-pedágio pode recusar a viagem legalmente. A fiscalização da ANTT está ativa: 11,6 mil autuações só em 2026.',
+      'Vale-pedágio: direito do motorista autônomo, obrigação do contratante. Fluxo correto: 1) Scapini gera o crédito de vale-pedágio antes da viagem; 2) Motorista usa a tag ou cartão nos pedágios da rota; 3) Empresa reembolsa ou credita diretamente na plataforma. Valor varia por rota/praça — não é fixo. TAC deve ter RNTRC ativo para receber. Empresa que não fornece: multa ANTT.',
+    ]},
+
+  // Manutenção preditiva vs preventiva
+  { re: /manutencao.*preditiva|preditiva.*manutencao|preventiva.*preditiva|preditiva.*preventiva|diferenca.*preventiva.*preditiva|sensor.*manutencao.*frota|telemetria.*manutencao|manutencao.*inteligente.*frota|manutencao.*sensor.*veiculo|predicao.*falha.*caminhao/,
+    r: [
+      'Manutenção preventiva faz revisões em intervalos fixos (ex: troca de óleo a cada 15.000 km, revisão geral a cada 6 meses). Reduz quebras, mas não antecipa falhas. Preditiva usa sensores e telemática para monitorar dados em tempo real — detecta vibração anormal, temperatura do motor, desgaste de pneu — e agenda o serviço ANTES da falha. Juntas são o ideal: preventiva como base + preditiva para antecipar o que escapa da agenda.',
+      'Na prática: preventiva = calendário ("passou 15k km, vai para revisão"). Preditiva = sensor ("vibração no eixo traseiro saiu do padrão — agende revisão nos próximos 3 dias antes de quebrar"). Segundo a McKinsey, frotas com manutenção preditiva reduzem custos em 10% e aumentam disponibilidade de veículos em 30%. A Scapini, com frota de 500+ equipamentos e idade média 3,4 anos, se beneficia muito da telemetria integrada ao CGI.',
+    ]},
+
+  // Férias do motorista CLT
+  { re: /ferias.*motorista|motorista.*ferias|tirar.*ferias.*motorista|ferias.*clt.*caminhao|fracionamento.*ferias.*motorista|ferias.*longa.*distancia|motorista.*30.*dias.*ferias|ferias.*motorista.*como.*funciona/,
+    r: [
+      'Motorista CLT tem direito a 30 dias de férias após 12 meses de trabalho (Lei 13.103/2015). Podem ser parceladas em até 3 períodos: mínimo 14 dias corridos + dois períodos de no mínimo 5 dias cada. Para viagens de longa distância (+7 dias fora), o descanso semanal é de 35h ininterruptas após a viagem. Férias não podem ser recusadas pela empresa após vencer o prazo aquisitivo — multa de 1/3 do salário por descumprimento.',
+      'Férias do motorista: 30 dias por ano de trabalho (salvo desconto por faltas excessivas). Fórmula: 0-5 faltas = 30 dias | 6-14 = 24 dias | 15-23 = 18 dias | 24-32 = 12 dias | 33+ = perde o direito. O salário de férias é pago acrescido de 1/3 constitucional. Para motoristas em escala, as férias entram como break na programação de rota — RH e operacional coordenam com 30 dias de antecedência para não deixar rota descoberta.',
+    ]},
+
+  // Diárias e reembolso de despesas de viagem
+  { re: /diaria.*motorista|motorista.*diaria|reembolso.*despesa.*motorista|motorista.*reembolso.*viagem|cartao.*combustivel.*corporativo|despesa.*viagem.*motorista|motorista.*despesa.*rota|quanto.*diaria.*motorista|abastecimento.*reembolso.*motorista/,
+    r: [
+      'As diárias do motorista cobrem alimentação, hospedagem e pequenas despesas em trânsito. Não integram o salário (não geram INSS/FGTS) se comprovado o gasto real. A Scapini adota cartão corporativo para abastecimento — mais seguro e rastreável, elimina dinheiro vivo, gera relatório por placa. Para pedágios, o vale-pedágio cobre (Lei 10.209/2001 — obrigação da empresa). Em caso de emergência sem cartão: motorista reembolsado com nota/recibo em até 48h úteis.',
+      'Política típica: 1) Combustível → cartão corporativo nos postos conveniados da rota (sem dinheiro); 2) Pedágio → vale-pedágio ou tag da empresa (nunca do bolso do motorista); 3) Alimentação/hospedagem → diária pré-definida em CCT ou política interna — recibo obrigatório; 4) Emergências mecânicas menores → motorista paga e apresenta nota para reembolso. Qualquer dúvida sobre despesas de rota: aciona o setor Financeiro via WhatsApp operacional antes de gastar.',
+    ]},
+
+  // Plano de cargos e carreira na transportadora
+  { re: /plano.*carreira.*scapini|carreira.*motorista|crescer.*empresa.*transport|promocao.*cargo.*motorista|motorista.*supervisor|supervisor.*frota.*cargo|progressao.*carreira.*scapini|cargo.*crescimento.*motorista|motorista.*senior.*cargo|como.*crescer.*scapini/,
+    r: [
+      'A progressão típica no transporte: Auxiliar de Motorista → Motorista (CNH D) → Motorista de Carreta (CNH E, MOPP) → Motorista Sênior → Encarregado Operacional → Supervisor de Frota → Gestor de Operações. O diferencial para crescer: zero ocorrências de acidente, tacógrafo sem infrações, boa comunicação com a base, cursos de atualização (SEST SENAT é gratuito). A Scapini valoriza motoristas que entendem de documentação (CT-e, MDFe, CIOT) — esse conhecimento abre portas para operacional e logística.',
+      'Para crescer na Scapini, o caminho é: dominar a operação com excelência (segurança, prazo, documentação) + buscar formação complementar. Supervisor de frota no setor ganha em média R$ 2.800–4.800/mês (salário.com.br, 2026). Gestão de Transportes, Logística ou ADM são graduações que aceleram a transição para liderança. A abertura de vagas internas é comunicada no mural e pelo RH — candidatos internos têm prioridade na Scapini.',
     ]},
 ];
 
@@ -7830,7 +7865,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 392+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 397+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
