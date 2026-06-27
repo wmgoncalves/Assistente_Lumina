@@ -1601,3 +1601,83 @@ Contador DEMO_QA atualizado: **397+ → 402+** (11 ocorrências atualizadas).
 4. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
 5. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
 6. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+
+---
+
+# Sessão 23 — 2026-06-27 (autônoma / madrugada)
+
+## Estado inicial
+- app.js: 9.776 linhas, DEMO_QA 382 entradas (script Python), contador user-visível "402+"
+- Todas as verificações PRIORIDADE 1 das sessões anteriores confirmadas limpas
+
+## PRIORIDADE 1 — Bug corrigido
+
+### `fusao` sem `\b` — falso positivo em "difusão" (DEMO_QA l.6478)
+- **Problema**: `/fusao|aquisicao|...` sem word-boundary. "fusao" é substring de "difusao" (difusão = diffusion). Em contexto de transporte de químicos, alguém poderia perguntar "como funciona a difusão de gases perigosos?" e receber resposta de M&A/aquisição de empresa.
+- **Fix**: `fusao` → `\bfusao\b` e `aquisicao` → `\baquisicao\b`
+- **Risco real**: Scapini opera com Translíquidos (químicos/líquidos a granel) — "difusão de gases" é tópico legítimo
+
+### Auditoria PRIORIDADE 1 — todos os 7 itens verificados:
+- `getElementById` sem null-guard: todos em elementos estáticos HTML ✓
+- `JSON.parse` sem try/catch: todos protegidos (verificados 5 pontos app.js + 5 server.js) ✓
+- `fetch()` sem catch: todos em try/catch ✓
+- `speak()` com undefined: `cleanForTTS` tem `String(raw ?? '')`, `buildSheetSpeech` sempre retorna string ✓
+- `_finalize()` com undefined: guard `raw ?? ''` confirmado ✓
+- DEMO_QA regex genérico: script Python varreu TODOS os tokens 2-5 chars — únicos riscos reais eram `fusao`/`aquisicao` (corrigidos) ✓
+- Variáveis antes de declaração: nenhuma encontrada ✓
+
+## PRIORIDADE 2 — Dados CCT atualizados (pesquisa confirmada)
+
+Agente de pesquisa executado em paralelo (resultado: HTTP 403 para tabela ANTT e CCT PDF, mas encontrou dados parciais CCT SETCERGS):
+
+### Diárias de viagem — CCT mai/2026 confirmada
+- **Antes**: "R$60-120/dia" (range estimado)
+- **Depois**: "R$100/dia (CCT mai/2026)" — dado confirmado
+- Atualizado em 4 locais: buildSystem, tryLocalResponse (2x), DEMO_QA benefícios
+
+### Plano de saúde — NOVO dado CCT
+- **R$290/mês** por funcionário (empresa) a partir de junho/2026
+- Adicionado em 4 locais: buildSystem, tryLocalResponse salário (2x), DEMO_QA benefícios
+
+### Tabela ANTT por eixo (herdado 18x)
+- Todos os sites retornam 403. Único acesso: calculadorafrete.antt.gov.br na máquina local.
+
+### CGI Software — dado confirmado
+- CIOT como módulo separado confirmado com PSPs: Pamcard, Repom, TruckPad
+- Sub-módulos detalhados ainda inacessíveis (webcgi.com.br bloqueado)
+
+## PRIORIDADE 4 — 5 novos pares DEMO_QA
+
+Inseridos antes do `];` final do array DEMO_QA:
+
+| # | Tema | Regex principal |
+|---|------|-----------------|
+| 1 | **CAT — Comunicação de Acidente de Trabalho** | `\bcat\b.*acidente`, `comunicacao.*acidente.*trabalho` |
+| 2 | **Backhaul / frete de retorno** | `backhaul`, `frete.*retorno`, `carga.*retorno`, `retorno.*vazio` |
+| 3 | **Quanto tempo levou para construir a Lúmina** | `quanto.*tempo.*lumina.*construi`, `como.*surgiu.*lumina` |
+| 4 | **Mensagens automáticas / alertas agendados** | `lumina.*mensagem.*automatica`, `alerta.*agendado.*lumina` |
+| 5 | **Lúmina gera proposta comercial para cliente** | `lumina.*gera.*proposta`, `proposta.*comercial.*lumina` |
+
+- `_thinkingBudget()` nível 512 expandido com novos padrões para os 5 tópicos
+- Contador user-visível: 402+ → **410+** (14 ocorrências atualizadas)
+
+## PRIORIDADE 5 — UX/CSS
+- Auditoria realizada — sem novos bugs
+- Todos os atributos `accept`, placeholders, hamburger mobile, Ollama model hint: corretos ✓
+
+## Estado final
+- `app.js`: **9.811 linhas** (era 9.776)
+- `DEMO_QA`: **387 entradas** (era 382 | +5 nesta sessão)
+- Contador user-visível: **410+**
+- Motoristas DEMO: 19 registros (inalterado)
+
+## Commits desta sessão
+- `751c2bc` — fix+feat: sessão 23 — word-boundary fusao, +5 DEMO_QA novos, CCT mai/2026 diárias R$100/dia + plano saúde R$290 — PUSHED
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 18x. Acesso manual: calculadorafrete.antt.gov.br
+2. **CGI sub-módulos** — herdado 3x. CIOT com PSPs (Pamcard/Repom/TruckPad) confirmado; demais sub-módulos inacessíveis
+3. **CCT MOVIFORT RS tabela completa** — herdado 17x. Pisos confirmados, benefícios mai/2026 agora em código
+4. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+5. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+6. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
