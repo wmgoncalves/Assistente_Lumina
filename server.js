@@ -1960,7 +1960,8 @@ app.get('/api/candidatura/:token', (req, res) => {
   const row = recrutaDB.prepare('SELECT * FROM candidaturas WHERE token=?').get(req.params.token);
   if (!row) return res.status(404).json({ error: 'Entrevista não encontrada.' });
   const perguntas = getPerguntasVaga(row.vaga);
-  const respostas = JSON.parse(row.respostas || '[]');
+  let respostas;
+  try { respostas = JSON.parse(row.respostas || '[]'); } catch { respostas = []; }
   const proxima   = respostas.length < perguntas.length ? perguntas[respostas.length] : null;
   res.json({ nome: row.nome, vaga: row.vaga, status: row.status, total: perguntas.length,
              respondidas: respostas.length, proxima, concluida: !proxima,
@@ -1984,7 +1985,8 @@ app.post('/api/candidatura/:token/responder', async (req, res) => {
   if (respostaLimpa.length > 5000) return res.status(400).json({ error: 'Resposta muito longa. Use no máximo 5.000 caracteres.' });
 
   const perguntas = getPerguntasVaga(row.vaga);
-  const respostas = JSON.parse(row.respostas || '[]');
+  let respostas;
+  try { respostas = JSON.parse(row.respostas || '[]'); } catch { respostas = []; }
   if (respostas.length >= perguntas.length) {
     return res.status(409).json({ error: 'Todas as perguntas já foram respondidas.' });
   }
