@@ -1515,3 +1515,89 @@ Verificado em sessão 20: todos os itens de P3 já existem. Nenhuma entrada nova
 4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
 5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 6. **Verificar CGI Software sub-módulos** — site webcgi.com.br retornou 403; verificar diretamente
+
+---
+
+# Sessão 22 — 27 de junho de 2026 (UTC)
+
+## Contexto
+Sessão autônoma noturna. Apresentação da Lúmina marcada para primeira semana de julho/2026.
+Continuação da sessão 21 — contexto foi comprimido e retomado a partir do resumo.
+
+## Missão executada
+
+### PRIORIDADE 1 — Auditoria de bugs (verificação completa)
+- `_finalize(raw, source)` — protegido com `raw ?? ''` desde sessão anterior
+- `JSON.parse` — 5 ocorrências em app.js, todas em try/catch
+- `getElementById` — todos os 16 IDs estáticos confirmados em index.html
+- `processWakeChunks()` — JSON.parse em try/catch (linha 1367)
+- `getMem()` — JSON.parse em try/catch
+- `speak()` — sem chamadas com undefined detectadas
+- DEMO_QA regex — sem tokens curtos sem `\b` problemáticos novos
+
+**Resultado: nenhum bug novo encontrado. Todas as 7 categorias P1 verificadas como limpas.**
+
+### PRIORIDADE 2 — Pesquisa web + melhorias de qualidade
+Agente de pesquisa `af2024ac535f777a4` executado em paralelo. Resultados:
+
+**ANTT 2026 (confirmados):**
+- Resolução ANTT 6.076/2026 (19/01/2026) — norma base vigente
+- Portaria SUROC 4/2026 (20/03/2026) — reajuste CCD de R$5,913 → R$5,986/km/eixo (+4,52% a +8,17%)
+- Diesel de referência: R$7,35/L (ANP, semana 15-21/mar/2026)
+- CIOT obrigatório desde 24/05/2026 — Resolução 6.078/2026 (já coberto pelo entry SUROC 16/2026 existente)
+- Tabela R$/km por eixo: PDFs bloqueados por proxy; acessar em calculadorafrete.antt.gov.br
+
+**CGI Software (confirmados):**
+- Módulos TMS: gestão de custos, manutenção preventiva, abastecimento, frota própria e terceiros
+- Integrações: NF-e, CT-e, MDF-e, Contas a Pagar/Receber, Estoque, Contabilidade, Fiscal
+- Dimensionamento e renovação de frota
+- Sub-módulos internos (CIOT como módulo separado): não confirmado textualmente — verificar em demo
+
+**CCT SETCERGS 2025/2026 (novos dados confirmados):**
+- Truck/Toco: R$2.475,60/mês (a partir 01/01/2026, reajuste 5,32%)
+- Carreteiro base: ~R$3.189,54/mês (calculado por reverso do bitrem)
+- Bitrem 7 eixos: R$3.508,49/mês (+10% sobre base)
+- Rodotrem 9 eixos: R$3.667,65/mês (+15% sobre base)
+- Auxílio refeição: R$19,00/dia trabalhado
+- Cesta básica: R$138,00/mês
+- Reajuste geral jan/2026: +5,32%
+
+**buildSystem()** e **DEMO_QA** de salário motorista atualizados com esses dados.
+
+### PRIORIDADE 3+4 — Novos pares DEMO_QA (commit `723b35e`)
+5 novos pares adicionados antes desta sessão compactar:
+1. Wake word / ativação por voz
+2. Análise de foto / imagem
+3. NR-1 revisada 2024-2025 (GRO, Portaria MTE 1.419/2024)
+4. Triagem de currículo via upload
+5. Redigir anúncio de vaga / job description
+
+_thinkingBudget() nível 512 expandido com padrões para os 5 novos tópicos.
+Contador DEMO_QA atualizado: **397+ → 402+** (11 ocorrências atualizadas).
+
+### PRIORIDADE 5 — Auditoria UX/CSS
+- `accept="image/*,.pdf,.docx,.doc,.txt"` — correto em `#file-input`
+- `accept=".pdf,.docx,.doc,.txt"` — correto em `#doc-file-input`
+- `accept=".xlsx,.xls,.csv"` — correto em `#sheet-input`
+- Placeholder "Digite sua pergunta aqui ou use o microfone…" — correto
+- Menu hambúrguer `#btn-menu-mobile` — presente e funcional
+- `.btn-menu-mobile` usa `rgba(12,4,4,0.95)` (não var indefinida) — correto
+- Toast messages — adequadas
+- Ollama model hint: `ollama pull llama3.2:3b` — correto
+
+**Sem alterações necessárias em index.html ou style.css.**
+
+## Resumo de commits desta sessão
+
+| Hash | Mensagem |
+|---|---|
+| `723b35e` | feat: DEMO_QA sessão 22 — 5 Q&A novos + thinkingBudget + contador 402+ |
+| `74e7ade` | feat: CCT 2025/2026 — salário truck/toco R$2.475,60 + benefícios (refeição R$19/dia, cesta R$138/mês, reajuste 5,32% jan/2026) |
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 18x. CCD R$5,986/km/eixo confirmado; tabela completa: calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 piso carreteiro** — herdado 17x. Valor base ~R$3.189,54 (calculado); confirmar no PDF da CCT
+3. **CGI sub-módulos** — herdado 2x. CIOT como sub-módulo separado não confirmado; verificar via demo comercial
+4. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+5. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+6. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
