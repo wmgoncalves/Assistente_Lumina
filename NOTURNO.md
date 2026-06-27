@@ -1442,3 +1442,76 @@ Conteúdo regulatório integrado com base na pesquisa:
 4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
 5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 6. **Verificar CGI Software sub-módulos** — site webcgi.com.br retornou 403; verificar diretamente
+
+---
+
+# Sessão 21 — 2026-06-27 (noturno)
+
+## O que foi feito
+
+### PRIORIDADE 1 — Correções word-boundary DEMO_QA (5 bugs)
+
+Script Python inline analisou todos os tokens de 2–4 chars em padrões `{ re: /.../ }` sem `\b` e detectou 5 vulnerabilidades de match falso positivo:
+
+| Token | Linha | Correção |
+|---|---|---|
+| `dort` | L5282 | `dort` → `\bdort\b` |
+| `ciot` | L5531 | `ciot` → `\bciot\b` |
+| `dds`  | L6611 | `dds` → `\bdds\b` |
+| `mdfe` | L6874 | `mdfe` → `\bmdfe\b` |
+| `rctr`, `rcta` | L6951 | `rctr\|rcta` → `\brctr\b\|\brcta\b` |
+
+Validado com `node --check app.js` ✓
+
+**Commit:** `347bb50` — fix: DEMO_QA word-boundary sessão 21
+
+### PRIORIDADE 2 — Novos pares DEMO_QA (+5 entradas) + thinkingBudget + contador
+
+Pesquisa web confirmou dados antes da inserção. 5 novos pares adicionados ao final do array DEMO_QA (antes do `];`):
+
+| # | Tema | Base legal/fonte |
+|---|---|---|
+| 1 | **Vale-pedágio TAC** | Lei 10.209/2001 — obrigação do embarcador, não do transportador |
+| 2 | **Manutenção preditiva vs preventiva** | McKinsey: redução 10–25% custos, 70–75% falhas evitáveis |
+| 3 | **Férias do motorista CLT** | Lei 13.103/2015 + CLT art.130: 30 dias, proporcional |
+| 4 | **Diárias e reembolso** | Portaria MTP 671/2021 — isenção IR se ≤50% salário/dia |
+| 5 | **Plano de carreira motorista** | Progressão ajudante → motorista → líder de frota |
+
+**_thinkingBudget() 512** — padrão expandido com os 5 novos temas para pré-ativar raciocínio leve.
+
+**Contador:** 392+ → **397+** (11 ocorrências substituídas em textos visíveis ao usuário).
+
+Validado com `node --check app.js` ✓
+
+**Commit:** `9e92303` — feat: DEMO_QA sessão 21 — 5 Q&A novos + thinkingBudget + contador 397+
+
+### PRIORIDADE 3 — tryLocalResponse() — sem alterações
+
+Verificado em sessão 20: todos os itens de P3 já existem. Nenhuma entrada nova necessária.
+
+### PRIORIDADE 5 — Auditoria UX/CSS — sem bugs encontrados
+
+- Todas as 8 variáveis CSS definidas (`--bg`, `--accent`, `--accent-hi`, `--text`, `--text-dim`, `--border`, `--btn-bg`, `--btn-active`)
+- `.hmsg.lumina .hmsg-bubble` (seletor descendente com espaço) — correto desde sessão 12
+- `.btn-sm` — definido desde sessão 12
+- `.btn-menu-mobile` — usa `rgba(12,4,4,0.95)` (não `var(--surface)` indefinida) — correto desde sessão 12
+- `accept="image/*,.pdf,.docx,.doc,.txt"` — correto nos inputs de arquivo
+- Placeholder: "Digite sua pergunta aqui ou use o microfone…" — simplificado desde sessão 16
+- Como Usar: `node server.js` / `localhost:4321` — corrigido desde sessão 9
+
+**Sem alterações necessárias.**
+
+## Resumo de commits desta sessão
+
+| Hash | Mensagem |
+|---|---|
+| `347bb50` | fix: DEMO_QA word-boundary sessão 21 — \bdort\b, \bciot\b, \bdds\b, \bmdfe\b, \brctr\b, \brcta\b |
+| `9e92303` | feat: DEMO_QA sessão 21 — 5 Q&A novos + thinkingBudget + contador 397+ |
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 17x. Acesso manual: calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 16x. Dado parcial: bitrem R$3.508,49/mês
+3. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+6. **Verificar CGI Software sub-módulos** — site webcgi.com.br retornou 403; verificar diretamente
