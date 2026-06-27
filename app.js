@@ -634,7 +634,7 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
 • Diesel S-10 RS (2026): R$7,10-7,60/l posto (ref. SUROC 4/2026: R$7,35/l de mar/2026) | R$6,70-7,10/l distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
-• Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): truck/toco R$2.475,60/mês (a partir jan/2026, reajuste 5,32%) | carreteiro base ~R$3.189/mês | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | auxílio refeição R$19/dia | cesta básica R$138/mês | + diárias R$60-120/dia | + periculosidade 30% se MOPP
+• Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): truck/toco R$2.475,60/mês (a partir jan/2026, reajuste 5,32%) | carreteiro base ~R$3.189/mês | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | auxílio refeição R$19/dia | cesta básica R$138/mês | diárias R$100/dia (CCT mai/2026) | plano de saúde R$290/mês (empresa, a partir jun/2026) | + periculosidade 30% se MOPP
 • Piso mínimo ANTT Lajeado→SP (1.100 km, Carga Geral, PORT.SUROC 04/2026): truck 2 eixos R$6.315 (CCD R$5,27/km) | carreta 5 eixos R$8.019 (CCD R$6,71/km) | bitrem 7 eixos alto desempenho R$7.745 (CCD R$6,80/km)
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
@@ -3582,7 +3582,7 @@ const _thinkingBudget = (msg) => {
   // Análise pesada — raciocínio profundo (2048): analítico, comparativo, investigativo
   if (/dre|balancete|auditoria|fechamento|demonstrat|ebitda|fluxo de caixa|prosp[ea]ct|cliente.{0,20}novo|contato.{0,20}empresa|análise|anali[sz]|compare|compara|versus|vs\.|por que (caiu|subiu|cresceu|reduziu|aumentou)|o que (explica|causou|gerou)|identifica|inconsistência|irregularidade|conferir|bate|fecha|budget|orcamento|capital de giro|ponto de equilibrio|rentabilidade|benchmark|meta.*anual|estrategia|sinistro|avaria.*indeniz|custo.*acidente|precifica|formacao.*preco|esg.*relatorio|iso.*9001|licitacao|redespacho|subfrete|simples.*presumido|lucro.*presumido|regime.*tributario|custo.*fixo.*variavel|ponto.*equilibrio.*frete|break.*even.*frota|valuation|swot|okr.*resultado|tco.*veiculo|tabela.*antt|piso.*minimo|custo.*operacional.*km|roi.*frota|inadimplencia|cobrança.*juridica|rescisão.*contrato|multa.*contratual|renegociação|proposta.*comercial|licitação.*transporte|contrato.*cliente|revisão.*tarifaria|imposto.*transporte|difal.*frete|icms.*transporte|pis.*cofins.*transporte|simples.*nacional.*transportadora|auditoria.*cgi|inconsistência.*cgi|divergência.*faturamento|custo.*filial|resultado.*filial|custo.*rota.*analise|rentabilidade.*cliente|margem.*contribuição|acao.*trabalhista|passivo.*trabalhista|verbas.*rescis|processo.*trabalhista|defesa.*trabalhista|reclamacao.*trabalhista|trabalhista.*calculo|indenizacao.*trabalhista|folha.*recalculo|recalculo.*folha|rescisao.*calculo|calculo.*rescisao/.test(t)) return 2048;
   // Perguntas de procedimento / contexto / empresa — raciocínio leve (512)
-  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha|gnv.*frota|frota.*gnv|descarboniz.*frota|frota.*sustentavel|scapini.*sede|sede.*scapini|lajeado.*scapini|vale.*taquari.*scapini|renovacao.*frota|frota.*renovacao|ata.*reuniao|reuniao.*ata|transcrever.*reuniao|gravar.*reuniao|feriado.*motorista|feriado.*transporte|trabalhar.*feriado|escala.*feriado|feriado.*hora.*extra|vale.?pedagio|pedagio.*tac|tac.*pedagio|pedagio.*motorista.*autonomo|manutencao.*preditiva|preditiva.*manutencao|preventiva.*preditiva|ferias.*motorista|motorista.*ferias|diaria.*motorista|motorista.*diaria|reembolso.*despesa.*motorista|plano.*carreira.*transport|carreira.*motorista|promocao.*cargo.*motorista|cartao.*combustivel.*corporativo|wake.?word|ativacao.*voz.*lumina|lumina.*escuta.*ambiente|palavra.*ativacao|nr.?1(?!0).*revisao|gerenciamento.*risco.*ocupacional|\bgro\b.*nr|nr.*\bgro\b|programa.*gerenciamento.*risco.*ocupacional|analisa.*imagem.*lumina|foto.*avaria.*lumina|triagem.*curriculo|redigir.*vaga|anuncio.*vaga.*lumina|job.*description.*lumina/.test(t)) return 512;
+  if (/como (funciona|fazer|faço|se faz|configur|ativ|calcular|reduzir|melhorar|aumentar|vender|fechar|negociar|prospectar)|procedimento|integra|cgi|sistema|motorista|manifesto|mdfe|cte|nota fiscal|frete|rota|calcul|estima|cotação de frete|qual (é|seria|seria|seria) (a|o) (melhor|ideal|certo)|me explica|pode explicar|o que significa|dica|sugestao|recomenda|finame|leasing|factoring|difal|geofence|rastreamento|telemetria|dds|ppra|pcmso|cipa|tms|wms|manutencao.*preventiva|recrutamento.*motorista|plr.*motorista|nps.*transporte|sla.*transporte|contingencia.*frota|tabela.*antt|ciot.*como|como.*emite.*cte|como.*abre.*viagem|como.*fecha.*viagem|procedimento.*sinistro|protocolo.*acidente|checklist.*veiculo|onboarding.*motorista|sassmaq|rntrc|documentacao.*carga|manifesto.*emissao|escala.*motorista|jornada.*motorista|norma.*antt|regulamentacao|como.*funciona.*cgi|modulo.*cgi|roteiriz|planejamento.*rota|avaliacao.*desempenho|avaliacao.*colaborador|gestao.*desempenho|ppp.*trabalhista|exame.*admissional|exame.*periodico|contas.*pagar.*gestao|gestao.*contas|grupo scapini|transliquidos|365 log|blue seguros|ls tech|stokkie|frete.*internacional|exportac|importac|argentina.*frete|uruguai.*frete|paraguai.*frete|america.*sul.*transporte|contrato.*transliquidos|carga.*quimica|perigosa.*liquida|granel.*liquido|licenca.*maternidade|maternidade.*licenca|licenca.*paternidade|estabilidade.*gestante|gestante.*estabilidade|gerenciamento.*risco.*carga|\bgrc\b|balanca.*pesagem|pesagem.*rodoviaria|excesso.*peso.*legal|pbt.*caminhao|recapagem.*pneu|pneu.*recapagem|adiantamento.*salarial|vale.*salario|consignado.*folha|gnv.*frota|frota.*gnv|descarboniz.*frota|frota.*sustentavel|scapini.*sede|sede.*scapini|lajeado.*scapini|vale.*taquari.*scapini|renovacao.*frota|frota.*renovacao|ata.*reuniao|reuniao.*ata|transcrever.*reuniao|gravar.*reuniao|feriado.*motorista|feriado.*transporte|trabalhar.*feriado|escala.*feriado|feriado.*hora.*extra|vale.?pedagio|pedagio.*tac|tac.*pedagio|pedagio.*motorista.*autonomo|manutencao.*preditiva|preditiva.*manutencao|preventiva.*preditiva|ferias.*motorista|motorista.*ferias|diaria.*motorista|motorista.*diaria|reembolso.*despesa.*motorista|plano.*carreira.*transport|carreira.*motorista|promocao.*cargo.*motorista|cartao.*combustivel.*corporativo|wake.?word|ativacao.*voz.*lumina|lumina.*escuta.*ambiente|palavra.*ativacao|nr.?1(?!0).*revisao|gerenciamento.*risco.*ocupacional|\bgro\b.*nr|nr.*\bgro\b|programa.*gerenciamento.*risco.*ocupacional|analisa.*imagem.*lumina|foto.*avaria.*lumina|triagem.*curriculo|redigir.*vaga|anuncio.*vaga.*lumina|job.*description.*lumina|cat.*acidente|comunicacao.*acidente.*trabalho|acidente.*trabalho.*cat|backhaul|frete.*retorno|carga.*retorno|mensagem.*automatica.*lumina|alerta.*agendado.*lumina|proposta.*comercial.*lumina|lumina.*gera.*proposta/.test(t)) return 512;
   // Conversas simples, lookups, saudações — sem thinking (0)
   return 0;
 };
@@ -4992,8 +4992,8 @@ const tryLocalResponse = (text) => {
   // ── Salário motorista / remuneração ──
   if (/salario.*motorista|motorista.*salario|quanto.*ganha.*motorista|remuneracao.*motorista|piso.*motorista|salario.*motorista.*scapini/.test(t))
     return pick([
-      'O salário de motorista na Scapini segue a CCT MOVIFORT/SETCERGS. Na tabela 2025/2026 (vigência mai/2025–abr/2026, reajuste jan/2026 de 5,32%): truck/toco R$2.475,60/mês | carreteiro (tração simples) ~R$3.189/mês | bitrem R$3.508,49/mês (+10%) | rodotrem 9 eixos R$3.667,65/mês (+15%). Benefícios mínimos: auxílio refeição R$19/dia trabalhado, cesta básica R$138/mês. Mais: diárias R$60–120/dia fora da base, periculosidade 30% se MOPP. Para o valor exato, consulte o RH.',
-      'Motoristas CLT da Scapini seguem a CCT MOVIFORT/SETCERGS 2025/2026. Pisos CCT (a partir jan/2026): truck/toco R$2.475,60 | carreteiro ~R$3.189 | bitrem R$3.508 (+10%) | rodotrem R$3.668 (+15%). Benefícios: auxílio refeição R$19/dia + cesta básica R$138/mês. O pacote total (salário + diárias + benefícios + eventual periculosidade MOPP) pode superar R$5.000/mês em viagens de longa distância.',
+      'O salário de motorista na Scapini segue a CCT MOVIFORT/SETCERGS. Na tabela 2025/2026 (vigência mai/2025–abr/2026, reajuste jan/2026 de 5,32%): truck/toco R$2.475,60/mês | carreteiro (tração simples) ~R$3.189/mês | bitrem R$3.508,49/mês (+10%) | rodotrem 9 eixos R$3.667,65/mês (+15%). Benefícios mínimos: auxílio refeição R$19/dia, cesta básica R$138/mês, diárias R$100/dia de viagem (CCT mai/2026), plano de saúde R$290/mês (empresa, jun/2026). Periculosidade 30% se MOPP. Para o valor exato, consulte o RH.',
+      'Motoristas CLT da Scapini seguem a CCT MOVIFORT/SETCERGS 2025/2026. Pisos CCT (a partir jan/2026): truck/toco R$2.475,60 | carreteiro ~R$3.189 | bitrem R$3.508 (+10%) | rodotrem R$3.668 (+15%). Benefícios (CCT mai/2026): auxílio refeição R$19/dia + cesta básica R$138/mês + diárias R$100/dia + plano de saúde R$290/mês. O pacote total (salário + diárias + benefícios + eventual periculosidade MOPP) pode superar R$5.500/mês em viagens de longa distância.',
     ]);
 
   // ── Segurança / privacidade dos dados Lúmina ──
@@ -5680,7 +5680,7 @@ const DEMO_QA = [
   // Benefícios obrigatórios e opcionais para motoristas
   { re: /beneficios.*motorista|vale.*alimentacao.*motorista|diaria.*motorista|ajuda.*custo.*motorista|vt.*motorista|ticket.*refeicao.*motorista|cesta.*basica.*frota|plano.*saude.*motorista|beneficio.*atrair.*motorista/,
     r: [
-      'Benefícios obrigatórios para motorista CLT: Vale-transporte (se deslocamento >1km e não usa o próprio veículo), seguro de vida em grupo (CCT da categoria — verificar sindicato), adicional de periculosidade se aplicável (30% salário). Benefícios fortemente praticados pelo setor: vale-alimentação/refeição R$25-40/dia, diária de viagem R$60-120/dia fora da base, cesta básica mensal.',
+      'Benefícios obrigatórios para motorista CLT: Vale-transporte (se deslocamento >1km e não usa o próprio veículo), seguro de vida em grupo (CCT da categoria — verificar sindicato), adicional de periculosidade se aplicável (30% salário). Benefícios CCT SETCERGS/MOVIFORT RS mai/2026: auxílio refeição R$19/dia, diária de viagem R$100/dia, cesta básica R$138/mês, plano de saúde R$290/mês (empresa).',
       'Benefícios que mais retêm motoristas segundo pesquisas do setor: (1) Plano de saúde — motorista valoriza para a família; (2) Programa de bonificação por viagem sem infração/acidente; (3) Diária sem burocracia — paga antes de viajar; (4) Comunicação humanizada — gestor que retorna mensagem e resolve problema; (5) Reconhecimento público (motorista do mês). Custo estimado pacote completo: R$800-1.500/motorista/mês além do salário. Custo de substituir um motorista: R$6-9k.',
     ]},
 
@@ -6475,7 +6475,7 @@ const DEMO_QA = [
     ]},
 
   // Fusão, aquisição e expansão
-  { re: /fusao|aquisicao|comprar.*transportadora|adquirir.*empresa|m&a.*transporte|crescer.*aquisicao|expansao.*regional|abrir.*filial/,
+  { re: /\bfusao\b|\baquisicao\b|comprar.*transportadora|adquirir.*empresa|m&a.*transporte|crescer.*aquisicao|expansao.*regional|abrir.*filial/,
     r: [
       'M&A no transporte rodoviário: o setor está em consolidação — grandes grupos (JSL, Sequoia, Tegma) estão comprando transportadoras regionais. Para a Scapini, duas estratégias: ser vendedor (preparar empresa por 2-3 anos para venda a múltiplo alto) ou ser comprador (adquirir concorrente menor para ganhar rota, frota ou carteira). Due diligence mínima: DRE 3 anos, passivo trabalhista, estado da frota, contratos ativos.',
       'Abertura de filial: para expansão regional (ex: Scapini abrindo em São Paulo ou Curitiba), avalie primeiro um ponto de apoio operacional (cross-docking, sem funcionários fixos) antes de montar estrutura completa. Custo de filial pequena: R$15.000-40.000/mês fixo. ROI mínimo: volume que pague a estrutura + 20% de margem. Tempo para break-even: 6 a 18 meses dependendo da rota.',
@@ -7071,7 +7071,7 @@ const DEMO_QA = [
   // ── Benefícios dos funcionários da Scapini ─────────────────────────────────────
   { re: /beneficio.*scapini|beneficio.*funcionario|beneficio.*colaborador|beneficio.*motorista.*scapini|scapini.*beneficio|vantagem.*trabalhar.*scapini/,
     r: [
-      'Os benefícios na Scapini incluem: salário conforme CCT MOVIFORT, diárias de viagem para motoristas (R$60-120/dia fora da base), vale-alimentação, cesta básica, uniforme fornecido, EPIs sem custo para o colaborador, e seguro de vida conforme convenção coletiva. Detalhes completos e valores vigentes: consulte o RH.',
+      'Os benefícios na Scapini incluem: salário conforme CCT MOVIFORT, diárias de viagem para motoristas (R$100/dia conforme CCT mai/2026), auxílio refeição R$19/dia, cesta básica R$138/mês, plano de saúde R$290/mês (empresa, a partir jun/2026), uniforme fornecido, EPIs sem custo. Detalhes completos e valores vigentes: consulte o RH.',
       'A Scapini oferece benefícios típicos do setor de transporte seguindo a CCT da categoria (MOVIFORT). Vale-alimentação/refeição, cesta básica, fardamento, EPIs fornecidos e, para motoristas, diária e ajuda de custo em viagem. A empresa cumpre rigorosamente a legislação trabalhista. Para detalhes do pacote atual, procure o RH.',
     ]},
 
@@ -7140,11 +7140,11 @@ const DEMO_QA = [
       'Phase 2 — integração CGI: consulta de viagens em aberto, status de CT-e, posição de frota, DRE por filial, alertas de inadimplência — tudo por linguagem natural. Hoje a Lúmina já analisa planilhas exportadas do CGI. Na Phase 2, vai consultar o dado direto na fonte, sem exportar nada.',
     ]},
 
-  // Funciona offline — Llama local + 402+ respostas
+  // Funciona offline — Llama local + 410+ respostas
   { re: /lumina.*offline|offline.*lumina|sem.*internet.*lumina|lumina.*sem.*internet|lumina.*rede.*cair|cair.*rede.*lumina|lumina.*sem.*api/,
     r: [
       'Sim — o Llama roda 100% local na máquina da Scapini: sem internet, sem API, zero custo. Mais de 350 respostas estão disponíveis offline para cobertura imediata de dúvidas operacionais. A voz (TTS) e o Gemini precisam de internet, mas o core da Lúmina funciona offline.',
-      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 402+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
+      'Modo offline: Llama local responde qualquer pergunta operacional, a base de 410+ respostas cobre RH/transporte/financeiro/compliance. Se a internet cair, a Lúmina continua respondendo 80% das perguntas. O que precisa de internet: análise de planilhas complexas (Gemini) e síntese de voz (Edge TTS).',
     ]},
 
   // Vai ficar mais inteligente — aprendizado contínuo
@@ -7157,7 +7157,7 @@ const DEMO_QA = [
   // Quanto tempo para implantar
   { re: /quanto.*tempo.*implantar|prazo.*implantar.*lumina|lumina.*prazo.*implantar|quando.*lumina.*pronta|lumina.*quando.*pronta|cronograma.*lumina|semanas.*lumina/,
     r: [
-      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 402+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
+      'A implantação leva 1 a 2 semanas: configuração do servidor (1-2 dias), carga da base de conhecimento com dados da Scapini (3-5 dias), testes com a equipe (2-3 dias), e treinamento do time (1 dia). A Lúmina já vem com 410+ respostas prontas para o setor de transporte — curva de aprendizado mínima.',
       'Cronograma de implantação: Semana 1 — instalação, configuração e carga da base de conhecimento. Semana 2 — testes, ajustes e treinamento do time. A partir daí, a equipe já usa em produção. O fine-tuning do Llama começa automaticamente na primeira semana de uso real.',
     ]},
 
@@ -7236,7 +7236,7 @@ const DEMO_QA = [
   // O que acontece se a internet cair
   { re: /internet.*cair|cair.*internet|sem.*internet|queda.*internet|lumina.*internet.*cair|lumina.*offline.*que acontece|funciona.*sem.*conexao|sem.*conexao.*lumina/,
     r: [
-      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (402+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
+      'Se a internet cair, a Lúmina entra em modo offline automático: responde por base local de conhecimento (410+ tópicos de transporte, RH, fiscal, operação, financeiro), sem custo de API. Análises de planilha e perguntas complexas ficam pausadas até a conexão voltar. O Llama (modelo local) assume como fallback — responde com raciocínio próprio, sem internet.',
       'Modo offline: a Lúmina não para. Ela responde toda a base local de conhecimento da Scapini (procedimentos, legislação, regulamentações, RH, fiscal). Para análises financeiras com Gemini, aguarda a reconexão. É por isso que temos o modelo Llama instalado localmente — é a alma da Lúmina que funciona até sem internet.',
     ]},
 
@@ -7453,7 +7453,7 @@ const DEMO_QA = [
   // ── Lúmina — fase atual vs roadmap ───────────────────────────────────────
   { re: /lumina.*completa|lumina.*pronta|lumina.*beta|lumina.*em.*teste|lumina.*prototipo|lumina.*fase|lumina.*versao.*atual|lumina.*quando.*fica.*pronta|quando.*lumina.*pronta|lumina.*desenvolvimento|lumina.*lancamento|lumina.*lancada|o que.*falta.*lumina|lumina.*o que.*falta/,
     r: [
-      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 402+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
+      'A Lúmina está na Fase 1 — e já funciona de verdade, não é protótipo! Hoje: chat por voz e texto, 410+ conhecimentos do setor de transporte, cotação de frete, prospecção de clientes, análise de planilha DRE, geração de documentos (Word/Excel/PDF) e protocolo de emergência. A Fase 2 — integração ao CGI, alertas no WhatsApp e App Motorista — está em desenvolvimento. A IA já existe; o próximo passo é conectar os dados reais da Scapini.',
       'Versão atual: Lúmina v1.0 — operacional para uso diário. Não é MVP de prateleira: foi construída especificamente para a Scapini. O que já funciona: respostas por voz, análise de documentos, prospecção de leads, cotação de frete, relatórios de KPI, base de conhecimento editável. O que vem na Fase 2: consultar o CGI em tempo real, alertas proativos, integração com rastreamento e WhatsApp. Cada conversa que você tem hoje alimenta o aprendizado do modelo.',
     ]},
 
@@ -7593,14 +7593,14 @@ const DEMO_QA = [
   { re: /lumina.*disponivel.*sempre|sempre.*disponivel.*lumina|lumina.*24h|lumina.*24.*horas|24.*horas.*lumina|lumina.*funciona.*sempre|lumina.*horario.*funcionamento|lumina.*fora.*horario|lumina.*madrugada|lumina.*fim.*semana|expediente.*lumina|lumina.*expediente|lumina.*uptime|disponibilidade.*lumina/,
     r: [
       'A Lúmina funciona 24 horas por dia, 7 dias por semana — não tem expediente, não tira férias, não fica em reunião. Enquanto o servidor da Scapini estiver ligado, ela está disponível. Um motorista pode consultar um procedimento às 2h da manhã; um diretor pode verificar um dado no domingo antes de uma reunião de segunda. A disponibilidade depende da infraestrutura local (servidor, energia, rede interna) — não de horário comercial.',
-      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (402+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
+      'Disponibilidade da Lúmina: 24/7 na rede interna da Scapini. Não há janela de manutenção que cause interrupção — atualizações são feitas pelo time de TI sem desligar o sistema. Para análises que dependem da API Gemini, é necessário internet ativa; para respostas da base local (410+ tópicos), funciona mesmo sem internet. Acesso fora da rede (motoristas em campo) está no roadmap da Phase 2 via App Motorista.',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Plano de contingência / e se parar ────────────
   { re: /lumina.*parar|lumina.*cair|servidor.*lumina.*cair|lumina.*indisponivel|o que.*acontece.*lumina.*parar|contingencia.*lumina|plano.*backup.*lumina|lumina.*recovery|lumina.*falhar|e se.*lumina.*parar|e se.*servidor.*lumina|lumina.*sair.*ar|lumina.*downtime/,
     r: [
-      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (402+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
-      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 402+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
+      'Cenário de contingência: se o servidor local cair, a Lúmina fica temporariamente indisponível até ser reiniciada pelo TI — tempo de recuperação é de minutos (reinício de serviço Node.js, não reconstrução). A base de conhecimento (410+ respostas e notas internas) fica armazenada localmente, zero risco de perda por falha da API do Google. Recomendação: servidor com nobreak e backup automático diário da pasta do projeto.',
+      'Resiliência da Lúmina em dois cenários: (1) Internet caiu → Ollama local assume, 410+ respostas disponíveis, operação continua; (2) Servidor local caiu → TI reinicia em minutos, histórico de conversas preservado no banco SQLite local. Nenhum dado crítico fica em nuvem de terceiros. Para alta disponibilidade, recomenda-se servidor dedicado com nobreak e monitoramento de serviço automático (reinício automático em caso de crash).',
     ]},
 
   // ── DIRETORIA JULHO/2026 — Proteção de dados confidenciais ───────────────
@@ -7662,8 +7662,8 @@ const DEMO_QA = [
   // Velocidade de resposta / latência da Lúmina
   { re: /velocidade.*lumina|lumina.*velocidade|lumina.*rapida|demora.*lumina|lumina.*demora|tempo.*resposta.*lumina|lumina.*tempo.*resposta|quanto.*tempo.*responde|resposta.*instantanea.*lumina|lumina.*lenta|lenta.*lumina/,
     r: [
-      'No modo offline (402+ respostas locais), a resposta é instantânea — menos de 0,1 segundos. Com o Gemini ativo, a resposta típica leva 2-5 segundos dependendo da complexidade: procedimento simples → 2s; análise de planilha ou auditoria complexa → 5-10s. É mais do que suficiente para o dia a dia — e entrega em 5s o que levaria 20 minutos manualmente.',
-      'A Lúmina prioriza qualidade sobre velocidade. Para 90% das perguntas, a resposta chega em menos de 3 segundos. Para análises mais profundas (DRE, prospecção, sinistro), pode levar até 10-15 segundos — mas entrega uma análise completa. Quando a internet está instável, o modo offline garante resposta imediata para 402+ temas da operação da Scapini.',
+      'No modo offline (410+ respostas locais), a resposta é instantânea — menos de 0,1 segundos. Com o Gemini ativo, a resposta típica leva 2-5 segundos dependendo da complexidade: procedimento simples → 2s; análise de planilha ou auditoria complexa → 5-10s. É mais do que suficiente para o dia a dia — e entrega em 5s o que levaria 20 minutos manualmente.',
+      'A Lúmina prioriza qualidade sobre velocidade. Para 90% das perguntas, a resposta chega em menos de 3 segundos. Para análises mais profundas (DRE, prospecção, sinistro), pode levar até 10-15 segundos — mas entrega uma análise completa. Quando a internet está instável, o modo offline garante resposta imediata para 410+ temas da operação da Scapini.',
     ]},
 
   // Ata de reunião / transcrição de áudio de reunião
@@ -7762,6 +7762,41 @@ const DEMO_QA = [
     r: [
       'Posso redigir o anúncio de vaga completo! Me diga: cargo, requisitos obrigatórios (CNH, MOPP, experiência mínima), benefícios e local de trabalho. Gero o texto pronto para publicar no LinkedIn, Indeed, Catho ou mural interno — com linguagem adequada para atrair o perfil certo. Para motoristas, adapto o texto destacando os diferenciais da Scapini (frota nova, salário CCT, GNV).',
       'Formato de vaga que gero: título atrativo + contexto da empresa (quase 50 anos, 500+ equipamentos) + requisitos obrigatórios e desejáveis + atividades + benefícios + como se candidatar. Para motoristas de carreta, sempre incluo CNH E e MOPP como obrigatórios para a operação da Translíquidos. Quer testar? Me diga o cargo e o perfil desejado.',
+    ]},
+
+  // CAT — Comunicação de Acidente de Trabalho
+  { re: /\bcat\b.*acidente|\bcat\b.*trabalho|comunicacao.*acidente.*trabalho|acidente.*trabalho.*notific|acidente.*trabalho.*prazo|acidente.*trabalho.*cat|lesao.*trabalho.*comunicar|inss.*acidente.*trabalho|cat.*emitir|emitir.*cat|acidente.*trabalho.*registrar/,
+    r: [
+      'CAT (Comunicação de Acidente de Trabalho): obrigatória até o 1º dia útil após o acidente — se houver óbito, comunicação imediata à SRTE. Emitida no site do INSS (cat.previdencia.gov.br) pelo empregador. Sem CAT = multa de 3 a 10 UFESP + responsabilidade civil ampliada. Para motoristas autônomos/TAC, a obrigação é do contratante (Scapini). Guardar por mínimo 20 anos. INSS pode gerar benefício por acidente de trabalho (auxílio acidentário B-91) — diferente do auxílio doença comum.',
+      'Protocolo de acidente de trabalho com motorista: 1) Socorro imediato; 2) BO na delegacia (obrigatório para roubos e atropelamentos); 3) Atendimento médico com emissão de atestado; 4) Emissão da CAT até o 1º dia útil; 5) Afastamento se necessário; 6) Reintegração garante estabilidade de 12 meses após a alta médica (Súmula TST 378). Para acidente em rodovia: acionar também a concessionária e o seguro de carga/responsabilidade civil.',
+    ]},
+
+  // Backhaul / frete de retorno
+  { re: /backhaul|frete.*retorno|carga.*retorno|retorno.*vazio|carga.*volta|viagem.*volta.*carga|aproveitar.*volta|carregar.*retorno|retorno.*carregado|caminhao.*vazio.*retorno|volta.*carregado|carga.*ida.*volta/,
+    r: [
+      'Backhaul (frete de retorno): aproveitar o caminhão na viagem de volta com carga — reduz o custo do km vazio. Para a Scapini, rotas Lajeado ↔ São Paulo ↔ Curitiba têm potencial. Plataformas como TruckPad, CargoX e BpShare conectam transportadoras com carga disponível para o retorno. Retorno carregado reduz em até 40% o custo total da viagem quando bem executado.',
+      'Como avaliar se o backhaul compensa: valor mínimo para aceitar = diesel (R$7,35/l referência SUROC) + pedágio de volta + diária do motorista. Frete abaixo desse piso é pior que retornar vazio — não amortiza o desgaste. Backhaul ideal: mesma categoria de carga (não misturar frigorificado com carga seca sem limpeza), cliente de confiança, e sem desvio de rota significativo. Com CGI Phase 2, a Lúmina poderá cruzar a programação de viagens com demanda de retorno em tempo real.',
+    ]},
+
+  // Quanto tempo levou para construir a Lúmina / origem
+  { re: /quanto.*tempo.*lumina.*construi|tempo.*desenvolv.*lumina|quanto.*tempo.*lumina.*ficou.*pronta|quando.*lumina.*comecou|historico.*lumina.*desenvolvimento|lumina.*quando.*comecou|como.*surgiu.*lumina|origem.*lumina|lumina.*foi.*feita.*quando|projeto.*lumina.*durou/,
+    r: [
+      'A Lúmina foi desenvolvida pela DV Digital especialmente para a Scapini — não é um produto de prateleira. Do briefing ao primeiro deploy: aproximadamente 3 meses de trabalho intenso, incluindo levantamento de necessidades com as lideranças, curadoria de 400+ respostas locais sobre o negócio Scapini, e integração com Gemini 2.5 Flash (raciocínio) + Llama local (respostas offline). É uma IA com identidade própria — não um chatbot genérico personalizado.',
+      'A Lúmina é evolutiva — não é um projeto que terminou. A base de conhecimento cresce continuamente. A Phase 2 (integração com CGI em tempo real) está em desenvolvimento. O nome vem de "luz + dados": Dando vida aos dados e luz às decisões. A Scapini foi pioneira no setor de transporte gaúcho em adotar IA com esse nível de personalização — algo que grupos como JSL e Sequoia investiram milhões para ter. Aqui foi feito sob medida.',
+    ]},
+
+  // Mensagens automáticas / alertas agendados pela Lúmina
+  { re: /lumina.*mensagem.*automatica|mensagem.*automatica.*lumina|lumina.*agenda.*mensagem|alerta.*agendado.*lumina|lumina.*enviar.*automatico|lumina.*programar.*envio|envio.*automatico.*lumina|notificacao.*automatica.*lumina|lumina.*me.*lembrar|lembrete.*lumina/,
+    r: [
+      'Na versão atual (v1.0), a Lúmina responde quando acionada — ainda não envia mensagens proativas agendadas. Na Phase 2 estão previstos alertas automáticos: vencimento de documentos da frota (CRLV, tacógrafo, RNTRC), motoristas com jornada próxima ao limite legal da Lei 13.103, metas de KPI não atingidas. Esses alertas chegarão por WhatsApp ou e-mail para os responsáveis, sem precisar perguntar.',
+      'Automações no roadmap da Lúmina: relatório semanal automático (toda segunda-feira), alerta de diesel quando o preço da ANP mudar mais de 2%, lembrete de reunião de CIPA, notificação de vencimento de CNH/MOPP de motoristas. A base técnica já existe — os gatilhos estão sendo configurados para a Phase 2. Por enquanto, você pode pedir explicitamente "me lembra X quando falar comigo amanhã" e eu anotarei na memória da sessão.',
+    ]},
+
+  // Lúmina gera proposta comercial / cotação para cliente
+  { re: /lumina.*gera.*proposta|proposta.*comercial.*lumina|lumina.*cotacao.*cliente|lumina.*monta.*proposta|lumina.*apresentacao.*cliente|proposta.*frete.*lumina|lumina.*gerar.*orcamento.*cliente|lumina.*escreve.*proposta|cotacao.*frete.*lumina.*gerar/,
+    r: [
+      'Posso ajudar a estruturar uma proposta comercial de frete completa! Me diga: nome do cliente, origem, destino, tipo de carga, peso/cubagem e frequência. Gero o texto com: apresentação da Scapini (quase 50 anos, 22 unidades, 500+ equipamentos), diferenciais (frota média 3,4 anos, 16% GNV, rastreamento 100%), condições de frete, prazo de trânsito e responsabilidades. Para enviar como Word ou PDF, use o botão de Gerar Arquivo.',
+      'Proposta pronta em 2 minutos: descreva o cliente e a necessidade. Uso os dados reais da Scapini e estruturo no formato correto. Para químicos/líquidos a granel, cito automaticamente a Translíquidos. Para cargas internacionais, menciono a TST Global. Para volume com contratos anuais, calculo o desconto por tabela CCT ANTT. A proposta sai pronta para revisão — você ajusta o preço final e assina.',
     ]},
 ];
 
@@ -7900,7 +7935,7 @@ const localFallback = (text) => {
   return pick([
     'Boa pergunta! Com o Gemini ativo, entro a fundo nisso em segundos. No modo atual, cubro procedimentos, rotas, documentação e dados da Scapini.',
     'Hmm, essa eu preciso da IA completa pra responder direito. Me pergunte sobre operação, RH, manutenção, financeiro ou qualquer procedimento interno.',
-    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 402+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
+    'Essa vai precisar do Gemini ligado — é análise mais profunda. Enquanto isso: tenho 410+ respostas sobre transporte, CGI, clientes, regulamentação e gestão.',
     'Isso foge um pouco do meu foco aqui. Posso ajudar com operação, RH, financeiro, comercial ou qualquer procedimento interno da Scapini.',
     'Pô, boa pergunta. Mas essa eu precisaria da IA completa pra responder sem inventar. Posso ajudar com algo específico da operação da Scapini?',
     'Não tenho esse dado aqui offline. Tenta me perguntar sobre: frete, CT-e, MDFe, motoristas, clientes, tabela ANTT, diesel, ou qualquer procedimento interno.',
