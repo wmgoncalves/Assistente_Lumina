@@ -1228,3 +1228,92 @@ Inseridos antes do fechamento `];` do array (linha 7577 → 7641):
 
 ### PRIORIDADE 5 (UX/CSS)
 - Nenhum bug UX encontrado. Verificar fluxo completo da demo antes da reunião com diretoria em julho/2026.
+
+---
+
+# Sessão 18 — 2026-06-27 00:16 UTC (Noturna/Autônoma)
+
+## Resumo
+Sessão autônoma noturna — continuação direta da sessão 17. Foco em: (1) PRIORIDADE 1 — 7 bugs word-boundary corrigidos + 2 JSON.parse sem try/catch em server.js; (2) PRIORIDADE 2 — pesquisa web confirma dados GNV Scapini (16% frota, meta 24%/2030, 40-50 caminhões/ano); (3) PRIORIDADE 4 — 4 novos pares DEMO_QA; (4) atualização de dados ESG em 3 locais. Total: 2 commits + push. Todos passam em `node --check`.
+
+## Estado final
+- `app.js`: **9.657 linhas** (era 9.629)
+- `DEMO_QA`: **380 entradas** (era 376)
+- Contador user-visível: **385+** (atualizado de 375+)
+
+## PRIORIDADE 1 — Bugs corrigidos
+
+### 5 word-boundary bugs em DEMO_QA (app.js)
+
+| Padrão | Falso positivo real | Fix |
+|--------|--------------------|----|
+| `grc` (l.7377) | "discográfica", "agrc" | `\bgrc\b` |
+| `eld` (l.6597) | "eldorado", "eldo" | `\beld\b` |
+| `ftl\|ltl` (l.6590) | sem fronteira | `\bftl\b\|\bltl\b` |
+| `sest\|senat` (l.6717) | "sesta" (cochilo PT-BR); "senatorial" | `\bsest\b\|\bsenat\b` |
+| `tms` (l.6389) | substrings inesperadas | `\btms\b` |
+
+### 2 bugs JSON.parse sem try/catch (server.js)
+
+- **`/api/candidatura/:token` (l.1963)**: `JSON.parse(row.respostas || '[]')` em handler síncrono Express — crash não tratado se BD corrompido. **Fix**: envolvido em `try {} catch { respostas = []; }`.
+- **`/api/candidatura/:token/responder` (l.1988)**: mesmo problema no endpoint POST. **Fix**: idem.
+
+### Auditoria de outros itens PRIORIDADE 1 — todos OK
+
+- `getElementById` sem null-guard: todos em elementos estáticos do HTML ou já protegidos ✓
+- `JSON.parse` sem try/catch: confirmados protegidos (app.js 9 pontos + server.js 7 pontos revisados) ✓
+- `fetch()` sem `.catch()`: todos em try/catch ✓
+- `speak()` com undefined: `cleanForTTS` tem `String(raw ?? '')` ✓
+- `_finalize()` com undefined: guard `raw ?? ''` confirmado ✓
+- DEMO_QA regex genérico: 5 bugs corrigidos acima; varredura adicional não encontrou novos casos ✓
+
+## PRIORIDADE 2 — Pesquisa web e qualidade
+
+### Dados confirmados via pesquisa — Scapini GNV/ESG
+- **16% da frota roda a GNV** (Gás Natural Veicular)
+- **Meta: 24% de descarbonização até 2030**
+- **Renovação de frota**: 40-50 caminhões/ano, ~R$1M/unidade
+- Fonte: artigo TransporteModerno "Como a diversificação blindou o Grupo Scapini" (out/2025)
+
+### Atualizações aplicadas no código (3 locais)
+- `buildSystem()` linha 521: frota com 16% GNV, meta 24%/2030, renovação 40-50/ano
+- `tryLocalResponse` bloco frota (l.4946-4947): 2 respostas atualizadas com dados GNV
+- DEMO_QA ESG (l.5610): resposta atualizada com dados específicos da Scapini
+
+### `_thinkingBudget()` — nível 512 expandido
+Novos padrões adicionados: `gnv.*frota`, `frota.*gnv`, `descarboniz.*frota`, `frota.*sustentavel`, `scapini.*sede`, `sede.*scapini`, `lajeado.*scapini`, `vale.*taquari.*scapini`, `renovacao.*frota`, `frota.*renovacao`
+
+### Dados não encontrados (bloqueados por HTTP 403 — herdado)
+- Tabela ANTT por eixo (R$/km) — herdado 14x
+- CCT MOVIFORT RS 2025/2026 tabela salarial completa — herdado 13x
+
+## PRIORIDADE 4 — Novos pares DEMO_QA (+4 entradas × 2 respostas)
+
+1. **GNV / descarbonização Scapini**: 16% frota GNV, meta 24%/2030, 40-50 caminhões/ano, ~R$1M/unidade
+   - Regex: `scapini.*gnv|gnv.*scapini|...|meta.*2030.*scapini|renovacao.*frota.*scapini|...`
+
+2. **Estratégia 2030 / meta R$1 bilhão**: R$440M→R$1B em 6 anos, pilares de crescimento
+   - Regex: `meta.*scapini.*2030|2030.*scapini|meta.*bilhao|...|scapini.*plano.*futuro`
+
+3. **Sede Lajeado / Vale do Taquari**: distância de POA, BR-386, polo industrial do Vale
+   - Regex: `onde.*scapini.*fica|sede.*scapini|...|endereco.*scapini|scapini.*rs|scapini.*sul`
+
+4. **Clientes da Scapini**: JTI, Souza Cruz/BAT, Nestlé, CMPC, Suzano, Braskem; perfil de cliente
+   - Regex: `clientes.*scapini|scapini.*cliente|quem.*cliente.*scapini|...|quem.*contrata.*scapini`
+
+## PRIORIDADE 5 — UX
+
+- Auditados: toast styles (error/success/info), botões feat-btn, upload button, placeholders, hamburger mobile
+- **Nenhum bug UX novo encontrado** — todas as correções anteriores confirmadas
+
+## Commits desta sessão
+- `a53cf04` — fix: DEMO_QA word-boundary — `\bgrc\b`, `\beld\b`, `\bftl\b`, `\bltl\b`, `\bsest\b`, `\bsenat\b`, `\btms\b` + 4 Q&A novos + ESG GNV 16% — PUSHED
+- `731a542` — feat: qualidade — fix JSON.parse sem try/catch em server.js candidatura — PUSHED
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 14x. Acesso manual em calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 13x. Dado parcial: bitrem R$3.508,49/mês
+3. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+6. **DEMO_QA por setor**: manutenção preventiva vs preditiva, procedimentos operacionais específicos — ainda há tópicos de workshop a cobrir
