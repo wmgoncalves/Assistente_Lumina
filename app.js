@@ -634,7 +634,7 @@ NÚMEROS DE REFERÊNCIA DO SETOR (use quando não tiver dados internos da Scapin
 • Custo por km (RS/Sul): truck R$1,80-2,20 | carreta R$2,00-2,60
 • Diesel S-10 RS (2026): R$7,10-7,60/l posto (ref. SUROC 4/2026: R$7,35/l de mar/2026) | R$6,70-7,10/l distribuidor
 • Pneu novo caminhão: R$1.800-2.400 | vida útil 120.000-180.000 km
-• Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): base ~R$3.189/mês tração | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | + diárias R$60-120/dia | + periculosidade 30% se MOPP
+• Salário motorista CLT RS (CCT MOVIFORT/SETCERGS 2025/2026): truck/toco R$2.475,60/mês (a partir jan/2026, reajuste 5,32%) | carreteiro base ~R$3.189/mês | bitrem R$3.508/mês (+10%) | rodotrem R$3.668/mês (+15%) | auxílio refeição R$19/dia | cesta básica R$138/mês | + diárias R$60-120/dia | + periculosidade 30% se MOPP
 • Piso mínimo ANTT Lajeado→SP (1.100 km, Carga Geral, PORT.SUROC 04/2026): truck 2 eixos R$6.315 (CCD R$5,27/km) | carreta 5 eixos R$8.019 (CCD R$6,71/km) | bitrem 7 eixos alto desempenho R$7.745 (CCD R$6,80/km)
 • Custo de acidente com afastamento: R$40.000-150.000 (direto + indireto)
 • Turnover motorista: setor 40-80%/ano | custo de substituição 1,5x salário
@@ -4992,8 +4992,8 @@ const tryLocalResponse = (text) => {
   // ── Salário motorista / remuneração ──
   if (/salario.*motorista|motorista.*salario|quanto.*ganha.*motorista|remuneracao.*motorista|piso.*motorista|salario.*motorista.*scapini/.test(t))
     return pick([
-      'O salário de motorista na Scapini segue a CCT MOVIFORT/SETCERGS. Na tabela 2025/2026 (vigência mai/2025–abr/2026): piso base (tração simples) ~R$3.189/mês; bitrem R$3.508,49/mês (+10%); rodotrem 9 eixos +15% sobre a base. Além disso: diárias de viagem R$60–120/dia fora da base, adicional de periculosidade 30% se carga com MOPP, vale-alimentação e cesta básica. Para o valor exato do seu cargo, consulte o RH.',
-      'Motoristas CLT da Scapini seguem a tabela salarial da CCT MOVIFORT/SETCERGS 2025/2026. O piso salarial varia por tipo de composição: tração simples ~R$3.189/mês | bitrem R$3.508/mês | rodotrem mais 15% sobre a base. O pacote total (salário + diárias + benefícios + eventual periculosidade MOPP) pode superar R$5.000/mês em viagens de longa distância. O RH confirma os valores vigentes.',
+      'O salário de motorista na Scapini segue a CCT MOVIFORT/SETCERGS. Na tabela 2025/2026 (vigência mai/2025–abr/2026, reajuste jan/2026 de 5,32%): truck/toco R$2.475,60/mês | carreteiro (tração simples) ~R$3.189/mês | bitrem R$3.508,49/mês (+10%) | rodotrem 9 eixos R$3.667,65/mês (+15%). Benefícios mínimos: auxílio refeição R$19/dia trabalhado, cesta básica R$138/mês. Mais: diárias R$60–120/dia fora da base, periculosidade 30% se MOPP. Para o valor exato, consulte o RH.',
+      'Motoristas CLT da Scapini seguem a CCT MOVIFORT/SETCERGS 2025/2026. Pisos CCT (a partir jan/2026): truck/toco R$2.475,60 | carreteiro ~R$3.189 | bitrem R$3.508 (+10%) | rodotrem R$3.668 (+15%). Benefícios: auxílio refeição R$19/dia + cesta básica R$138/mês. O pacote total (salário + diárias + benefícios + eventual periculosidade MOPP) pode superar R$5.000/mês em viagens de longa distância.',
     ]);
 
   // ── Segurança / privacidade dos dados Lúmina ──
