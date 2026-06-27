@@ -1317,3 +1317,128 @@ Novos padrões adicionados: `gnv.*frota`, `frota.*gnv`, `descarboniz.*frota`, `f
 4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
 5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
 6. **DEMO_QA por setor**: manutenção preventiva vs preditiva, procedimentos operacionais específicos — ainda há tópicos de workshop a cobrir
+
+---
+
+# SESSÃO 19 — 2026-06-27 (~00:30 UTC)
+
+## Estado inicial
+- app.js: 9657 linhas, DEMO_QA 385+ entradas
+
+## PRIORIDADE 1 — Bugs corrigidos (4 novos encontrados)
+
+### `\badas\b` falso positivo crítico — palavra "estradas"
+- **Arquivo**: app.js l.6448 (DEMO_QA câmeras ADAS)
+- **Problema**: `/adas/` sem word-boundary disparava em "estradas federais", "estradas do RS" — palavrão extremamente comum em transporte
+- **Fix**: `\badas\b` e também `\bdvr\b` na mesma regex
+
+### `\bkpi\b` e `\botd\b` sem word-boundary
+- **Arquivo**: app.js l.5376 (DEMO_QA KPI/indicadores)
+- **Problema**: inconsistência com padrão do projeto — todos os acrônimos curtos devem ter `\b`
+- **Fix**: `\bkpi\b`, `\botd\b`
+
+### `ia` (verbo PT-BR) vs `ia` (sigla IA) na regex de limitações
+- **Arquivo**: app.js l.6865 (DEMO_QA limitações da Lúmina)
+- **Problema**: `ia` aparecia em 3 grupos de alternância sem artigo — verbos como "a limitação de peso **ia** me atrasar a rota" disparavam a resposta errada
+- **Fix**: `ia` → `a ia` em todos os 3 grupos (o artigo "a" obrigatório é como a sigla IA aparece em PT-BR: "a IA não consegue", "a ia tem limitação")
+
+### `_thinkingBudget()` nível 512 expandido
+- Novos padrões: `ata.*reuniao|reuniao.*ata|transcrever.*reuniao|gravar.*reuniao|feriado.*motorista|feriado.*transporte|trabalhar.*feriado|escala.*feriado|feriado.*hora.*extra`
+
+## PRIORIDADE 4 — Novos pares DEMO_QA (+5 entradas × 2 respostas)
+
+| # | Tema | Regex (resumo) |
+|---|---|---|
+| 1 | Velocidade de resposta | `velocidade.*lumina`, `tempo.*resposta.*lumina`, `lumina.*lenta` |
+| 2 | Ata de reunião por áudio | `ata.*reuniao`, `transcrever.*reuniao`, `audio.*reuniao.*lumina` |
+| 3 | Feriado / escala motorista | `trabalhar.*feriado`, `escala.*feriado`, `feriado.*hora.*extra` |
+| 4 | Limite de arquivo / upload | `limite.*arquivo`, `arquivo.*grande.*demais`, `maximo.*upload` |
+| 5 | Atualização do sistema | `lumina.*update`, `nova.*versao.*lumina`, `servidor.*lumina.*reinicia` |
+
+## Contadores
+- DEMO_QA: 385+ → 390+
+
+## Commits
+- `a2d09ea` — fix+feat: sessão 19 — word-boundary bugs + 5 Q&A novos + thinkingBudget — PUSHED
+
+## Pendências mantidas
+1. Tabela ANTT por eixo — herdado 15x
+2. CCT MOVIFORT RS 2025/2026 completo — herdado 14x
+3. Rebuild Ollama (máquina local)
+4. Fine-tuning Llama (≥500 exemplos)
+
+---
+
+# SESSÃO 20 — 2026-06-27 (04:20 UTC)
+
+## Estado inicial
+- app.js: 9705 linhas, DEMO_QA 390+ entradas
+- Sessão continuada automaticamente após compactação de contexto
+
+## PRIORIDADE 2 — Pesquisa web e integração de dados regulatórios
+
+### Resultado da pesquisa (agente background `aed2aae4a39a5388e`)
+
+**Regulamentação ANTT 2025/2026 — confirmado:**
+
+| Norma | Data | Tema |
+|---|---|---|
+| Res. 6.068/2025 | 17/07/2025 | RNTRC validade indeterminada + 3 seguros obrigatórios (RCTR-C, RC-DC, RC-V) |
+| Res. 6.076/2026 | 19/01/2026 | Metodologia CCD: todos eixos contam (+3,15%) |
+| Portaria SUROC 3/2026 | 13/03/2026 | Diesel ref. R$6,89/L — +4,52% a +8,17% |
+| Portaria SUROC 4/2026 | 20/03/2026 | Diesel ref. R$7,35/L — +6,67% sobre SUROC 3 |
+| MP 1.343/2026 | 19/03/2026 (vigência 24/05/2026) | CIOT obrigatório para TODAS as operações TRC |
+| Res. 6.077/2026 | 24/03/2026 | Fiscalização preventiva; multa embarcador R$1M–R$10M |
+| Res. 6.078/2026 | 24/03/2026 | CIOT vinculado ao MDF-e; multa R$10.500/operação |
+| Portaria SUROC 6/2026 | 23/04/2026 | Regras operacionais CIOT (vigência 24/05/2026) |
+| Portaria SUROC 16/2026 | 20/05/2026 | Altera SUROC 6 — carga fracionada 1 CIOT por percurso |
+
+**Tabela ANTT por eixo:** faixa R$3,60–R$11,61/km (Tabela A) confirmada, mas valores linha a linha bloqueados (DOU 403). Calculadora: calculadorafrete.antt.gov.br
+
+**CGI Software:** empresa gaúcha (Consultoria Gaúcha de Informática Ltda, webcgi.com.br), 39+ anos de mercado, TMS modular — CT-e, MDF-e, CIOT, rastreamento confirmados como módulos. Detalhes de sub-módulos não indexados publicamente.
+
+### Verificação PRIORIDADE 3 — tryLocalResponse() completa (l.4584–5038)
+
+Todos os itens de PRIORIDADE 3 confirmados como JÁ EXISTENTES:
+
+| Item | Status | Linha |
+|---|---|---|
+| Grupo Scapini / 7 empresas | ✓ já existe | l.4818 |
+| Sede Lajeado / Vale do Taquari | ✓ já existe | l.4867 |
+| Fundação / Diamantino / 1977 | ✓ já existe | l.4804 |
+| Salário motorista CCT | ✓ já existe | l.4993 |
+| Processo seletivo motorista | ✓ já existe | l.4986 |
+| Custo da Lúmina | ✓ já existe | l.4905 |
+| Substitui funcionários? | ✓ já existe | l.5122 (DEMO_QA) |
+| Integração CGI Phase 2 | ✓ já existe | l.4899 |
+| Funciona offline? | ✓ já existe | l.4911 |
+| Segurança / privacidade | ✓ já existe | l.4999 |
+
+**Nenhuma entrada nova necessária no tryLocalResponse().**
+
+## PRIORIDADE 2 — Novos pares DEMO_QA (+2 entradas × 2 respostas)
+
+Conteúdo regulatório integrado com base na pesquisa:
+
+| # | Tema | Regex (resumo) |
+|---|---|---|
+| 1 | **Seguros obrigatórios RNTRC** (Res. 6068/2025) | `seguro.*obrigatorio.*transport`, `rctr.c.*obrigatorio`, `rc.dc`, `rc.v.*seguro.*transport`, `rntrc.*tres.*seguro` |
+| 2 | **MP 1.343/2026 / CIOT expandido + multas embarcador** | `mp.?1.?343`, `ciot.*obrigatorio.*todos`, `multa.*embarcador.*antt`, `resolucao.*6077`, `resolucao.*6078`, `piso.*minimo.*bloqueio` |
+
+**Localização das inserções:**
+- Seguros RNTRC: após Res. 6.068 DEMO_QA (pós l.6899), antes de // Tacógrafo
+- MP 1.343 CIOT: após CIOT DEMO_QA (pós l.6920), antes de // Tipos de carga
+
+## Contadores
+- DEMO_QA: 390+ → 392+
+
+## Commits desta sessão
+(ver commit abaixo)
+
+## Pendências / próxima sessão
+1. **Tabela ANTT por eixo (R$/km)** — herdado 16x. Acesso manual: calculadorafrete.antt.gov.br
+2. **CCT MOVIFORT RS 2025/2026 completo** — herdado 15x. Dado parcial: bitrem R$3.508,49/mês
+3. **Rebuild Ollama**: `ollama create lumina-treinada -f Modelfile.lumina` — máquina local
+4. **`npm run build-dataset`** — máquina local (≥500 exemplos para fine-tuning)
+5. **Fine-tuning Llama** — quando dataset atingir 500+ exemplos
+6. **Verificar CGI Software sub-módulos** — site webcgi.com.br retornou 403; verificar diretamente
