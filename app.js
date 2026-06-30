@@ -402,6 +402,29 @@ const buildContextBlock = async (lastUserMsg = '') => {
     });
   }
 
+  // Portais Scapini — dados sincronizados a cada 30min (somente leitura)
+  try {
+    const ps = await serverGet('portal-status', null);
+    if (ps && (ps.rh || ps.comercial)) {
+      ctx += `\n\n── PORTAIS SCAPINI (dados sincronizados ${ps.syncedAt ? new Date(ps.syncedAt).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—'}) ──`;
+      if (ps.rh?.metricas) {
+        const m = ps.rh.metricas;
+        ctx += `\n🧑‍💼 RH: ${m.total ?? '?'} candidatos nos últimos ${m.periodo_dias}d — ${m.aprovados ?? 0} aprovados, ${m.concluiram ?? 0} concluíram entrevista, nota média ${m.nota_media ?? '—'}`;
+        if (ps.rh.vagas?.vagas?.length) {
+          const ativas = ps.rh.vagas.vagas.filter(v => v.ativa == 1);
+          ctx += ` | ${ativas.length} vaga(s) ativa(s): ${ativas.map(v => v.titulo).join(', ')}`;
+        }
+      }
+      if (ps.comercial?.metricas) {
+        const m = ps.comercial.metricas;
+        ctx += `\n📊 Comercial: ${m.total_leads_ativos ?? '?'} leads ativos — ${m.em_negociacao ?? 0} em negociação, ${m.propostas_enviadas ?? 0} propostas abertas, ${m.clientes_ganhos_mes ?? 0} fechamentos este mês`;
+        if (m.valor_fechado_mes_reais) ctx += ` | R$ ${Number(m.valor_fechado_mes_reais).toLocaleString('pt-BR',{minimumFractionDigits:2})} faturado no mês`;
+        if (m.leads_parados)  ctx += ` | ⚠️ ${m.leads_parados} leads parados`;
+        if (m.tarefas_atrasadas) ctx += ` | 🔴 ${m.tarefas_atrasadas} tarefas atrasadas`;
+      }
+    }
+  } catch { /* portais offline */ }
+
   // Planilha — injeta contexto com limite de 2000 chars (reduzido para evitar prompt pesado)
   if (app.lastSheet) {
     const sheetCtx = app.lastSheet.context || '';

@@ -79,10 +79,14 @@ const getCfg  = () => {
   if (!_cfgCache) {
     _cfgCache = readJSON(CONFIG_FILE, { geminiKey: '', elevenLabsKey: '', username: '' });
     // Variáveis de ambiente sobrepõem config.json (segurança)
-    if (process.env.GEMINI_KEY)      _cfgCache.geminiKey      = process.env.GEMINI_KEY;
-    if (process.env.ELEVENLABS_KEY)  _cfgCache.elevenLabsKey  = process.env.ELEVENLABS_KEY;
-    if (process.env.COMPOSIO_KEY)    _cfgCache.composioKey    = process.env.COMPOSIO_KEY;
-    if (process.env.SMTP_PASS)       _cfgCache.smtpPass       = process.env.SMTP_PASS;
+    if (process.env.GEMINI_KEY)              _cfgCache.geminiKey            = process.env.GEMINI_KEY;
+    if (process.env.ELEVENLABS_KEY)          _cfgCache.elevenLabsKey        = process.env.ELEVENLABS_KEY;
+    if (process.env.COMPOSIO_KEY)            _cfgCache.composioKey          = process.env.COMPOSIO_KEY;
+    if (process.env.SMTP_PASS)               _cfgCache.smtpPass             = process.env.SMTP_PASS;
+    if (process.env.PORTAL_RH_URL)           _cfgCache.portalRhUrl          = process.env.PORTAL_RH_URL;
+    if (process.env.PORTAL_RH_TOKEN)         _cfgCache.portalRhToken        = process.env.PORTAL_RH_TOKEN;
+    if (process.env.PORTAL_COMERCIAL_URL)    _cfgCache.portalComercialUrl   = process.env.PORTAL_COMERCIAL_URL;
+    if (process.env.PORTAL_COMERCIAL_TOKEN)  _cfgCache.portalComercialToken = process.env.PORTAL_COMERCIAL_TOKEN;
   }
   return _cfgCache;
 };
@@ -139,6 +143,7 @@ const PUBLIC_GET_ENDPOINTS = [
   /^\/api\/news\//,
   /^\/api\/sports$/,
   /^\/api\/cnpj\//,
+  /^\/api\/portal-status$/,
 ];
 
 const SENSITIVE_GET_ENDPOINTS = [
@@ -3420,6 +3425,64 @@ function _checkAutoTrain() {
 
 // Também verifica 5 min após o servidor subir (capta o que ficou pendente)
 setTimeout(_checkAutoTrain, 5 * 60 * 1000);
+
+// ── Integração Portais Scapini (somente leitura) ─────────────────────────────
+let _portalCache = { rh: null, comercial: null, syncedAt: null, errors: {} };
+
+const _fetchPortal = async (url, token, endpoints) => {
+  const results = {};
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(`${url}?endpoint=${ep}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!r.ok) { results[ep] = { erro: `HTTP ${r.status}` }; continue; }
+      results[ep] = await r.json();
+    } catch (e) {
+      results[ep] = { erro: e.message };
+    }
+  }
+  return results;
+};
+
+const _syncPortais = async () => {
+  const c = getCfg();
+  const erros = {};
+
+  if (c.portalRhUrl && c.portalRhToken) {
+    try {
+      _portalCache.rh = await _fetchPortal(c.portalRhUrl, c.portalRhToken, ['metricas', 'vagas', 'agenda']);
+    } catch (e) { erros.rh = e.message; }
+  }
+
+  if (c.portalComercialUrl && c.portalComercialToken) {
+    try {
+      _portalCache.comercial = await _fetchPortal(c.portalComercialUrl, c.portalComercialToken, ['metricas', 'funil', 'urgencias']);
+    } catch (e) { erros.comercial = e.message; }
+  }
+
+  _portalCache.syncedAt = new Date().toISOString();
+  _portalCache.errors   = erros;
+  if (Object.keys(erros).length === 0) {
+    console.log('[Portais] Sync concluído:', _portalCache.syncedAt);
+  } else {
+    console.warn('[Portais] Sync com erros:', erros);
+  }
+};
+
+// Sync a cada 30 minutos + 1 min após startup
+setTimeout(() => { _syncPortais(); setInterval(_syncPortais, 30 * 60 * 1000); }, 60 * 1000);
+
+app.get('/api/portal-status', (req, res) => {
+  res.json({ ok: true, syncedAt: _portalCache.syncedAt, rh: _portalCache.rh, comercial: _portalCache.comercial, errors: _portalCache.errors });
+});
+
+app.post('/api/sync-portais', async (req, res) => {
+  if (!hasValidLocalToken(req)) return res.status(401).json({ error: 'Não autorizado.' });
+  await _syncPortais();
+  res.json({ ok: true, syncedAt: _portalCache.syncedAt, errors: _portalCache.errors });
+});
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, HOST, () => {
