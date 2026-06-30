@@ -357,7 +357,8 @@ Retorne APENAS JSON válido:
 }
 Regras: remova duplicatas, corrija contradições, adicione tags (trabalho/saúde/família/hobby/preferência/habilidade), peso 1-3 por importância, máx 60 fatos.` }] }],
           generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
-        })
+        }),
+        signal: AbortSignal.timeout(30000),
       }
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -413,7 +414,7 @@ app.post('/api/chat', async (req, res) => {
             contents: messages,
             generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
           }),
-          signal: AbortSignal.timeout(30000),
+          signal: AbortSignal.timeout(60000),
         }
       );
       if (r.ok) {
@@ -450,7 +451,8 @@ app.post('/api/vision', async (req, res) => {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: base64 } }, { text: prompt }] }],
           generationConfig: { maxOutputTokens: 450, temperature: 0.7 }
-        })
+        }),
+        signal: AbortSignal.timeout(15000),
       }
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -503,7 +505,8 @@ app.post('/api/learn', async (req, res) => {
 Mensagem: "${text.substring(0, 300)}"
 Responda APENAS JSON: {"nome":"X ou null","fatos":["fato"]} — máx 2 fatos em português.` }] }],
           generationConfig: { maxOutputTokens: 80, temperature: 0.1 }
-        })
+        }),
+        signal: AbortSignal.timeout(10000),
       }
     );
     if (!r.ok) return res.json({ updated: false });
@@ -2362,8 +2365,9 @@ Se os dados forem insuficientes para alguma análise, aponte o que está faltand
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.25 }
-        })
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.25, thinkingConfig: { thinkingBudget: 2048 } }
+        }),
+        signal: AbortSignal.timeout(90000),
       }
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
@@ -2431,8 +2435,9 @@ Em 2-3 linhas: o fechamento está completo? Há pendências críticas? Pode ser 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.2 }
-        })
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.2, thinkingConfig: { thinkingBudget: 2048 } }
+        }),
+        signal: AbortSignal.timeout(90000),
       }
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
@@ -2502,8 +2507,9 @@ Verifique especialmente:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 8192, temperature: 0.15 }
-        })
+          generationConfig: { maxOutputTokens: 8192, temperature: 0.15, thinkingConfig: { thinkingBudget: 2048 } }
+        }),
+        signal: AbortSignal.timeout(90000),
       }
     );
     if (!r.ok) throw new Error(`Gemini ${r.status}`);
@@ -2685,7 +2691,9 @@ Seja detalhado e profissional. Retorne APENAS o JSON válido, sem markdown, sem 
     const gr = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: structPrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.4, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }) }
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: structPrompt }] }], generationConfig: { maxOutputTokens: 4000, temperature: 0.4, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }),
+        signal: AbortSignal.timeout(60000),
+      }
     );
     if (!gr.ok) { const e = await gr.json().catch(() => ({})); throw new Error(e.error?.message || `Gemini HTTP ${gr.status}`); }
     const gd   = await gr.json();
@@ -2836,7 +2844,9 @@ Use KPIs reais do setor de transporte rodoviário brasileiro. Se não houver dad
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${c.geminiKey}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 4000, temperature: 0.3, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }) }
+          generationConfig: { maxOutputTokens: 4000, temperature: 0.3, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 512 } } }),
+        signal: AbortSignal.timeout(60000),
+      }
     );
     if (!gr.ok) throw new Error(`Gemini HTTP ${gr.status}`);
     const gd  = await gr.json();

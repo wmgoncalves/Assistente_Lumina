@@ -1574,7 +1574,7 @@ const _renderLuminaText = (text) => {
     if (m) {
       const title = m[1].replace(/\s*\[arquivo:[^\]]*\]/g, '').trim();
       const file  = m[2]?.trim() || notes.find(n => n.title === title)?.file;
-      if (file) return `<a class="source-chip" href="/api/download-doc/${encodeURIComponent(file)}" target="_blank">📄 ${_escHtml(title)} ⬇</a>`;
+      if (file) return `<a class="source-chip" href="#" onclick="event.preventDefault();downloadDocWithToken('/api/download-doc/${encodeURIComponent(file)}','${file.replace(/'/g,'')}').catch(()=>{})">📄 ${_escHtml(title)} ⬇</a>`;
       return `<span class="source-chip">📄 ${_escHtml(title)}</span>`;
     }
     let html = _escHtml(line);
@@ -3200,13 +3200,8 @@ const executeTool = async (name, args) => {
       if (originalFile) {
         const checkUrl = `/api/download-doc/${encodeURIComponent(originalFile)}`;
         try {
-          const check = await fetch(checkUrl, { method: 'HEAD' });
-          if (check.ok) {
-            const a = Object.assign(document.createElement('a'), { href: checkUrl, download: originalFile });
-            document.body.appendChild(a); a.click();
-            setTimeout(() => document.body.removeChild(a), 200);
-            return `Aqui está! Arquivo "${originalFile}" baixado na pasta Downloads.`;
-          }
+          await downloadDocWithToken(checkUrl, originalFile);
+          return `Aqui está! Arquivo "${originalFile}" baixado na pasta Downloads.`;
         } catch { /* fallback para txt */ }
       }
 
@@ -4473,6 +4468,18 @@ const detectOpenSite = (rawText) => {
 // Remove acentos para comparação sem diferenciar "devolução" vs "devolucao"
 const stripAccents = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+// ── Helper: baixa um /api/download-doc com token (anchor sem fetch não envia header) ──
+const downloadDocWithToken = async (url, filename) => {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const blob = await resp.blob();
+  const burl = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: burl, download: filename });
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(burl); }, 300);
+};
+window.downloadDocWithToken = downloadDocWithToken;
+
 // ── Download direto (funciona sem API, com Gemini ou Ollama) ──────────────────
 const detectLocalDownload = async (rawText) => {
   const t = stripAccents(rawText.toLowerCase().trim().replace(/[!?.]+$/, ''));
@@ -4524,13 +4531,8 @@ const detectLocalDownload = async (rawText) => {
   if (originalFile) {
     const checkUrl = `/api/download-doc/${encodeURIComponent(originalFile)}`;
     try {
-      const check = await fetch(checkUrl, { method: 'HEAD' });
-      if (check.ok) {
-        const a = Object.assign(document.createElement('a'), { href: checkUrl, download: originalFile });
-        document.body.appendChild(a); a.click();
-        setTimeout(() => document.body.removeChild(a), 200);
-        return `Arquivo original "${originalFile}" baixado! Verifique sua pasta Downloads.`;
-      }
+      await downloadDocWithToken(checkUrl, originalFile);
+      return `Arquivo original "${originalFile}" baixado! Verifique sua pasta Downloads.`;
     } catch { /* fallback para txt */ }
   }
 
