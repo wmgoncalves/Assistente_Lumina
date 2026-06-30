@@ -1772,6 +1772,23 @@ const _demoBadge = () => document.getElementById('demo-badge');
 const _showDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = 'block'; };
 const _hideDemoMode = () => { const b = _demoBadge(); if (b) b.style.display = 'none'; };
 
+// ── Indicador de status da IA (barra inferior) ────────────────────────────────
+const _setAiStatus = (source) => {
+  const dot   = document.getElementById('ai-status-dot');
+  const label = document.getElementById('ai-status-label');
+  if (!dot || !label) return;
+  const MAP = {
+    gemini: { color: '#4ade80', text: 'GEMINI' },   // verde
+    ollama: { color: '#facc15', text: 'OLLAMA' },   // amarelo
+    local:  { color: '#94a3b8', text: 'DEMO' },     // cinza
+    demo:   { color: '#94a3b8', text: 'DEMO' },
+    unknown:{ color: '#94a3b8', text: 'DEMO' },
+  };
+  const s = MAP[source] || MAP.unknown;
+  dot.style.background = s.color;
+  label.textContent = s.text;
+};
+
 const _handleGeminiErr = (msg) => {
   const s = String(msg);
   if (/expired|401|API_KEY_INVALID|not valid/.test(s)) blockGemini(30 * 1000);    // chave inválida → 30s (demo segura)
@@ -1838,6 +1855,7 @@ const _finalize = (raw, source = 'unknown') => {
   applyInlineLearn(learned);
   const finalResponse = sanitizeIdentity(response || pick(['Entendido.', 'Registrado.', 'Ok!', 'Certo.']));
   app.history.push({ role: 'model', content: finalResponse });
+  _setAiStatus(source);
   // Remove bolinhas de "pensando" se existirem
   document.querySelector('.hmsg-thinking')?.remove();
   // Typewriter: texto curto (<120 chars) aparece direto; longo digita palavra a palavra
