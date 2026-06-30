@@ -83,10 +83,11 @@ const getCfg  = () => {
     if (process.env.ELEVENLABS_KEY)          _cfgCache.elevenLabsKey        = process.env.ELEVENLABS_KEY;
     if (process.env.COMPOSIO_KEY)            _cfgCache.composioKey          = process.env.COMPOSIO_KEY;
     if (process.env.SMTP_PASS)               _cfgCache.smtpPass             = process.env.SMTP_PASS;
-    if (process.env.PORTAL_RH_URL)           _cfgCache.portalRhUrl          = process.env.PORTAL_RH_URL;
-    if (process.env.PORTAL_RH_TOKEN)         _cfgCache.portalRhToken        = process.env.PORTAL_RH_TOKEN;
-    if (process.env.PORTAL_COMERCIAL_URL)    _cfgCache.portalComercialUrl   = process.env.PORTAL_COMERCIAL_URL;
-    if (process.env.PORTAL_COMERCIAL_TOKEN)  _cfgCache.portalComercialToken = process.env.PORTAL_COMERCIAL_TOKEN;
+    if (process.env.PORTAL_RH_URL)          _cfgCache.portalRhUrl         = process.env.PORTAL_RH_URL;
+    if (process.env.PORTAL_RH_TOKEN)        _cfgCache.portalRhToken       = process.env.PORTAL_RH_TOKEN;
+    if (process.env.PORTAL_COMERCIAL_URL)   _cfgCache.portalComercialUrl  = process.env.PORTAL_COMERCIAL_URL;
+    if (process.env.PORTAL_LUMINA_EMAIL)    _cfgCache.portalLuminaEmail   = process.env.PORTAL_LUMINA_EMAIL;
+    if (process.env.PORTAL_LUMINA_PASSWORD) _cfgCache.portalLuminaPassword= process.env.PORTAL_LUMINA_PASSWORD;
   }
   return _cfgCache;
 };
@@ -3456,9 +3457,32 @@ const _syncPortais = async () => {
     } catch (e) { erros.rh = e.message; }
   }
 
-  if (c.portalComercialUrl && c.portalComercialToken) {
+  // Portal Comercial — login JWT com conta lumina@scapini.com.br
+  if (c.portalComercialUrl && c.portalLuminaEmail && c.portalLuminaPassword) {
     try {
-      _portalCache.comercial = await _fetchPortal(c.portalComercialUrl, c.portalComercialToken, ['metricas', 'funil', 'urgencias']);
+      // 1. Autentica (access token expira em 15min, mas sync é a cada 30min — login a cada vez)
+      const loginR = await fetch(`${c.portalComercialUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: c.portalLuminaEmail, password: c.portalLuminaPassword }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!loginR.ok) throw new Error(`Login Comercial falhou: HTTP ${loginR.status}`);
+      const { accessToken } = await loginR.json();
+      if (!accessToken) throw new Error('Token não retornado');
+
+      // 2. Busca dados com o JWT
+      const authH = { 'Authorization': `Bearer ${accessToken}`, 'Accept': 'application/json' };
+      const [statsR, funnelR, comerciaisR] = await Promise.all([
+        fetch(`${c.portalComercialUrl}/api/dashboard/stats`,      { headers: authH, signal: AbortSignal.timeout(10000) }),
+        fetch(`${c.portalComercialUrl}/api/dashboard/funnel`,     { headers: authH, signal: AbortSignal.timeout(10000) }),
+        fetch(`${c.portalComercialUrl}/api/dashboard/comerciais`, { headers: authH, signal: AbortSignal.timeout(10000) }),
+      ]);
+      _portalCache.comercial = {
+        stats:      statsR.ok      ? await statsR.json()      : { erro: `HTTP ${statsR.status}` },
+        funil:      funnelR.ok     ? await funnelR.json()     : { erro: `HTTP ${funnelR.status}` },
+        comerciais: comerciaisR.ok ? await comerciaisR.json() : { erro: `HTTP ${comerciaisR.status}` },
+      };
     } catch (e) { erros.comercial = e.message; }
   }
 

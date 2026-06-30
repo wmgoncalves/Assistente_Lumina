@@ -415,12 +415,13 @@ const buildContextBlock = async (lastUserMsg = '') => {
           ctx += ` | ${ativas.length} vaga(s) ativa(s): ${ativas.map(v => v.titulo).join(', ')}`;
         }
       }
-      if (ps.comercial?.metricas) {
-        const m = ps.comercial.metricas;
-        ctx += `\n📊 Comercial: ${m.total_leads_ativos ?? '?'} leads ativos — ${m.em_negociacao ?? 0} em negociação, ${m.propostas_enviadas ?? 0} propostas abertas, ${m.clientes_ganhos_mes ?? 0} fechamentos este mês`;
-        if (m.valor_fechado_mes_reais) ctx += ` | R$ ${Number(m.valor_fechado_mes_reais).toLocaleString('pt-BR',{minimumFractionDigits:2})} faturado no mês`;
-        if (m.leads_parados)  ctx += ` | ⚠️ ${m.leads_parados} leads parados`;
-        if (m.tarefas_atrasadas) ctx += ` | 🔴 ${m.tarefas_atrasadas} tarefas atrasadas`;
+      if (ps.comercial?.stats) {
+        const m = ps.comercial.stats;
+        ctx += `\n📊 Comercial: ${m.totalLeads ?? '?'} leads ativos — ${m.negociacoesAbertas ?? 0} em negociação, ${m.propostasEnviadas ?? 0} propostas abertas, ${m.clientesGanhos ?? 0} clientes fechados`;
+        if (m.valorFechadoMesCentavos) ctx += ` | R$ ${(m.valorFechadoMesCentavos/100).toLocaleString('pt-BR',{minimumFractionDigits:2})} faturado no mês`;
+        if (m.leadsParados)      ctx += ` | ⚠️ ${m.leadsParados} leads parados`;
+        if (m.tarefasAtrasadas)  ctx += ` | 🔴 ${m.tarefasAtrasadas} tarefas atrasadas`;
+        if (m.leadsAltaPrioridade) ctx += ` | 🔥 ${m.leadsAltaPrioridade} alta prioridade`;
       }
     }
   } catch { /* portais offline */ }
