@@ -3663,7 +3663,7 @@ const callGemini = async (customHistory = null) => {
 
   for (let iter = 0; iter < 3; iter++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s — thinking pode levar até 30s
     let res;
     try {
       res = await fetch(
@@ -3676,8 +3676,11 @@ const callGemini = async (customHistory = null) => {
             system_instruction: { parts: [{ text: systemText }] },
             contents,
             tools,
-            generationConfig: { maxOutputTokens: app.lastSheet ? 800 : 1200, temperature: 0.78 },
-            thinkingConfig: { thinkingBudget: _thinkingBudget(lastMsg) }
+            generationConfig: {
+              maxOutputTokens: app.lastSheet ? 800 : 1200,
+              temperature: 0.78,
+              thinkingConfig: { thinkingBudget: _thinkingBudget(lastMsg) }
+            }
           })
         }
       );

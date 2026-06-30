@@ -418,7 +418,7 @@ app.post('/api/chat', async (req, res) => {
           body: JSON.stringify({
             system_instruction: { parts: [{ text: system }] },
             contents: messages,
-            generationConfig: { maxOutputTokens: 2000, temperature: 0.82 }
+            generationConfig: { maxOutputTokens: 2000, temperature: 0.82, thinkingConfig: { thinkingBudget: 512 } }
           }),
           signal: AbortSignal.timeout(60000),
         }
