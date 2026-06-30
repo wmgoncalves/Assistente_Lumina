@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "nodemon --watch server.js --watch services/ --ignore app.js --ignore public/ server.js",
     "lumina": "node -e \"delete process.env.ELECTRON_RUN_AS_NODE;require('child_process').spawn(require('electron'),['.'],{stdio:'inherit',env:process.env}).on('exit',c=>process.exit(c))\"",
-    "build-dataset": "node lumina-dataset-builder.js"
+    "build-dataset": "node lumina-dataset-builder.js",
+    "reset-demo": "node reset-demo.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.1",
